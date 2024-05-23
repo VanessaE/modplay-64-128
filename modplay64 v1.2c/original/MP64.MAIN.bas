@@ -12,7 +12,7 @@ start tok64 mp64.main.fix
 120 FORx=0TO31:POKEl1+x,.:POKEl2+x,.:NEXT
 130 PRINT"{down}Generating Pitch Table{.*3}":GOSUB2500
 200 OPEN1,dv,15:INPUT#1,z$,z$,z$,z$:CLOSE1
-210 PRINT"{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2b  {yellow}8/19/2{0*3}"
+210 PRINT"{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2c  {yellow}12/3/2007"
 220 PRINT"{down}{gray}{reverse on} L {reverse off} {light gray}Load Module{space*7}{gray}{reverse on} # {reverse off} {light gray}Change Device"
 230 PRINT"{gray}{reverse on} P {reverse off} {light gray}Play Module{space*7}{gray}{reverse on} $ {reverse off} {light gray}Directory"
 240 PRINT"{gray}{reverse on} M {reverse off} {light gray}Change Play Mode{space*2}{gray}{reverse on} @ {reverse off} {light gray}DOS Command"
@@ -40,7 +40,7 @@ start tok64 mp64.main.fix
 450 PRINT" in "pm$(pm-1,2)" Bits"
 460 IFpm=4THENsp=1:PRINT"{home}{down*6}"TAB(12)"{green}ON "
 461 PRINT"{home}{down*16}":WAIT203,64:GETk$
-470 IFk$="x"THENPOKE53280,14:POKE53281,6:PRINT"{142}{light blue}{clear}";:END
+470 IFk$="x"THENPOKE53265,0:sys64738
 480 IFk$="#"THENGOSUB10000:GOTO210
 490 IFk$="@"THENGOSUB11000:GOTO210
 500 IFk$="l"THENGOSUB12000:GOTO210
@@ -50,7 +50,7 @@ start tok64 mp64.main.fix
 540 IFk$="i"ANDfi>0THENpg=0:GOSUB13000:GOTO210
 550 IFk$="v"ANDpm=1THENvo=1-vo:PRINT"{home}{down*7}"TAB(13)oo$(vo):GOTO460
 560 IFk$="d"ANDpm=1THENdi=1-di:PRINT"{home}{down*6}"TAB(34)oo$(di):GOTO460
-570 IFk$="s"THENsp=1-sp:PRINT"{home}{down*6}"TAB(12)oo$(sp):GOTO460
+570 IFk$="s"THENsp=1-sp:PRINT"{home}{down*6}"TAB(12)oo$(sp):gosub17006:GOTO460
 580 IFk$="a"ANDpm<3ANDsp=1THENGOSUB17000:GOTO460
 590 IFk$="b"ANDpm=2ANDsp=1THENGOSUB18000:GOTO210
 600 GOTO460
@@ -63,7 +63,7 @@ start tok64 mp64.main.fix
 1060 POKE994,pm:POKE995,v
 1070 REM: 996-1000 are reserved.
 1080 POKE1001,di:POKE1002,vo:POKE1003,sp:POKE1004,s2
-1090 POKE1005,lv:POKE1006,rv
+1090 POKE1005,lv:POKE1006,rv:poke2,(s4-1)*32:sys24976
 1100 SYS25091:SYS25088:SYS25097:RETURN
 2000 PRINT"{up}Select Playback Device:{space*16}"
 2010 PRINT"{space*37}"
@@ -188,7 +188,7 @@ start tok64 mp64.main.fix
 5060 FORx=0TO7:READfr$(x):NEXT
 5070 FORx=0TO17:READaj(x):NEXT
 5080 di=0:vo=1:lf=140:rf=40:lr=.:rr=.
-5090 sp=0:s2=215:pm=1:si$="{cyan}D700"
+5090 sp=0:s2=212:pm=1:si$="{cyan}D420":s3=1:s4=2
 5100 lv=7:rv=15
 5110 p0=pm:d0=di:s0=sp:RETURN
 6000 OPEN15,dv,15:INPUT#15,a$,b$,c$,d$:CLOSE15:rs$=a$+","+b$+","+c$+","+d$
@@ -246,9 +246,9 @@ start tok64 mp64.main.fix
 14060 h=INT(tl/bg):l=tl-h*256
 14070 POKE57095,l:POKE57096,h:POKE57098,0:RETURN
 15000 GETa$:IFa$<>""THEN15030
-15010 IFti>(t2+30)THENt2=ti:c=NOTc:PRINTc$(ABS(c));
+15010 t2=(t2+1)and3:IFt2=0THENc=NOTc:PRINTc$(ABS(c));
 15020 GOTO15000
-15030 IFa$=CHR$(13)THENPRINT" ";:RETURN
+15030 IFa$=CHR$(13)THENPRINT" ";:t2=0:RETURN
 15040 IFa$<>CHR$(20)THEN15070
 15050 IF(LEN(in$)>0)THENPRINTa$;:in$=LEFT$(in$,LEN(in$)-1)
 15060 GOTO15000
@@ -262,8 +262,11 @@ start tok64 mp64.main.fix
 16010 fr=(l-INT(l))*8:IFl<1THENa$=fr$(fr)+"{reverse off}"+LEFT$(sp$,20-INT(l)):GOTO16030
 16020 IFl<20THENa$="{reverse on}"+LEFT$(sp$,INT(l))+"{reverse off}"+fr$(fr)+"{reverse off}"+LEFT$(sp$,20-INT(l))
 16030 PRINT"{up}{right*5}{green}"a$"{left}{white}{cm g}":RETURN
-17000 IFs2=215THENs2=222:si$="{light blue}DE00":GOTO17020
-17010 IFs2=222THENs2=215:si$="{cyan}D700"
+17000 s4=s4+1:ifs4>8thens4=1:s3=s3+1
+17001 ifs3>11thens3=1:s4=2
+17005 ifs3=5thens3=11
+17006 si$="{blue}N/A ":ifsp=0orpm>1then17020
+17010 s2=211+s3:si$=mid$("{cyan}{light blue}",(s4 and 1)+1,1)+"D"+mid$("4567EEEEEEE",s3,1)+mid$("02468ACE",s4,1)+"0"
 17020 PRINT"{home}{down*5}"TAB(34)si$:RETURN
 18000 c=.:PRINT"{down*2}{light gray}Please Enter Balance Setting";:IFspTHENPRINT"s";
 18010 PRINT:PRINT"{light gray}({green}Range{light green}: {yellow}0{light gray}..{yellow}15{light gray}){down}":in$=MID$(STR$(lv),2)
