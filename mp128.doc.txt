@@ -1,0 +1,531 @@
+Copyleft Notice
+---------------
+
+This program is public domain software.  Within this document, references are
+made to various hardware devices that the program can use.  Those devices are
+managed only by their respective licenes and copyrights.
+
+Commodore, Commodore 128, 128-D, 128-DCR, 17x1 devices, REU, Datasette,
+and the "C=" logo are registered trademarks of ... No one!  As of this writing,
+there does not appear to be any entity who can claim ownership of these
+trademarks.
+
+CMD, FD, HD, RamLink, and Super CPU are trademarks of Creative Micro
+Designs, Inc. 
+
+Stereo Player 64 is (C) Mark A. Dickenson.  All Rights Reserved. 
+
+
+Disclaimer
+----------
+
+I'm just a coder, not a magician, and can't be held responsible for any 
+damages caused by the use of this Program.  In other words, if you screw 
+something up and end up formatting your hard disk or something, it's 
+your own damn fault.  So there. :-)
+
+
+Hardware Requirements
+---------------------
+
+* A Commodore 128, 128-D, or 128-DCR.  VICE users:  The x128 emulator should
+  work fine as well.  Set your "Sound Synchronization" to "exact".
+
+* One 5 1/4" or 3 1/2" disk drive
+
+* An 80 column RGB Monitor (Color is recommended, Mono will work too)
+
+* A Commodore 17xx series REU (a RamLink will NOT work to replace it!)
+
+
+Optional but Recommended Hardware
+---------------------------------
+
+* Any kind of mass storage device such as a uIEC, a CMD HD, IDE64, etc., 
+  or at least something significantly bigger than a 1571 or 1581 drive.
+
+* An 8 bit Digital to Analog Convertor interfaced to the User Port.  The
+  DigiMAX card will work here, in mono.   VICE users: The Digimax emulation
+  should work fine.  Set the base address to "User Port".  Digimax Dual users
+  should connect their cards to the User Port, as this program doesn't know
+  how to address it on the Expansion Port.
+
+
+Installation
+------------
+Modplay 128 v1.0 comes supplied from the website as a single ZIP file.  It can
+be extracted using any of the programs commonly used on ZIP files on the C128,
+including Errol Smith's Unzip128.
+
+If you have a Commodore 1581, a CMD FD, HD, RamLink, or RamDrive, or 
+almost any other Commodore compatible storage device (except the C2N 
+Datasette), you may install Modplay 128 by simply copying all the files 
+on the distribution disk to the disk, partition, sub-partition, or 
+sub-directory of your choice.  You will need about 1100 blocks (273 kB) 
+free.
+
+If your device is too small, you can pare down the program by deleting 
+the documentation files and all of the audio drivers except the one you 
+plan to use.  At the bare minimum, you need "mp", all of the "mp.*" 
+files, "p-mp.main.prg", one of the pm.xxxx.o files, and its companion 
+pm.xxxx.t file. In this reduced state, the program will occupy about 420 
+blocks (104 kB).
+
+The program can then be loaded from the new location and run.  Modplay 128
+will recognize any drive from 8 through 30 that is powered on when you
+boot, and will permit loading of Music files from any of these devices as
+well.  The program supports up to 22 devices, as if anyone has that many.
+
+
+Getting Started
+---------------
+To load Modplay 128 v1.0, simply press Shift-Run/Stop if you are booting
+from the distribution disk.  Otherwise, use the usual LOAD command.
+
+As a shortcut to the regular LOAD command, you can put a trailing colon
+after the device number, and tap Shift-Run/Stop right after you type the
+colon, instead of hitting Return, to automatically RUN the program, As in: 
+
+LOAD"MP",device#: <Shift-Run/Stop>
+
+'Device#' is the device you are booting Modplay 128 from.  The title
+screen will be displayed. After a short pause, Modplay 128 will display
+it's Main Menu screen.
+
+During this short pause, Modplay 128 is loading it's various modules, and
+also searches the bus for as many storage devices as it can find.  If you
+have a drive turned off, that you wish to use with the Program, you must
+turn it on before booting Modplay 128. 
+
+Once the Main Menu screen appears, Modplay 128 is ready for a list of
+Music files to be loaded. 
+
+The Program defaults to load Music files from device 8.  To change this,
+first tap the "C=" logo key to switch to menu #2, and then tap the "I" 
+key to cycle through the drives that were found when you booted Modplay
+128. 
+
+Once you have the correct device selected, you can press the C= key to
+return to the main menu. 
+
+The use of the C= key is only cosmetic.  You do not have to switch menus
+to use whatever functions are displayed in each menu.  Thus, pressing "I"
+while in Menu #1 still cycles through the available drives, even though
+you can't see it.
+
+All of the keys used while in the Main Menu screen are active regardless
+of which menu is displayed, unless they appear in dark grey in thier
+respective menus.  These indicate options that cannot be used at cartain
+times.
+
+Change disks if necessary, or if you are using a mass storage device such
+as CMD's HD-Series hard drive, you may wish to change partitions and/or
+subdirectories. 
+
+To do so, you need a DOS prompt -- Simply press the "@" key, and enter a
+DOS command, using full DOS Syntax.  The drive currently selected as the
+Music device, will be the target of the command you enter.
+
+If there is an error, it will be displayed, other wise you will receive
+another DOS Prompt.
+
+Press return on a blank entry to cancel the DOS prompt, and return to the
+Main Menu.  By now you should have the desired disk, partition, and/or
+subdirectory selected to read Music files from. 
+
+To get a list of Music files, press the "F5" Function key (to the right,
+above the 10-Keypad).  The Program will display a message at the bottom of
+the screen, and search the Music device (which defaults to 8) for all
+filenames beginning with "mod." or "MOD.", or ending with ".mod" or
+".MOD".  The Program does not care what Commodore filetypes are used;  it
+will load Modules written as PRG, SEQ, and even USR filetypes, as long as
+the file was saved in a simple, sequential manner.
+
+Once the program has read the entire directory, it will erase the status
+message at the bottom, and fill the File List with the files it found.
+ 
+Each file entry consists of a number and a filename.  The number, if you
+haven't already guessed, is the size of the file in K.  I would have
+chosen to use Disk Blocks, but I find KB to be more acceptable for files
+this large, not to mention that the letter "K" fits comfortably next to
+the file sizes. :) 
+
+For those who haven't already noticed, it's beginning to look like Modplay
+128 was patterened after Stereo Player 64 v10.3 by Mark A. Dickenson.
+Well, it was.  The Program is intended to operate much the same way as
+StereoPlayer. In fact, You will find all of Mark's main functions,
+including multiple file operations present in this menu.  We'll get to
+more on that a bit later on.
+
+Using the cursor keys to move the list, find a Music file to listen to,
+and place the list so that your desired Music file is highlighted in
+white. 
+
+Press the "F1" key.  Modplay 128 will verify that the selected file can be
+loaded, and will attempt to load it.  If the file is not of a type
+supported, a message will be displayed at the bottom of the screen
+informing you what type of Module the Music file is.  Press any key to
+return to the Main Menu. 
+
+The Program will briefly display a message indicating that it is
+'Working', then, if the file is a compatible type, the screen will change
+to the playback screen, which some users may notice looks similar to older
+versions of Dual Module Player from the PC.
+
+Incompatible file types will display an error message, and return to the
+Main Menu screen upon the press of a key. 
+
+The file will start to load.  After the first few seconds, the screen will
+fill with information relating to this file, including it's size and
+filename, title, number of sequence positions and number of actual
+patterns (displayed in Hexadecimal), and the list of sample names or other
+text.
+
+After this information is on the screen (which takes only a second to
+render), the file will continue to load.
+
+Throughout the entire loading proceedure, a Progress Indicator will
+report the progress of the file load, as both a percentage and a simple
+right-moving bar. 
+
+When the file has finished loading, the program will begin playing
+immediately. The default playback device is the SID chip, single channel,
+4 bit resolution.  See below for information on Device Drivers.
+
+While the song is playing, you have a few options you can use.  The
+spacebar will stop the song, as will "F5".  "P" will pause the song (this
+is a little sensative), and keys 1 through 4 will toggle the corresponding
+tracks on and off.  All four tracks are turned on when a song is started.
+
+When you are done listening to the song, or when the song ends, you will
+be returned to the Main Menu screen.  You may select another song to play,
+or if you are done, just press "F8".  The Program will reset the device
+you booted from, Your Music device, and Device 8, and reset itself,
+re-booting the computer.  This was done so that users may reboot back into
+whatever program normally starts when the machine is turned on, if any.
+
+In the case of my (the Author's) machine, this is a copy of EZ-Loader,
+which sits on my RamLink. 
+
+
+Main Menu Functions
+-------------------
+All of the major functions from Stereo Player are present here, as well as
+some of the more minor ones.  All keys that are inactive at any given
+point have the key and description displayed in dark grey.  Otherwise, the
+key appears in yellow, between green colored brackets, with the
+description displayed in light grey.
+
+
+Cursor Up/Down:  Scroll the file list by one item.  If the list has only one
+                 item, or if it is empty, these keys are inactive.
+
+Plus/Minus:  Scroll the file list by one page.  If there are not enough files
+             in the list to fill one page, these keys are inactive.
+
+Home: Move the file list to the top item.  If the file list has only one item,
+      or if it is empty, this key is inactive.
+
+Clear (Shift-Home): Move the file list to the last item.  If the file list has
+                    only one item, or if it is empty, this key is inactive.
+
+Return: Select file(s) to be included in the F2 Multifile play mode. The
+        filename will appear in Reverse Video.  If there is no file list
+        loaded, this key is inactive.
+
+F1: Load and Play the module highlited in white in the file list.  If there is
+    no file list in memory, this option is inactive.
+
+F2: Load and Play each module previously selected with the Return Key,
+    one at a time, in the order they appear in the file list.  Press the
+    Spacebar while a song is playing, to skip to the next song, or press
+    F5 to abort all together and return to the Main Menu.  If there is no
+    file list loaded, this option is inactive.   If Repeat is enabled, the
+    selected list of congs will play over and over, until stopped with F5.
+
+F3: Load and Play ALL modules in the file list, one after another, from top to
+    bottom.  Spacebar to skip, F5 to abort.  If there is no file list loaded,
+    this option is inactive.  If Repeat is active, the entire list will
+    play over and over until it is stopped with F5.
+
+F4: Toggle Song Repeat on and off.  When Off, each song is played only once.
+    Multi-file operations run thier respective lists once.  When ON, single
+    files will play over and over until you press Space or F5.  Multi-File
+    operations will run through thier respective lists over and over until you
+    press F5.
+
+    Note:  Some songs contain a code called "Position Jump", which can cause
+    a song to repeat endlessly.  The official Song-Repeat Function, as
+    controlled here, does not affect this Position Jump Command.  Thus, if
+    a song contains this command, it can and will override the the Main
+    Menu's Repeat setting.
+
+F5: Load a directory from the Music device.  As described above, your Music
+    device will be searched for Music files, and the results will be displayed
+    immediately.
+
+F6: Clear Selection List.  This causes all files that have been selected with
+    the Return Key to be un-selected.  If there is no file list loaded, this
+    option is inactive.
+
+F7: Play all Modules from the highlighted file to the end of the file list,
+    inclusive.  If there is no file list loaded, this option is inactive.
+    If Repeat is enabled, the list is played from top to bottom over and
+    over after the initial list has played.  Spacebar will skip a song,
+    and F5 aborts the proceedure.
+
+F8: Exit the player.  The computer will completely reset, allowing the C128 to
+    execute it'S usual boot loaders, perhaps returning you to EZ-Loader or
+    something.
+
+P: Re-play the last Music file that as loaded.  If no file has been loaded
+   (using any of the operations above), this key is inactive.
+
+L: Load the Module highlighted in white, but do not play it.  The Module will
+   be loaded, and you will be placed in the Sample Player screen (which looks
+   much like the Playback screen).  If no file list has been loaded, this key
+   is inactive.
+
+Shift-L:  Load a module by filename.  This option is always active, regardless
+          of the contents of the file list, and is handy for quickly grabbing a
+          file from a long directory, if you know exactly what file you want.
+
+          The Program will ask for a full file name or pattern, simply enter
+          this and press Return.  From here, the program will go through the
+          usual checks, and then proceed as you has hit Unshifted-L on the
+          filename you typed in.
+
+Commercial-At (@): Summon a DOS prompt.  Enter commands at this prompt as you
+                   normally would inside the quotation marks in the usual OPEN
+                   command in BASIC.  Press Return on a blank line, or the
+                   Escape key anytime, to abort the DOS prompt.
+
+I: Change Input device.  This changes the device Modplay 128 will search when
+   looking for or loading Music files.  This option is saved in the
+   configuration.
+
+D: Display a disk directory of the Music device.  A window will open and the
+   directory will be displayed inside it.  Tap No-Scroll or hold the C= logo
+   key to pause the list, or Run/Stop key to abort the list.
+
+F: Adjust Filters.  This allows you to set the Filter values to any number from
+   0 to 255, and has settings for both left and right channels, although
+   stereo (right channel) devices are not supported in this release.
+
+   Normally, only the SID chip in 8 bit PWM mode uses a filter..  This is
+   provided in case the Author or another person writes a device driver
+   for something else that has a filter, perhaps an Amiga "Paula" Chip, or 
+   a DAC chip and a separate memory mapped filter circuit. 
+
+R: Adjust Resonance.  This allows you to adjust the resonance setting of your
+   playback device, if it supports this option.
+
+   Normally, only the SID chip in 8 bit PWM mode supports this, but as
+   with the Filter, it's possible for another device to make use of this.
+
+A: Change Stereo SID address.  This option is disabled in this version of
+   Modplay 128, but when it is enabled, it will allow you to switch
+   between $D700 and $DE00 for your stereo SID chip.  When the Program
+   supports this option, it will only be active when a driver supporting
+   Stereo SIDs is loaded. 
+
+Backarrow (<--): This saves the configuration to the boot device.  Modplay
+                 128 will first search the boot device for one of it's
+                 files, and if found, will immediately save the
+                 configuration file.  
+
+                 If the file was not found, the Program will determine if
+                 the drive is a CMD device.  If it is a plain C= 15x1
+                 device, the Program will ask you to swap in the Modplay
+                 128 Disk.
+
+                 CMD FD owners will also see an option for a DOS prompt.
+
+                 CMD HD, RamLink, and RamDrive owners receive only a
+                 DOS prompt with no disk change option.  It seems kinda
+                 silly to ask the user to change disks in a fixed-media
+                 device, doesn't it? :)
+
+
+Playback Mode (Device Driver) Submenu
+-------------------------------------
+Press 'M' to enter this sub-menu.
+
+Modplay 128 will immediately search the boot device for Playback drivers,
+read thier headers, and generate a list of available drivers.  Each item
+in the list uses the text found inside the corresponding driver's header.
+If you need to change disks to get the correct driver, you should do so
+before you press 'M'.  If no drivers are found on the disk, the Program
+will display an error message, and will return to the main menu when you
+press any key.
+
+Once the list is generated (all of this only takes a matter of a few
+seconds if you have a relatively fast device, like an HD or RamLink), a
+window will open and display all the drivers that were found. 
+
+Use the Up/Down Cursor Keys to move through the displayed list, and the
+Return Key to select a driver. 
+
+Press the Escape Key to abort back to the Main Menu.
+
+The drivers currently supported are:
+
+* Single SID Chip, running in 4 bit "Raw" mode.  This operates much like
+  most RAW player programs, such as SOund Studio 128.  The 8580 SID chips
+  should be working under this mode, as I (the Author) attempted to
+  install the volume fix for this Chip.  Since I have no 8580 to test this 
+  on, I cannot be certain it works.
+
+* Single SID Chip, running in 4 bit Raw mode, with dithering enabled.
+  This increases the resolution to approximately 8 bits, but adds a 16dB
+  signal-to-noise ratio.  The result is higher resolutions ound with more
+  static.  The same volume fix applies here as to the above option.
+
+* Single SID Chip, running in 8 bit Pulse Width Modulation ("PWM") Mode.
+  This driver is very quiet compared to the others, and is recommended for
+  use with high-fidelity stereos.  This driver uses the SID's filter, and
+  results will vary from one SID chip to another.
+
+* Single 8 bit DAC.  This option allows the user to send the sound, in one
+  channel, through a single 8 bit digital to analog convertor circuit,
+  attached to pins PB0-PB7 of the User Port.  A simple Inverted R-2R
+  ladder will suffice here, or a real D/A Chip may be used, if the chip's
+  clock and/or chip-select lines are tied to the User Port's low-active PC
+  line.
+
+  Output through this port is strictly a byte-by-byte transfer, and it is
+  possible, if the receiver is fast enough, to capture a MOD file as it is
+  being played, into another machine, in a pure 8 bit digital form. In
+  such a case, the receiver need only watch for the user port PC line to
+  go low (for exactly one microsecond), and then read the data that 
+  appears on the port.  As long as PC is high, data on the port is
+  invalid.
+
+
+Single Sample Player Submenu
+----------------------------
+Press 'S' to enter this submenu.
+
+Use the Up/Down Cursor keys to move through the list of sample names.  The
+Program will automatically skip over items that have no sample assigned to
+them (even if there is text in the item, it can still have no sample
+assigned to it).  Trying to move past either end of the list simply moves
+the highlight bar to the last or first entry, respectively. 
+
+Press a number key from 1 to 9, to hear the highlighted sample play at one
+of 9 different pitches.  These pitches are not calibrated in any way, they
+only serve to let you hear the sample outside of the player (useful to
+check to see if a sample is corrupted or recorded badly).  Key 4 plays at
+around 12kHz or so.  The keys are relational, if you double the key number
+(4 doubled is 8), the sample plays at double the speed, and so on. 
+
+Press P to play the song.  The "Single Sample" title at the top of the
+screen will be erased, the key menu at the bottom will change to show
+available keys during playback, and the song will play once (repeat mode
+is not active in this menu).   If there is a "Position Jump" code in the
+song that causes the song to repeat, it will repeat until it is stopped
+with Space or F5.
+
+Press Escape to return to the Main Menu screen.
+
+
+Technical Overview
+------------------
+
+Over the year and a half (!) developing the Program, Modplay 128 has 
+turned into possibly the most revolutionary piece software to hit the 
+C128 in several years.  At least, I'd like to think so.  :-) Needless to 
+say, it has also become quite a chore to write.
+
+The Amiga Module format, which consists of blocks of pattern data and up
+to 31 large blocks of Sample data, is really not all that hard to
+understand.  Implementing it, on the other hand, is quite a different
+story. 
+
+By using some of the hardware present in the C128, and utilizing several
+techniques that are new to the Author, Modplay 128 is able to pull off 12-
+to 13 kHz in 4 or 8 bit resolution. 
+
+The Program supports Noise Tracker, Sound Tracker, StarTrekker, and
+ProTracker formats, and can handle the full 4MB MOD file limit if you have
+a big enough REU.  There is no error checking on the size of a MOD file,
+so don't try to load a file larger than your REU, it will most likely not
+play. :) 
+
+Only 4-track files are supported.  To do more than four tracks, I expect 
+that a Super 128 CPU or other accellerator will be required.  I figure 
+the presence of one of these will also eliminate the need for the 
+Commodore 17xx REU.  It may also be possible, in the future, to support other 
+types of module files, as well as increasing the mixing/sample rate of the
+player.
+
+Modplay 128 v1.0 currently supports up to sixty-four 1K pattern blocks, 
+and 15 or 31 samples.  Up to 128 pattern sequence positions will be 
+played.  The Program supports Amiga V-Blank Tempos from 1 to 31, as well 
+as Amiga CIA timer tempos from 48 to 255.  Amiga CIA Tempo settings from 
+32 to 47 are treated as if they were 48, due to a deficiency in the C128 
+CIA's timers.  These are the slowest tempo settings possible, but 
+shouldn't have any effect on 99% of the tunes out there.  I have only 
+one tune that has a tempo setting this low.
+
+The Program supports 10 of the 14 basic MOD file commands.  These are: 
+
+Pitch Slide Up
+Pitch Slide Down
+Portamento to Note
+Volume Slide
+Volume Slide + Portamento
+Set Sample Offset
+Position Jump
+Set Track Volume
+Break Pattern
+Set Speed
+
+The basic commands not supported are:
+
+Arpeggio
+Vibrato
+Vibrato+Volume Slide
+Tremolo
+
+The Program also does not support Protracker Extended Commands (those with
+base values of 14 or $0E), but will still load and play Protracker files,
+the commands simply are not executed. 
+
+All commands that are not supported are displayed in (parenthesis) when
+shown in the Command-Description field of the playback display (this is
+the right-most area of the four-line display, next to the Left/Right
+indicators).  This serves to indicate that the program has run across such
+a command, but can do nothing with it.
+
+In the future, I hope to add support for most of the Extended effect 
+commands, and will also support those final four basic Commands.  
+Support for these commands was not included in Modplay 128 v1.0 due to 
+lack of skills on my part.  A fast multiply routine is needed to 
+implement these functions.
+
+I hope you enjoy the program!
+
+It was a lot of work, and is still not where I want it to be, but it 
+works quite well for most of the well-tracked Amiga/PC MOD files out 
+there.  I am sure the program probably has a bug or two still, but I'll 
+try to work them all out in time.
+
+
+Contact:
+--------
+
+I can be reached by Email at vanessaezekowitz@gmail.com
+
+
+Revision History:
+-----------------
+
+This document was first written just before the program's initial 
+release in 1997.  It has since been modified only once, on 25 November 
+2009, to reflect updates and changes in technology and changes in the 
+life and name of the author.
+
+Other parts of the Modplay 128 v1.0 package have received only 
+superficial, cosmetic changes to follow along with the above.  The 
+functionality of the program has not been altered.
