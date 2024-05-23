@@ -3,16 +3,13 @@ start tok64 mp64.main.fix
 0 goto 1
 1sys36240
 50 POKE53280,.:POKE53281,.:dv=PEEK(186):IFdv<8ORdv>30THENdv=8
-60 mh=PEEK(2024):IFmh=20THENPOKE53374,.:POKE53366,.:POKE53375,.:POKE53371,.
-70 PRINT"{clear}{ct n}{light gray}{down*3}Reading Data{.*3}"
-80 DIM lt(1023),aj(17),sl(31),in$(31),c$(1),pm$(4,4),fr$(7),oo$(1)
+60 mh=1
+70 PRINT"{black}{clear}{light gray}{ct n}{down*3}Reading Data{.*3}"
+80 DIM sl(31),in$(31),c$(1),pm$(4,4),fr$(7),oo$(1)
 90 GOSUB5000:GOSUB5050
-100 PRINT"{down}Generating LOG(x) Table{.*3}":FORx=0TO31:lt(x)=.:NEXT
-110 lg=LOG(2):FORx=32TO1023:lt(x)=LOG(x)/lg:NEXT:l1=58880:l2=l1+1024
-120 FORx=0TO31:POKEl1+x,.:POKEl2+x,.:NEXT
-130 PRINT"{down}Generating Pitch Table{.*3}":GOSUB2500
+100 PRINT"{down}Unpacking Pitch Table{.*3}":GOSUB2500
 200 OPEN1,dv,15:INPUT#1,z$,z$,z$,z$:CLOSE1
-210 PRINT"{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2c  {yellow}12/3/2007"
+210 PRINT"{black}{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2d  {yellow}12/6/2007"
 220 PRINT"{down}{gray}{reverse on} L {reverse off} {light gray}Load Module{space*7}{gray}{reverse on} # {reverse off} {light gray}Change Device"
 230 PRINT"{gray}{reverse on} P {reverse off} {light gray}Play Module{space*7}{gray}{reverse on} $ {reverse off} {light gray}Directory"
 240 PRINT"{gray}{reverse on} M {reverse off} {light gray}Change Play Mode{space*2}{gray}{reverse on} @ {reverse off} {light gray}DOS Command"
@@ -20,12 +17,12 @@ start tok64 mp64.main.fix
 260 PRINT"{gray}{reverse on} I {reverse off} {dark gray}Show Module Info{space*2}";
 270 IFpm=3ORpm=4ORsp=0THENPRINT"{gray}{reverse on} A {reverse off} {dark gray}SID #2 {light gray}[{blue}N/A{light gray} ]":GOTO290
 280 PRINT"{gray}{reverse on} A {reverse off} {light gray}SID #2 {white}[{space*4}]"
-290 IFpm=4THENPRINT"{gray}{reverse on} S {reverse off} {dark gray}Stereo {light gray}[{green}ON {light gray}]{space*6}";:GOTO300
+290 :
 291 PRINT"{gray}{reverse on} S {reverse off} {light gray}Stereo {white}[{space*3}]{space*6}";
 300 IFpm=1THENa$="{reverse on}{gray} D {reverse off} {light gray}Dither {white}[{space*3}]":b$="{reverse on}{gray} V {reverse off} {light gray}Vol Fix {white}[{space*3}]":GOTO320
 310 a$="{reverse on}{gray} D {reverse off} {dark gray}Dither {light gray}[{blue}N/A{light gray}]":b$="{reverse on}{gray} V {reverse off} {dark gray}Vol Fix {light gray}[{blue}N/A{light gray}]"
 320 PRINTa$:PRINTb$"{space*5}{reverse on}{gray} X {reverse off} {light gray}Exit Modplay"
-330 IFpm=2ANDsp=1THENa$="{gray}{reverse on} B {reverse off} {light gray}Balance Adjust":GOTO350
+330 :
 340 a$="{gray}{reverse on} B {reverse off} {dark gray}Balance Adjust"
 350 PRINTa$
 360 IFpm=1THENPRINT"{home}{down*7}"TAB(13)oo$(vo)
@@ -38,7 +35,7 @@ start tok64 mp64.main.fix
 430 PRINT"{light gray} Size{white}:{yellow}"sz-1500"{light gray}Bytes"
 440 PRINT"{home}{down*16}{light gray}Playback Dev{white}:{light green} "pm$(pm-1,0)" "pm$(pm-1,1);
 450 PRINT" in "pm$(pm-1,2)" Bits"
-460 IFpm=4THENsp=1:PRINT"{home}{down*6}"TAB(12)"{green}ON "
+460 :
 461 PRINT"{home}{down*16}":WAIT203,64:GETk$
 470 IFk$="x"THENPOKE53265,0:sys64738
 480 IFk$="#"THENGOSUB10000:GOTO210
@@ -52,13 +49,13 @@ start tok64 mp64.main.fix
 560 IFk$="d"ANDpm=1THENdi=1-di:PRINT"{home}{down*6}"TAB(34)oo$(di):GOTO460
 570 IFk$="s"THENsp=1-sp:PRINT"{home}{down*6}"TAB(12)oo$(sp):gosub17006:GOTO460
 580 IFk$="a"ANDpm<3ANDsp=1THENGOSUB17000:GOTO460
-590 IFk$="b"ANDpm=2ANDsp=1THENGOSUB18000:GOTO210
+590 :
 600 GOTO460
 1000 WAIT203,41,41
 1010 IF(p0=pm)AND(s0=sp)AND(d0=di)THEN1050
 1020 s0=sp:d0=di:p0=pm
 1030 PRINT"{down}{light gray}One or more Play Settings were changed"
-1040 PRINT"A new Pitch Table is being generated{.*3}":GOSUB2500
+1040 PRINT"A new Pitch Table is being unpacked{.*3}":GOSUB2500
 1050 v=11:IFpm=2ANDsp=1THENv=13
 1060 POKE994,pm:POKE995,v
 1070 REM: 996-1000 are reserved.
@@ -67,31 +64,19 @@ start tok64 mp64.main.fix
 1100 SYS25091:SYS25088:SYS25097:RETURN
 2000 PRINT"{up}Select Playback Device:{space*16}"
 2010 PRINT"{space*37}"
-2020 PRINT"{yellow}1{light green}) {light gray}SID Chip in 4 bits":IFmh=20THEN2040
-2030 PRINT"{gray}2{green}) {dark gray}SID Chip in 8 bit PWM":GOTO2050
-2040 PRINT"{yellow}2{light green}) {light gray}SID Chip in 8 bit PWM"
+2020 PRINT"{yellow}1{light green}) {light gray}SID Chip in 4 bits"
+2030 PRINT"{gray}2{green}) {dark gray}SID Chip in 8 bit PWM"
 2050 PRINT"{yellow}3{light green}) {light gray}User Port DAC in 8 bits"
-2055 IFmh=20THEN2057
-2056 PRINT"{gray}4{green}) {dark gray}DigiMax Interpolated 8 bits":GOTO2060
-2057 PRINT"{yellow}4{light green}) {light gray}DigiMax Interpolated 8 bits"
+2056 PRINT"{gray}4{green}) {dark gray}DigiMax Interpolated 8 bits"
 2060 WAIT203,36,36
-2070 WAIT203,64,64:GETk$:IFk$>"0"ANDk$<"5"THEN2090
+2070 WAIT203,64,64:GETk$:IFk$>"0"ANDk$<"5"THEN2100
 2080 GOTO2070
-2090 IFmh=20THENpm=VAL(k$):RETURN
 2100 IFk$="2"ORk$="4"THEN2060
 2110 pm=VAL(k$):RETURN
-2500 IFmh=20THEN2550
-2510 IFpm=1THENaj=aj(sp+di*2):GOTO2580
-2520 IFpm=2THENPRINT"PWM Mode not available on 1MHz systems":END
-2530 IFpm=3THENaj=aj(4+sp)
-2535 IFpm=4THENPRINT"Interpolating not available on 1 MHz":PRINT"systems":END
-2540 GOTO2580
-2550 IFpm=1THENaj=aj(8+sp+di*2):GOTO2580
-2560 IFpm=2THENaj=aj(12+sp):GOTO2580
-2570 IFpm=3THENaj=aj(14+sp):GOTO2580
-2575 IFpm=4THENaj=aj(16+sp)
-2580 FORx=32TO1023:z=2^(aj-lt(x)):POKEl1+x,z-INT(z/bg)*bg:POKEl2+x,INT(z/bg)
-2590 NEXT:RETURN
+2500 IFpm=1THENaj=sp+di*2:GOTO2580
+2530 IFpm=3THENaj=4+sp*2
+2580 poke2,aj:sys36352
+2590 RETURN
 3000 is=ib+952:FORx=isTOis+127:a=PEEK(x):IFa>hpTHENhp=a
 3010 NEXT:hp=hp-1:ns=31:np=PEEK(ib+950)-1:RETURN
 3020 is=ib+472:FORx=isTOis+127:a=PEEK(x):IFa>hpTHENhp=a
@@ -186,7 +171,6 @@ start tok64 mp64.main.fix
 5040 sp$="{space*20}":oo$(0)="{red}Off":oo$(1)="{light green}On ":RETURN
 5050 FORx=0TO3:FORy=0TO2:READpm$(x,y):NEXT:NEXT
 5060 FORx=0TO7:READfr$(x):NEXT
-5070 FORx=0TO17:READaj(x):NEXT
 5080 di=0:vo=1:lf=140:rf=40:lr=.:rr=.
 5090 sp=0:s2=212:pm=1:si$="{cyan}D420":s3=1:s4=2
 5100 lv=7:rv=15
@@ -268,23 +252,10 @@ start tok64 mp64.main.fix
 17006 si$="{blue}N/A ":ifsp=0orpm>1then17020
 17010 s2=211+s3:si$=mid$("{cyan}{light blue}",(s4 and 1)+1,1)+"D"+mid$("4567EEEEEEE",s3,1)+mid$("02468ACE",s4,1)+"0"
 17020 PRINT"{home}{down*5}"TAB(34)si$:RETURN
-18000 c=.:PRINT"{down*2}{light gray}Please Enter Balance Setting";:IFspTHENPRINT"s";
-18010 PRINT:PRINT"{light gray}({green}Range{light green}: {yellow}0{light gray}..{yellow}15{light gray}){down}":in$=MID$(STR$(lv),2)
-18020 IFsp=.THENPRINT"{white}--> {light green}"in$;:mc=3:GOSUB15000:a=VAL(in$):GOTO18040
-18030 in$=MID$(STR$(lv),2):PRINT"{yellow} Left {white}--> {light green}"in$;:mc=3:GOSUB15000:a=VAL(in$)
-18040 IFa<0ORa>15THEN18080
-18050 lv=a:IFsp=.THENRETURN
-18060 in$=MID$(STR$(rv),2):PRINT:PRINT"{yellow}Right {white}--> {light green}"in$;
-18070 mc=3:GOSUB15000:a=VAL(in$):IF(a>-1)AND(a<16)THENrv=a:RETURN
-18080 PRINT:PRINT"{down}{red}Invalid Setting":GOTO9000
-20000 POKE994,4:aj=16.12:GOSUB2580
-20010 SYS25091:SYS25088:SYS25097:RETURN
 63000 DATA"Standard","SID","4"
 63010 DATA"PWM Mode","SID","8"
 63020 DATA"User Port","DAC","8"
 63025 DATA"Interp.","DigiMAX","8"
 63030 DATA" ","{cm g}","{cm h}","{cm j}","{cm k}","{reverse on}{cm l}","{reverse on}{cm n}","{reverse on}{cm m}"
-63040 DATA 19.9,20.05,20.05,20.25,19.75,19.82,20,20
-63050 DATA 16.61,16.74,16.82,17.05,17.32,17.73,16.72,17.39,17,16.12
 stop tok64
 (bastext 1.04)

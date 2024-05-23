@@ -8,7 +8,7 @@ realentry
 endprg
 ;---------------------------------
         ;entry point
-        *=$3c00
+        *=$5000
 entry
         lda #$00
         sta $d020
