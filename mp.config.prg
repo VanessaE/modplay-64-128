@@ -1,1 +1,1 @@
- 8 STEREO USER 215  0  215  0  0  0 
+ 8 DIGIMAX 215  0  60  60  5  5 
