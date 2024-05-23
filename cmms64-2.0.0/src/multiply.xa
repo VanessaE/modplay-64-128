@@ -1,0 +1,35 @@
+; multiply.xa - CMMS 64 v2.0.0
+
+; Multiply two 8-bit numbers and return a 16-bit result.  Using Steve Judd's 
+; Table-of- Squares method. Enter with factors to multiply in .A and .Y.
+;
+; a*b = f(a+b) - f(a-b),   f(x) = x^2/4
+; 
+; Notes from Steve Judd about this routine:
+;
+; By using the indexed addressing mode, we let the CPU add A and Y together.
+; If Y and A can both range from 0..255, then Y+A can range from 0..510.  So we
+; need a 510-byte table of f(x).  What about Y-A?  The complementing of A means
+; that what we are really calculating on the computer is Y + 256-A, or
+; 256+Y-A.  So we need another table of f(x-256) to correctly get f(Y-A).
+;
+; [...] the upper 256 bytes of this [second] table is the same as the lower 256
+; bytes of the first table: f(x-256) for x=256..511 is the same as f(x) for
+; x=0..255.  This means that the first table can be piggy-backed on top of the
+; second table in memory.
+
+		sta SquareTab1	; points to f(x) low byte
+		sta SquareTab2	; high byte
+		eor #$FF
+		adc #$01
+		sta SquareTab3	; table of f(x-256)
+		sta SquareTab4
+		lda (SquareTab1),y ; f(Y+A), low byte
+		sec
+		sbc (SquareTab3),y ; f(Y-A), low byte
+		tax
+		lda (SquareTab2),y ; f(Y+A), high byte
+		sbc (SquareTab4),y ; f(Y-A), high byte
+
+; Result is now in .X (low) and .A (high)
+; No RTS here - this code is meant to be #include'd wherever it's needed.

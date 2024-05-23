@@ -1,0 +1,75 @@
+Many of the files used by CMMS 64 have been compressed with a simple RLE or
+"Run Length Encoding" algorithm.  It ain't exactly Gzip2, but it works well
+enough for the program's needs, and most importantly, it's insanely fast to
+decompress.
+
+A typical RLE-compressed file consists of multiple blocks of "run" information
+and blocks of raw data bytes, and is basically intended to compress out all the
+repeats in a file (such as blank areas of a bitmap).  The file "compress.bas"
+in ../etc can be used to compress files with this method, if you have Blassic
+installed.
+
+In the format used here, the compresser generates three types of blocks: Basic
+RLE codes, RLE extensions, and raw data.  This is the same format used by 
+MagerValp's RLE routines at http://www.paradroid.net/rle/ .
+
+Basic RLE codes consist of two bytes with the same value, followed by a repeat
+count.  A value of 1 in this count means to write two bytes.  2 means to write
+three bytes, and so on.
+
+RLE extension codes can follow any Basic RLE block, and consist of the same
+fill byte as the preceding Basic RLE block, followed by a new run count.  When
+this run count is 255, then 256 fill bytes are written out and additional
+extension codes will follow, in the same format.  Otherwise, it is a count of
+the final number of fill bytes to write out, plus 1, and some other type of
+block follows.
+
+Raw data is literally everything else between these RLE blocks - any chunk of
+data where no two adjacent bytes have the same value.
+
+The end-of-file marker is simple:  If the original uncompressed file ended with
+raw data, and the last two bytes are different, the second to last byte is
+written out, followed by the last byte *twice*, followed by a 0 byte.  If they
+were the same, they are both written out followed by a run count of 1, then an
+extension code with a run count of 0 follows.
+
+If the file ended while a run block was being counted, then the run block is
+written with a count byte of one less than the actual count, followed by a
+dummy extension block with the same fill byte and a count of 0.
+
+RLE-compressed files used within CMMS will generally have extensions like
+".rle" for program files, ".Hr" for High Resolution skins, and ".Mr" for
+Multicolor skins.
+
+
+Examples:
+
+Suppose you have a string of data like this:
+
+76,12,98,34,34,02,87,45,72,72,255,72,24,90,23,39,27,27,255,27,255,27,2,3,3,0
+
+The program will logically separate it into blocks like so:
+
+76,12,98 - 34,34,02 - 87,45 - 72,72,255 - 72,24
+90,23,39 - 27,27,255 - 27,255 - 27,2 - 3,3,0
+
+Translated into English, this reads as:
+
+Write values 76, 12 and 98 to the output,
+write the value 34 to the output 3 times,
+write the values 87 and 45 to the output,
+write the value 72 to the output 256 times,
+write the value 72 to the output 25 more times,
+write the values 90, 23 and 39 to the output,
+write the value 27 to the output 256 times,
+write the value 27 to the output 256 more times,
+write the value 27 to the output 2 more times,
+write the value 3 to the output once, and end the file.
+
+Depending on the nature of the original data, RLE compression can result in
+significant savings.  In the above example, 24 bytes of RLE data expands to
+806 bytes, for a whopping 97% reduction in size.  In a more real-world example,
+the two "Expensive High Fi" multicolor skin files together total 20006 bytes
+(they are ordinary Koala format).  When packed, they total 11817 bytes, for a
+59% size reduction.  The program's splash screen is 10003 bytes raw, but is
+reduced to 3065 bytes after packing, for reduction of 69%.

@@ -1,0 +1,177 @@
+; main.xa - CMMS 64 v2.0.0
+
+; This file comprises most of the core code of CMMS, mainly by including all of
+; the primary program modules and supplying all of the supporting "glue" code.
+
+#include "variables.xa"
+
+.word $0800
+* = $0800
+
+		lda #1			; we don't want to actually run this
+		sta $d020		; program yet.
+hang		jmp hang
+
+		lda #$7f		; Disable all interrupts
+		sta CIA1_Base+$0D
+		sta CIA2_Base+$0D
+		sta VIC_Base+$19
+		lda #$2C		; %00101100 = bank out the KERNAL+BASIC
+		sta ROM_Bank		; ROMs.
+
+		lda #$28		; Blank the screen
+		sta VIC_Base+$11
+		lda #0
+		sta VIC_Base+$20
+		sta VIC_Base+$21
+
+		ldx #2
+		ldy #0
+lp0		lda $00,x		; First we back up the contents of Zero
+		sta BackupZP,x		; Page.
+		sty $00,x		; ...replacing Zero Page with nulls.
+		inx
+		bne lp0
+		lda #63
+		sta PointerXmax
+		lda #1			; 1*256+63 = 319: the C64's max X
+		sta PointerXmax+1	; coordinate.
+		lda #199		; Max Y coordinate is 199, period. :-)
+		sta PointerYmax
+		lda #0
+		sta PointerYmax+1
+		lda #255
+		sta PotMin
+		sta PotMin+1
+		lda #1			; The default mouse cursor is a
+		sta Sprite_HotspotX	; pointer, so the hot spot is the upper
+		sta Sprite_HotspotY	; left corner.
+		lda #$d7
+		sta SID2_Base+1		; Default Second SID address = $D700
+		lda #>SquareTableB	; Always points to the second page of
+		sta SquareTab1+1	; the Table of Squares
+		sta SquareTab2+1
+		lda #>SquareTableA	; Always points to the first page of
+		sta SquareTab3+1	; the Table of Squares
+		sta SquareTab4+1
+		lda #0
+		ldx #31
+lp1		sta StepFract,x		
+		sta StepLSB,x
+		sta StepMSB,x
+		sta VoicePointerLSB,x
+		sta VoicePointerMSB,x
+		sta VoicePointerBank,x
+		sta SampleStartLSB,x
+		sta SampleStartMSB,x
+		sta SampleStartBank,x
+		sta SampleEndLSB,x
+		sta SampleEndMSB,x
+		sta SampleEndBank,x
+		sta SampleLoopStartLSB,x
+		sta SampleLoopStartMSB,x
+		sta SampleLoopStartBank,x
+		sta SampleLoopEndLSB,x
+		sta SampleLoopEndMSB,x
+		sta SampleLoopEndBank,x
+		sta NotePeriodLSB,x
+		sta NotePeriodMSB,x
+		sta OldPeriodLSB,x
+		sta OldPeriodMSB,x
+		sta VoiceVolume,x
+		sta SampleNumber,x
+		sta CurrentCommand,x
+		sta CommandArgument1,x
+		sta CommandArgument2,x
+		sta OldCommand,x
+		sta OldCommandArg1,x
+		sta OldCommandArg2,x
+		sta ArpeggioFlag,x
+		sta SetVolumeFlag,x
+		sta PortamentoFlag,x
+		sta VolumeSlideFlag,x
+		sta VolumeSlideDirection,x
+		sta PortaVolSlideFlag,x
+		sta SetOffsetFlag,x
+		sta VibratoRate,x
+		sta VibratoDepth,x
+		sta VibratoTopLSB,x
+		sta VibratoTopMSB,x
+		sta VibratoBottomLSB,x
+		sta VibratoBottomMSB,x
+		sta VibratoStepFract,x
+		sta VibratoStepLSB,x
+		sta VibratoStepMSB,x
+		sta VibratoCounter,x
+		sta VibratoHalfCount,x
+		sta VibratoWaveform,x
+		sta VibratoUpFlag,x
+		sta TempPeriodLSB,x
+		sta TempPeriodMSB,x
+		sta ArpeggioNote1LSB,x
+		sta ArpeggioNote1MSB,x
+		sta ArpeggioNote2LSB,x
+		sta ArpeggioNote2MSB,x
+		sta ArpeggioCounterLSB,x
+		sta ArpeggioCounterMSB,x
+		sta VoiceData,x
+		dex
+		bmi nlp1
+		jmp lp1
+nlp1		ldx #0
+lp2		sta LeftBuffer,x
+		sta RightBuffer,x
+		sta RowBuffer,x
+		dex
+		bne lp2
+		ldx #7
+		lda #1
+lp3		sta BitTable,x
+		asl
+		dex
+		bpl lp3
+		ldx #0
+lp4		txa
+		lsr
+		lsr
+		lsr
+		lsr
+		sta Divide16Table,x
+		inx
+		bne lp4
+		rts
+
+; Various subroutines
+
++SwapZP		ldx #$02
+lp5		ldy BackupZP,x
+		lda $00,x
+		sta BackupZP,x
+		sty $00,x
+		inx
+		cpx #$4B
+		bne lp5
+		ldx #$71
+lp6		ldy BackupZP,x
+		lda $00,x
+		sta BackupZP,x
+		sty $00,x
+		inx
+		bne lp6
+		rts
+
+.(
+#include "coords.xa"
+.)
+
+.(
+#include "mousedrv.xa"
+.)
+
+.(
+#include "gui.xa"
+.)
+
+.(
+#include "mixer.xa"
+.)

@@ -1,0 +1,136 @@
+; reu.xa - CMMS 64 v2.0.0
+
+; This file provides the 17xx REU driver for CMMS 64.
+
+#include "variables.xa"
+
+.word StashByte
+* = StashByte
+
+; Jump table
+
+		jmp SB		; Stash byte from RAM_Data to expansion [.AXY]
+		jmp FBlk	; Fetch Block from .AXY to (Memory_Int_Addr)
+		jmp SBlk	; Stash Block from (Memory_Int_Addr) to [.AXY]
+		jmp OS		; Set up and open Stream for read/write
+				; starting at [.AXY] and using RAM_Data.
+		jmp CS		; Close stream, reset RAM expansion steam vars.
+		jmp RS		; Read one byte from stream into .A
+		jmp WS		; Write one byte in .A to the stream
+		jmp MF		; Check for/report free memory (carry set on
+				; exit means no memory found)
+
+FB		sta DMA_Ext_Addr   ; Fetch byte (from expansion .AXY into .A)
+		stx DMA_Ext_Addr+1 ; Notice how the jump table falls through
+		sty DMA_Ext_Addr+2 ; to this routine to save a few cycles on
+		lda #<RAM_Data	   ; fetches.
+		sta DMA_Int_Addr
+		lda #>RAM_Data
+		sta DMA_Int_Addr+1
+		lda #1
+		sta DMA_Bytecount
+		lda #0
+		sta DMA_Bytecount+1
+		lda #$95
+		sta DMA_Command
+		lda RAM_Data
+		rts
+
+SB		sta DMA_Ext_Addr	; Fetch byte from expansion [.AXY]...
+		stx DMA_Ext_Addr+1
+		sty DMA_Ext_Addr+2
+		lda #<RAM_Data		; ...to RAM_Data.
+		sta DMA_Int_Addr
+		lda #>RAM_Data
+		sta DMA_Int_Addr+1
+		lda #1			; Only copy one byte...
+		sta DMA_Bytecount
+		lda #0
+		sta DMA_Bytecount+1
+		lda #$94
+		sta DMA_Command
+		lda RAM_Data		; ...and return it in .A
+		rts
+
+OS		sta DMA_Ext_Addr	; Start address in expansion memory is
+		stx DMA_Ext_Addr+1	; 24-bit [.AXY].
+		sty DMA_Ext_Addr+2
+		lda #<RAM_Data		; The host address is always RAM_Data.
+		sta DMA_Int_Addr
+		lda #>RAM_Data
+                sta DMA_Int_Addr+1
+		lda #1			; We always want to transfer just one
+		sta DMA_Bytecount	; byte at a time.
+		lda #0
+		sta DMA_Bytecount+1
+		lda #$80		; This value configures the host 
+		sta DMA_Version 	; address to stay fixed while the
+		rts			; expansion address can increment.
+
+CS		lda #0			; For an REU, all that needs done to
+		sta DMA_Version		; close off the stream is reset the
+		rts			; address increment register to normal.
+
+RS		lda #$95		; To stream from an REU, just send
+		sta DMA_Command		; another Fetch command.  REU will
+		lda RAM_Data		; inc. the expansion address and leave
+		rts			; the host address alone, as set above.
+
+WS		sta RAM_Data		; Writing to a stream is the same way.
+		lda #$94
+		sta DMA_Command
+		rts
+
+FBlk		sta DMA_Ext_Addr	; Expansion source address is [.AXY]
+		stx DMA_Ext_Addr+1
+		sty DMA_Ext_Addr+2
+		lda Memory_Int_Addr	; Target address is (Memory_Int_Addr)
+		sta DMA_Int_Addr
+		lda Memory_Int_Addr+1
+		sta DMA_Int_Addr+1
+		lda Memory_Bytecount	; Number of bytes to copy
+		sta DMA_Bytecount
+		lda Memory_Bytecount+1
+		sta DMA_Bytecount+1
+		lda #$95
+		sta DMA_Command		; ...and perform the actual fetch.
+		rts
+
+SBlk		sta DMA_Ext_Addr	; Expansion target address is [.AXY]
+		stx DMA_Ext_Addr+1
+		sty DMA_Ext_Addr+2
+		lda Memory_Int_Addr	; Source address is (Memory_Int_Addr)
+		sta DMA_Int_Addr
+		lda Memory_Int_Addr+1
+		sta DMA_Int_Addr+1
+		lda Memory_Bytecount	; Number of bytes to copy
+		sta DMA_Bytecount
+		lda Memory_Bytecount+1
+		sta DMA_Bytecount+1
+		lda #$94
+		sta DMA_Command		; ...and perform the actual stash.
+		rts
+
+MF		lda #0			; REU driver always assumes first bank
+		sta RAM_Bottom		; is the start of expansion RAM.
+		sta RAM_Bottom+1
+		sta RAM_Bottom+2
+		sta RAM_Top
+		sta RAM_Top+1
+		ldx #0
+		ldy #0
+nextbank	tya			; bank number = value to stash, also.
+		sty tempbyte1
+		jsr SB
+		lda #0			; .A gets trashed, but .XY are safe,
+		jsr FB			; so we can just re-fetch immediately.
+		cmp tempbyte1		; If the return value differs, we found 
+		beq nextbank		; the first unavailable bank.  
+		clc
+		dey
+		cpy #$ff		; if that first bank is >0 then there
+		bne rampresent		; is indeed a working REU present.
+		sec			; Else, we return with what essentially
+		ldy #0			; means "out of memory"; the set carry
+rampresent	sty RAM_Top+2		; conveys this message concisely.
+		rts

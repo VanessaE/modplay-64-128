@@ -1,0 +1,185 @@
+; mousedrv.xa - CMMS 64 v2.0.0
+
+; This is the main code for the mouse driver for CMMS, Closely based on Mac
+; Bacon's dual-driver as included with ACME crossassembler (this version has
+; been stripped of all C128-specific content.
+
++MovePointer	ldx #$00; 0 tells PotDelta to perform mouse X stuff
+		jsr PotDelta
+
+; Now signed x movement is in A/Y. Add to current x value.
+
+		clc
+		adc PointerXnow
+		sta PointerXnow
+		tya
+		adc PointerXnow+1
+		sta PointerXnow+1
+; mouse y
+		ldx #$01; 1 means "y stuff"
+		jsr PotDelta
+
+; Now signed y movement is in A/Y. Mouse and computer use different y
+; directions, so don't add to, but subtract from current y value.
+; This is a reverse subtraction - it might be harder to understand,
+; but it is both faster and smaller than the usual way.
+
+		clc
+		sbc PointerYnow
+		eor #$ff
+		sta PointerYnow
+		tya
+		sbc PointerYnow+1
+		eor #$ff
+		sta PointerYnow+1
+
+; --- Part 2, handling mouse buttons
+
+; Prepare CIA by setting bits to input
+		ldy #$11
+		sty cia1_ddrb
+		ldx #$ff; $ff means "pressed"
+		lda #$10; check left button
+		bit cia1_prb
+		bne l1
+		stx LeftButton; store state
+l1		lda #$01; check right button
+		bit cia1_prb
+		bne l2
+			stx RightButton; store state
+; Reset CIA to normal state
+l2		ldy #$00
+		sty cia1_ddrb
+
+; --- Part 6, restrict coordinate range
+
+		ldx #$00;	0 means "x stuff"
+		jsr Restrict
+		ldx #$02;	2 means "y stuff"
+		jsr Restrict
+		rts
+
+; --- "Restrict" subroutine
+; Restrict internal coordinates to configured range. Entry conditions:
+; X is direction handle (0 = x, 2 = y)
+
+Restrict	lda PointerXnow+1,x
+		bmi SetTo0
+		cmp PointerXmax+1,x
+		bcc Eosr
+		bne l3
+		lda PointerXmax,x
+		cmp PointerXnow,x
+		bcs Eosr
+l3		lda PointerXmax,x
+		ldy PointerXmax+1,x
+		jmp DefCo
+SetTo0		lda #0
+		tay
+DefCo		sta PointerXnow,x
+		sty PointerXnow+1,x
+Eosr		rts
+
+; --- "Pot" subroutine
+
+; This routine computes the mouse movements and therefore contains the
+; self-calibration stuff and the other improvements over the standard
+; 1351 driver.
+
+; Compute the signed distance of mouse movement.
+; Entry conditions: X is direction handle (0 = x, 1 = y)
+; Exit conditions: A/Y are signed distance (low/high)
+
+; First, get new value and clear "recalculate signal width" flag.
+
+PotDelta	lda sid_pot,x
+		ldy #$00
+		; Check whether new value is lower than lowest known.
+		cmp PotMin,x
+		bcs l4
+		; Store new "lowest" and set "recalculate signal width" flag.
+		sta PotMin,x
+		ldy #$ff
+l4		; Check whether new value is higher than highest known.
+		cmp PotMax,x
+		bcc l5
+; Set "recalculate signal width" flag and store new "highest".
+		ldy #$ff
+		pha;	Remember current value
+		adc #$00;	Add one (C is set)
+		sta PotMax,x
+; Value $ff (0 after adding) means that there is no mouse connected,
+; so reset min/max in that case.
+		beq ResetMM;	Stack is untidy...
+		pla;	Restore current value
+l5		; If flag is set, recalculate signal width.
+		iny;	Check flag
+		bne l7
+		tay;	Buffer current value.
+		lda PotMax,x;	Get highest+1
+		sec;	Subtract lowest
+		sbc PotMin,x
+		bcc l6
+		sta PotWidth,x;	Store signal
+		lsr;	width and half signal
+		sta HalfPotWidth,x;	width
+l6		tya;	Restore current value.
+l7		; Calculate distance
+		tay;	Buffer current value.
+		sec
+		sbc PotOld,x
+		pha
+		tya
+		sta PotOld,x
+		pla
+		beq zero;	If not moved, exit.
+		bcc minus;	Negative difference
+
+; Positive difference:
+; Check whether movement caused a value wrap-around.
+		cmp HalfPotWidth,x
+		bcc Decrease
+		beq Decrease
+; It did, so calculate "real" distance and jump to exit
+
+		sbc PotWidth,x;	Fix distance (Carry is always set here)
+
+; We now know that the (fixed) distance is really negative, so we
+; finally wipe out that annoying bit 0 noise by incrementing the
+; value.
+
+Increase	adc #$01	; Carry is always clear here
+		beq zero;	If increasing gives zero, jump to zero handler.
+		ldy #$ff;	Set up high byte for negative values.
+		rts
+
+; Negative difference:
+; Check whether movement caused a value wrap-around.
+minus		eor #$ff;	Complement
+; If we would do a real negation (by adding "1"), then we would need
+; to branch using BCC *and* BEQ. So the above way might be harder to
+; understand, but it is both shorter *and* faster - which I like. :)
+		cmp HalfPotWidth,x
+		eor #$ff;	Restore value
+		bcc Increase
+; Movement caused a value wrap-around, so calculate "real" distance and exit.
+		clc
+		adc PotWidth,x;	Fix distance
+
+; We now know that the (fixed) distance is really positive, so we
+; finally wipe out that annoying bit 0 noise by decrementing the value.
+Decrease	sec
+		sbc #$01
+
+; No difference or positive difference; both need zero as the high byte.
+zero		ldy #0
+		rts
+
+; If there is no mouse, reset "lowest" ("highest" will have been reset
+; already) and return zero.
+ResetMM		tay;	Set Y to zero.
+		pla;	Tidy stack
+		lda #$ff;	Reset "lowest"
+		sta PotMin,x
+		tya;	Return with A/Y = 0
+		rts

@@ -1,0 +1,336 @@
+; gui.xa - CMMS 64 v2.0.0
+ 
+; This file comprises pretty much everything needed to create the GUI.  Think
+; of this file as a sort of a tool kit, as QT or GTK+ are to some open-source
+; PC applications.
+
+; This first routine simply blanks out an area of the screen, fills it with a
+; solid color (either hires background or multicolor ColorRAM value), and fills
+; the corresponding region of the widgets map with zeroes.
+
+; Enter with .XY = Upper-left corner of filled area, FillSize[XY] = X/Y size,
+; and .A = Zero Page address of color to use (see variables.xa).
+
++FillArea	stx FillStartX	; We'll need backups of these.
+		sty FillStartY
+		sta fc1+1	; This translates color address into actual
+fc1		lda $00		; color to fill with
+		sta FillColor
+		lda FillSizeY	; We use FillSize[XY] as column/line counters
+		sta tempbyte1
+
+; First, blank out the bitmap part
+
+linecount	ldx FillSizeX
+		ldy tempbyte1
+		lda BitmapLines,y
+		sta tempword1
+		lda BitmapLines+25,y
+		sta tempword1+1
+		lda VideoMode	; since 0 is used to fill hires and $FF to fill
+				; multi, we can directly use this flag's value
+				; as a fill value.
+				
+fill_line	ldy #7
+fillchar	sta (tempword1),y		
+		dey
+		bpl fillchar
+		clc
+		lda tempword1
+		adc #8
+		sta tempword1
+		bcc dec1
+		inc tempword1+1
+dec1		dex
+		bpl fill_line
+		dec tempbyte1
+		bpl linecount
+
+; Next, fill the appropriate region of either Color RAM (Multicolor Mode) or
+; Video Matrix (Hires Mode) with the desired color.
+
+		bit VideoMode
+		bne multicolor
+
+		lda FillSizeY	; We use FillSize[XY] as column/line counters
+		sta tempbyte1
+		ldx tempbyte1	; X=Number of lines to fill
+		lda VMLines,y	; Start address...
+		sta tempword1
+		lda VMLines+25,y
+		sta tempword1+1
+
+linecount2	ldy FillSizeX	; Y=Number of columns to fill
+		lda FillColor		
+
+fillbyte1	sta (tempword1),y
+		dey
+		bpl fillbyte1
+		clc
+		lda tempword1
+		adc #40		; Adding 40 moves to the next row
+		sta tempword1
+		bcc dec2
+		inc tempword1+1
+dec2		dex
+		bpl linecount2
+		bmi fill_widgetmap
+
+multicolor	lda FillSizeY	; We use FillSize[XY] as column/line counters
+		sta tempbyte1
+		ldx tempbyte1	; X=Number of lines to fill
+		lda ColorLines,y ; Start address...
+		sta tempword1
+		lda ColorLines+25,y
+		sta tempword1+1
+
+linecount3	ldy FillSizeX	; Y=Number of columns to fill
+		lda FillColor		
+
+fillbyte2	sta (tempword1),y
+		dey
+		bpl fillbyte2
+		clc
+		lda tempword1
+		adc #40
+		sta tempword1
+		bcc dec3
+		inc tempword1+1
+dec3		dex
+		bpl linecount3
+
+fill_widgetmap	lda FillSizeY	; We use FillSize[XY] as column/line counters
+		sta tempbyte1
+		ldx tempbyte1	; X=Number of lines to fill
+		lda WidgetMapLines,y ; Start address...
+		sta tempword1
+		lda WidgetMapLines+25,y
+		sta tempword1+1
+
+linecount4	ldy FillSizeX	; Y=Number of columns to fill
+		lda #0		; We always fill widget map with 0's
+
+fillbyte3	sta (tempword1),y
+		dey
+		bpl fillbyte3
+		clc
+		lda tempword1
+		adc #40		; like screen memory, widget map is a 1000-
+		sta tempword1	; byte matrix, with the same type of layout.
+		bcc dec4
+		inc tempword1+1
+dec4		dex
+		bpl linecount4
+		rts
+
++PlaceWidget	
+
+
+BitmapLines
+.byt <Bitmap
+.byt <(Bitmap+320)
+.byt <(Bitmap+640)
+.byt <(Bitmap+960)
+.byt <(Bitmap+1280)
+.byt <(Bitmap+1600)
+.byt <(Bitmap+1920)
+.byt <(Bitmap+2240)
+.byt <(Bitmap+2560)
+.byt <(Bitmap+2880)
+.byt <(Bitmap+3200)
+.byt <(Bitmap+3520)
+.byt <(Bitmap+3840)
+.byt <(Bitmap+4160)
+.byt <(Bitmap+4480)
+.byt <(Bitmap+4800)
+.byt <(Bitmap+5120)
+.byt <(Bitmap+5440)
+.byt <(Bitmap+5760)
+.byt <(Bitmap+6080)
+.byt <(Bitmap+6400)
+.byt <(Bitmap+6720)
+.byt <(Bitmap+7040)
+.byt <(Bitmap+7360)
+.byt <(Bitmap+7680)
+.byt >Bitmap
+.byt >(Bitmap+320)
+.byt >(Bitmap+640)
+.byt >(Bitmap+960)
+.byt >(Bitmap+1280)
+.byt >(Bitmap+1600)
+.byt >(Bitmap+1920)
+.byt >(Bitmap+2240)
+.byt >(Bitmap+2560)
+.byt >(Bitmap+2880)
+.byt >(Bitmap+3200)
+.byt >(Bitmap+3520)
+.byt >(Bitmap+3840)
+.byt >(Bitmap+4160)
+.byt >(Bitmap+4480)
+.byt >(Bitmap+4800)
+.byt >(Bitmap+5120)
+.byt >(Bitmap+5440)
+.byt >(Bitmap+5760)
+.byt >(Bitmap+6080)
+.byt >(Bitmap+6400)
+.byt >(Bitmap+6720)
+.byt >(Bitmap+7040)
+.byt >(Bitmap+7360)
+.byt >(Bitmap+7680)
+
+VMLines
+.byt <VideoMatrix
+.byt <(VideoMatrix+40)
+.byt <(VideoMatrix+80)
+.byt <(VideoMatrix+120)
+.byt <(VideoMatrix+160)
+.byt <(VideoMatrix+200)
+.byt <(VideoMatrix+240)
+.byt <(VideoMatrix+280)
+.byt <(VideoMatrix+320)
+.byt <(VideoMatrix+360)
+.byt <(VideoMatrix+400)
+.byt <(VideoMatrix+440)
+.byt <(VideoMatrix+480)
+.byt <(VideoMatrix+520)
+.byt <(VideoMatrix+560)
+.byt <(VideoMatrix+600)
+.byt <(VideoMatrix+640)
+.byt <(VideoMatrix+680)
+.byt <(VideoMatrix+720)
+.byt <(VideoMatrix+760)
+.byt <(VideoMatrix+800)
+.byt <(VideoMatrix+840)
+.byt <(VideoMatrix+880)
+.byt <(VideoMatrix+920)
+.byt <(VideoMatrix+960)
+.byt >VideoMatrix
+.byt >(VideoMatrix+40)
+.byt >(VideoMatrix+80)
+.byt >(VideoMatrix+120)
+.byt >(VideoMatrix+160)
+.byt >(VideoMatrix+200)
+.byt >(VideoMatrix+240)
+.byt >(VideoMatrix+280)
+.byt >(VideoMatrix+320)
+.byt >(VideoMatrix+360)
+.byt >(VideoMatrix+400)
+.byt >(VideoMatrix+440)
+.byt >(VideoMatrix+480)
+.byt >(VideoMatrix+520)
+.byt >(VideoMatrix+560)
+.byt >(VideoMatrix+600)
+.byt >(VideoMatrix+640)
+.byt >(VideoMatrix+680)
+.byt >(VideoMatrix+720)
+.byt >(VideoMatrix+760)
+.byt >(VideoMatrix+800)
+.byt >(VideoMatrix+840)
+.byt >(VideoMatrix+880)
+.byt >(VideoMatrix+920)
+.byt >(VideoMatrix+960)
+
+ColorLines
+.byt <ColorRAM
+.byt <(ColorRAM+40)
+.byt <(ColorRAM+80)
+.byt <(ColorRAM+120)
+.byt <(ColorRAM+160)
+.byt <(ColorRAM+200)
+.byt <(ColorRAM+240)
+.byt <(ColorRAM+280)
+.byt <(ColorRAM+320)
+.byt <(ColorRAM+360)
+.byt <(ColorRAM+400)
+.byt <(ColorRAM+440)
+.byt <(ColorRAM+480)
+.byt <(ColorRAM+520)
+.byt <(ColorRAM+560)
+.byt <(ColorRAM+600)
+.byt <(ColorRAM+640)
+.byt <(ColorRAM+680)
+.byt <(ColorRAM+720)
+.byt <(ColorRAM+760)
+.byt <(ColorRAM+800)
+.byt <(ColorRAM+840)
+.byt <(ColorRAM+880)
+.byt <(ColorRAM+920)
+.byt <(ColorRAM+960)
+.byt >ColorRAM
+.byt >(ColorRAM+40)
+.byt >(ColorRAM+80)
+.byt >(ColorRAM+120)
+.byt >(ColorRAM+160)
+.byt >(ColorRAM+200)
+.byt >(ColorRAM+240)
+.byt >(ColorRAM+280)
+.byt >(ColorRAM+320)
+.byt >(ColorRAM+360)
+.byt >(ColorRAM+400)
+.byt >(ColorRAM+440)
+.byt >(ColorRAM+480)
+.byt >(ColorRAM+520)
+.byt >(ColorRAM+560)
+.byt >(ColorRAM+600)
+.byt >(ColorRAM+640)
+.byt >(ColorRAM+680)
+.byt >(ColorRAM+720)
+.byt >(ColorRAM+760)
+.byt >(ColorRAM+800)
+.byt >(ColorRAM+840)
+.byt >(ColorRAM+880)
+.byt >(ColorRAM+920)
+.byt >(ColorRAM+960)
+
+WidgetMapLines
+.byt <ActiveWidgetMap
+.byt <(ActiveWidgetMap+40)
+.byt <(ActiveWidgetMap+80)
+.byt <(ActiveWidgetMap+120)
+.byt <(ActiveWidgetMap+160)
+.byt <(ActiveWidgetMap+200)
+.byt <(ActiveWidgetMap+240)
+.byt <(ActiveWidgetMap+280)
+.byt <(ActiveWidgetMap+320)
+.byt <(ActiveWidgetMap+360)
+.byt <(ActiveWidgetMap+400)
+.byt <(ActiveWidgetMap+440)
+.byt <(ActiveWidgetMap+480)
+.byt <(ActiveWidgetMap+520)
+.byt <(ActiveWidgetMap+560)
+.byt <(ActiveWidgetMap+600)
+.byt <(ActiveWidgetMap+640)
+.byt <(ActiveWidgetMap+680)
+.byt <(ActiveWidgetMap+720)
+.byt <(ActiveWidgetMap+760)
+.byt <(ActiveWidgetMap+800)
+.byt <(ActiveWidgetMap+840)
+.byt <(ActiveWidgetMap+880)
+.byt <(ActiveWidgetMap+920)
+.byt <(ActiveWidgetMap+960)
+.byt >ActiveWidgetMap
+.byt >(ActiveWidgetMap+40)
+.byt >(ActiveWidgetMap+80)
+.byt >(ActiveWidgetMap+120)
+.byt >(ActiveWidgetMap+160)
+.byt >(ActiveWidgetMap+200)
+.byt >(ActiveWidgetMap+240)
+.byt >(ActiveWidgetMap+280)
+.byt >(ActiveWidgetMap+320)
+.byt >(ActiveWidgetMap+360)
+.byt >(ActiveWidgetMap+400)
+.byt >(ActiveWidgetMap+440)
+.byt >(ActiveWidgetMap+480)
+.byt >(ActiveWidgetMap+520)
+.byt >(ActiveWidgetMap+560)
+.byt >(ActiveWidgetMap+600)
+.byt >(ActiveWidgetMap+640)
+.byt >(ActiveWidgetMap+680)
+.byt >(ActiveWidgetMap+720)
+.byt >(ActiveWidgetMap+760)
+.byt >(ActiveWidgetMap+800)
+.byt >(ActiveWidgetMap+840)
+.byt >(ActiveWidgetMap+880)
+.byt >(ActiveWidgetMap+920)
+.byt >(ActiveWidgetMap+960)
+

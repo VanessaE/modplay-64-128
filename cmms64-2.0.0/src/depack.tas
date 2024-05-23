@@ -1,0 +1,134 @@
+;-------------------------------------------------------
+;DUMP PIC 'DEPACKER'
+;(Use with dumped picture made with Pico(ptimizer) v1.3)
+;-------------------------------------------------------
+;About:
+;This routine will write back dumped areas to 
+;screen, color ram and bitmap.
+;-------------------------------------------------------
+;(C) 2007:
+;Programming by 6R6/Nostalgia
+;-------------------------------------------------------
+
+
+datasize	= $fa	;word
+zp		= $fc	;word
+zpread		= $fe	;word
+
+
+screen		= $7000
+d800		= $d800
+bitmap		= $4000
+
+
+
+screenpos	= (>(screen&$3fff) << 2)	;shift bits opp * 2 ( asl,asl) 
+bitmappos	= (>(bitmap&$3fff) >> 2)	;shift bits ned * 2 ( lsr,lsr)
+
+
+
+
+		* = $1000
+		sei
+		lda #2
+		sta $dd00
+		lda #bitmappos|screenpos
+		sta $d018
+		lda #$3b
+		sta $d011
+		lda #$d8
+		sta $d016
+		lda #0
+		sta $d020
+		sta $d021
+		
+		lda #<data
+		sta zpread
+		lda #>data
+		sta zpread+1
+
+getmore1	ldx #<screen	;Write to screen
+		stx zp
+		ldx #>screen
+		stx zp+1
+		jsr getbyte	;First time this is Datasize high (max $03e8 in size) and never zero.
+		beq getmore2
+		jsr get_stream	;Write dumped area(s) to char screen
+		bcs getmore1	;infinite loop
+
+getmore2	ldx #<d800	;Write to color ram
+		stx zp
+		ldx #>d800
+		stx zp+1
+		jsr getbyte	;First time this is Datasize high (max $03e8 in size) and never zero.
+		beq getmore3
+		jsr get_stream	;Write dumped area(s) to color ram screen
+		bcs getmore2	;infinite loop
+
+getmore3	ldx #<bitmap	;Write to bitmap
+		stx zp
+		ldx #>bitmap
+		stx zp+1
+		jsr getbyte	;First time this is Datasize high (max $1f40 in size) and never zero.
+		beq endofdepack
+		jsr get_stream	;Write dumped area(s) to bitmap
+		bcs getmore3	;infinite loop
+		
+endofdepack	inc $d020
+		dec $d020
+		jmp endofdepack	;Finished at this position.. put rts here.. whatever..
+		
+		
+		
+		
+get_stream	sta datasize+1
+		jsr getbyte
+		sta datasize
+		
+		jsr getbyte	;Get offset high
+		clc
+		adc zp+1
+		sta zp+1
+		jsr getbyte	;Get offset low
+		clc
+		adc zp
+		sta zp
+		bcc *+4
+		inc zp+1
+
+getbytes 	jsr getbyte
+		sta (zp),y
+		jsr incdatasize
+		bcc getbytes
+		rts
+
+
+getbyte		ldy #0
+		lda (zpread),y
+		tax
+		inc zpread
+		bne *+4
+		inc zpread+1
+		txa
+		rts
+
+
+
+incdatasize	inc zp
+		bne *+4
+		inc zp+1
+		clc
+                inc datasize		;Increase datasize to $0000
+                bne ceof
+                inc datasize+1
+                bne ceof
+                sec			;EOF when filesize = 0 and carry is set.
+ceof		rts                
+
+
+
+
+
+data
+;Include binary file to 'depack' here:
+.binary buddy.bin

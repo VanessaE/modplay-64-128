@@ -1,0 +1,164 @@
+; Copy a widget from the skin storage area to the screen
+; enter with .X = widget number to copy
+
+
+; Widget tile skin source locations (top X, top Y, width, height)
+; Y<25 = row number in top half of skin.  Y>24 = row (Y-24) in bottom half
+; Four bytes per entry, one entry = first (or only) image for the widget
+
+skintiles		; widget no.
+.byte 25,26,1,1		; 4
+.byte 25,27,1,1		; 5
+.byte 25,28,1,1		; 6
+.byte 25,29,1,1		; 7
+.byte 39,25,1,3		; 8
+.byte 0,0,0,0		; (ignored)
+.byte 30,23,3,1		; 10
+.byte 0,41,4,1		; 11
+.byte 27,27,3,1		; 12
+.byte 0,15,2,1		; 13
+.byte 2,15,2,1		; 14
+.byte 0,23,18,1		; 15
+.byte 8,19,2,2		; 16
+.byte 10,19,2,2		; 17
+.byte 12,19,2,2		; 18
+.byte 14,19,2,2		; 19
+.byte 16,19,2,2		; 20
+.byte 18,19,2,2		; 21
+.byte 0,19,2,2		; 22
+.byte 0,21,2,2		; 23
+.byte 33,39,3,2		; 24
+.byte 31,25,1,1		; 25
+.byte 32,25,1,1		; 26
+.byte 37,19,2,1		; 27
+.byte 18,23,3,1		; 28
+.byte 32,19,5,2		; 29
+.byte 0,25,1,4		; 30
+.byte 0,33,1,4		; 31
+.byte 0,33,1,4		; 32
+.byte 0,33,1,4		; 33
+.byte 0,33,1,4		; 34
+.byte 0,33,1,4		; 35
+.byte 0,33,1,4		; 36
+.byte 0,33,1,4		; 37
+.byte 0,33,1,4		; 38
+.byte 0,33,1,4		; 39
+.byte 0,33,1,4		; 40
+.byte 33,25,1,1		; 41
+.byte 34,25,1,1		; 42
+.byte 0,0,0,0		; 43 (playlist background, ignored)
+.byte 0,0,0,0		; 44 (playlist slider, ignored)
+.byte 36,39,1,1		; 45
+.byte 36,41,1,1		; 46
+.byte 4,15,2,2		; 47
+.byte 6,15,2,2		; 48
+.byte 8,15,2,2		; 49
+.byte 10,15,2,2		; 50
+.byte 12,15,2,2		; 51
+.byte 20,19,2,2		; 52
+.byte 22,19,2,2		; 53
+.byte 24,19,2,2		; 54
+.byte 26,19,2,2		; 55
+.byte 28,19,2,2		; 56
+.byte 30,19,2,2		; 57
+.byte 33,37,2,2		; 58
+.byte 14,15,2,2		; 59
+.byte 16,15,2,2		; 60
+.byte 18,15,2,2		; 61
+.byte 20,15,2,2		; 62
+.byte 22,15,2,2		; 63
+.byte 24,15,2,2		; 64
+.byte 26,15,2,2		; 65
+.byte 28,15,2,2		; 66
+.byte 30,15,2,2		; 67
+.byte 32,15,2,2		; 68
+.byte 34,15,2,2		; 69
+.byte 36,15,2,2		; 70
+.byte 27,37,5,1		; 71
+.byte 27,38,6,2		; 72
+
+
+; Widget tile screen destinations (cell coordinates - topX,topY)
+; Two bytes per entry, one entry = one widget
+; Widgets 1-3 (main/EQ/playlist backgrounds) are drawn by a separate routine
+
+widgettiles
+
+; Main controls		- widget no:
+.byte 1,0	; 4
+.byte 17,0	; 5
+.byte 18,0	; 6
+.byte 19,0	; 7
+.byte 1,1	; 8
+.byte 9,1	; 9
+.byte 17,2	; 10
+.byte 9,3	; 11
+.byte 13,3	; 12
+.byte 16,3	; 13
+.byte 18,3	; 14
+.byte 1,4	; 15
+.byte 1,5	; 16
+.byte 3,5	; 17
+.byte 5,5	; 18
+.byte 7,5	; 19
+.byte 9,5	; 20
+.byte 11,5	; 21
+.byte 13,5	; 22
+.byte 15,5	; 23
+.byte 17,5	; 24
+
+; Equalizer controls
+.byte 38,0	; 25
+.byte 39,0	; 26
+.byte 20,1	; 27
+.byte 22,1	; 28
+.byte 35,1	; 29
+.byte 21,2	; 30
+.byte 25,2	; 31
+.byte 26,2	; 32
+.byte 27,2	; 33
+.byte 28,2	; 34
+.byte 29,2	; 35
+.byte 30,2	; 36
+.byte 31,2	; 37
+.byte 32,2	; 38
+.byte 33,2	; 39
+.byte 34,2	; 40
+
+; Playlist controls
+.byte 38,7	; 41
+.byte 39,7	; 42
+.byte 1,8	; 43
+.byte 38,8	; 44
+.byte 38,21	; 45
+.byte 38,22	; 46
+.byte 1,22	; 47
+.byte 3,22	; 48
+.byte 5,22	; 49
+.byte 7,22	; 50
+.byte 35,22	; 51
+.byte 17,23	; 52
+.byte 19,23	; 53
+.byte 21,23	; 54
+.byte 23,23	; 55
+.byte 25,23	; 56
+.byte 27,23	; 57
+.byte 38,23	; 58
+
+; Playlist popup menus
+.byte 1,20	; 59
+.byte 1,18	; 60
+.byte 3,20	; 61
+.byte 3,18	; 62
+.byte 3,16	; 63
+.byte 5,20	; 64
+.byte 5,18	; 65
+.byte 7,20	; 66
+.byte 7,18	; 67
+.byte 7,16	; 68
+.byte 36,20	; 69
+.byte 36,18	; 70
+
+; Main window time/visualizer
+.byte 3,1	; 71 (time display when idle)
+.byte 2,2	; 72 (visualizer when idle)

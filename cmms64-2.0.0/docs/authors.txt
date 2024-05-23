@@ -1,0 +1,40 @@
+# Authors.txt - CMMS 64 v2.0.0
+
+This file is subject to change, as it is not yet complete.
+
+Program credits:
+----------------
+
+Vanessa Ezekowitz <vanessaezekowitz@gmail.com>
+  Maintainer, yours truely.
+
+George Taylor <aa601@chebucto.ns.ca>
+  Contributed the dithering algorithm used with the 4-bit SID driver in 
+  Modplay 1.0.
+
+Image/UI Credits:
+-----------------
+
+Peter Alm <peter@xmms.org>, Havard Kvalen <havardk@xmms.org>
+  Main authors of XMMS, a popular multimedia program for Linux, on which I
+  based much of CMMS' look and feel (and of course, the name).
+
+Spencer Kimball, Peter Mattis
+  Creators of The GIMP, which is the image program that I used to create and
+  manipulate all of the graphics, fonts, and images that comprise CMMS 64.
+
+Vodka/Fairlight: Touchups and generally improvements to the splash screen.
+
+
+Skin Credits:
+-------------
+
+I drew the "Commodore 64" skin.
+
+I ported the following skins from various sources:
+
+Expensive High-Fi: Original by Will Mooney <wsmooney@hotmail.com>
+         NoerdAMP: Original by Hans Karlsson <d98hk@efd.lth.se>
+CX2 (Concept-X 2): Original by Espen Thooring <espen@bjorli.com>
+           XawMMS: Original by Christopher Allen <cpcallen@ruah.dyndns.org>
+             Ions: Original artist unknown.

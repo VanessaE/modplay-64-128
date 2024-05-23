@@ -1,0 +1,41 @@
+; coords.a -- CMMS 64/128 v2.0.0
+;
+; This subroutine converts mouse coordinates into color-cell coordinates
+; (Used by the UI routines to detect what widget sits under the pointer, if
+; any)
+;
+; We do this by dividing the mouse X coordinate by 4 (C64 MC) or 8 (All other 
+; modes), and the Y coordinate by 8 (C64) or 4 (C128).
+
+!include variables.a
+
+Entry	lda Coordinates+1
+	sta temp1
+	lda Coordinates
+	ldx VideoMode		; So as not to disbturb .A, we use .X to check
+	beq C64_MC		; which mode we're in.  Anything not C64 multi
+	lsr temp1		; means we divide by 8.
+	ror
+C64_MC	lsr temp1		; If we jump here, the result is Coordinates/4
+	ror			; instead of /8.
+	lsr temp1
+	ror
+	sta CellCoords		; When we're done, X cell coord remains in .A
+	lda Coordinates+3
+	sta temp1
+	lda Coordinates+2
+	ldx VideoMode		; C64 modes need Y coord divided by 8.
+	cpx #2
+	beq C128
+	cpx #3
+	beq C128
+	lsr temp1
+	ror
+C128	lsr temp1		; but if we jump here, we get Y/4.
+	ror
+	lsr temp1
+	ror
+	sta CellCoords+1	; When we're done, Y cell coord remains in .A
+
+; End of code -- no need for RTS here, this code will be included inline where
+; it is needed.

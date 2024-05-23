@@ -1,0 +1,121 @@
+; mod-loaders.xa - CMMS 64 v2.0.0
+
+; This bit of code handles loading a MOD file's headers, pattern data, and
+; sample data.  Be sure to swap the KERNAL in and restore the KERNAL-safe Zero
+; Page registers before calling these routines (see zpswap.xa).
+;
+; *** FIXME ***
+;
+; This piece of code will be extended into a full MOD-file decoder/driver.  It
+; will need to convert the MOD into cmms' internal music format so that only
+; one generic player engine is needed.
+;
+; *** FIXME ***
+
+#include "variables.xa"
+
+.word LoadSong
+* = LoadSong
+		
+LoadHeader1080	ldx #1
+		jsr CHKIN
+		lda #<HeaderBuffer
+		sta tempword2
+		lda #>HeaderBuffer
+		sta tempword2+1
+		lda #56
+		sta tempword1
+		lda #5
+		sta tempword1+1
+
+more1080	jsr BASIN
+		ldy #0
+		sta (tempword2),y
+		inc tempword2
+		bne chk1080
+		inc tempword2+1
+
+chk1080		dec tempword1
+		bne more1080
+		dec tempword1+1
+		bne more1080
+		jsr CLRCH
+		rts
+
+LoadHeader600	ldx #1
+		jsr CHKIN
+		lda #<HeaderBuffer
+		sta tempword2
+		lda #>HeaderBuffer
+		sta tempword2+1
+		lda #88
+		sta tempword1
+		lda #3
+		sta tempword1+1
+
+more600		jsr BASIN
+		ldy #0
+		sta (tempword2),y
+		inc tempword2
+		bne chk600
+		inc tempword2+1
+
+chk600		dec tempword1
+		bne more600
+		dec tempword1+1
+		bne more600
+		jsr CLRCH
+		rts
+
+LoadPattern	ldx #1
+		jsr CHKIN
+		lda #<PatternBuffer
+		sta tempword2
+		lda #>PatternBuffer
+		sta tempword2+1
+
+morepattern	jsr BASIN
+		sta tempbyte3
+		and #$f0
+		sta tempbyte1
+		jsr BASIN
+		ldy #1
+		sta (tempword2),y
+		jsr BASIN
+		sta tempbyte2
+		lsr
+		lsr
+		lsr
+		lsr
+		ora tempbyte1
+		ldy #0
+		sta (tempword2),y
+		jsr BASIN
+		ldy #3
+		sta (tempword2),y
+		lda tempbyte3
+		and #$0f
+		sta tempbyte1
+		lda tempbyte2
+		asl
+		asl
+		asl
+		asl
+		ora tempbyte1
+		ldy #2
+		sta (tempword2),y
+		clc
+		lda tempword2
+		adc #4
+		sta tempword2
+		bne morepattern
+		inc tempword2+1
+		lda tempword2+1
+		cmp #>PatternBufTop
+		bne morepatn
+		jsr CLRCH
+		rts
+
+; MOD sample data is just raw, 8-bit signed data, so we leave it as-is.
+
+LoadSample	jmp LoadData

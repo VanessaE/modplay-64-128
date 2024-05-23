@@ -1,0 +1,42 @@
+Program credits:
+----------------
+
+Vanessa Ezekowitz <vanessaezekowitz@gmail.com> - maintainer, yours truely.
+
+
+Image/UI Credits:
+-----------------
+
+Peter Alm <peter@xmms.org>       - Main authors of XMMS, a popular multimedia 
+Havard Kvalen <havardk@xmms.org>   program for Linux, on which I based CMMS
+                                   128's layout and feel, and from which I
+                                   borrowed the name.
+
+Abraham Ezekowitz <aezekowitz@gmail.com> - several nature photographs which I
+                                           converted to create the backdrop
+                                           images for C128 "hires" mode.
+
+Desiree Vie < > - several photographs of Niagara Falls, which I converted into
+                  backdrop images for C128 "hires" mode.
+
+John Catraham <catraham.john@gmx.net> - painted the the supernova/planet image
+                                        from which I generated catraham.xpm
+                                        (yet another of the C128 "hires"
+                                        mode backdrops)
+
+NASA - Their Hubble Space Telescope took pictures of the Whirlpool Galaxy, the
+       Omega Nebula, and the Hodge nebula, which I converted for use as 
+       C128 "hires" mode backdrop images.
+
+I ported the following skins from XMMS and/or WinAMP:
+
+Expensive High-Fi: Original by Will Mooney <wsmooney@hotmail.com>
+         NoerdAMP: Original by Hans Karlsson <d98hk@efd.lth.se>
+CX2 (Concept-X 2): Original by Espen Thooring <espen@bjorli.com>
+           XawMMS: Original by Christopher Allen <cpcallen@ruah.dyndns.org>
+          Cracked: Original artist unknown.
+             Ions: Original artist unknown.
+
+The "Default" skin is my own design, based loosely on the XawMMS skin.  It 
+is intended to trade asthetics for good compression, but still be 
+useable in a pinch, that's why it's so ugly. :-)

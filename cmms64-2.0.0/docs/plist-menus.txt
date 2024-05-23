@@ -1,0 +1,49 @@
+This file describes, briefly, the menus at the bottom of the playlist editor.
+
+Depending on the skin one is using, the menu buttons at the bottom of the
+playlist editor can become a little vague or confusing, especially if the skin
+doesn't have worded labels (for example, "Expensive Hi-Fi" uses graphical icons
+in keeping with the original WinAmp skin)
+
+The four buttons on the left, as they appear in the default skin:
+
+"+" - if the user merely clicks this item, it calls up a file selector so that
+      the user can add one or more songs to the playlist.  When held down
+      instead, two other entries can be selected instead:
+        "Dir" - Clicking this affords an opportunity to add an entire directory
+                of songs to the playlist.
+        "URL" - This would normally add an Internet address (for Shoutcast
+                streams and remotely-stored files) but is not implemented in
+                this version of CMMS.
+
+"-" - Removes the selected entries from the playlist if clicked momentarily,
+      otherwise makes the following three options available:
+        "- Crop" - Remove all entries except those currently selected.
+        "- All"  - Remove all entries from the playlist.
+        "- Misc" - Calls forth a menu offering various unsorted remove options.
+
+"Sel" - Selects all entries in the playlist if clicked, else the following two
+        options are made available:
+          "None" - Un-select all entries in the playlist
+          "Inv"  - Invert the selection (un-select that which is selected, and
+                   vice-versa).
+
+"Op" - Misc. other options.  This one has no "momentary" function, but holding
+       it down makes the following three options available:
+         "Info" - Displays a dialog offering whatever details are available for
+                  the currently selected entries.
+         "Sort Sel" - Alphabetically sorts the selected entries.
+         "Sort List" - Sorts the entire playlist
+
+The single button on the right calls up the playlist menu:
+
+"Ld" - calls forth a dialog offering to allow the user to load a .M3U playlist
+       from disk.  When held down, this option offers two more functions:
+         "New" - Erases the entire playlist.  Equivalent to the "remove all"
+                 option above.
+         "Save" - Offers a dialog allowing the user to save the current
+                  playlist contents to a .M3U file.
+
+When icons pop up, they are arranged from bottom to top.  For example, clicking
+the "Op" button will cause the "Info" button to appear immediately above it,
+with "Sort Sel" above that, and "Sort List" at the top of the stack.

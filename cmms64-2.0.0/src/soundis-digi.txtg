@@ -1,0 +1,25 @@
+; Initialize SID chip
+; first clear SID with 0's, then...
+
+;  full volume, no filter
+lda     #$0f
+sta     sid1+$18
+sta     sid2+$18
+ ;  attack  = 0, decay   = 0
+ ;  sustain = f, release = 0
+lda     #$f0
+sta     sid1+$06
+sta     sid1+$0d
+sta     sid1+$14
+
+; Now the actual IRQ code that makes the samples
+
+lda     #$11            ;  2  ($11) voice3 triangle, start adsr
+sta     $D412           ;  4
+lda     #$09            ;  2  ($09) voice3 testbit, start adsr
+sta     $D412           ;  4
+lda     sample_data     ;  4
+sta     $D40F           ;  4        voice3 freq hi
+lda     #$01            ;  2  ($01) voice3 start adsr
+sta     $D412           ;  4
+                        ;  = 26

@@ -1,0 +1,558 @@
+; bootloader.xa - CMMS 64 v2.0.0
+
+; This file handles displaying the splash screen and loading everything into
+; memory.
+
+#include "variables.xa"
+
+.word $0801
+* = $0801
+
+.byt 11,8,10,0,158,50,48,54,49,0,0,0	; C64 BASIC header: "10 SYS2061"
+
+		lda #<startbootcode	; This little bit of code moves the 
+		sta tempword1		; working part of the boot loader up to
+		lda #>startbootcode	; $C000 so it's out of the way of all
+		sta tempword1+1		; of the program's other parts, and
+		lda #0			; runs it from there.  That region is
+		sta tempword2		; free through $C7FF, and of course
+		lda #$C0		; it gets overwritten when the main
+		sta tempword2+1		; code is started.
+		ldy #0
+lp01		lda (tempword1),y
+		sta (tempword2),y
+		iny
+		bne lp01
+		inc tempword2+1
+		inc tempword1+1
+		lda tempword1+1
+		cmp #>endbootcode
+		bne lp01
+		jmp bootstrap
+
+startbootcode
+endbootcode = startbootcode + $0600	; The bootloader is about 6 pages long.
+
+* = BootstrapCode
+
+bootstrap	lda #0			; black background
+		sta $d020
+		sta $d021
+		lda #$36		; Switch out BASIC ROM
+		sta ROM_Bank
+		lda $BA			; Current device number
+		sta DeviceNumber
+		lda #0			; Splash defaults to on
+		sta Splashtmp
+		lda #1			; Video mode defaults to multicolor
+		sta VideoMode
+
+		ldx #15			; Fill color swap table
+lp16		lda colortab,x
+		sta ColorSwaps,x
+		dex
+		cpx #$ff
+		bne lp16
+
+		ldx #<clrscreen
+		ldy #>clrscreen
+		jsr Print
+		ldx #<loadmsg
+		ldy #>loadmsg
+		jsr Print
+		lda #8			; 8 char file name
+		ldx #<cfg_file
+		ldy #>cfg_file
+		jsr SETNAM
+
+		lda #1		
+		ldx DeviceNumber		
+		ldy #2
+		jsr SETLFS
+
+		jsr OPEN
+		bcs nocfg
+		ldx #1
+		jsr CHKIN
+
+		jsr BASIN		; Toss out the first two, they're the
+		jsr BASIN		; load address
+		jsr BASIN		
+		sta ShowSplashScreen
+		jsr CLRCH
+		ldx #1
+		jsr CLOSE
+		
+		lda ShowSplashScreen	; If the splash screen was explicitly
+		bne nocfg		; disabled, don't load its data files
+		jmp loadcfg
+
+nocfg		ldx #<splashmsg
+		ldy #>splashmsg
+		jsr Print
+
+		lda #10
+		ldx #<splash_file
+		ldy #>splash_file
+		jsr SETNAM
+		lda #0			
+		ldx DeviceNumber		
+		ldy #0
+		jsr SETLFS
+		lda #0			; Set this to 0 to specify load address
+		ldx #0			; in .X/.Y, which is $0800
+		ldy #8			; 
+		jsr LOAD
+		bcc f1
+		jmp loadcfg		; Assume error = no image = no splash
+
+f1		ldx #<fontmsg
+		ldy #>fontmsg
+		jsr Print
+		lda #16
+		ldx #<font_file
+		ldy #>font_file
+		jsr SETNAM
+		lda #0
+		ldx DeviceNumber
+		ldy #0
+		jsr SETLFS
+		lda #0
+		ldx #<WinTitleFont	; Override the default load address
+		ldy #>WinTitleFont
+		jsr LOAD
+		bcc sp1
+		jmp loadcfg		; Assume error = no font = no splash
+
+sp1		lda #1			; Enable the splash screen!
+		sta Splashtmp
+		ldx #0			; Unpack the bitmap to $2000
+		ldy #$20
+		jsr Unpack
+
+		lda #0			; Now, copy it to the bitmap
+		sta tempword1
+		lda #$20
+		sta tempword1+1
+		lda #<Bitmap
+		sta tempword2
+		lda #>Bitmap
+		sta tempword2+1
+		ldy #0
+lp02		lda (tempword1),y
+		sta (tempword2),y
+		iny
+		bne lp02
+		inc tempword1+1
+		inc tempword2+1		; the bitmap ends at $FF3F, so just
+		bne lp02		; keep copying until we roll to $0000. 
+
+		lda #$40		; Now we copy the Video Matrix, which
+		sta tempword1		; starts at $3F40 in memory
+		lda #$3F
+		sta tempword1+1
+		lda #<VideoMatrix
+		sta tempword2
+		lda #>VideoMatrix
+		sta tempword2+1
+		ldy #0
+lp03		lda (tempword1),y
+		sta (tempword2),y
+		iny
+		bne lp03
+		inc tempword1+1
+		inc tempword2+1
+		lda tempword2+1
+		cmp #$D0
+		bne lp03
+
+		lda #$28		; Now we copy the Color RAM, which
+		sta tempword1		; sits at $4328.
+		lda #$43
+		sta tempword1+1
+		lda #<ColorRAM
+		sta tempword2
+		lda #>ColorRAM
+		sta tempword2+1
+		ldy #0
+lp04		lda (tempword1),y
+		sta (tempword2),y
+		iny
+		bne lp04
+		inc tempword1+1
+		inc tempword2+1
+		lda tempword2+1
+		cmp #$DC
+		bne lp04
+
+		lda $4710		; The file's background color is here
+		sta VIC_Base+$21
+		lda CIA2_Base
+		and #$FC		; Clear lower two bits of VIC Bank
+		sta CIA2_Base
+		lda #$3B 		; Bitmap mode %00111011
+		sta VIC_Base+$11
+		sta VIC_Base+$18	: Videomatrix=$CC00, Bitmap=$E000.
+		lda #$18		; Multicolor mode
+		sta VIC_Base+$16
+
+loadcfg		ldx #<cfgfilemsg	
+		ldy #>cfgfilemsg
+		jsr Print
+		ldx #<cfg_file
+		ldy #>cfg_file
+		jsr LoadFile
+	
+		ldx #<sqrtabmsg
+		ldy #>sqrtabmsg
+		jsr Print
+		ldx #<sqrtab_file
+		ldy #>sqrtab_file
+		jsr LoadFile
+		bcc d1
+		jmp panic
+
+d1		ldx #<SquareTableA
+		ldy #>SquareTableA
+		jsr Unpack
+
+		ldx #<div16tabmsg
+		ldy #>div16tabmsg
+		jsr Print
+		ldx #<div16tab_file
+		ldy #>div16tab_file
+		jsr LoadFile
+		bcc r1
+		jmp panic
+
+r1		ldx #<Divide16Table
+		ldy #>Divide16Table
+	        jsr Unpack
+
+		ldx #<reciptabmsg
+		ldy #>reciptabmsg
+		jsr Print
+		ldx #<reciptab_file
+		ldy #>reciptab_file
+		jsr LoadFile
+		bcc p1
+		jmp panic
+
+p1		ldx #<pointersmsg
+		ldy #>pointersmsg
+		jsr Print
+		lda #12
+		ldx #<pointers_file
+		ldy #>pointers_file
+		stx lastfile
+		sty lastfile+1
+		jsr SETNAM
+		lda #0
+		ldx DeviceNumber
+		ldy #0
+		jsr SETLFS
+		lda #0
+		ldx #0			; Override the default load address
+		ldy #8
+		jsr LOAD
+		bcc w1
+		jmp panic		; Assume error = no font = no splash
+
+w1		ldx #<SpriteImages
+		ldy #>SpriteImages
+                jsr Unpack
+
+		ldx #<widgetmapmsg
+		ldy #>widgetmapmsg
+		jsr Print
+		ldx #<widgetmap_file
+		ldy #>widgetmap_file
+		jsr LoadFile
+		bcc m1
+		jmp panic
+
+m1		ldx #<MainWidgetMap
+		ldy #>MainWidgetMap
+                jsr Unpack
+
+		ldx #<mainprgmsg
+		ldy #>mainprgmsg
+		jsr Print
+		ldx #<mainprg_file
+		ldy #>mainprg_file
+		jsr LoadFile
+		bcc mainstart
+		jmp panic
+
+mainstart	jmp CodeStart		; Bootloader exits here and executes
+					; the main program.
+; - - - - - - - - - - - - - - - -
+; Load a single file into memory
+
+LoadFile	stx lastfile
+		sty lastfile+1
+		stx tempword1		; LSB of filename address is in .X
+		sty tempword1+1
+
+		ldy #255		; To compute the length of the filename
+lp97		iny			; pointed to by address in .X/.Y,
+		lda (tempword1),y	; we just look for the null at the end
+		bne lp97		; of the filename.
+		tya			; SETNAM expects filename length in .A
+		ldy tempword1+1		; and MSB of filename address in .Y
+		jsr SETNAM
+		lda #0			; Unused with LOAD
+		ldx DeviceNumber
+		ldy #1			; Sec. Addr > 0 = normal LOAD
+		jsr SETLFS		
+		lda #0			
+		tax
+		tay
+		jsr LOAD
+		rts
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - 
+; The Print-to-screen routine (splash or plain text)
+
+Print		stx lastmsg
+		sty lastmsg+1
+Print2		stx tempword5		; Enter here to avoid overwriting the
+		sty tempword5+1		; address of the last printed msg.
+		ldy #255		; Compute the length of the message
+lp98		iny			
+		lda (tempword5),y
+		bne lp98
+		tya
+		lsr			; Compute starting column
+		sta tempbyte1
+		lda #20
+		sec
+		sbc tempbyte1
+		sta msgcolumn
+	
+		lda Splashtmp
+		bne usesplash		; Use splash screen,
+		jmp usetext		; or plain text?
+
+usesplash	ldy #151
+		lda #$FF		; First we must erase columns 11-29 of
+spl1		sta SplashLine+$58,y	; the status line.
+		dey
+		cpy #$ff
+		bne spl1
+
+		ldy #18			; ...and set the color maps to white
+		lda #$1F		; ($-F for bitpair %01) and light grey
+spl2		sta VideoMatrix+811,y	; ($1- for bitpair %10)
+		dey
+		cpy #$ff
+		bne spl2
+		
+		ldy #18
+		lda #$0C		; Set color RAM to medium grey ($0C for
+spl3		sta ColorRAM+811,y	; bitpair %11)
+		dey
+		cpy #$ff
+		bne spl3
+
+		clc
+		lda #0			; Compute the address in the bitmap
+		sta tempword3+1		; where the text should start
+		lda msgcolumn		; (column*8 + SplashLine)
+		asl
+		rol tempword3+1
+		asl
+		rol tempword3+1
+		asl
+		rol tempword3+1
+		adc #<SplashLine
+		sta tempword3
+		lda tempword3+1
+		adc #>SplashLine
+		sta tempword3+1
+		ldy #0
+
+spl4		lda #0
+		sta tempbyte1		; High byte overflow for accumulator
+		lda (tempword5),y
+		beq e1			; if we've hit the null terminator,
+					; return to the file loader routine.
+		sec			; Font starts at 0, not 32.
+		sbc #32
+		asl			; Multiply result by 8 to get address
+		rol tempbyte1		; offset into font
+		asl
+		rol tempbyte1
+		asl
+		rol tempbyte1
+
+		adc #<WinTitleFont	; add the offset to font base to get
+		sta tempword2		; address of char to read
+		lda tempbyte1
+		adc #>WinTitleFont
+		sta tempword2+1
+
+		sty tempbyte6		; save .Y or we lose it below.
+		ldy #7
+spl5		lda (tempword2),y
+		sta (tempword3),y
+		dey
+		cpy #$ff
+		bne spl5
+
+		clc
+		lda tempword3
+		adc #8
+		sta tempword3
+		bne sk1
+		inc tempword3+1
+
+sk1		ldy tempbyte6
+		iny			; next character
+		jmp spl4
+
+e1		rts
+
+usetext		lda #145
+		jsr BSOUT
+		lda #13
+		jsr BSOUT
+		ldy #39
+		lda #32
+eraseline	jsr BSOUT
+		dey
+		bne eraseline
+		lda #145
+		jsr BSOUT
+		lda #13
+		jsr BSOUT
+
+		ldy msgcolumn
+		lda #32
+tab		jsr BSOUT
+		dey
+		bne tab
+		ldy #0
+
+lp12		lda (tempword5),y
+		beq endname2
+		jsr BSOUT
+		iny
+		jmp lp12
+endname2	rts
+
+Unpack		lda #0
+		sta lzmv_src
+		lda #8
+		sta lzmv_src+1
+		stx lzmv_dest
+		sty lzmv_dest+1	
+.(
+#include "backunpack.xa"
+.)
+
+panic		lda #$1B
+		sta VIC_Base+$11
+		lda #$C8
+		sta VIC_Base+$16
+		lda #$15
+		sta VIC_Base+$18
+		lda #$97
+		sta CIA2_Base
+		lda #14
+		jsr BSOUT
+		lda #147
+		jsr BSOUT
+		lda #2
+		sta $d020
+		lda #0
+		sta $d021
+		sta Splashtmp
+		sta ShowSplashScreen
+		ldx #<loaderrormsg1
+		ldy #>loaderrormsg1
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		ldx #<loaderrormsg2
+		ldy #>loaderrormsg2
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		ldx #<loaderrormsg3
+		ldy #>loaderrormsg3
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		jsr BSOUT
+		ldx lastfile
+		stx tempword1
+		ldy lastfile+1
+		sty tempword1+1
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		jsr BSOUT
+		ldx #<loaderrormsg4
+		ldy #>loaderrormsg4
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		ldx #<loaderrormsg5
+		ldy #>loaderrormsg5
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		ldx #<loaderrormsg6
+		ldy #>loaderrormsg6
+		jsr Print2
+		lda #13
+		jsr BSOUT
+		ldx #<loaderrormsg7
+		ldy #>loaderrormsg7
+		jsr Print2
+		
+hang		jmp hang
+
+; 16 char. limit:     1234567890123456
+cfg_file	.byt "cmms-cfg",0
+splash_file	.byt "splash.lz",0
+font_file	.byt "medium-sans.mf",0
+sqrtab_file	.byt "squaretable.lz",0
+reciptab_file	.byt "reciptable.bin",0
+div16tab_file	.byt "div16table.lz",0
+pointers_file	.byt "pointers.lz",0
+widgetmap_file	.byt "widgetmap.lz",0
+mainprg_file	.byt "main.prg",0
+
+clrscreen	.byt 155,147,14,17,17,17,17,17,17,17,17
+		.byt 17,17,17,17,17,17,17,17,17,17,17,0
+loadmsg		.byt "Loading...",13,0
+
+; 19 char. limit:     1234567890123456789
+cfgfilemsg	.byt "Config file",0
+splashmsg	.byt "Splash Screen",0
+fontmsg		.byt "Splash font",0
+sqrtabmsg	.byt "Squares table",0
+reciptabmsg	.byt "Reciprocals table",0
+div16tabmsg	.byt "Divide-by-16 table",0
+pointersmsg	.byt "Pointer images",0
+widgetmapmsg	.byt "Widget Decode map",0
+mainprgmsg	.byt "Main program",0
+
+loaderrormsg1	.byt "Ooops!  CMMS 64 has run into an error",0
+loaderrormsg2	.byt "one of the files needed by the program",0
+loaderrormsg3	.byt "has failed to load:",0
+
+loaderrormsg4	.byt "This is usually caused by a corrupt",0
+loaderrormsg5	.byt "or missing data file.  Please replace",0
+loaderrormsg6	.byt "the offending file from the",0
+loaderrormsg7	.byt "distribution archive and try again.",0
+
+DeviceNumber	.byt 8
+Splashtmp	.byt 0
+lastmsg		.byt 0,0
+lastfile	.byt 0,0
+msgcolumn	.byt 0
+
+colortab	.byt 11,15,10,14,10,13,14,8,7,8,2,12,15,5,6,1

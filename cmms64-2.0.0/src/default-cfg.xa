@@ -1,0 +1,48 @@
+; default-cfg.xa - CMMS 64 v2.0.0
+
+#include "variables.xa"
+
+.word ShowSplashScreen
+
+.byt 1		; Default is splash disabled
+.byt 1		; Select Multicolor mode
+.byt 0		; The next 14 bytes are reserved for future use.
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt 0
+.byt "%t (%p%f)"  ; Title format (see "Config.txt")	
+align(32)
+.byt "Med-Sans-MC.mf"	; Song title font filename
+align(16)
+.byt "Med-Sans-MC.mf"	; Playlist font filename
+align(16)
+.byt "Med-Sans-MC.mf"	; Dialog text font filename
+align(16)
+.byt "Med-Sans-MC.mf"	; Window title font filename
+align(16)
+.byt "Med-Sans-MC.mf"	; Text box font filename
+align(16)
+.byt "Btn-Sans-MC.mf"	; Button font filename
+align(16)
+.byt "sid4bit.snd"	; Default sound driver filename
+align(16)
+.byt 0			; Default effect plugin filename
+align(16)
+.byt 0			; Default visualizer plugin filename
+align(16)
+.byt "HighFi"		; Default skin filename
+align(16)
+.byt "default.eq"	; EG Preset filename
+align(16)
+.byt "0/:"		; Default shortcuts (normally 16 paths * 128 b. each)
+align(1024)

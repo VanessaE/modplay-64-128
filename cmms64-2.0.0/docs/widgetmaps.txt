@@ -1,0 +1,22 @@
+This file describes the meaning of the various *.dat files.
+
+widgetmap.dat translates screen positions into widget numbers.  For every byte
+of screen memory, there is one byte in this file, in the same order.  Each byte
+contains a widget number.  If a zero is found, it indicates that there is no
+widget in that spot.  This file is mostly used for translating mouse activity
+into code events, such as re-drawing a widget for mouseover highlighting, or
+popping up a menu.
+
+widgetmap2.dat is essentially the opposite of the above - it provides a two-part
+list of widget screen coordinates, with all of the X values listed first.  When
+the UI code needs to draw or change a widget or icon, the number of the desired
+widget is used as an index into this table.  Coordinates are measured in
+character cells.
+
+skinmap.dat provides two two-part lists, describing the positions and sizes of
+each of the 78 widgets found in any given skin file.  The first table lists all
+of the X coordinates, followed by a list of Y coordinates, then horizontal
+sizes, and finally vertical sizes.  All values are measured in character cells.
+This table is used along with widgetmap2.dat to provide source and destination
+information whenever a widget image is being copied to the screen (including the
+initial build-up of the UI display).

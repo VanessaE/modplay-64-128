@@ -1,0 +1,162 @@
+# Config.txt - CMMS 64 v2.0.0
+
+This file describes all of CMMS 64's configurable parameters.  By extension, 
+this file also describes the format of the cmms-config file.  Items marked as
+"bool" are single-byte flags where zero means "False" and any non-zero value
+means "True".  All strings are padded with nulls.
+
+The config file is currently 3600 bytes in size, in this format:
+
+Size	Type	Description
+===============================================================================
+1	bool	Show splash screen
+1	byte	Main fill color for windows and dialog boxes
+1	byte	Window/dialog box border and title bar color
+1	byte	Window title bar text color
+1	byte	Range slider bar color
+1	byte	Range slider handle widget color
+1	byte	Range slider handle widget highlight color
+1	byte	Button background color
+1	byte	Button background highlight color
+1	byte	Button color (normal)
+1	byte	Button highlight color
+1	byte	Button antialias color
+1	byte	Button highlight antialias color
+1	byte	Spinbox background fill color
+1	byte	Spinbox background highlight color
+1	byte	Spinbox foreground color
+1	byte	Spinbox antialias foreground color
+1	byte	Spinbox foreground highlight color
+1	byte	Spinbox foreground antialias-highlight color
+1	byte	Box-drawing highlight color
+1	byte	Box-drawing shadow color
+1	byte	Color for currently-selected tab
+1	byte	Antialias color for currently-selected tab
+1	byte	Color for non-selected tabs
+1	byte	Antialias color for non-selected tabs
+1	byte	Progress bar background color
+1	byte	Progress bar foreground/edge color
+1	byte	Progress bar "fill" color (the active part)
+1	byte	Scroll arrow background color
+1	byte	Scroll arrow background highlight color
+1	byte	Scroll arrow background "disabled" color
+1	byte	Scroll arrow foreground color
+1	byte	Scroll arrow foreground highlight color
+1	byte	Scroll arrow foreground "disabled" color
+1	byte	Scroll arrow foreground antialias color
+1	byte	Scroll arrow FG antialias-highlight color
+1	byte	Scroll arrow FG antialias-"disabled" color
+1	byte	Scrollbar background fill color
+1	byte	Scrollbar foreground/edge fill color
+1	byte	Scrollbar handle color
+1	byte	Scrollbar handle highlight color
+1	byte	Editable Combo Box background fill color
+1	byte	Editable Combo Box foreground color
+1	byte	Editable Combo Box antialias foreground color
+1	byte	Non-editable Combo Box background fill color
+1	byte	Non-editable Combo Box foreground color
+1	byte	Non-editable Combo Box antialias FG color
+1	byte	Fill color for text and list boxes
+1	byte	Highlight fill color for text/list boxes
+1	byte	Text color within text and list boxes
+1	byte	Text Highlight color within text/list boxes
+1	byte	List box edge shadow color
+1	byte	List box edge highlight color
+1	byte	Menu background fill color
+1	byte	Menu background fill highlight color
+1	byte	Menu foreground text/separator color
+1	byte	Menu foreground text highlight
+1	byte	Menu separator highlight
+1	byte	Menu edge color
+1	byte	Window/dialog box/menu drop shadow color
+1	byte	Primary color for most dialog text
+1	byte	Dialog box "disabled" text color
+1	byte	Color used for the main body of the pointer
+1	byte	Color used for the edges of the pointer
+1	byte	Read info on: 0=play, 1=demand, 2=load
+1	bool	Convert %20 to space
+1	bool	Convert underscore to space
+1	bool	Sort "jump to file" alphabetically
+1	byte	Pause between songs for N seconds (if N=0, disabled)
+1	bool	Show numbers in playlist
+1	bool	Smooth title scroll
+1	byte	Snap windows at N pixels (if N=0, disabled)
+1	bool	Use meta-data in playlists
+1	bool	Repeat (0=play list or song one time only)
+1	bool	Shuffle (0=play songs in list order)
+1	bool	No playlist advance (0=advance playlist)
+1	bool	display as "time elapsed" (0=display as "time remaining)
+1	byte	Visualizer mode (0=off, 1=scope, 2=analyzer)
+1	byte	Analyzer mode (0=normal, 1=fire, 2=vertical lines)
+1	bool	Display analyzer as lines (0=bars)
+1	bool	Show analyzer peaks
+1	byte	Scope mode (0=dots, 1=line, 2=solid)
+1	bool	Windowshade VU mode is smooth (0=normal)
+1	byte	Visualizer refresh rate (0=full, 1=1/2, 2=1/4, 3=1/8 normal)
+1	byte	Analyzer falloff rate (0-4, lower is faster)
+1	byte	Analyzer peaks falloff (0-4, lower is faster)
+1	bool	EQ enabled (SuperCPU only)
+1	bool	EQ auto-load preset from playlist (SuperCPU only)
+1	byte	EQ preamp control (0-255 in steps of 8)
+10	byte	Ten EQ band adjustments (0-255 in steps of 8)
+1	bool	Dim titlebar when inactive (unused)
+1	bool	Always show clutter bar (unused)
+1	bool	Show window manager decorations (unused)
+1	bool	Allow multiple instances (unused)
+1	bool	Save window positions (unused)
+1	bool	Show main window (always on, unused)
+1	bool	Show EQ window (always on, unused)
+1	bool	Show playlist window (always on, unused)
+1	bool	Always on top (unused)
+1	bool	Show on all desktops (unused)
+1	bool	Windowshade mode (unused)
+1	bool	Playlist windowshade more (unused)
+1	bool	EQ windowshade mode (unused)
+1	bool	Easy move (unused)
+1024	string	Up to 8 paths+filenames for input plugins
+128	string	Output plugin path+filename
+128	string	Effect plugin path+filename
+128	string	Visualizer plugin path+filename
+
+128	string	Main window font path+filename
+128	string	Playlist font path+filename
+128	string	Dialog box font path+filename
+128	string	Window Title font path+filename
+128	string	Text box font path+filename
+
+32	string	Title format
+128	string	Skin path+filename
+128	string	EQ default preset config path+filename
+1024	string	Up to 8 paths for shortcuts in file selector
+128	string	Last selected path in file selector
+
+===
+
+Playlist/song title format
+--------------------------
+
+In the configuration dialog are options for setting the song title 
+display format, and for setting the format of the entries in the 
+playlist.  The following symbols are treated as variables:
+
+%a	Artist
+%f	Filename
+%l	Length of sequence table
+%m	Song length, minutes
+%p	Full path to the file (excluding filename)
+%s	Song length, seconds
+%t	Song title
+
+Any other characters are printed literally.
+
+Example: you have a file named "foo.mod" in subdirectory "/some/path/" with a 
+length of 12 minutes and 34 seconds, and a title field reading "bar".  The 
+following string:
+
+%t -*- %m:%s [%p%f]
+
+Would render as:
+
+bar -*- 12:34 [/some/path/foo.mod]
+
+(Note the empty "artist" field - MOD files don't have such an attribute).

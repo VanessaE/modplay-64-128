@@ -1,0 +1,9 @@
+; reciptable.xa - CMMS 64 v2.0.0
+
+; Reciprocals table: 255/1 to 255/16
+
+#include "variables.xa"
+
+.word RecipOf16Table
+
+.byt 255,127,85,63,51,42,36,31,28,25,23,21,19,18,17,15

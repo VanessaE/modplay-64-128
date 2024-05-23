@@ -1,0 +1,698 @@
+# Internals.txt - CMMS 64 v2.0.0
+
+This document describes much of the internal workings of the program, at least
+where it seemed appropriate.  Here you'll find the internal formats to which
+music files are converted when loading, maps of the widgets used, and more.
+
+
+CHARACTER ENCODING
+******************
+
+If it isn't already evident, all of the documentation and source code in this
+program uses UNIX end-of-line characters and plain 7-bit ASCII encoding.  
+Within the program, the same holds true (or should - this section is subject
+to revision, as is the whole file I guess :-)).  Most of this stems from doing
+all of the programming work on a PC and using an emulator for preliminary
+testing.  Final testing will of course be performed on real hardware.
+
+
+MODULES
+*******
+
+Module files are converted into a custom internal format designed to allow the
+actual player engine to be fairly generic, relative to the various types of
+data it is expected to play.  This way, one need only write an appropriate
+routine to convert the desired module file into CMMS' internal format without
+having to write a whole new player engine.
+
+
+Header/Metadata
+---------------
+
+The header of a module file must be expanded and translated into the internal
+meta-data table used by CMMS 64.  This table occupies a sizeable chunk of the
+C64's base RAM, 16648 bytes to be specific.  The format of that table is as 
+follows:
+
+
+#Bytes  Description
+------  ----------------------------------------------------------------------
+ 64	Module title (standard 7-bit ASCII), padded with $00 (NULL) bytes.
+  1	Number of samples in this module.
+  1	Length of the module's order list in patterns.
+256	Pattern Order List.  Each byte refers to the pattern number that should
+        be played as the engine steps through the order list.
+  6	Module/file type (standard 7-bit ASCII string) padded with $00 bytes.
+        Valid strings include (plus possibly others):
+
+	MOD15 - Old Noisetracker 15-sample MOD file
+	M.K.  - Protracker 31-sample MOD file
+        M!K!  - Protracker 31-sample, 129+ pattern MOD file
+	6CHN  - Protracker 31-sample, 129+ pattern, 6-voice MOD file
+	8CHN  - Protracker 31-sample, 129+ pattern, 8-voice MOD file
+	FLT4  - Star Trekker (PT-compatible) 31-sample MOD file
+	FLT8  - Star Trekker (PT-compat) 31-sample, 8-voice MOD file
+	XM    - FastTracker II eXtended Module file
+	WAV   - Microsoft RIFF Wave file
+	IFF   - Amiga IFF/8SVX sample file
+
+	These loader formats are questionable - I'm not sure when or if these
+	will be implemented, but these are the official tags the program will
+	(expect to) use.
+
+        STM   - Old-format Screamtracker 1/2 module
+        S3M   - Common-format ScreamTracker 3 module
+	669   - 
+	IT    - Impulse Tracker module
+	MP3   - MPEG 2 Layer 3 audio
+	OGG   - Open-source OGG/Vorbis audio
+	FLAC  - Open-source "Fast Lossless Audio Codec"
+-----
+
+Following these 328 bytes are 255, 64-byte Instrument descriptors, arranged in
+this manner:
+
+ 52	Instrument name (standard 7-bit ASCII), padded with $00 bytes.
+  3	Sample length in bytes (LSB first).
+  3	Start point for loop section.
+  3	End point for loop section.
+  1	Default fine-tune value for this sample (maximum range [-128..+127] )
+  1	Default volume level for this sample (0-255)
+  1	Default panning position.  Range is [-128..+127], where negative values
+	are on the left, positive on the right, and 0 is exactly centered.
+
+
+Patterns
+--------
+
+Patterns are stored as a series of "divisions" or "rows".  Each row is stored
+in the form of a one-byte header followed by a number of voice descriptors,
+each of which consisting of 7 bytes of note data.  The one-byte header tells
+the player engine how many voices need to be updated in this row (and thus, how
+many voice descriptors follow it).
+
+   Byte 1:  Voice number (1-32) that this descriptor refers to.
+   Byte 2:  Instrument number for this channel (1-255, 0=no change)
+Bytes 3,4:  Note Period for this voice/row (0-65536)
+   Byte 5:  Effect command number (see table below)
+   Byte 6:  Effect command parameter #1 ("X" - see table below)
+   Byte 7:  Effect command parameter #2 ("Y" - see table below)
+
+Every voice descriptor that follows this first one is in the same format, less
+the number-of-voices byte.  Thus, a typical four-voice MOD file would use up to
+29 bytes per row (1+4*7) as opposed to the usual 16, if all four voices need to
+be updated.
+
+In cases where an X or Y parameter represents a percentage, the parameter is
+scaled up to 8-bit signed or unsigned range.  All other parameters, since they
+represent some discrete value, are left unchanged.  For example, fine-tune in a
+MOD file is [-8..+7], and it remains that way when the file is loaded, while 
+something like a volume control, which is essentially a 0% to 100% setting, 
+would be scaled.  This rule is subject to change in the future if the need
+arises for more fine-grained control of certain effects.
+
+This first section of the effect command list covers all of the effects that
+were supported in the Protracker MOD format.  The formatting and order of the
+table has been re-arranged from the official spec to make the player engine
+more generic.  This list is subject to additions as new effect commands need to
+be added, but what's already here will probably not change.
+
+1:  Pitch slide up.  This causes the engine to decrease the note period of the
+    voice by X after each 'tick' in the current row.
+
+2:  Pitch slide down.  This causes the engine to Increase the note period of
+    the voice by X after each 'tick' in the current row.
+
+3:  Portamento-to-note.  This causes the engine to increase or decrease the
+    previously-set note period of the voice by X after each 'tick' in the
+    current row, stopping at the note period currently being set by Bytes 2,3.
+
+4:  Vibrato.  This causes the engine to oscillate the note period of the voice
+    in Bytes 2,3 using a particular waveform with an amplitude of Y/16
+    semitones and a rate of (X*ticks)/64 cycles per row.
+
+5:  Portamento plus Volume Slide.  This causes the engine to continue the
+    previously-started Portamento-to-Note command, adding the Volume-slide
+    effect with it, where the volume is adjusted by X (negative or positive)
+    after each tick.
+
+6:  Vibrato plus Volume Slide.  This causes the engine to continue the Vibrato
+    effect, adding the Volume-slide effect with it.  The volume is adjusted by
+    X (negative or positive) after each tick in the current row.
+
+7:  Tremolo.  Oscillate the voice's volume using a particular waveform with an
+    amplitude of y*(ticks-1), such that (x*ticks)/64 cycles occur in this row.
+
+8:  Arpeggio.  This causes the engine to start a three-note arpeggio (really
+    more like a trill) using the base note specified by the current note
+    period, and two added notes specified as X and Y semitones above the
+    current note, respectively, and are played repeatedly in that order.  Each
+    note lasts for one 'tick.'
+
+9:  Set sample offset.  Causes the selected sample to be started not from the
+    first byte, but from word X+Y*256.  If a sample is already playing, it is
+    restarted from this position.
+
+10: Volume slide.  This causes the engine to alter the volume of the voice by
+    X (negative or positive) after every tick.
+
+11: Position Jump.  Causes the engine to stop playing the current pattern and
+    immediately jump to pattern "X" in the order list (the "pattern table").
+
+12: Set voice volume.  This simply sets the volume of the voice to X.
+
+13: Pattern Break.  Causes the engine to stop playing the current pattern and
+    call up the next pattern in the order list.  The player immediately jumps
+    to row X in the new pattern.
+
+14: Set song tempo.  If the value of X is non-zero, the engine is set to play
+    at X ticks per division, where each tick lasts for 1/60 of a second.  If
+    the value Y is non-zero, the length of a 'tick' itself is altered.  The 
+    player engine decodes and updates voices at (24*Y)/X rows per minute.
+
+15: Set filter on or off.  Any non-zero value of X will turn the filter on.
+    This is related to the hardware filter found on some Amigas.
+
+16: Fine slide up.   This causes the engine to simply subtract X from the
+    current note period, once and only once, at the start of a row.
+
+17: Fine slide down.  This causes the engine to simply add X to the current
+    note period, at the beginning of the row.
+
+18: Set glissando on/off.  Any non-zero value in X will cause the engine to 
+    round all subsequent note periods on this voice to the nearest semitone, 
+    including the final outputs of the pitch-slide and portamento commands.
+    This does not alter the actual note period, merely the final pitch of the
+    note(s).
+
+19: Set vibrato waveform.  This uses the value of X to select one of three
+    waveforms.  Add 4 to the values below to force the engine to not re-
+    trigger the waveform at the start of a new note.
+
+       0 - sine     1 - sawtooth     2 - Square (50%)     3 - Random choice
+                                                             _      . .
+      _     _         |\  |\           .__.  .__.           ' \_/   |\|\,
+     / \   / \        | \ | \          |  |  |  |              _   _
+        \_/   \_/        \|  \|           |__|  |__|          ' |_| |_.
+
+20: Set finetune value.  The value X is directly used to temporarily replace
+    the selected sample's preset finetune value on this voice.
+
+21: Loop pattern.  This causes the engine to enter a fixed-length loop within
+    the current pattern.  If X is 0, this command sets the start of the loop.
+    If X is non-zero, this command causes the engine to loop play from the 
+    selected row of the pattern, through to the current row, X times.
+
+22: Set tremolo waveform.  This causes the player engine to select one of three
+    possible waveforms to perform the Tremolo effect with, according to the
+    value in X, as with the Vibrato effect.
+
+23: Retrigger sample.  This causes the engine to simply restart the sample
+    every X ticks during the current row.  If X is 0, no re-triggering is done.
+
+24: Fine Volume Slide Up.  This causes the engine to simply increment the 
+    voice's volume by X at the beginning of the current row, thus no actual
+    sliding is performed.
+
+25: Fine Volume Slide Down.  Causes the engine to simply decrement the voice's
+    volume by X at the beginning of the current row.
+
+26: Cut sample.  This simply causes the engine to silence this voice's volume
+    after X+Y*256 words of the voice's sample have been played, rather than 
+    letting the entire sample play normally.  Technically, if the value given
+    is 0, the sample remains silent, as though the Set-Volume effect had been
+    given with a value of 0.
+
+27: Delay sample.  This causes the engine to wait X ticks after the start of
+    the current row before starting the selected sample.
+
+28: Delay pattern.  This simply causes the engine to act as if it has inserted
+    X 'blank' rows right after the current row.  Thus, any previous effect
+    commands, samples, etc. will continue to run until the next 'real' row.
+
+29: Invert loop.  According to the MOD-Format documentation on this command,
+    this causes the player to invert the sign of the loop section of the
+    current voice's sample (thus playing the waveform upside down) at a speed
+    based on X that is determined by some sort of table internal to Protracker.
+
+From here down are the various effects needed for other formats like XM, S3M,
+and so on.  
+
+30: Set pan envelope position.  Causes the engine to move the pan envelope
+    "cursor" directly to position X within the sample's 48-entry panning
+    envelope, setting the actual pan position accordingly.
+
+31: Set Global Volume.  The global volume of the player is explicitly set to X.
+
+32: Global volume slide.  This causes the player to gradually adjust the
+    engine's master volume control down or up by X steps (negative or positive)
+    at the beginning of each tick.
+
+33: Set volume envelope position.  The engine simply moves the voice's envelope
+    "cursor" directly to position X within the sample's 48-entry volume
+    envelope list, setting the voice's volume accordingly.
+
+34: Panning slide.  This causes the engine to move the panning "cursor" X steps
+    (either negative, e.g. backward, or positive) within the 48-entry panning
+    envelope list, setting the voice's panning position accordingly.
+
+35: Multi-retrig note.  What does this button do?? :-)
+
+36: Extra fine pitch slide up.  What does this button do?? :-)
+
+37: Extra fine pitch slide down.  What does this button do?? :-)
+
+
+SAMPLE DATA, LIMITATIONS
+************************
+
+The VIC-II vs. 6510 CPU
+-----------------------
+
+A little background:  As all C64 coders and many users know, an NTSC Commodore
+64 uses a 6567 VIC-II video chip, which generates 263 raster lines per frame,
+and covers 65 CPU cycles per raster line.  The 6510 CPU runs at a nominal clock
+rate of of 1.022727 MHz, and the two chips operate on shared data and address
+buses, on opposite halves of the main clock, thus keeping them out of each
+others' way most of the time.
+
+Like a time-share property gone wrong, the two chips eventually come into
+conflict over who gets the data and address busses at any given moment.  The
+VIC needs more data on every eighth raster line than it can fetch on its half
+of the clock, so it has to hang the CPU 25 times per frame for 40 to 43 cycles
+each time, in order to take over the shared data and address buses and keep the
+video display alive.  C64 coders  universally call these lines "bad lines"
+because of their detremental effect on code timing precision.  In the case of
+digital audio, these bad lines can cause large delays in a sample player
+routine, leading to poor sound quality.
+
+There are several possible ways to adapt to this behavior, as follows:
+
+* Time the sound driver routine so as to outright avoid the times when the VIC
+  blocks the CPU.  You can output one sample every 52 cycles, for a  final
+  sample rate of 18.803 kHz, without ever landing on the VIC-occupied part of
+  a bad line.
+
+* Play the samples at whatever rate you want, but skip the samples that fall on
+  the occupied part of a bad line.  There will probably be a low "grumbling"
+  in the background of the music that gets worse as you get farther away (up
+  or down) from the ideal 18.803 kHz sample rate (or an even division of it).
+
+* Play the samples at whatever rate you want, skip the samples that fall on an
+  occupied part of a bad line, and use some sort of "error distribution" 
+  algorithm on the valid samples adjacent to the occupied part of the line, to
+  account for the missing samples.
+
+* Ignore the VIC's activities entirely, but choose your sample rate and time
+  your code very carefully so that samples that do fall on the occupied part of
+  a bad line won't be delayed by too large an amount.  One sample every 40
+  cycles (24.444 kHz) is a good speed to use, as the occupied part of the bad
+  line would only delay the samples that land there by less than 4 micro-
+  seconds.
+
+* Ignore the VIC activities entirely, play the samples at whatever rate you
+  like, but do so through a buffered sound device. Such a device need only
+  carry some RAM, an adjustable timer, and a pair of ordinary 8- or 16-bit
+  DACs.  The buffer will continue to output samples during a bad line, so as
+  long as you fill it back up before the buffer totally empties, there will
+  never be a delayed sample.
+
+* Turn off the VIC's display and just play the sample data at whatever rate
+  we want.  This pretty much stops the VIC from blocking the CPU, but then
+  you have no display at all.  Modplay 64 used this idea, but the way that 
+  program was written, this wasn't a problem.
+
+* Switch to a Commodore 128, turn off the VIC's display, and use the C128's
+  80-column VDC display for the program's UI.  Since the VDC has its own local
+  RAM and doesn't share buses with the CPU, there are no conflicts to speak of.
+  
+* Switch to some other kind of video system entirely - i.e. design something
+  from scratch that doesn't interfere with the CPU, and use that for the UI.
+
+Which of these methods CMMS ends up using is still undecided, although 7.5 kHz,
+18.8 kHz and 24.4 kHz are all very attractive choices, while the last option is
+obviously very unattractive for just one program.
+
+
+General info about sample data
+------------------------------
+
+Whether a sample is being loaded as part of a module file or simply as a plain
+sample file like RIFF/WAVE or so, the sample data is usually stored in memory
+in either packed unsigned 4-bit, unsigned 8-bit, or unsigned Little-endian
+16-bit format - basically raw, uncompressed PCM sound data.  In the case of 
+straight sample files such as WAVE or IFF, the data should be re-sampled to
+24.444 kHz or lower if the file is too large to fit into memory... or at least
+an option to do so should be offered.  
+
+In the case of compressed sample data, in this first incarnation of the player,
+it must first be decompressed before it is stored in memory.  For some types of
+files, the compression is fairly light, such as uLAW.  "Decompressing" these
+types of files is fairly trivial, but for others, this can be a really hairy
+task.  For example, complex files like MP3, AC3, or OGG must be decompressed,
+re-sampled, scaled, cooked, bleached, hung out to dry, and whatever else is
+necessary to make the resultant music fit into available expansion memory.  As
+with raw PCM sample data, if re-sampling to a lower rate is needed, the loader 
+should aim for a final sample rate of 24.444 kHz.
+
+
+NOTES, MAXIMUM PLAYER LIMITS
+****************************
+
+The maximum size of a file that you can load is dependent on the type of file,
+as well as the amount of RAM you have.  In the case of module files, the player
+will handle up to 32 voices, each pattern can be 256 rows in length, and up to
+256 patterns can be loaded.  That means that the memory usage for pattern data
+alone can reach (32*7+1)*256*256 = 14,745,600 bytes.  Sample data is not
+functionally limited, since the program can (theoretically) address up to 16MB
+of data per instrument.  Since there can be, in theory, 256 instruments in a
+song, that amounts to a theoretical maximum of 16*1024*1024*256 = 4,294,967,296
+bytes just for the sample data.  Needless to say, if your module file is this
+big, you may as well just take your music, add a video to it, and make a
+single-layer DVD of it instead :-)
+
+In the case of plain sample data, whether it starts as simple, uncompressed PCM
+sound, or highly compressed acoustic data like MP3, all of the expansion memory
+may be used for the sample data, save for a small amount used for the skin and
+a few other things.
+
+Certain uncommon types of digital sample files such as VOC ("voice") files may
+require conversion to a module-like format, due to the way the sample data is
+organized within the file.  In these cases, the decoder should convert and
+store it memory as though it were loading a simplified module file.
+
+In the future, direct playback of compressed samples may be added if there is
+enough demand for it.  This will almost certainly require a CPU accellerator
+such as a Super CPU, TurboProcess, or something of a similar nature.
+
+One final word on limitations.  A C64 is only just so fast, so there's a limit
+to how many voices you can process at the output stage of the player routine.
+At this stage, 4 voices at 7.5 kHz on an otherwise stock C64 sounds workable.
+Basically, if you want to play more than 4 voices, you either need to reduce
+the sample rate of the player or add a CPU accellerator.  This is in addition
+to (or perhaps, supplied with) whatever form of RAM expansion you've chosen to
+use.
+
+
+THE GUI AND ITS WIDGETS
+***********************
+
+Since the player is based around a decent GUI, some method had to be devised to
+map out all of the widgets and call a specific piece of code for each one when
+they are clicked on.  First, we need a list of the widget numbers and their 
+functions.  This list also describes the Widgets1.gif file.
+
+In places where a widget is marked as "not implemented," that just means that
+this version of the player doesn't handle them, probably because the so-marked
+widgets would only make sense in a full-blown multitasking graphical system 
+such as Wings.  Functions like "Hide EQ" or "Resize Playlist Window" woudln't
+be of much use in a single-tasking environment as is implemented in this first 
+release of CMMS.
+
+All of the widget numbers used in this list apply only while the main GUI has
+control.  When a menu or dialog box is open, a different set of menu-specific
+or window-specific widgets is used instead.  First, a few generic things:
+
+ 0	No widget is assigned (use this for "ignore this cell" areas)
+ 1	Background/unassigned portions of the main window
+ 2	Background/unassigned portions of the equalizer window
+ 3	Background/unassigned portions of the playlist window
+
+Most of the "Main Window" widgets are implemented:
+
+ 4	Summon the main menu
+ 5	Shade main window (not implemented)
+ 6	Iconify main window (not implemented)
+ 7	Quit from CMMS
+ 8	Clutter bar (misc functions)
+ 9	Current file/song name or other song info
+10	Stereo/Mono switch
+11	Master volume control
+12	Balance control (disabled in certain mono modes)
+13	Hide/show Equalizer window (not implemented)
+14	Hide/show Playlist window (not implemented)
+15	Song seek/position widget (disabled with some file types)
+16	Previous song in playlist
+17	Play
+18	Pause
+19	Stop
+20	Next song in playlist
+21	Summon load-new-playlist dialog
+22	Straight-through/Shuffle switch
+23	Loop/no-loop switch
+24	Summon the About-CMMS dialog
+
+All Equalizer functions are dependent on the presence of some kind of CPU
+accellerator such as a SuperCPU or Turboprocess, due to the higher CPU needs of
+the equalizing code:
+
+25	Shade the Equalizer window (not implemented)
+26	Hide the Equalizer window (not implemented)
+27	Equalizer enable/disable switch
+28	Auto-load EQ setting from playlist enable/disable switch
+29	Summon the Presets menu
+30	Equalizer "Preamp" control
+31-40	Equalizer band boost/attenuation controls
+
+Most of the Playlist functions work on all setups:
+
+41	Shade the Playlist window (not implemented)
+42	Hide the Playlist window (not implemented)
+43	The main playlist widget itself - one value covers the entire region.
+44	Playlist main scroller/pager widget
+45	Playlist scroll-up widget
+46	Playlist scroll-down widget
+47	Add files to playlist
+48	Remove files from playlist
+49	Various playlist entry selection tools
+50	Various other playlist manipulation tools
+51	Summon the load-new-playlist dialog
+52	Previous song in playlist
+53	Play
+54	Pause
+55	Stop
+56	Next song in playlist
+57	Summon the load-new-playlist dialog
+58	Resize the Playlist window (Not implemented)
+
+The playlist supports a few sub-menus on some of its widgets.  These numbers
+are treated in a special manner, in that they are copied into place only while
+their corresponding sub-menus are actually open.  Otherwise, 3 or 43 is used to
+fill their place(s).
+
+59	Add all files in a given directory to the playlist
+60	Add a URL for file streaming (Need TCP/IP+HTTP to implement this)
+61	Miscellanious playlist-entry removal options
+62	Remove entries in playlist
+63	Remove all entries except the selected ones ("Crop")
+64	Unselect what entries are selected, and vice-versa ("Invert")
+65	Unselect all entries
+66	Sort playlist entries (or selected entries, if any)
+67	Information/properties of selected playlist entry
+68	Save playlist to disk
+69	Clear all entries from playlist
+
+Two of the widgets on the Main window are intended mostly for display, but they
+also have special uses when clicked on (the numbering is an afterthought; I
+didn't feel like re-numbering everything else to fit them in properly :-) ).
+
+70	Elapsed or Remaining time in current song (click to switch modes)
+71	Current visualizer (click to switch modes, right-click for Visualizer
+	menu)
+
+In addition to all of these, there are also several more widgets that are used
+solely as a method of displaying something.  Since they aren't clickable, they
+aren't given in-program numbers, just letters so you can match them up with the
+layout image.
+
+A	Play/Pause/Stop status indicator
+B	Current number of voices in modules or number of channels in samples
+C	Current sample rate
+D	Estimated response curve to match the Equalizer's settings.
+E	Approximate amount of play time in playlist and total elapsed time
+F	Elapsed time in currently-playing song
+
+All widgets within the "main window" section, except the Visualizer area, will 
+summon the main menu when right-clicked, as will happen when widget #4 is
+clicked normally.  Similarly, the Playlist main text area supports right-
+clicking to bring up a small menu.
+
+
+Window/menu widgets
+-------------------
+
+In order for the program to keep track of what menus are being displayed, the
+easiest way seems to be to assign a number to each type of menu or dialog box.
+Here then is the list of those numbers, as they are assigned to the
+"CurrentPopup" variable.  A value of 0 in this variable means that there is
+no dialog or menu being displayed.
+
+ 1 - Main menu
+ 2 - Options menu
+ 3 - Playback menu
+ 4 - Visualizer menu
+ 5 - Visualizer menu, Visualizer Mode
+ 6 - Visualizer menu, Analyzer Mode
+ 7 - Visualizer menu, Scope Mode
+ 8 - Visualizer menu, Windowshade VU Mode
+ 9 - Visualizer menu, Refresh Rate
+10 - Visualizer menu, Analyzer Falloff
+11 - Visualizer menu, Peaks Falloff
+12 - Preferences, Audio I/O Plugins
+13 - Preferences, Effects Plugins
+14 - Prererences, Visualizer Plugins
+15 - Preferences, Colors Page 1
+16 - Preferences, Colors Page 2
+17 - Preferences, Colors Page 3
+18 - Preferences, Colors Page 4
+19 - Preferences, Colors Page 5
+20 - Preferences, Options
+21 - Preferences, Fonts
+22 - Preferences, Title
+23 - File Selector, Load one item
+24 - File Selector, Load multiple items
+25 - File Selector, Save one item
+26 - Color Selector dialog
+27 - Skin Browser dialog
+28 - "Jump to entry" dialog
+29 - Playlist, popup menu
+30 - Playlost, View file info
+31 - Playlist, Add files
+32 - Playlist, Remove entries
+33 - Playlist, Remove entries, Misc
+34 - Playlist, Selection options
+35 - Playlist, Sort options
+36 - Playlist, Sort options, Sort List
+37 - Playlist, Sort options, Sort selection
+38 - Playlist, Playlist (load/save/new)
+
+Whenever a dialog box or menu is open, the main screen widget numbers no longer
+mean anything.  Instead, the piece of code that controls the dialog box or menu
+will, after setting the variable mentioned above, overwrite part of the main
+widget map with a number of new widgets, all numbered starting with 128,
+and usually numbered so from left to right and top to bottom (though this is
+not always the case).
+
+In the "Preferences" dialog box, the tabs along the top have a consistent 
+numbering - 128 through 134, and the OK/Cancel/Apply buttons always get 253
+through 255.  This simplifies the code used to control this dialog.
+
+Within the "Colors" tab of the Preferences dialog, there are five "Page" tabs,
+numbered 134 through 138.  Within each of those "Page" tabs, you'll find a
+listing of colors, numbered 140 through 151.
+
+
+Widget Color Replacement
+------------------------
+
+Included with the program is a single, congolmerate widgets file, containing 
+both Hires- and Multicolor-mode widget images.  Unlike the Skin files, this
+mixed-mode file has a totally new set of color-handling rules.  First, let's
+break the file down into segments.
+
+The first two bytes of course are the load address, which is ignored.
+
+Next are 264 bytes of ordinary, raw VIC-II bitmap data for the Hires version of
+the "icons."  These 33 8x8 images are simple single-color icons meant to be
+scattered around the screen as needed.  Foreground colors are taken from the
+color segment (below), while background colors for the icons are picked up from
+the window background, menu background, or text box background/fill color.
+
+Following these are 264 bytes of raw VIC-II bitmap data for the Multicolor
+version of the icons.  Bit patterns 01 and 10 are taken from the color segment
+below, while bit pattern 11 is replaced with one of the three background colors
+mentioned above.  Bit pattern 00 is illegal and will probably lead to weird
+results.
+
+Next, 33 bytes specify the foreground colors for the Hires icons.  These colors
+are all stored in the upper nybbles, while the lower nybbles are simply
+ignored.  
+
+Next, 33 bytes specify the two foreground colors for the Multicolor icons.  Bit
+patterns 01 and 10 in the bitmap data for the Multicolor icons get their colors
+from here, as these bytes will be directly written into the VIC-II Video Matrix
+region.
+
+Following this are 1544 bytes of raw VIC-II bitmap data for the Hires version 
+of the main widgets - i.e. menu edges, window borders, box-drawing characters,
+combo-boxes, scroll bars, and so on.  The colors given to these icons are 
+entirely user-specified, thus there is no corresponding segment of color data.
+Set pixels are drawn in one of the many possible foreground color settings, 
+while unset/off pixels will show one of the various background 'fill' colors
+(window background, menu background, text-box background, possibly others).
+
+Finally, 1544 bytes of raw VIC-II bitmap data for the Multicolor versions of
+those widgets.  Bit pattern 00 is illegal in this file and will lead to strange
+results.  Bit pattern 01 is the main color for a widget and is taken from the
+appropriate variable for each widget type (tab, combo box, etc).  Bit pattern
+10 is the second main color, often used for anti-aliasing.  Bit pattern 11 is
+used almost exclusively for some sort of background "fill" color for each
+widget.  Only a few widgets specify their own background color for this bit 
+pattern, the rest take their colors from a user-specified setting.
+
+SKINS
+*****
+
+Skin data is handled in a very simple manner.  Each of the two files associated
+with a given skin are loaded into expansion memory and then copied in small 
+pieces, directly to the Bitmap, Video Matrix, and Color RAM (in the case of
+Multicolor skins) to build up or change parts of the display (such as when a 
+slider is moved or a switch is toggled).  No color manipulation is performed
+in these files, except for two places:  The Seek widget and the Playlist Scroll
+handle.  These two widgets consist of two black and white images each (one
+mouse-over highlight and one regular), and are turned into sprites.  Since the
+last several cells of the skin image aren't being used for anything else, the
+colors for those sprites are taken from the upper nybbles of the last four
+bytes of Video Matrix data in the first half of the skin file, for either video
+mode.
+
+There are several empty regions within a skin file, some of which are simply
+unused, while others are meant to be filled with some sort of dynamic display.
+Four of those regions in the second category are of special concern - the Main
+Window's Visualizer display, the Main Window song title display, the Equalizer
+response curve display, and the main play list area where the list of songs is
+displayed.
+
+These regious should be pre-filled with $00 and then populated with a few small
+color squares (just 'on' pixels in Hires, or 01 bit patterns in Multicolor),
+one square per color cell from left to right.  These colors are used at various
+times within their respective regions, and are assigned to specific bit
+patterns in Multicolor mode (in parenthesis, below).
+
+Hires Mode Visualizer:  Foreground and background colors for each row are taken
+directly from the widget's first cell in each row for the scope mode, and from
+the second cell in the row for spectrum mode.
+
+Multicolor Mode Visualizer:  The first cell of each row in this widget 
+specifies the main color for the scope's waveform (01), antialias color (10),
+and background fill color (11).  The second cell in each row specifies the
+spectrum mode's main color (01), peaks color (10), and background fill color
+(11).
+
+Hires Mode Title display: Foreground and background colors are taken directly
+from the first cell in this widget.  These colors are also used to print the
+phrase "CMMS 64 v2.0" when the player does not have a song loaded.
+
+Multicolor Mode Title display:  The first cell specifes all three colors used
+for the title text: the primary foreground (01), the antialias (10), and
+the background fill color (11).  These colors are also used to print the
+phrase "CMMS 64 v2" when the player does not have a song loaded.
+
+Hires Mode EQ Curve:  Background and foreground colors are copied directly from
+this widget to the display's Video Matrix.
+
+Multicolor Mode EQ Curve: The colors found here are copied directly over to the
+display.  Each cell specifies a main foreground color for the curve (01), an
+antialias color (10), and a background fill color (11).
+
+Hires Mode Playlist:  Four color cells are used here. The first cell specifies
+the foreground and background colors for normal items in the playlist.  The 
+second cell handles selected items, the third cell handles the one highlithed
+item, and the fourth cell handles that highlighted item when it is also
+selected.
+
+Multicolor Mode Playlist:  Four color cells are used here.  The first cell 
+specifies the normal items' foreground color (01), antialias color (10), and
+background color (11). The second cell handles selected items, the third cell
+handles the highlighted item, and the fourth cell handles the highlighted-
+selected item.

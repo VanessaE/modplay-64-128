@@ -1,0 +1,57 @@
+#
+# numchan = number of channels to play (always a multiple of 2)
+# inbufptr = pointer to the current input position in the sample ring buffer
+#            (2 bytes)
+#
+# chanptr[] = array of sample pointers for each channel (3 bytes * 32)
+# chanfreq[] = array of frequency counter values for each channel (4 bytes * 32)
+# samplebase[] = array of start addresses for each sample (3 bytes * 256)
+# sampletop[] = array of end addresses for each sample (3 bytes * 256)
+# chansample[] = array of sample numbers currently assigned to each channel
+#                (1 byte * 32)
+# volume[] = current volume level of the channel (1 byte * 32)
+#
+# fetchbyte() = function to fetch one byte of sample data from far memory
+# writeringbuffer() = function to add two bytes of sample data to the ring
+#                     buffer
+
+
+$inbufpointer = $ringbufferbase
+tickcount = $ticktime
+
+while [ $tickcount > 0 ]; do {
+
+leftout=0
+rightout=0
+
+for i in `seq 0 $numchan-1`; do {
+	chanptr[$i]=$((chanptr[$i]+chanfreq[$i]))
+
+ 	if [ chanptr[$i] > sampletop[chansample[$i]] ] ; then {
+		chanptr[$i] = samplebase[chansample[$i]]
+	}
+	fi
+
+	chanbyte=$((fetchbyte(chanptr[$i])/volume[$i]))
+	if [ ($i && 3)=0 || ($i && 3) = 3 ] ; then {
+		leftout=$((leftout+chanbyte))
+		} else {
+		rightout=$((rightout+chanbyte))
+	}
+	fi
+}
+done
+
+inbufpointer=$((inbufpointer+2))
+if [ $inbufpointer . $ringbuffermax ] ; then { 
+	$inbufpointer = $ringbufferbase
+	}
+fi
+
+writeringbuffer($inbufpointer, $((leftout/numchan)))
+writeringbuffer($((inbufpointer+1)), $((rightout/numchan)))
+
+tickcount = $((tickcount-1))
+
+}
+done 

@@ -1,0 +1,494 @@
+; variables.xa - CMMS 64 v2.0.0
+;
+; This file describes all of the variables used by CMMS 64, and is meant to be
+; #include'd in to any source code modules that don't have a connection back to
+; main.xa.
+
+; =============================================================================
+; Various raw constants that don't point to memory addresses.
+; =============================================================================
+
+LowestNote		= 1024
+HighestNote		= 16
+
+; =============================================================================
+; Zero page variables!  Since we keep a backup of Zero Page, which is swapped
+; in when the KERNAL needs to be used, all of Zero Page except $01, $02, and
+; $4B - $70 is fair game and should be considered KERNAL-UNSAFE.
+; =============================================================================
+
+ROM_Bank		= $01	; We all know what this one does. (KERNAL-safe)
+tempbyte1		= $02	; First of 8 temp bytes (KERNAL-safe)
+Coordinates		= $03	; Current mouse coordinates (4 bytes)
+LeftButton		= $07	; Left mouse button (non-zero = pressed)
+RightButton		= $08	; Right mouse button (non-zero = pressed)
+CellCoords		= $09	; {X,Y} Cell coordinate under pointer
+SID2_Base		= $0B	; Address of the second SID chip, if any.
+SquareTab1		= $0C	; These four 2-byte pointers are used by the
+SquareTab2		= $0E	; multiply and divide routines.
+SquareTab3		= $11
+SquareTab4		= $13
+CurrentString		= $15	; Address of next text string to be printed
+RAM_Data		= $17	; One-byte buffer for expanded-memory transfers
+PointerXnow		= $18	; Current raw position of the pointer
+PointerYnow		= $1A
+PointerXmax		= $1C	; Maximum possible pointer coordinates
+PointerYmax		= $1E
+PotMax			= $20	; Max values the POTs have reached so far
+PotMin			= $22	; Min values the POTs have reached so far
+PotOld			= $24	; Last values the POTs held from previous IRQ
+PotWidth		= $26	; Difference between PotMax and PotMin
+HalfPotWidth		= $28	; Half of the difference between PotMax and 
+				; PotMin
+Sprite_HotspotX		= $2A	; X coordinate for pointer's "hot spot"
+Sprite_HotspotY 	= $2B	; Y coordinate for pointer's "hot spot"
+NumberOfChannels	= $2D	; Number of Channels
+NumChanReciprocal	= $2E	; Reciprocal, 256/(NumberOfChannels/2)
+TempoTicks		= $2F	; Tempo: Number of ticks per division
+TickTime		= $30	; Tempo: time per tick (16-bit CIA Timer value)
+LastKey			= $32	; Last key pressed during keyscan routine
+LastWidget		= $33	; Last widget clicked on during mouse routine
+PatternNumber		= $34	; Current pattern (position within order list)
+RowIndex		= $36	; Index into current pattern (row number)
+BreakAddress		= $37	; Break-Pattern command destination address
+AbortFlag		= $39	; GUI sets this to $FF to tell player to stop
+StereoFlag		= $3A	; 0 = mono, $ff = stereo
+LeftVolume		= $3B	; Left channel final output volume (0-255)
+RightVolume		= $3C	; Right channel final output volume (0-255)
+SongLength		= $3D	; Number of patterns (by order list) in song
+RAM_Bottom		= $3E	; Bottom of expansion memory
+RAM_Top			= $41	; Top of expansion memory + 1
+
+; Various user-configurable stuff starts here...
+
+WinBGColor		= $42	; Main fill color for windows and dialog boxes
+WinFrameColor		= $43	; Window/dialog box frame and title bar color
+WindowTitleColor	= $44	; Window title bar text color
+
+SliderBarColor		= $45	; Range slider bar color
+SliderHandleColor	= $46	; Range slider handle widget color
+SliderHandleHL		= $47	; Range slider handle widget highlight color
+
+ButtonBGColor		= $48	; Button background color
+ButtonBGHighlight	= $49	; Button background highlight color
+ButtonColor		= $4A	; Button foreground color (normal)
+
+; ...and skips over the KERNAL-safe zone, continuing below.
+
+; -----------------------------------------------------------------------------
+; These variables occupy the $4B - $70 range because they need to remain safe
+; from the KERNAL but still available while the KERNAL is in use.  This region
+; was originally used pretty exclusively by the BASIC ROM, so it's safe to use
+; since BASIC won't be used at all.
+; -----------------------------------------------------------------------------
+
+tempbyte2		= $4B	; More KERNAL-safe one-byte temporary variables
+tempbyte3		= $4C
+tempbyte4		= $4D
+tempbyte5		= $4E
+tempbyte6		= $4F
+tempbyte7		= $50
+tempbyte8		= $51
+
+lastbyte		= tempbyte8
+
+tempword1		= $52	; These 16 bytes are useful for temporary
+tempword2		= $54	; multi-byte variables or pointers.
+tempword3		= $56
+tempword4		= $58
+tempword5		= $5A
+tempword6		= $5C
+tempword7		= $5E
+tempword8		= $60
+
+rle_src			= tempword6
+rle_dest		= tempword7
+rle_destlen		= tempword8
+
+lzmv_backptr		= tempword5
+lzmv_src		= tempword6
+lzmv_dest		= tempword7
+lzmv_destlen		= tempword8
+
+Memory_Int_Addr		= $62	; C64 local address for memory transfers
+Memory_Ext_Addr		= $64	; Expansion address for memory transfers
+Memory_Bytecount	= $67	; C64 <-> Expansion memory transfer length
+SampleLength		= $69	; Length of sample currently being loaded
+SampleAddress		= $6B	; Expansion memory sound sample target address
+				; (24 bits)
+CurrentPopup		= $6E	; Current pop-up menu or dialog box (see 
+				; Internals.txt for explanation)
+
+; -----------------------------------------------------------------------------
+; More non-KERNAL-safe Zero Page variables
+; -----------------------------------------------------------------------------
+
+; User-configurable stuff picks up again here
+
+ButtonHighlight		= $71	; Button foreground highlight color
+ButtonAAColor		= $72	; Button antialias and upper/left edge color
+ButtonAAHighlight	= $73	; Button highlight antialias/upper/left color
+
+SpinboxBGColor		= $74	; Spinbox background fill color
+SpinboxBGHighlight	= $75	; Spinbox background highlight color
+SpinboxColor		= $76	; Spinbox foreground color
+SpinboxAAColor		= $77	; Spinbox antialias foreground color
+SpinboxHighlight	= $78	; Spinbox foreground highlight color
+SpinboxAAHighlight	= $79	; Spinbox foreground antialias-highlight color
+
+BoxForegroundColor	= $7A	; Box-drawing main foreground color
+BoxShadowColor		= $7B	; Box-drawing shadow color
+
+TabSelectColor		= $7C	; Color for currently-selected tab
+TabSelectAAColor	= $7D	; Antialias color for currently-selected tab
+TabUnselectColor	= $7E	; Color for non-selected tabs
+TabUnselectAAColor	= $7F	; Antialias color for non-selected tabs (also
+				; used for unselected tab background color)
+
+ProgressBGColor		= $80	; Progress bar background fill color
+ProgressColor		= $81	; Progress bar foreground/edge color
+ProgressFillColor	= $82	; Progress bar "active" color
+
+ScrollArrowBGColor	= $83	; Scroll arrow background color
+ScrollArrowBG_HL	= $84	; Scroll arrow background highlight color
+ScrollArrowBG_Dis	= $85	; Scroll arrow background "disabled" color
+ScrollArrowColor	= $86	; Scroll arrow foreground color
+ScrollArrowHLColor	= $87	; Scroll arrow foreground highlight color
+ScrollArrowDisColor	= $88	; Scroll arrow foreground "disabled" color
+ScrollArrowAAColor	= $89	; Scroll arrow foreground antialias color
+ScrollArrowAA_HL	= $8A	; Scroll arrow FG antialias-highlight color
+ScrollArrowAA_Dis	= $8B	; Scroll arrow FG antialias-"disabled" color
+
+ScrollbarBGColor	= $8C	; Scrollbar background fill color
+ScrollbarColor		= $8D	; Scrollbar upper/left edge color
+ScrollbarHighlight	= $8E	; Scrollbar lower/right edge highlight color
+ScrollbarHandle		= $8F	; Scrollbar handle color
+ScrollbarHandleHL	= $90	; Scrollbar handle highlight color
+
+ComboBoxEditBGColor	= $91	; Editable Combo Box background fill color
+ComboBoxEditColor	= $92	; Editable Combo Box foreground color
+ComboBoxEditAAColor	= $93	; Editable Combo Box antialias foreground color
+ComboNoneditBGColor	= $94	; Non-editable Combo Box background fill color
+ComboNoneditColor	= $95	; Non-editable Combo Box foreground color
+ComboNoneditAAColor	= $96	; Non-editable Combo Box antialias FG color
+
+ListBoxBGColor		= $97	; Fill color for text and list boxes
+ListBoxBGColor_HL	= $98	; Highlight fill color for text/list boxes
+ListBoxFGColor		= $99	; Text color within text and list boxes
+ListBoxFGColor_HL	= $9A	; Text Highlight color within text/list boxes
+ListEdgeShadow		= $9B	; List box edge shadow color
+ListEdgeHighlight	= $9C	; List box edge highlight color
+
+MenuBGColor		= $9D	; Menu background fill color
+MenuBG_Highlight	= $9E	; Menu background fill highlight color
+MenuTextColor		= $9F	; Menu foreground text color
+MenuTextHighlight	= $A0	; Menu foreground text highlight
+MenuSeperatorColor	= $A1	; Menu separator color
+MenuEdgeColor		= $A2	; Menu edge color
+
+DropShadowColor		= $A3	; Window/dialog box/menu drop shadow color
+DialogTextColor		= $A4	; Primary color for most dialog text
+DialogTextColor_Dis	= $A5	; Dialog box "disabled" text color
+PointerMainColor	= $A6	; Color used for the main body of the pointer
+PointerEdgeColor	= $A7	; Color used for the edges of the pointer
+				; Note that the pointer drop shadow is hard-
+				; coded to dark grey.
+
+ReadInfo		= $A8	; Read info on: 0=play, 1=demand, 2=load
+Convert20Space		= $A9	; Flag: Convert %20 to space
+ConvertUnderscore	= $AA	; Flag: Convert underscore to space
+SureJumpTo		= $AB	; Flag: Sort "jump to file" alphabetically
+PauseBetweenSongs	= $AC	; Pause between songs (seconds, 0=disabled)
+ShowPlaylistNumbers	= $AD	; Flag: Show numbers in playlist
+SmoothTitleScroll	= $AE	; Flag: Smooth title scroll
+UsePlaylistMetaData	= $AF	; Flag: Use meta-data in playlists
+Repeat			= $B0	; Flag: Repeat (0=play once)
+Shuffle			= $B1	; Flag: Shuffle (0=play in list order)
+NoPlaylistAdvance	= $B2	; Flag: Don't advance playlist (0=do advance)
+ShowTimeElapsed		= $B3	; Flag: Show time elapsed (0=time remaining)
+VisualizerMode		= $B4	; Visualizer Mode (0=off, 1=scope, 2=analyzer)
+AnalyzerMode		= $B5	; Flag: Analyzer mode (0=normal, 1=fire,
+				; 2=vertical lines)
+AnalyzerLines		= $B6	; Flag: Display analyzer as lines (0=bars)
+AnalyzerPeaks		= $B7	; Flag: Show analyzer peaks
+ScopeMode		= $B8	; Flag: Scope mode (0=dots, 1=line, 2=solid)
+VisualizerRefresh	= $B9	; Visualizer refresh rate (1=full, else 1/N)
+AnalyzerFalloffRateq	= $BA	; Analyzer falloff rate (0-4, lower is faster)
+AnalyzerPeaksFalloff	= $BB	; Analyzer peaks falloff (0-4, lower is faster)
+EnableEQ		= $BC	; Flag: EQ enabled (usually 0, SuperCPU only)
+EQAutoloadPreset	= $BD	; Flag: EQ autoload preset from playlist (SCPU)
+EQPreampLevel		= $BE	; EQ preamp level (0-255)
+EQBands			= $BF	; EQ band adjustments (10 bytes, 0-255 each)
+ChosenColor		= $C0	; "Select Color" dialog: last chosen color
+ShowProgress		= $C1	; If non-zero, use a progress bar during the
+				; LoadData routine.
+FillStartX		= $C2	; Upper-left X/Y cell coordinate of fill area
+FillStartY		= $C3
+FillSizeX		= $C4	; X/Y size of fill area
+FillSizeY		= $C5
+FillColor		= $C6	; Current fill color
+
+RingBufferInPtr		= $C7	; Index into ring buffers, input side
+RingBufferOutPtr	= $C8	; Index into ring buffers, output side
+
+LeftTotal		= $C9	; Running total of all left channels
+RightTotal		= $CB	; ...and right channels.
+
+TickCount		= $CD	; Number of mixer loop cycles remaining for
+				; current 'tick'
+CurrentVoice		= $CF	; Temp register for voice counter
+
+BitTable		= $F8	; Table of bit values (1, 2, 4, 8, ...)
+
+; =============================================================================
+; Low-memory variables (below program code)
+; =============================================================================
+
+LeftBuffer		= $0400	; Left sound channel ring buffer (256 bytes)
+RightBuffer		= $0500	; Right sound channel ring buffer (256 bytes)
+RowBuffer		= $0600	; Row buffer (32 ch. * 8 bytes per = 256 bytes)
+BackupZP		= $0700	; 256-byte buffer for Zero-page backup
+
+; =============================================================================
+; The code!
+; =============================================================================
+
+CodeStart		= $0800	; The main program code will load here.
+
+; -----------------------------------------------------------------------------
+; Loadable code plugins, etc.
+; -----
+;
+; Effect Plugin (sound enhancements, 2 kB)
+
+InitializeEffectPlugin	= $6AC5	; Initialize/set up the selected Effect Plugin
+DisplayEffectPlugin	= $6AC8	; Display the plugin's config/UI dialog
+ProcessEffectFrame	= $6ACB	; Process/apply effect to one sample frame
+EraseEffectPlugin	= $6ACE	; Close/erase the effect plugin's UI.
+
+
+; - - - - - - - - - - - -
+; Visualizer Plugin (2 kB)
+
+InitializeVisualizer	= $72C5	; Initialize/set up the visualizer
+DisplayVisualizer	= $72C8	; Display the visualizer's UI, if any
+ProcessVisualizerFrame	= $72CB	; Process and display four bytes of sound data
+EraseVisualizer		= $72CE	; Close/erase the visualizer's UI.
+
+
+; - - - - - - - - - - - - - - - - - - - - 
+; Output Plugin (sound driver, 512 bytes)
+
+StartSoundDevice	= $7AC5	; Initialize sound device, start sound driver
+StopSoundDevice		= $7AC8	; Mute sound device and terminate driver
+SuspendSoundDevice	= $7ACB	; Mute sound device and pause driver
+ResumeSoundDevice	= $7ACE	; Resume driver and un-mute sound device
+
+
+; - - - - - - - - - - - - - - - -
+; Input Plugin (file loader, 2 kB)
+
+DetermineFiletype	= $7CC5	; Determine if file can be loaded
+EstimateLength		= $7CC8	; Estimate the length of a song
+LoadSong		= $7CCB	; Load the file into memory (duh :-) )
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - -
+; Memory Driver (expansion RAM handler, 512 bytes)
+
+StashByte		= $84C5	; Stash one byte (.A) into expansion memory
+FetchBlock		= $84C8	; Fetch a block of expansion memory
+StashBlock		= $84CB	; Stash a block of host memory into expansion
+OpenStream		= $84D0	; "Open" a memory stream for read/write
+CloseStream		= $84D3	; "Close" the read/write stream
+ReadStream		= $84D6	; "Read" from the virtual stream
+WriteStream		= $84D9	; "Write" to the virtual stream
+MemFree			= $84DC	; Check/report on amount of free memory
+FetchByte		= $84DF	; Fetch one byte (into .A) from expansion
+
+
+; =============================================================================
+; High memory -- fonts, tables, variables, etc.
+; =============================================================================
+
+MainWinFont		= $86C5	; Main window "song title" font data (768 byt.)
+DialogFont		= $89C5	; Dialog box font data (768 bytes)
+WinTitleFont		= $8CC5	; Window title font data (768 bytes)
+TextboxFont		= $8FC5	; Text box font data (768 bytes)
+PlaylistFont		= $92C5	; Playlist font filename (768 bytes)
+ButtonFont		= $95C5	; Button/Combobox font filename (768 bytes)
+
+WidgetFile1		= $98C5	; Widget file #1 (icons, 363 bytes)
+WidgetFile2		= $9A30 ; Widget file #2 (main widgets, 2000 bytes)
+
+Divide16Table		= $A200	; Divide-by-16 table (256 bytes)
+SquareTableA		= $A300	; Table of squares, part A (512 bytes)
+SquareTableB		= $A400	; Table of squares, part B (512 bytes, note the
+				; 256-byte overlap with part A, ends at $A7FF)
+
+; All data from here to "End of Config file area" is saved into the config file
+; with a bulk SAVE command.
+
+ShowSplashScreen	= $A600	; Flag: Show splash screen
+VideoMode		= $A601	; Flag: 0=Hires, 1=Multicolor mode
+DimTitlebar		= $A602	; Flag: Dim titlebar when inactive (unused)
+AlwaysShowClutterBar	= $A603	; Flag: Always show clutter bar (unused)
+AllowMultiInstances	= $A604	; Flag: Allow multiple instances (unused)
+SaveWindowPositions	= $A605	; Flag: Save window positions on exit (unused)
+ShowMainWindow		= $A606	; Flag: Show main window (always on, unused)
+ShowEQWindow		= $A607	; Flag: Show EQ window (always on, unused)
+ShowPlaylistWindow	= $A608	; Flag: Show Playlst window (always on, unused)
+AlwaysOnTop		= $A609	; Flag: Always on top (unused)
+ShowOnAllDesktops	= $A60A	; Flag: Show on all desktops (unused)
+MainWindowShade		= $A60B	; Flag: Main window WindowShade mode (unused)
+PlaylistWindowShade	= $A60C	; Flag: Playlist windowshade more (unused)
+EQWindowShade		= $A60D	; Flag: EQ windowshade mode (unused)
+EasyMove		= $A60E	; Flag: Easy move (unused)
+WindowShadeVUMode	= $A60F	; Flag: Windowshade VU mode is smooth (0=norm.)
+TitleFormat		= $A610	; Title format (32 bytes)
+SongTitleFontFilename	= $A630	; Song title font filename (16 bytes)
+PlaylistFontFilename	= $A640	; Playlist font filename (16 bytes)
+DialogFontFilename	= $A650	; Dialog box text font filename (16 bytes)
+WinTitleFontFilename	= $A660	; Dialog box/window title font filename (16 b.)
+TextboxFontFilename	= $A670	; Text box font filename (16 bytes)
+ButtonFontFilename	= $A680	; Button/Combobox font filename (16 bytes)
+OutputPluginFilename	= $A690	; Output plugin filename (16 bytes)
+EffectPluginFilename	= $A6A0	; Effect plugin filename (16 bytes)
+VisualPluginFilename	= $A6B0	; Visualizer plugin filename (16 bytes)
+SkinFilename		= $A6C0	; Skin filename (16 bytes)
+EQPresetFilename	= $A6D0	; EQ default preset config filename (16 bytes)
+ShortcutPaths		= $A6E0	; 8 shortcut paths for file selector (128 bytes
+				; each, total 1 kB, ends at $AADF)
+; End of Config file area
+; 8 wasted bytes.
+
+InputPluginFilenames	= $AAE8	; 16 Input Plugin filenames (256 bytes)
+CurrentPath		= $ABE8	; Last selected path in file dialog (128 byt.)
+ProgramPath		= $AC68	; Full path where to find all program files
+				; (fonts, plugins, codecs, etc., 128 bytes)
+RecipOf16Table		= $ACE8	; Reciprocals table: 255/n for 1<= n <= 16
+SampleLoopFlag		= $ACF8	; Loop flags, by channel (1=looping, 32 bytes)
+VibratoUpFlag		= $AD18 ; Vibrato direction flag (32 bytes)
+TempoTable		= $AD38	; Tempo table (512 bytes)
+NotePeriodLSB		= $AF38	; Current note period (pitch, 32 bytes)
+NotePeriodMSB		= $AF58
+OldPeriodLSB		= $AF78	; Previous note period (32 bytes)
+OldPeriodMSB		= $AF98
+ArpeggioFlag		= $AFB8	; Arpeggio flags (0=no, 1=yes, 32 bytes)
+SetVolumeFlag		= $AFD8	; Set Volume flags (0=no, 1=yes, 32 bytes)
+PortamentoFlag		= $AFF8	; Portamento flags (0=no, 1=yes, 32 bytes)
+VolumeSlideFlag		= $B018	; Volume Slide flags (0=no, 1=yes, 32 bytes)
+VolumeSlideDirection	= $B038	; Slide direction flag (0 = down, 1 = up, 32 b)
+PortaVolSlideFlag	= $B058	; Portamento + Volume Slide flag (0=no, 1=yes)
+SetOffsetFlag		= $B078	; Set Sample Offset flags (0=no, 1=yes, 32 b.)
+VibratoRate		= $B098	; If 0, no vibrato. >0 sets rate (32 bytes)
+VibratoDepth		= $B0B8	; Vibrato depth in semitones (32 bytes)
+VibratoTopLSB		= $B0D8	; Top end of current vibrato range (32 bytes)
+VibratoTopMSB		= $B0F8
+VibratoBottomLSB	= $B118	; Bottom end of current vibrato range (32 b.)
+VibratoBottomMSB	= $B138
+VibratoStepFract	= $B158	; Vibrato stepper (Fractional part, 32 bytes)
+VibratoStepLSB		= $B178
+VibratoStepMSB		= $B198
+VibratoCounter		= $B1B8	; Some sort of vibrato counter?? :-) (32 bytes)
+VibratoHalfCount	= $B1D8
+VibratoWaveform		= $B1F8	; 0 = Sawtooth, 1 = Sine, 2 = Square (32 byt.)
+TremoloWaveform		= $B218	; 0 = Sawtooth, 1 = Sine, 2 = Square (32 byt.)
+TempPeriodLSB		= $B238	; Temporary storage for note periods (32 bytes)
+TempPeriodMSB		= $B258
+ArpeggioNote1LSB	= $B278	; First added note (period) for arpeggio (32 b)
+ArpeggioNote1MSB	= $B298
+ArpeggioNote2LSB	= $B2B8	; Second added note (period) for arpeggio (32b)
+ArpeggioNote2MSB	= $B2D8
+ArpeggioCounterLSB	= $B2F8	; Internal counters used during Arpeggio (32 b)
+ArpeggioCounterMSB	= $B318
+StepFract      		= $B338	; Instrument sample data rates (fraction, 32 b)
+StepLSB			= $B358	; ...LSB
+StepMSB			= $B378	; ...MSB
+VoicePointerFract	= $B398	; Sample pointers, by voice number (32 bytes)
+VoicePointerLSB		= $B3B8
+VoicePointerMSB		= $B3D8
+VoicePointerBank	= $B3F8
+SampleStartLSB		= $B418	; Start addresses of samples (32 bytes)
+SampleStartMSB		= $B438
+SampleStartBank		= $B458
+SampleEndLSB		= $B478	; End addresses of samples (32 bytes)
+SampleEndMSB		= $B498
+SampleEndBank		= $B4B8
+SampleLoopStartLSB	= $B4D8	; Start addresses of sample loops (32 bytes)
+SampleLoopStartMSB	= $B4F8
+SampleLoopStartBank	= $B518
+SampleLoopEndLSB	= $B538	; End addresses of sample loops (32 bytes)
+SampleLoopEndMSB	= $B558
+SampleLoopEndBank	= $B578
+VoiceVolume		= $B598	; Current volumes of each voice (0-255, 32 b.)
+SampleNumber		= $B5B8	; Instrument currently being played (by number)
+CurrentCommand		= $B5D8	; Current effect command (32 bytes)
+CommandArgument1	= $B5F8	; Current effect command argument #1 ("X", 32b) 
+CommandArgument2	= $B618	; Current effect command argument #2 ("Y", 32b)
+OldCommand		= $B638	; Previous effect command (32 bytes)
+OldCommandArg1		= $B658	; Previous effect command arguement #1 (32 b)
+OldCommandArg2		= $B678	; Previous effect command arguement #2 (32 b)
+MainWidgetMap		= $B698	; Main screen widget map (1000 bytes)
+ActiveWidgetMap		= $BA80	; Active widget map (all widget maps are copied
+				; here as they are generated. (1000 bytes)
+VoiceData		= $BE68	; Un-processed voice sample data (64 bytes)
+ColorSwaps		= $BEA8	; Low-contrast color-swap table for use when a
+				; widget has same color as background (16 byt.)
+ModuleHeader		= $BEB8	; Translated module header (328 bytes, ends at
+				; $BFFF)
+BootstrapCode		= $C000	; Bootstrap code gets temporarily copied up to
+				; and run from here, but will be re-used by:
+InstrumentDesc		= $C000	; Instrument descriptors (255 entries * 7 bytes
+				; each = 1785 bytes, ends at $C7F8)
+SpriteImages		= $C800	; Sprite images (1 kB)
+VideoMatrix		= $CC00	; Bitmap "Video Matrix" (colors, 1000 bytes)
+Bitmap			= $E000	; The main bitmap (8000 bytes, ends at $FF3F)
+SplashLine=Bitmap+$1900		; Location of row 20 on the bitmap (splash
+				; screen status line)
+
+; =============================================================================
+; I/O devices
+; =============================================================================
+
+VIC_Base		= $D000	; Base address of VIC-II chip
+SID_Base		= $D400	; Base address of SID chip
+sid_pot			= $D419	; POT-X register in SID chip
+ColorRAM		= $D800	; Color RAM
+CIA1_Base		= $DC00	; Base address of keyboard/serial CIA
+cia1_pra		= $DC00	; CIA #1 Port A I/O register
+cia1_prb		= $DC01	; CIA #1 Port B I/O register
+cia1_ddrb		= $DC03	; CIA #1 Port B data direction register
+CIA2_Base		= $DD00	; Base address of User-Port/etc. CIA
+DMA_Command		= $DF01	; REU Command register
+DMA_Int_Addr		= $DF02	; REU<->C64 Internal address
+DMA_Ext_Addr		= $DF04	; REU<->C64 Expansion address
+DMA_Bytecount		= $DF07	; REU<->C64 Transfer length (bytes)
+DMA_Version		= $DF0A	; REU Version/data transfer increment control
+
+; =============================================================================
+; KERNAL routines
+; =============================================================================
+
+SETLFS			= $FFBA	; Set logical file handles
+SETNAM			= $FFBD	; Set file name
+OPEN			= $FFC0	; Open a file on disk
+CLOSE			= $FFC3	; Close a disk file
+CHKIN			= $FFC6	; Switch input stream
+CHKOUT			= $FFC9	; Switch output stream
+CLRCH			= $FFCC	; Reset I/O streams
+BASIN			= $FFCF	; Read from channel
+BSOUT			= $FFD2	; Write to channel
+LOAD			= $FFD5	; Load a binary file
+SAVE			= $FFD8	; Save a binary file
+
+; =============================================================================
+; Various expansion-memory variables
+; =============================================================================
+
+SkinFile1		= @$000000	; Skin file #1 (10001 bytes)
+SkinFile2		= @$002711	; Skin file #2 (10001 bytes)
+SongData		= @$004E22	; Start of song data
+
+#define align(a) .(: .dsb (((*/a)+1)*a)-* : .byt 0 :.)
+

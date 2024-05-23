@@ -1,0 +1,44 @@
+; load-data.xa - CMMS 64 v2.0.0
+
+; This bit of code handles loading data from disk into expansion memory.
+; Enter with [.AXY] set to the start address in expansion memory to write to,
+; and [Memory_Bytecount] set for the total number of bytes to be loaded.
+
+; This routine assumes a disk file is already open as channel #1.
+
++LoadData 	jsr OpenStream		; First, open a RAM expansion stream.	
+		lda ShowProgress
+		beq noprog1
+		lda #1
+		jsr OpenProgressBar
+
+noprog1		lda Memory_Bytecount	; Then save the byte count values
+		sta tempword1
+		lda Memory_Bytecount+1
+		sta tempword1+1
+		lda Memory_Bytecount+2
+		sta tempword1+2		; This overlaps tempword2.
+		ldx #1
+		jsr CHKIN		; Select channel #1
+
+read		jsr BASIN
+		jsr WriteStream		; Store .A to external memory
+		lda ShowProgress
+		beq noprog2
+		lda #1			; Select the "file load" progress bar
+		jsr UpdateProgress
+
+noprog2		lda tempword1		; if LSB is non-zero, it's all we dec
+		bne dec1
+		lda tempword1+1		; but if it's 0, check middle.  If 
+		bne dec2		; middle is non-zero, dec both LSB's.
+		lda tempword1+2
+		beq done		; the only way this branch will be
+		dec tempword1+2		; taken is if all three bytes are 0.
+dec2		dec tempword1+1
+dec1		dec tempword1
+		jmp read
+
+done		jsr CLRCH
+		jsr CloseStream
+		rts

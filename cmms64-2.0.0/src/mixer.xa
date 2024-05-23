@@ -1,0 +1,151 @@
+; mixer.xa - CMMS 64 v2.0.0
+
++StartMixer	lda TickTime
+		sta TickCount
+		lda TickTime+1
+		sta TickCount+1
+mainloop1	lda #0			; Each loop of the tick counter starts
+		sta LeftTotal		; here, up to a few tens of thousands
+		sta LeftTotal+1		; of times.
+		sta RightTotal
+		sta RightTotal+1
+		tax
+voiceloop	clc			; After each voice's next data byte has
+		lda StepFract,x		; been fetched and summed, the program
+		adc VoicePointerFract,x	; loops to here, up to 32 voices.
+		sta VoicePointerFract,x
+		lda StepLSB,x
+		adc VoicePointerLSB,x
+		sta VoicePointerLSB,x
+		lda StepMSB,x
+		adc VoicePointerMSB,x
+		sta VoicePointerMSB,x
+		bcc lookforloop
+		inc VoicePointerBank,x
+lookforloop	lda SampleLoopFlag,x	; If no loop is in effect, skip ahead
+		beq chksampleloop	; to check for end-of-sample
+
+		sec
+		lda VoicePointerLSB,x
+		sbc SampleLoopEndLSB,x
+		lda VoicePointerMSB,x
+		sbc SampleLoopEndMSB,x
+		lda VoicePointerBank,x	; If the voice pointer is still within
+		sbc SampleLoopEndBank,x	; the loop region, just move on.
+		bcs getsamplebyte
+
+		lda #0			; If it isn't, it overflowed, so we
+		sta VoicePointerFract,x	; need to reset the loop to the start
+		lda SampleLoopStartLSB,x
+		sta VoicePointerLSB,x
+		lda SampleLoopStartMSB,x
+		sta VoicePointerMSB,x
+		lda SampleLoopStartBank,x
+                sta VoicePointerBank,x
+		jmp getsamplebyte
+
+chksampleloop	lda SampleLoopEndLSB,x	; If we make it here instead, no sample
+		ora SampleLoopEndMSB,x	; loop is running, yet.
+		ora SampleLoopEndBank,x
+		bne createloop		; Do we need one?
+		sta StepFract,x		; If not, halt the voice counter, the
+		sta StepLSB,x		; sample's done.
+		sta StepMSB,x
+		beq getsamplebyte
+
+createloop	lda #0			; if we do, set the voice pointer to
+		sta VoicePointerFract,x	; the start of the loop.
+		lda SampleLoopStartLSB,x
+		sta VoicePointerLSB,x
+		lda SampleLoopStartMSB,x
+		sta VoicePointerMSB,x
+		lda SampleLoopStartBank,x
+		sta VoicePointerBank,x
+		lda #1
+		sta SampleLoopFlag,x
+
+getsamplebyte	stx CurrentVoice	; Fetch the next byte of sample data
+		ldy VoicePointerBank,x	; for the current voice...
+		lda VoicePointerMSB,x
+		tax
+		lda VoicePointerLSB,x
+		jsr FetchByte		; ...from far memory.
+		tay			; we want (Vol*Sample)/256 so we just
+		ldx CurrentVoice	; multiply and ignore the result LSB.
+		lda VoiceVolume,x
+#include "multiply.xa"
+
+		tay			; temporarily store the MSB
+		lda CurrentVoice
+		tax
+		and #$03		; Voices 1, 5, 9, 13...
+		beq left
+		cmp #$03		; ...4, 8, 12, and 16...
+		beq left		; ... all go to the left speaker
+			
+right		clc			; The rest go to the right speaker
+		tya
+		adc RightTotal
+		sta RightTotal
+		beq nextvoice
+		inc RightTotal+1
+		bcs nextvoice
+
+left 		clc
+		tya
+		adc LeftTotal
+		sta LeftTotal
+		beq nextvoice
+		inc LeftTotal+1
+
+nextvoice	inx			; Check for more voices, and do them.
+		cpx NumberOfChannels
+		beq averagevoices
+		jmp voiceloop
+
+; We want to calculate A/B, where 0<= A <= 4095 and 1<= B <=16.   A*(1/B) is
+; the same thing, and B only needs one byte, so use a table of 256/B (we scaled
+; it up for precision), and only use the high byte of the final result (to
+; scale it back down).  Thus, we need to calculate (A*(256/B))/256
+
+averagevoices	lda NumChanReciprocal ; This is pre-set during module load
+					; as 256/(NumberOfChannels/2).
+		ldy LeftTotal		; Calculate A(LSB)*(256/B)
+#include "multiply.xa"
+
+		sta tempbyte1		; Save the high byte of the result as
+					; a "carry" byte.
+		lda NumChanReciprocal
+		ldy LeftTotal+1		; Calculate A(MSB)*(256/B)
+#include "multiply.xa"
+					; MSB is always 0, so ignore .A
+		clc
+		txa			; Add the MSB "carry" from the first
+		adc tempbyte1		; calculation to the LSB of the second.
+
+;### FIXME: Create Right-channel buffer fill routine here.
+
+		lda NumChanReciprocal ; Now do the same thing again with the
+		ldy RightTotal		; right channel.
+#include "multiply.xa"
+
+		sta tempbyte1
+		lda NumChanReciprocal
+		ldy RightTotal+1
+#include "multiply.xa"
+
+		clc
+		adc tempbyte1
+
+;### FIXME: Create Right-channel buffer fill routine here.
+	
+		lda TickCount
+		bne sk1
+		dec TickCount+1
+sk1		dec TickCount
+		lda TickCount		; If the tick counter is non-zero, 
+		ora TickCount+1		; keep looping.
+		beq exit
+		jmp mainloop1
+exit		rts
+

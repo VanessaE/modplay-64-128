@@ -1,0 +1,97 @@
+; This file is a modified copy of src/backpack/cc65/backunpack.s
+; 
+; Changes: translated into XA65 format, minor changes to overall formatting
+; to better match CMMS' style, edited to work with CMMS code
+
+
+	lda lzmv_dest
+	sta lzmv_destlen	; save original dest
+	lda lzmv_dest + 1
+	sta lzmv_destlen + 1
+	jsr back_unpack		; execute
+	lda lzmv_dest
+	sec
+	sbc lzmv_destlen
+	sta lzmv_destlen
+	lda lzmv_dest + 1
+	sbc lzmv_destlen + 1
+	sta lzmv_destlen + 1
+	tax
+	lda lzmv_destlen	; return length
+	rts
+
+; unpack backpacked data
+
+back_unpack
+	ldy #0
+	jsr bp_read		; read command byte
+	cmp #$00		; update flags
+	bmi literal		; msb means literal run
+	beq done		; 0 means eof
+
+; back reference, length - 2 in A
+
+	clc 			; put length + 2 in X
+	adc #2
+	tax
+	jsr bp_read		; read offset byte
+				; inc dest len
+
+	clc 			; lzmv_backptr = lzmv_dest - 256 + offset
+	adc lzmv_dest
+	sta lzmv_backptr
+	ldy lzmv_dest + 1
+	bcs l1
+	dey
+l1	sty lzmv_backptr + 1
+	ldy #0			; copy forwards to handle overlaps
+l2	lda (lzmv_backptr),y
+	sta (lzmv_dest),y
+	iny
+	dex
+	bne l2
+
+	dey			; put count - 1 in A
+	tya
+	pha
+	bne incdest		; jump to increment dest ptr
+
+done	rts
+
+; literal run, length - 1 in A with msb set
+
+literal	and #$7f		; mask msb
+	tay 			; use as counter
+
+	pha			; save for later
+
+copy	lda (lzmv_src),y
+	sta (lzmv_dest),y
+	dey
+	bpl copy
+
+	pla			; add length to src pointer
+	pha
+	sec
+	adc lzmv_src
+	sta lzmv_src
+	bcc l3
+	inc lzmv_src + 1
+l3
+incdest	pla			; add length to dest pointer
+	sec
+	adc lzmv_dest
+	sta lzmv_dest
+	bcc l4
+	inc lzmv_dest + 1
+
+l4	jmp back_unpack		; back to main loop
+
+
+; read a byte and increment source pointer
+
+bp_read	lda (lzmv_src),y
+	inc lzmv_src
+	bne l5
+	inc lzmv_src + 1
+l5	rts

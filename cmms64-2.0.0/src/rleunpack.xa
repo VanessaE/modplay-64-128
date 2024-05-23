@@ -1,0 +1,56 @@
+; rleunpack.xa - CMMS 64 v2.0.0
+;
+; Very closely based on MagerValp's RLE routines
+; from http://www.paradroid.net/rle/
+
+; Enter with:
+; rle_src = source address for the unpacker
+; rle_dest = destination address
+
+	ldy #0
+	sty rle_destlen		; reset byte counter
+	sty rle_destlen+1
+	jsr rle_read		; read the first byte
+	sta lastbyte		; save as last byte
+	jsr rle_store		; store
+unpack
+	jsr rle_read		; read next byte
+	cmp lastbyte		; same as last one?
+	beq rle			; yes, unpack
+	sta lastbyte		; save as last byte
+	jsr rle_store		; store
+	jmp unpack		; next
+rle
+	jsr rle_read		; read byte count
+	tax
+	beq end			; 0 = end of stream
+	lda lastbyte
+read
+	jsr rle_store		; store X bytes
+	dex
+	bne read
+	beq unpack		; next
+end
+	rts
+
+; read a byte and increment source pointer
+
+rle_read
+	lda (rle_src),y
+	inc rle_src
+	bne rr
+	inc rle_src+1
+rr	rts
+
+
+; write a byte and increment destination pointer
+
+rle_store
+	sta (rle_dest),y
+	inc rle_dest
+	bne rs1
+	inc rle_dest+1
+rs1	inc rle_destlen
+	bne rs2
+	inc rle_destlen+1
+rs2	rts
