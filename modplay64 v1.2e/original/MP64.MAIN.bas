@@ -4,12 +4,12 @@ start tok64 mp64.main.fix
 1sys36240
 50 POKE53280,.:POKE53281,.:dv=PEEK(186):IFdv<8ORdv>30THENdv=8
 60 mh=1
-70 PRINT"{black}{clear}{light gray}{ct n}{down*3}Reading Data{.*3}"
+70 PRINT"{black}{clear}"
 80 DIM sl(31),in$(31),c$(1),pm$(4,4),fr$(7),oo$(1)
 90 GOSUB5000:GOSUB5050
-100 PRINT"{down}Unpacking Pitch Table{.*3}":GOSUB2500
+100 GOSUB2500
 200 OPEN1,dv,15:INPUT#1,z$,z$,z$,z$:CLOSE1
-210 PRINT"{black}{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2d  {yellow}12/6/2007"
+210 PRINT"{black}{clear}{light gray}{ct n} Welcome to {red}Mod{orange}pl{yellow}ay {green}64 {light blue}v1{purple}.2{pink}e {yellow}12/10/2007"
 220 PRINT"{down}{gray}{reverse on} L {reverse off} {light gray}Load Module{space*7}{gray}{reverse on} # {reverse off} {light gray}Change Device"
 230 PRINT"{gray}{reverse on} P {reverse off} {light gray}Play Module{space*7}{gray}{reverse on} $ {reverse off} {light gray}Directory"
 240 PRINT"{gray}{reverse on} M {reverse off} {light gray}Change Play Mode{space*2}{gray}{reverse on} @ {reverse off} {light gray}DOS Command"
@@ -17,12 +17,10 @@ start tok64 mp64.main.fix
 260 PRINT"{gray}{reverse on} I {reverse off} {dark gray}Show Module Info{space*2}";
 270 IFpm=3ORpm=4ORsp=0THENPRINT"{gray}{reverse on} A {reverse off} {dark gray}SID #2 {light gray}[{blue}N/A{light gray} ]":GOTO290
 280 PRINT"{gray}{reverse on} A {reverse off} {light gray}SID #2 {white}[{space*4}]"
-290 :
-291 PRINT"{gray}{reverse on} S {reverse off} {light gray}Stereo {white}[{space*3}]{space*6}";
+290 PRINT"{gray}{reverse on} S {reverse off} {light gray}Stereo {white}[{space*3}]{space*6}";:
 300 IFpm=1THENa$="{reverse on}{gray} D {reverse off} {light gray}Dither {white}[{space*3}]":b$="{reverse on}{gray} V {reverse off} {light gray}Vol Fix {white}[{space*3}]":GOTO320
 310 a$="{reverse on}{gray} D {reverse off} {dark gray}Dither {light gray}[{blue}N/A{light gray}]":b$="{reverse on}{gray} V {reverse off} {dark gray}Vol Fix {light gray}[{blue}N/A{light gray}]"
 320 PRINTa$:PRINTb$"{space*5}{reverse on}{gray} X {reverse off} {light gray}Exit Modplay"
-330 :
 340 a$="{gray}{reverse on} B {reverse off} {dark gray}Balance Adjust"
 350 PRINTa$
 360 IFpm=1THENPRINT"{home}{down*7}"TAB(13)oo$(vo)
@@ -35,8 +33,7 @@ start tok64 mp64.main.fix
 430 PRINT"{light gray} Size{white}:{yellow}"sz-1500"{light gray}Bytes"
 440 PRINT"{home}{down*16}{light gray}Playback Dev{white}:{light green} "pm$(pm-1,0)" "pm$(pm-1,1);
 450 PRINT" in "pm$(pm-1,2)" Bits"
-460 :
-461 PRINT"{home}{down*16}":WAIT203,64:GETk$
+460 PRINT"{home}{down*16}":WAIT203,64:GETk$
 470 IFk$="x"THENPOKE53265,0:sys64738
 480 IFk$="#"THENGOSUB10000:GOTO210
 490 IFk$="@"THENGOSUB11000:GOTO210
@@ -49,13 +46,11 @@ start tok64 mp64.main.fix
 560 IFk$="d"ANDpm=1THENdi=1-di:PRINT"{home}{down*6}"TAB(34)oo$(di):GOTO460
 570 IFk$="s"THENsp=1-sp:PRINT"{home}{down*6}"TAB(12)oo$(sp):gosub17006:GOTO460
 580 IFk$="a"ANDpm<3ANDsp=1THENGOSUB17000:GOTO460
-590 :
 600 GOTO460
 1000 WAIT203,41,41
 1010 IF(p0=pm)AND(s0=sp)AND(d0=di)THEN1050
 1020 s0=sp:d0=di:p0=pm
-1030 PRINT"{down}{light gray}One or more Play Settings were changed"
-1040 PRINT"A new Pitch Table is being unpacked{.*3}":GOSUB2500
+1040 GOSUB2500
 1050 v=11:IFpm=2ANDsp=1THENv=13
 1060 POKE994,pm:POKE995,v
 1070 REM: 996-1000 are reserved.
@@ -230,7 +225,7 @@ start tok64 mp64.main.fix
 14060 h=INT(tl/bg):l=tl-h*256
 14070 POKE57095,l:POKE57096,h:POKE57098,0:RETURN
 15000 GETa$:IFa$<>""THEN15030
-15010 t2=(t2+1)and3:IFt2=0THENc=NOTc:PRINTc$(ABS(c));
+15010 t2=(t2+1)and31:IFt2=0THENc=NOTc:PRINTc$(ABS(c));
 15020 GOTO15000
 15030 IFa$=CHR$(13)THENPRINT" ";:t2=0:RETURN
 15040 IFa$<>CHR$(20)THEN15070

@@ -1,0 +1,20 @@
+Modplay1.2d basic version vs 1.2e Austrocompiled version
+
+------------------------------------
+|                    |Loading times|
+|recall.mod  / 66040b|Basic |Comp'd|
+|----------------------------------|
+|normal kernal+1541  | 3:56 | 3:03 |
+|TFR 0.8             | 3:56 | 3:03 |
+|Action replay/RR    | 3:50 | 3:01 |
+|Exos                | 3:49 | 3:02 |
+|SpeedDos+           | 2:02 | 1:15 |
+|JiffyDos 6.01       | 1:51 | 1:04 |
+|PiffyDos/FLT        | 1:52 | 1:04 |
+|DolphinDos 2        | 1:24 | 0:37 |
+------------------------------------
+|normal kernal+1581  | 3:17 | 2:27 |
+|JiffyDos+1581jd     | 1:23 | 0:36 |
+------------------------------------
+
+All tests made in Vice 1.22, 1541 and a stopwatch

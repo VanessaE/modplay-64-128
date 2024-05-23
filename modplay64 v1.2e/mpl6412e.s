@@ -1,13 +1,16 @@
 ;---------------------------------
 ; iAN CooG/HokutoForce
 ;---------------------------------
-; ModPlay 1.2d patch
+; ModPlay 1.2e patch
 ; added precalculated pitch tables
+; main.prg can be compiled with austrospeed
+; this build source is onefiled too
 
         *=$0800
         byte 0
-
+startprg
         incprg  original\MP64.MAIN.fix.out.prg
+endprg
         incprg  original\mp64.signed.prg,l
         incprg  original\mp64.ascii.prg,l
         incprg  original\mp64.loaders.o.prg,l
@@ -15,8 +18,163 @@
         incprg  original\mp64.volumetab.prg,l
         incprg  original\mp64.tempotab.prg,l
         incprg  original\mp64.division.prg,l
-        *=$f800
-        byte 0
+;-----------------------------------------------------------------------
+        *=$d000
+t0      incprg   original\c\mem_e600_pm1sp0di0.exo
+t1      incprg   original\c\mem_e600_pm1sp0di1.exo
+t2      incprg   original\c\mem_e600_pm1sp1di1.exo
+t3
+        *=$ee10
+        incprg   original\c\mem_e600_pm3sp0di0.exo
+t4      incprg   original\c\mem_e600_pm3sp1di0.exo
+t5
+;-----------------------------------------------------------------------
+        *=$3500
+entry
+        lda #$00
+        sta $d020
+        sta $d021
+        sta $d011
+        lda #$16
+        sta $d018
+        lda #0
+        sta $02
+tragain
+        ldx $02
+        lda tablesrc,x
+        sta trloop+2
+        lda tabledst,x
+        sta trloop+5
+
+        ldx #0
+        ldy #$04
+trloop
+        lda $1000,x
+        sta $0400,x
+        inx
+        bne trloop
+        inc trloop+2
+        inc trloop+5
+        dey
+        bne trloop
+
+        inc $02
+        lda $02
+        and #$01
+        bne nokeynow
+        lda #$1b
+        sta $d011
+        jsr w8k
+nokeynow
+        lda $02
+        cmp #[tabledst-tablesrc]
+        bne tragain
+        lda #1
+        jsr $e536
+        lda #0
+        sta $c6
+        lda #225
+        sta 808
+        ;sei
+        ;inc $01
+        jsr reudetect
+        lda #0
+        jsr $e536
+
+        ldx #[endptrs-memptrs-1]
+setptrs
+        lda memptrs,x
+        sta $2b,x
+        dex
+        bpl setptrs
+
+        jsr $a659
+        jsr $a533
+        jmp $a7ae
+
+;---------------------------------
+w8k
+        jsr sensek
+        bne w8k
+debounce
+        jsr sensek
+        beq debounce
+        rts
+sensek  lda $dc01
+        and $dc00
+        and #$10
+        rts
+;---------------------------------
+reudetect
+
+        lda #$55
+        sta $df02 ; here MUST stay like this
+        nop
+        cmp $df02
+        bne noreu
+        sta $df00 ; here MUST NOT stay, $00 and $10 only on read
+        cmp $df00
+        beq noreu
+        lda $df00
+        beq reu1700
+        cmp #$10
+        bne noreu
+
+        lda #<mreu17xx
+        ldy #>mreu17xx
+        bne npr
+reu1700
+
+        lda #<mreu1700
+        ldy #>mreu1700
+npr
+        jsr $ab1e
+        ldx #$2
+pr      lda $a2
+        bne pr
+        dex
+        bne pr
+        rts
+
+noreu
+        lda #<noreumsg
+        ldy #>noreumsg
+        jsr $ab1e
+        jmp w8k
+
+noreumsg petc "*WARNING* REU not found!",0
+mreu1700 petc "REU 128k found",0
+mreu17xx petc "REU 256k+ found",0
+;---------------------------------
+        ;info pages
+        align $100
+col1
+        incprg "original\mp64.scrn color.prg"
+        align $100
+scr1
+        incprg "original\mp64.screen.prg"
+        align $100
+
+
+tablesrc
+        byte >col1
+        byte >scr1
+tabledst
+        byte $d8
+        byte $04
+;---------------------------------
+topofmem=$5500
+memptrs
+        word  startprg
+        word  endprg
+        word  endprg
+        word  endprg
+        word  topofmem
+        word  topofmem
+        word  topofmem
+endptrs
+;---------------------------------
+
 ;-----------------------------------------------------------------------
 ; prints directory, wait 4 key, exits
 
@@ -70,17 +228,17 @@ dirname byte "$"
         ldy #$00
         ldx #[addrtablh-addrtabll-1]
 lp1
-     	lda addrtabll,x
-     	sta $03
-pt   	lda ($03),y
+        lda addrtabll,x
+        sta $03
+pt      lda ($03),y
         and #$1f
         ora $02
         sta ($03),y
         dex
         bpl lp1
-	    rts
+        rts
 
-    	*=$61b0
+        *=$61b0
 patch1
         lda #$00
         sta $fe
@@ -112,12 +270,12 @@ tr
         sta $0360,x
         dex
         bpl tr
-        lda #$1
-        sta 2024
+        ;lda #$1  ; 1mhz/20mhz marker, useless in onefiled version
+        ;sta 2024
         rts
 arptable
         incprg "original\MP64.ARP+VIB.prg"
-endarp
+
 ;-----------------------------------------------------------------------
 tablel
  byte <t1    ;pm1sp0di0
@@ -199,8 +357,8 @@ zp_src_hi  = zp_src_lo + 1
 zp_bits_hi = $fc
 
 zp_bitbuf  = $fd
-zp_dest_lo = zp_bitbuf + 1	; dest addr lo
-zp_dest_hi = zp_bitbuf + 2	; dest addr hi
+zp_dest_lo = zp_bitbuf + 1  ; dest addr lo
+zp_dest_hi = zp_bitbuf + 2  ; dest addr hi
 
 decrunch_table = $8f00
 tabl_bi = decrunch_table
@@ -239,50 +397,50 @@ decrunch:
 ; -------------------------------------------------------------------
 ; init zeropage, x and y regs. (12 bytes)
 ;
-	ldy #0
-	ldx #3
+    ldy #0
+    ldx #3
 init_zp:
-	jsr get_crunched_byte
-	sta zp_bitbuf - 1,x
-	dex
-	bne init_zp
+    jsr get_crunched_byte
+    sta zp_bitbuf - 1,x
+    dex
+    bne init_zp
 ; -------------------------------------------------------------------
 ; calculate tables (50 bytes)
 ; x and y must be #0 when entering
 ;
 nextone:
-	inx
-	tya
-	and #$0f
-	beq shortcut		; starta på ny sekvens
+    inx
+    tya
+    and #$0f
+    beq shortcut        ; starta på ny sekvens
 
-	txa			; this clears reg a
-	lsr a			; and sets the carry flag
-	ldx tabl_bi-1,y
+    txa         ; this clears reg a
+    lsr a           ; and sets the carry flag
+    ldx tabl_bi-1,y
 rolle:
-	rol a
-	rol zp_bits_hi
-	dex
-	bpl rolle		; c = 0 after this (rol zp_bits_hi)
+    rol a
+    rol zp_bits_hi
+    dex
+    bpl rolle       ; c = 0 after this (rol zp_bits_hi)
 
-	adc tabl_lo-1,y
-	tax
+    adc tabl_lo-1,y
+    tax
 
-	lda zp_bits_hi
-	adc tabl_hi-1,y
+    lda zp_bits_hi
+    adc tabl_hi-1,y
 shortcut:
-	sta tabl_hi,y
-	txa
-	sta tabl_lo,y
+    sta tabl_hi,y
+    txa
+    sta tabl_lo,y
 
-	ldx #4
-	jsr get_bits		; clears x-reg.
-	sta tabl_bi,y
-	iny
-	cpy #52
-	bne nextone
-	ldy #0
-	beq begin
+    ldx #4
+    jsr get_bits        ; clears x-reg.
+    sta tabl_bi,y
+    iny
+    cpy #52
+    bne nextone
+    ldy #0
+    beq begin
 ; -------------------------------------------------------------------
 ; get bits (29 bytes)
 ;
@@ -298,27 +456,27 @@ shortcut:
 ;   y is untouched
 ; -------------------------------------------------------------------
 get_bits:
-	lda #$00
-	sta zp_bits_hi
-	cpx #$01
-	bcc bits_done
+    lda #$00
+    sta zp_bits_hi
+    cpx #$01
+    bcc bits_done
 bits_next:
-	lsr zp_bitbuf
-	bne ok
-	pha
+    lsr zp_bitbuf
+    bne ok
+    pha
 literal_get_byte:
-	jsr get_crunched_byte
-	bcc literal_byte_gotten
-	ror a
-	sta zp_bitbuf
-	pla
+    jsr get_crunched_byte
+    bcc literal_byte_gotten
+    ror a
+    sta zp_bitbuf
+    pla
 ok:
-	rol a
-	rol zp_bits_hi
-	dex
-	bne bits_next
+    rol a
+    rol zp_bits_hi
+    dex
+    bne bits_next
 bits_done:
-	rts
+    rts
 ; -------------------------------------------------------------------
 get_crunched_byte:
         lda _byte_lo
@@ -334,144 +492,144 @@ _byte_hi = * + 2
 ; main copy loop (18(16) bytes)
 ;
 copy_next_hi:
-	dex
-	dec zp_dest_hi
-	dec zp_src_hi
+    dex
+    dec zp_dest_hi
+    dec zp_src_hi
 copy_next:
-	dey
+    dey
 IF 0 == LITERAL_SEQUENCES_NOT_USED
-	bcc literal_get_byte
+    bcc literal_get_byte
 ENDIF
-	lda (zp_src_lo),y
+    lda (zp_src_lo),y
 literal_byte_gotten:
-	sta (zp_dest_lo),y
+    sta (zp_dest_lo),y
 copy_start:
-	tya
-	bne copy_next
+    tya
+    bne copy_next
 begin:
-	txa
-	bne copy_next_hi
+    txa
+    bne copy_next_hi
 ; -------------------------------------------------------------------
 ; decruncher entry point, needs calculated tables (21(13) bytes)
 ; x and y must be #0 when entering
 ;
 IF 0 == LITERAL_SEQUENCES_NOT_USED
-	inx
-	jsr get_bits
-	tay
-	bne literal_start1
+    inx
+    jsr get_bits
+    tay
+    bne literal_start1
 ELSE
-	dey
+    dey
 ENDIF
 begin2:
-	inx
-	jsr bits_next
-	lsr a
-	iny
-	bcc begin2
+    inx
+    jsr bits_next
+    lsr a
+    iny
+    bcc begin2
 IF 1 == LITERAL_SEQUENCES_NOT_USED
-	beq literal_start
+    beq literal_start
 ENDIF
-	cpy #$11
+    cpy #$11
 IF 0 == LITERAL_SEQUENCES_NOT_USED
-	bcc sequence_start
-	bne bits_done
+    bcc sequence_start
+    bne bits_done
 ; -------------------------------------------------------------------
 ; literal sequence handling (13(2) bytes)
 ;
-	ldx #$10
-	jsr get_bits
+    ldx #$10
+    jsr get_bits
 literal_start1:
-	sta <zp_len_lo
-	ldx <zp_bits_hi
-	ldy #0
-	bcc literal_start
+    sta <zp_len_lo
+    ldx <zp_bits_hi
+    ldy #0
+    bcc literal_start
 sequence_start:
 ELSE
-	bcs bits_done
+    bcs bits_done
 ENDIF
 ; -------------------------------------------------------------------
 ; calulate length of sequence (zp_len) (11 bytes)
 ;
-	ldx tabl_bi - 1,y
-	jsr get_bits
-	adc tabl_lo - 1,y	; we have now calculated zp_len_lo
-	sta zp_len_lo
+    ldx tabl_bi - 1,y
+    jsr get_bits
+    adc tabl_lo - 1,y   ; we have now calculated zp_len_lo
+    sta zp_len_lo
 ; -------------------------------------------------------------------
 ; now do the hibyte of the sequence length calculation (6 bytes)
-	lda zp_bits_hi
-	adc tabl_hi - 1,y	; c = 0 after this.
-	pha
+    lda zp_bits_hi
+    adc tabl_hi - 1,y   ; c = 0 after this.
+    pha
 ; -------------------------------------------------------------------
 ; here we decide what offset table to use (20 bytes)
 ; x is 0 here
 ;
-	bne nots123
-	ldy zp_len_lo
-	cpy #$04
-	bcc size123
+    bne nots123
+    ldy zp_len_lo
+    cpy #$04
+    bcc size123
 nots123:
-	ldy #$03
+    ldy #$03
 size123:
-	ldx tabl_bit - 1,y
-	jsr get_bits
-	adc tabl_off - 1,y	; c = 0 after this.
-	tay			; 1 <= y <= 52 here
+    ldx tabl_bit - 1,y
+    jsr get_bits
+    adc tabl_off - 1,y  ; c = 0 after this.
+    tay         ; 1 <= y <= 52 here
 ; -------------------------------------------------------------------
 ; Here we do the dest_lo -= len_lo subtraction to prepare zp_dest
-; but we do it backwards:	a - b == (b - a - 1) ^ ~0 (C-syntax)
+; but we do it backwards:   a - b == (b - a - 1) ^ ~0 (C-syntax)
 ; (16(16) bytes)
-	lda zp_len_lo
-literal_start:			; literal enters here with y = 0, c = 1
-	sbc zp_dest_lo
-	bcc noborrow
-	dec zp_dest_hi
+    lda zp_len_lo
+literal_start:          ; literal enters here with y = 0, c = 1
+    sbc zp_dest_lo
+    bcc noborrow
+    dec zp_dest_hi
 noborrow:
-	eor #$ff
-	sta zp_dest_lo
-	cpy #$01		; y < 1 then literal
+    eor #$ff
+    sta zp_dest_lo
+    cpy #$01        ; y < 1 then literal
 IF 0 == LITERAL_SEQUENCES_NOT_USED
-	bcc pre_copy
+    bcc pre_copy
 ELSE
-	bcc literal_get_byte
+    bcc literal_get_byte
 ENDIF
 ; -------------------------------------------------------------------
 ; calulate absolute offset (zp_src) (27 bytes)
 ;
-	ldx tabl_bi,y
-	jsr get_bits;
-	adc tabl_lo,y
-	bcc skipcarry
-	inc zp_bits_hi
-	clc
+    ldx tabl_bi,y
+    jsr get_bits;
+    adc tabl_lo,y
+    bcc skipcarry
+    inc zp_bits_hi
+    clc
 skipcarry:
-	adc zp_dest_lo
-	sta zp_src_lo
-	lda zp_bits_hi
-	adc tabl_hi,y
-	adc zp_dest_hi
-	sta zp_src_hi
+    adc zp_dest_lo
+    sta zp_src_lo
+    lda zp_bits_hi
+    adc tabl_hi,y
+    adc zp_dest_hi
+    sta zp_src_hi
 ; -------------------------------------------------------------------
 ; prepare for copy loop (8(6) bytes)
 ;
-	pla
-	tax
+    pla
+    tax
 IF 0 == LITERAL_SEQUENCES_NOT_USED
-	sec
+    sec
 pre_copy:
-	ldy <zp_len_lo
-	jmp copy_start
+    ldy <zp_len_lo
+    jmp copy_start
 ELSE
-	ldy <zp_len_lo
-	bcc copy_start
+    ldy <zp_len_lo
+    bcc copy_start
 ENDIF
 ; -------------------------------------------------------------------
 ; two small static tables (6(6) bytes)
 ;
 tabl_bit:
-	.byte 2,4,4
+    .byte 2,4,4
 tabl_off:
-	.byte 48,32,16
+    .byte 48,32,16
 ; -------------------------------------------------------------------
 ; end of decruncher
 ; -------------------------------------------------------------------
@@ -481,34 +639,17 @@ tabl_off:
 ; by other data between decrunches.
 ; -------------------------------------------------------------------
 ;decrunch_table:
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	;.byte 0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ;.byte 0,0,0,0,0,0,0,0,0,0,0,0
 ; -------------------------------------------------------------------
 ; end of decruncher
 ; -------------------------------------------------------------------
 
-
-
-;-----------------------------------------------------------------------
-
-	*=$d000
-
-t0  incprg   original\c\mem_e600_pm1sp0di0.exo
-t1  incprg   original\c\mem_e600_pm1sp0di1.exo
-t2  incprg   original\c\mem_e600_pm1sp1di1.exo
-t3
-
-
-    	*=$ee10
-	incprg   original\c\mem_e600_pm3sp0di0.exo
-t4  incprg   original\c\mem_e600_pm3sp1di0.exo
-t5
-;-----------------------------------------------------------------------
