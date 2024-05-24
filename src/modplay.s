@@ -101,9 +101,6 @@ start
 	!source "src/mm-text-128.s"
 }
 
-dirname
-		!text "$"
-
 !ifndef c128 {
 	config_filename_len !byte 13
 	config_filename     !text "modplay64.cfg",0
@@ -111,6 +108,9 @@ dirname
 	config_filename_len !byte 14
 	config_filename     !text "modplay128.cfg",0
 }
+
+dirname
+		!text "$"
 
 ; this area is used to temporarily store the contents of zero page when
 ; the player is running, since the player needs a lot of it and the KERNAL
@@ -181,12 +181,18 @@ sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
 sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
 sample_default_fine_tunes			= sample_loop_end_addresses_highs + 32
 sample_default_volume_levels		= sample_default_fine_tunes + 32
+sample_data_lookahead_cache			= sample_default_volume_levels + 64
+track_lookahead_indexes				= sample_data_lookahead_cache + 32
+current_note_periods_lows			= track_lookahead_indexes + 64
+current_note_periods_highs			= current_note_periods_lows + 8
+current_node_period_offsets			= current_note_periods_highs + 8
+current_sample_volume_levels		= current_node_period_offsets + 8
 
 !ifndef c128 { 
-	pattern_table					= sample_default_volume_levels + 32
+	pattern_table					= current_sample_volume_levels + 8
 	main_mem_free_start				= ((>pattern_table) + 1) * 256
 } else { ; on C128 the pattern table is in the low memory area
-	main_mem_free_start				= ((>sample_default_volume_levels) + 1) * 256
+	main_mem_free_start				= ((>current_sample_volume_levels) + 1) * 256
 }
 
 ; anything appended after this point will be overwritten by the loaded file

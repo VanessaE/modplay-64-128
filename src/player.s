@@ -175,19 +175,17 @@ generate_volume_tables
 		clc
 		adc product
 
-; divide the final value down to the resolution the audio driver requested.
-; only 4 or 7 bits allowed, otherwise the output is 8 bits.
+; divide the final value down to the resolution the audio driver needs
+; only 4 or 8 bits allowed
 
 		ldx volume_tables_resolution
-		cpx #7
-		beq .b7
 		cpx #4
 		bne .nd
 
-		lsr ; 4 bits
 		lsr
 		lsr
-	.b7	lsr ; 7 bits
+		lsr
+		lsr
 
 	.nd	sta (tempzp_d),y
 		inc bval_cnt

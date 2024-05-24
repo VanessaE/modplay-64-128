@@ -78,8 +78,7 @@
 	; e.g. only when player is running and no KERNAL
 	; or BASIC is needed
 
-	; these various multiples of 8 bytes are in reverse order by track number
-	; (8 first, 1 last)
+	; these various multiples of 8 bytes are in order by track number
 
 	volume_table_vectors			= $02 ; 16 bytes
 	current_volume_levels			= $12 ; 8 bytes
@@ -108,13 +107,16 @@
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	current_pattern					= $5e
+	current_pattern_number			= $5e
 	number_of_patterns				= $5f
+	pattern_address					= $60 ; 3 bytes
+	pattern_break_target_row		= $63
+	tempzp_g						= $64 ; 2 bytes
 
-	; free: $60 through $67
+	; free: $66 through $6d
 
-	track_data_targets				= $68 ; 8 bytes
-	current_sample_number			= $70 ; 8 bytes
+	mixer_output_countdown			= $6e ; 2 bytes
+	current_sample_numbers			= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes
 	cut_sample_ticks				= $88 ; 8 bytes
@@ -292,8 +294,9 @@
 		reu_highest_bank			= $0272
 		parse_header_sample_pointer = $0273 ; 3 bytes
 
-		; free memory through $028e
+		; free memory through $0286
 
+		arpeggio_counters			= $0287 ; 8 bytes
 		arpeggio_extra_note_first	= $028f ; \___ 16 bytes
 		arpeggio_extra_note_second	= $0297 ; /
 		header_loaded				= $029f

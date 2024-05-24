@@ -118,140 +118,192 @@ reu_mixer_entry
 	sta DMA_DAL
 	lda #0
 	sta DMA_DAH
-	lda #>track_data_targets
+	lda #>sample_data_lookahead_cache
 	sta DMA_ADH
 	ldx #REUCOMMAND_FETCH
-	lda current_file_tracks
-	cmp #4
-	bne +
-	lda #<mix_4_tracks
-	sta .pnt+1
-	lda #>mix_4_tracks
-	sta .pnt+2
-	jmp reu_gen_sample_loop
-
-+	cmp #6
-	bne +
-	lda #<mix_6_tracks
-	sta .pnt+1
-	lda #>mix_6_tracks
-	sta .pnt+2
-	jmp reu_gen_sample_loop
-
-+	lda #$ea
-	sta .pnt
-	sta .pnt+1
-	sta .pnt+2
 
 reu_gen_sample_loop
-	lda #<track_data_targets							; 2
+	lda #<sample_data_lookahead_cache					; 2
 	sta DMA_ADL											; 4
 
-.pnt jmp $0000											; 6
-
-	!for track, 7, 0 {
+	!for track, 0, 3 {
 		!zone reu_mixloop {
 
-			!if track = 5 {
-				mix_6_tracks
-			}
-
-			!if track = 3 {
-				mix_4_tracks
-			}
-
 			clc											; 2
-			lda sample_pointers_fract+7-track			; 3
-			adc current_steprates_fract+7-track			; 3
-			sta sample_pointers_fract+7-track			; 3
+			lda sample_pointers_fract+track				; 3
+			adc current_steprates_fract+track			; 3
+			sta sample_pointers_fract+track				; 3
+			bcc .reu_fix_dma_low_byte					; 3/2
 
-			lda sample_pointers_lows+7-track			; 3
-			adc current_steprates_lows+7-track			; 3
-			sta sample_pointers_lows+7-track			; 3
+			lda sample_pointers_lows+track				; 3
+			adc current_steprates_lows+track			; 3
+			sta sample_pointers_lows+track				; 3
 			sta DMA_LO									; 4
-			bcc .reu_fix_top_two_bytes					; 3/2
+			bcc .reu_fix_dma_high_byte					; 3/2
 
-			lda sample_pointers_mids+7-track			; 3
-			adc #0										; 2
-			sta sample_pointers_mids+7-track			; 3
+			inc sample_pointers_mids+track				; 5
+			lda sample_pointers_mids+track				; 3
 			sta DMA_HI									; 4
-			bcc .reu_fix_just_bank_addr					; 3/2
+			bne .reu_check_end							; 3/2
 
-			lda sample_pointers_highs+7-track			; 3
-			adc #0										; 2
-			sta sample_pointers_highs+7-track			; 3
+			inc sample_pointers_highs+track				; 5
+			lda sample_pointers_highs+track				; 3
 			sta DMA_BANK								; 4
-			beq .reu_check_end							; 3/2
+			bne .reu_check_end							; 3
 
-		.reu_fix_top_two_bytes
-			lda sample_pointers_mids+7-track			; 3
+		.reu_fix_dma_low_byte
+			lda sample_pointers_lows+track				; 3
+			sta DMA_LO									; 4
+
+		.reu_fix_dma_high_byte
+			lda sample_pointers_mids+track				; 3
 			sta DMA_HI									; 4
-
-		.reu_fix_just_bank_addr
-			lda sample_pointers_highs+7-track			; 3
-			sta DMA_BANK								; 4
 
 		.reu_check_end
-			sec
-			lda sample_pointers_lows+7-track			; 3
-			cmp current_sample_end_addr_lows+7-track	; 3
-			lda sample_pointers_mids+7-track			; 3
-			cmp current_sample_end_addr_mids+7-track	; 3
+			sec											; 2
+			lda sample_pointers_lows+track				; 3
+			cmp current_sample_end_addr_lows+track		; 3
+			lda sample_pointers_mids+track				; 3
+			cmp current_sample_end_addr_mids+track		; 3
 			lda sample_pointers_highs					; 3
-			cmp current_sample_end_addr_highs+7-track	; 3
+			cmp current_sample_end_addr_highs+track		; 3
 			bcc .reu_fetch_sample_data					; 3/2
 
-			lda track_loop_flags+7-track				; 3
+			lda track_loop_flags+track					; 3
 			bne .reu_sample_has_loop					; 3/2
-			sta current_steprates_fract+7-track			; 3
-			sta current_steprates_lows+7-track			; 3
-			beq .reu_next_track							; 3/2
+			sta current_steprates_fract+track			; 3
+			sta current_steprates_lows+track			; 3
+			sta track_lookahead_indexes+track*8			; 4
+			sta track_lookahead_indexes+track*8+1		; 4
+			sta track_lookahead_indexes+track*8+2		; 4
+			sta track_lookahead_indexes+track*8+3		; 4
+			sta track_lookahead_indexes+track*8+4		; 4
+			sta track_lookahead_indexes+track*8+5		; 4
+			sta track_lookahead_indexes+track*8+6		; 4
+			sta track_lookahead_indexes+track*8+7		; 4
+			beq .reu_fetch_sample_data					; 3
 
 		.reu_sample_has_loop
 			lda #0										; 2
-			sta sample_pointers_fract+7-track			; 3
-			ldy current_sample_number+7-track			; 3
+			sta sample_pointers_fract+track				; 3
+			ldy current_sample_numbers+track			; 3
 			lda sample_loop_start_addresses_lows,y		; 5
-			sta sample_pointers_lows+7-track			; 4
+			sta sample_pointers_lows+track				; 4
 			sta DMA_LO									; 4
 			lda sample_loop_start_addresses_mids,y		; 5
-			sta sample_pointers_mids+7-track			; 4
+			sta sample_pointers_mids+track				; 4
 			sta DMA_HI									; 4
 			lda sample_loop_start_addresses_highs,y		; 5
-			sta sample_pointers_highs+7-track			; 4
+			sta sample_pointers_highs+track				; 4
 			sta DMA_BANK								; 4
 			lda sample_loop_end_addresses_lows,y		; 5
-			sta current_sample_end_addr_lows+7-track	; 3
+			sta current_sample_end_addr_lows+track		; 3
 			lda sample_loop_end_addresses_mids,y		; 5
-			sta current_sample_end_addr_mids+7-track	; 3
+			sta current_sample_end_addr_mids+track		; 3
 			lda sample_loop_end_addresses_highs,y		; 5
-			sta current_sample_end_addr_highs+7-track	; 3
+			sta current_sample_end_addr_highs+track		; 3
 
 		.reu_fetch_sample_data
 			stx DMA_CMD									; 4
-			ldy track_data_targets+7-track				; 3
-			lda (volume_table_vectors+7-track*2),y		; 5
-			sta track_byte_to_mix+7-track				; 3
-
-		.reu_next_track
+		}
 	}
-}
 
-; 2+4+6 = 12 cycles to start the loop
+; loop start: 2+4 = 6 cycles
+; add 2+3+3+3+3 +3+4 +3+4 +3+4 = 35 cycles if only fraction byte is updated.
 
-; main pointer updates: 2+3+3+3 + 3+3+3+4+3 + 3+4 + 3+4 = 41 cycles per byte, per track
-; add 3+2+3+4+3 and subtract 3+4 = 8s cycles every 256 bytes, per track
-; add 3+2+3+4 and subtract 3+4 = 5 cycles evert 64k, per track
+; subtract 3+4 and add +3+3+3+4+3, total 41 cycles to update 2 bytes
 
-; loop/end checks add 3+3+3+3+3+3+3 = 21 cycles per track when end not reached
+; subtract 3+4 and add +5+3+4+3, total 52 cycles to update 3 bytes
 
-; fetch adds 4+3+5+3 = 15 cycles
+; subtract 3+4 and add +5+3+4+3, total 60 cycles to update all 4 bytes
 
-; grand total: 320 cycles for four tracks, plus the mixer+buffer code below.
+; then add 2+3+3+3+3+3+3+3 = 23 more cycles do to the end-of-sample check
 
-reu_mix_samples
-	; fill the rest in later.  this part just needs to downmix the various
-	; tracks' sample bytes, stuff them into the audio buffer, decrement the
-	; number-of-samples countdown, and then either loop or exit back to the
-	; sequencer.
+; add 4 + 8 to actually fetch the data
 
+; times 4 tracks:
+
+; minimum (35 + 23 + 12) * 4 = 280 cycles if all four tracks are playing at very
+;     low pitches
+
+; most common will probably be (41 + 23 + 12) * 4 = 304 cycles if all four tracks
+;     have a pitch somewhere in the middle of the range
+
+; could be up to (60 + 32 + 12) * 4 = 416 cycles if literally every pointer
+;     byte gets updated on every track -- rare, only once per 65k samples
+;     so like, every 5-10 seconds or so probably
+
+; next step is to downmix these four bytes with additional bytes from the
+; lookahead cache. indexes into this cache will be generated by the sequencer
+; any time a new note pitch/period is set, so that the mixer code doesn't have
+; to do a bunch of maths on the sample pointers.
+
+		ldx audio_in_buf_index						; 3
+
+	!for .byte_index, 0, 7 {
+	-	cpx audio_out_buf_index						; 3        /  wait for a free
+		beq -										; 3/2      /  slot in the buffer
+
+		clc											; 2
+		ldy sample_data_lookahead_cache+.byte_index ; 4        / track 1
+		lda (volume_table_vectors),y				; 5
+		ldy sample_data_lookahead_cache+3*8 + .byte_index ; 4  / track 4
+		adc (volume_table_vectors+3*2),y			; 5   
+		lsr											; 2
+		sta audio_buffer_left,x						; 5
+
+		clc											; 2
+		ldy sample_data_lookahead_cache+1*8 + .byte_index ; 4  / track 2
+		lda (volume_table_vectors+1*2),y			; 5
+		ldy sample_data_lookahead_cache+2*8 + .byte_index ; 4  / track 3
+		adc (volume_table_vectors+2*2),y			; 5
+		lsr											; 2
+		sta audio_buffer_right,x					; 5
+
+		inx											; 2
+	}
+
+	stx audio_in_buf_index							; 3
+
+; so downmixing to the buffer costs 62 cycles per pair of output samples
+; plus 3+3
+
+	sec												; 2
+	lda mixer_output_countdown						; 3
+	sbc #1											; 2
+	sta mixer_output_countdown						; 3
+	bcc +											; 3/2
+	jmp reu_gen_sample_loop							; 6
+
++	lda mixer_output_countdown+1					; 5
+	sbc #0											; 2
+	sta mixer_output_countdown+1					; 3
+	beq +											; 3/2
+	jmp reu_gen_sample_loop							; 6
++ rts												; 6
+
+; add 2+3+2+3+2+6 = 18 cycles to decrement the mixer countdown and loop back
+
+; add 1+5+2+3+2 = +11 cycles every 256th pass
+
+; =====================
+
+; timings to generate 8 output bytes across all four tracks (rounded up):
+
+; Best case:
+;
+; (35 + 23 + 12) * 4 + 62 * 8 + 6 + 18 = 800 cycles
+; 800 / 8 = 100 cycles per output sample pair
+
+; Typical case should be roughly:
+;
+; (41 + 23 + 12) * 4 + 62 * 8 + 6 + 18 = 824 cycles
+; 824 / 8 = 103 cycles per output sample pair
+
+; Worst case:
+;
+; (60 + 32 + 12) * 4 + 62 * 8 + 6 + 18 + 11 + 21 + 8 = 976
+; 976 / 8 = 122 cycles per output sample pair
+
+; add like 30 cycles or so per sample pair for the ISR runtime
+; stock C64 should be able to mix and output at about 5 kHz
