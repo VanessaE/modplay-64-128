@@ -25,6 +25,8 @@ basic_header
 	!text " nope!"
 	!byte 0,0,0
 
+	zero_countdown	!byte 0
+
 splash_loader
 	ldy #0
 --	lda #3
@@ -40,11 +42,11 @@ splash_loader
 	bne -
 
 splash_start
-	jsr $0801					; by the time we get here, the splash code is
-	lda #$01					; loaded, so execute that, then reset the load
+	jsr program_start			; by the time we get here, the splash code is
+	lda #<program_start			; loaded, so execute that, then reset the load
 	sta EAL						; address back to the start, since main prg
-	sta CHROUT_vec		; will load there as usual also, ...
-	lda #$08
+	sta CHROUT_vec				; will load there as usual also, ...
+	lda #>program_start
 	sta EAL+1
 	sta CHROUT_vec+1
 	jmp $f6ed 					; ...and let the KERNAL finish loading.
@@ -52,10 +54,10 @@ splash_start
 ; stop_vector_trap enters right here.
 stop_vector_trap_entry
 	lda #$f6					;repair stop check vector right away (only the
-	sta STOP_vec+1		;hi-byte was altered, that's why *=$02ed)
-	lda #$01
+	sta STOP_vec+1				;hi-byte was altered, that's why *=$02ed)
+	lda #<program_start
 	sta load_pointer
-	lda #$08
+	lda #>program_start
 	sta load_pointer+1
 	bne splash_loader
 

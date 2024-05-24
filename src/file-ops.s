@@ -14,12 +14,10 @@ check_drive_presence			; enter with .A = device to check
 rts
 
 open_file			; enter with .A = filename len, .X/.Y = filename addr
+	php
 	sta tempzp_c
 	and #$7f		; in case the len indicates need for DOS command channel
-	bne +
-	lda #1			; if the length was 0, asssume we want the directory, len=1
-
-+	jsr SETNAM
+	jsr SETNAM
 
 	!ifdef c128 {
 		lda #0
@@ -29,16 +27,16 @@ open_file			; enter with .A = filename len, .X/.Y = filename addr
 
 	ldy #2			; default SA=2
 	ldx load_device
-	lda tempzp_c	; retrieve filename length
 
-
-	bne +			; if we called this with filename length = 0,
+	plp
+	bcc +			; if we called this with the carry set,
 	ldy #0			; it means we need the directory, so SA=0
 	beq .setlfs
 
-+	and #$80		; if on the other hand, the high bit of the length was set
++	lda tempzp_c	; retrieve filename length
+	and #$80		; if the high bit of the length was set
 	beq +
-	ldy #15			; then it's for the DOS command channel,so SA=15
+	ldy #15			; then it's for the DOS command channel, so SA=15
 
 .setlfs
 +	lda #2			; always using file number 2
@@ -61,11 +59,7 @@ close_file
 rts
 
 read_err_channel
-	lda #$00		; no filename, also pre-fill
-	ldy #40
--	dey
-	sta error_message_text,y
-	bne -
+	jsr clear_string_buffer ; this also leaves .A=0, which signals "no filename"
 
 	lda #$80		; open_file will notice this and assume len=0, SA=15
 	ldx #0
@@ -77,7 +71,7 @@ read_err_channel
 -	lda $90			; (read status byte)
 	bne .close		; either EOF or read error
 	jsr CHRIN
-	sta error_message_text,y
+	sta string_buffer,y
 	iny
 	cpy #39
 	bne -
@@ -85,4 +79,71 @@ read_err_channel
 .close
 	jmp close_file
 
-error_message_text !fill 40,0
+!ifndef c128 {
+	input_limit = 28
+} else {
+	input_limit = 38
+}
+
+request_dos_command
+	clc
+	jsr draw_text_input_popup
+
+	lda #0
+	ldx #<dos_command_msg
+	ldy #>dos_command_msg
+	jsr print_msg
+
+	!ifndef c128 {
+		clc
+		ldx #(24 - text_input_popup_height) / 2 + 2
+		ldy #text_input_popup_left_column + 1
+		jsr PLOT
+	} else {
+		lda #RETURN
+		jsr CHROUT
+		jsr CHROUT
+	}
+
+	lda #LGRN
+	jsr CHROUT
+	lda #"@"
+	jsr CHROUT
+	lda #">"
+	jsr CHROUT
+	ldy #input_limit
+	jsr get_text_input
+rts
+
+request_filename
+	clc
+	jsr draw_text_input_popup
+
+	lda #0
+	ldx #<filename_req_msg
+	ldy #>filename_req_msg
+	jsr print_msg
+
+	!ifndef c128 {
+		clc
+		ldx #(24 - text_input_popup_height) / 2 + 2
+		ldy #text_input_popup_left_column + 1
+		jsr PLOT
+	} else {
+		lda #RETURN
+		jsr CHROUT
+		jsr CHROUT
+	}
+
+	lda #LGRN
+	jsr CHROUT
+	lda #"="
+	jsr CHROUT
+	lda #">"
+	jsr CHROUT
+	ldy #input_limit
+	jsr get_text_input
+rts
+
+default_error_message
+		!text 13,"Error #",0

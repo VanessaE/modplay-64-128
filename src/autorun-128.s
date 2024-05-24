@@ -10,12 +10,12 @@
 !convtab pet
 !cpu 6510
 
-; this is a binary save of C128 mem from $0200 to $03fb
+; this is a binary save of C128 mem from $0200 to $03fa
 ; after waiting for the machine to finish startup.
 ;
 ; this is needed because there's a bunch of binary data that
 ; can't easily be represented in source form (plus some overlap to ensure
-; that the code below actually overwrites some of it).
+; that the code below can safely overwrite one byte of it).
 
 * = $0200
 
@@ -28,32 +28,43 @@
 ; the user if they loaded wrong
 
 basic_header
-	!word $1307 ; pointer to next line
+	!word $1307	; pointer to next line (relative to $1301)
 	!word $000a		; line number 10
 	!byte $8f		; "REM"
 	!text " nope!"
 	!byte 0,0,0
 
-splash_loader
-	lda $03f8		; if the $55 below overwrote the 0 at $03f8 in the
-	cmp #$55		; low-mem bin at load time, the drive was BURST-capable,
-	beq +			; so we have to offset the load address upwards.
 
-	lda #$01
+; if the KERNAL uses BURST mode to get the load started, it will load exactly
+; two full disk blocks, because the STOP vector we're overwriting is a bit
+; over one disk block past the load address.  In so doing, it'll replace the
+; 0 normally found at $03f7 with the $55 written into the binary save by the
+; !byte pseudo-op at the bottom of this file.  If FAST mode is used, the
+; KERNAL will stop cold at $0328 and the 0 remains intact, so we have to
+; displace the load address for the splash segment downward to effectively
+; discard the remainder of the "binary save" that it didn't load.
+
+
+splash_loader
+	lda $03f7
+	cmp #$55
+	beq +
+
+	lda #<(program_start-$d0)
 	sta EAL
-	lda #$13
+	lda #>(program_start-$d0)
 	sta EAL+1
 	bne splash_loader_run
 
-+	lda #$d1
++	lda #<program_start
 	sta EAL
-	lda #$13
+	lda #>program_start
 	sta EAL+1
 
 splash_loader_run
-	lda $19c4					; when the splash has finished loading
-	bne +						; there will be a zone of 0's in this area
-	jmp $f66e
+	lda splash_128_end_check	; when the splash has finished loading
+	bne +						; there will be a zone of non-0's in this area
+	jmp $f66e					; which overwrites the 0 stored below.
 
 ; by the time we get here, the splash code is loaded, so execute that, then
 ; reset the load address back to the start, since main prg will load there as
@@ -63,18 +74,18 @@ splash_loader_run
 	sta STOP_vec
 	lda #$f6
 	sta STOP_vec+1
-	jsr $13e0
-	lda #$c6					; $1301 minus 59-byte offset because it's weird :P
-	sta EAL						; (has to do with where the FAST load stops vs.
-	sta CHROUT_vec		; the BURST load)
-	lda #$12
+	jsr program_start
+	lda #<program_start			; now re-point the load address so that the
+	sta EAL						; main program segment can load.
+	sta CHROUT_vec
+	lda #>program_start
 	sta EAL+1
 	sta CHROUT_vec+1
-	jmp $f66e					; let the KERNAL finish loading.
+	jmp $f66e					; now let the KERNAL finish loading.
 
-; The splash data ends at around $1920, and there'll be a block of NOP's at
-; the end to give some room for expansion, aligned to the next BURST block.
-; With some padding on the splash displayer, the new start will be $13e0.
+; The real splash data ends at around program_start + $0570, and there'll be a
+; block of NOP's at the end to give some room for expansion, aligned to fill
+; the last BURST block.
 
 ; stop_vector_trap enters right here
 
@@ -88,7 +99,7 @@ stop_vector_trap_entry
 	lda #>(splash_loader_run-2)
 	sta STOP_vec+1
 	lda #0
-	sta $19c4
+	sta splash_128_end_check
 	beq splash_loader
 
 end_of_entry
@@ -178,6 +189,6 @@ end_of_entry
 	!word $ef79		; $326 KERNAL CHROUT routine
 	!word $026e		; $328 KERNAL STOP routine Vector (was $f66e)
 
-* = $03fa
-!byte $55 ; note that it'll actually be at $03f8 once loaded
+* = $03f9
+!byte $55 ; note that it'll actually be at $03f7 once loaded
 

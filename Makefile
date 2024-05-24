@@ -1,6 +1,6 @@
-OPTIONS = -Wno-label-indent -v3
-C1541 = /home/vanessa/.local/bin/c1541 # change this to point to your copy, part of VICE
-TMPDIR= /tmp/mp-trim-ws-compress-tmp
+OPTIONS=-Wno-label-indent -v3 --format plain 
+CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
+TMPDIR=/tmp/mp-trim-ws-compress-tmp
 
 all:
 
@@ -18,17 +18,22 @@ clean:
 	rm -f disk-images/*
 
 mod_disks:
-	$(C1541) -format 'more mods 1',mm d81 disk-images/more-mods-1.d81
-	$(C1541) -format 'more mods 2',mm d81 disk-images/more-mods-2.d81
+	$(eval DISK_IMG := disk-images/more-mods-1.d81)
 
-	$(C1541) -attach disk-images/more-mods-1.d81 -write 'mods/Happy As Fish.mod'           happyasfish.mod
-	$(C1541) -attach disk-images/more-mods-1.d81 -write 'mods/Hazy Day.mod'                'hazy day.mod'
-	$(C1541) -attach disk-images/more-mods-1.d81 -write 'mods/Amazed (End Tune).mod'       'amazed endtn.mod'
-	$(C1541) -attach disk-images/more-mods-1.d81 -write 'mods/Street Jungle.mod'           'streetjungle.mod'
+	$(CC1541) -n 'more mods 1' -i m1											\
+				-f 'Happy as Fish'		-w 'mods/Happy As Fish.mod'				\
+				-f 'Hazy Day'			-w 'mods/Hazy Day.mod'					\
+				-f 'Amazed Endtune'		-w 'mods/Amazed (End Tune).mod'			\
+				-f 'Street Jungle'		-w 'mods/Street Jungle.mod'				\
+																				$(DISK_IMG)
 
-	$(C1541) -attach disk-images/more-mods-2.d81 -write 'mods/Hall of Hobbits (Remix).mod' 'hall hobbits.mod'
-	$(C1541) -attach disk-images/more-mods-2.d81 -write "mods/Molecule's Revenge.mod"      'molculs rvng.mod'
-	$(C1541) -attach disk-images/more-mods-2.d81 -write 'mods/Boesendorfer.mod'            'boesendorfer.mod'
+	$(eval DISK_IMG := disk-images/more-mods-2.d81)
+
+	$(CC1541) -n 'more mods 2' -i m2											\
+				-f 'Hall of Hobbits'	-w 'mods/Hall of Hobbits (Remix).mod'	\
+				-f "Molecule's Rvng"	-w "mods/Molecule's Revenge.mod"		\
+				-f 'Boesendorfer'		-w 'mods/Boesendorfer.mod'				\
+																				$(DISK_IMG)
 
 c64:
 	@echo -e '\nBuilding Modplay 64...\n'
@@ -55,8 +60,9 @@ c128:
 	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
 
 	acme $(OPTIONS) -Dc128=1 -o src/autorun-128.o src/autorun-128.s
-		acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
+	acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
 	acme $(OPTIONS) -Dc128=1 -o src/mp128.o src/modplay.s
+	acme $(OPTIONS) -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
 
 	cat src/autorun-128.o \
 		src/display-splash-128.o \
@@ -73,6 +79,7 @@ gen_release_disk_img:
 ifeq ($(MACHINE),128)
 	$(eval SW := -D7)
 	$(eval DISK_FORMAT := d71)
+	$(eval INTLV := -s 5)
 endif
 
 ifeq ($(MACHINE),64)
@@ -85,28 +92,25 @@ endif
 	rm -f $(DISK_IMG)
 
 	export SW DISK_IMG PRG DISK_FORMAT
-	
-	$(C1541) -format 'modplay $(MACHINE) v2.0',20 $(DISK_FORMAT) $(DISK_IMG)
 
-	$(C1541) -attach $(DISK_IMG) -write bin/$(PRG).prg $(PRG)
-
-	touch empty.seq
-	$(C1541) -attach $(DISK_IMG) -write empty.seq				'----------------'
-	$(C1541) -attach $(DISK_IMG) -write empty.seq				' load with Xxx1 '
-	$(C1541) -attach $(DISK_IMG) -write empty.seq				'-------------- -'
-	$(C1541) -attach $(DISK_IMG) -write empty.seq				'a few mod filesX'
-	$(C1541) -attach $(DISK_IMG) -write empty.seq				'                '
-	$(C1541) -attach $(DISK_IMG) -write 'mods/Acidbat II.mod'	'acidbat ii.mod'
-	$(C1541) -attach $(DISK_IMG) -write 'mods/On the Telly.mod'	'on the telly.mod'
-	$(C1541) -attach $(DISK_IMG) -write 'mods/Cutie Pie.mod'	'cutie pie.mod'
-
-	# fix-up some of the filenames since c1541's CBMfs emulation gets in the way
-	$(C1541) -attach $(DISK_IMG) -bpoke 18 1 80 44 -bpoke 18 1 82 44 # change "XxX1" to ",x,1"
-	$(C1541) -attach $(DISK_IMG) -bpoke 18 1 115 45                  # fix missing "-"
-	$(C1541) -attach $(DISK_IMG) -bpoke 18 1 148 58                  # fix missing ":"
+	$(CC1541) -n 'modplay $(MACHINE) v2.0' -i 20  $(DISK_IMG)
 
 ifeq ($(MACHINE),128)
-	$(C1541) -attach $(DISK_IMG) -write 'mods/Cybernoid 1.mod'   'cybernoid 1.mod'
+	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)
 endif
 
-	rm empty.seq
+	$(CC1541)	\
+		$(INTLV)	-f $(PRG)				-w bin/$(PRG).prg			\
+					-f '----------------'	-L							\
+					-f ' load with ,x,1 '	-L							\
+					-f '---- ------ ----'	-L							\
+					-f 'a few mod files:'	-L							\
+					-f '                '	-L							\
+		$(INTLV)	-f 'Acidbat II'			-w 'mods/Acidbat II.mod'	\
+		$(INTLV)	-f 'On the Telly'		-w 'mods/On the Telly.mod'	\
+		$(INTLV)	-f 'Cutie Pie'			-w 'mods/Cutie Pie.mod'		\
+																		$(DISK_IMG)
+
+#ifeq ($(MACHINE),128)
+#	$(CC1541) $(INTLV) -f 'Cybernoid 1'		-w 'mods/Cybernoid 1.mod'	$(DISK_IMG)
+#endif

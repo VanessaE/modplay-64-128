@@ -1,8 +1,8 @@
 ; display the main menu
 
 show_main_menu
-	!ifdef c128 { ; restore screen/window dimensions
-		jsr set_dim_full_screen
+	!ifdef c128 {				; restore screen/window dimensions
+		jsr set_window_full_screen
 		bit clear_menu_screen_flag
 		bpl +
 		lda #CLR
@@ -11,7 +11,14 @@ show_main_menu
 		sta clear_menu_screen_flag
 	}
 
-	+PRINT_MSG_BATCH 24, mm_lo, mm_hi
+	; draw the main menu's outlines/boxes and title line
+
+	lda #0
+	ldx #<program_title
+	ldy #>program_title
+	jsr print_msg
+
+	+PRINT_MSG_BATCH_RLE 23, mm_lo, mm_hi
 
 	!ifndef c128 { ; restore the screen line links to 40 chars apiece.
 		ldx #24
@@ -21,517 +28,877 @@ show_main_menu
 		bpl -
 	}
 
-	ldx #<rt_press_com_key_msg
-	ldy #>rt_press_com_key_msg
-	jsr print_msg
+	jsr populate_info_box
+	jsr display_playlist
 
+redraw_menu
 	!ifdef c128 {
-		jsr set_dim_right_pane
-	}
-
-	bit current_page
-	bmi +
-
-	jsr draw_right_pane_a
-	jmp main_loop
-
-+	jsr draw_right_pane_b
-
-
-main_loop
-	jsr GETIN	; returns $0 if nothing is pressed/buf empty
-	beq check_com_key
-
-	cmp #$4c ; "l"
-	bne +
-	jsr load_file_to_expansion
-	jmp show_main_menu
-
-	cmp #$50 ; "p"
-	bne +
-	jsr start_playback
-	jmp show_main_menu
-
-+	cmp #$8a ; "F4"
-	bne +
-	jsr toggle_repeat
-	jmp main_loop
-
-+	cmp #$23; "#"
-	bne +
-	jsr change_input_device
-	jmp main_loop
-
-+	cmp #$41; "a"
-	bne +
-	jsr change_sid_addr
-	jmp main_loop
- 
-+	cmp #$46; "f"
-	bne +
-	jsr change_filter_setting
-	jmp main_loop
-
-+	cmp #$52; "r"
-	bne +
-	jsr change_resonance_setting
-	jmp main_loop
-
-+	cmp #$24 ; "$"
-	bne +
-	jsr show_directory
-	jmp show_main_menu
-
-+	cmp #$5f ; "←"
-	bne +
-	jsr save_config
-
-+	jmp main_loop
-
-check_com_key ; that is, the "C=" key
-	lda #$7f
-	sta CIA1
-
-	lda #$df
-	cmp CIA1+$01
-	bne main_loop
-	jsr switch_pages
-
-	lda #$df
--	cmp CIA1+$01 ; wait for release
-	beq -
-	jmp main_loop
-
-rp_start = SCREEN+(2*40)+19
-
-switch_pages
-	!ifdef c128 {
-		jsr set_dim_right_pane
+		jsr set_window_menu_pane
 		lda #CLR
 		jsr CHROUT
 
 	} else {
 		ldy #0
 		lda #$20
-	-	sta SCREEN + 2*40  + 19,y
-		sta SCREEN + 3*40  + 19,y
-		sta SCREEN + 4*40  + 19,y
-		sta SCREEN + 5*40  + 19,y
-		sta SCREEN + 6*40  + 19,y
-		sta SCREEN + 7*40  + 19,y
-		sta SCREEN + 8*40  + 19,y
-		sta SCREEN + 9*40  + 19,y
-		sta SCREEN + 10*40 + 19,y
-		sta SCREEN + 11*40 + 19,y
-		sta SCREEN + 12*40 + 19,y
-		sta SCREEN + 13*40 + 19,y
-		sta SCREEN + 14*40 + 19,y
-		sta SCREEN + 15*40 + 19,y
-		sta SCREEN + 16*40 + 19,y
+	-	!for .row, 2, 16 {
+			sta VIC_SCREEN+.row*40+18,y
+		}
 		iny
-		cpy #20
+		cpy #21
 		bne -
 	}
 
-	lda current_page
-	eor #$80
-	sta current_page
-	bmi +
-	jmp draw_right_pane_a
-+	jmp draw_right_pane_b
-
-draw_right_pane_a
-	+PRINT_MSG_BATCH 15, rp_a_lo, rp_a_hi
-	jsr show_repeat_mode
-rts
-
-draw_right_pane_b
-	+PRINT_MSG_BATCH 12, rp_b_lo, rp_b_hi
-	jsr show_input_device
-	jsr show_sid_addr
-	jsr show_filter_setting
-	jsr show_resonance_setting
-rts
-
-toggle_repeat
-	lda repeat_mode
-	eor #$80
-	sta repeat_mode
-	bit current_page
-	bmi +
-	jsr show_repeat_mode
-+ rts
-
-show_repeat_mode
-	bit repeat_mode
-	bpl +
-
-	ldx #<rpt_mode_on_txt
-	ldy #>rpt_mode_on_txt
-	jsr print_msg
-	rts
-
-+	ldx #<rpt_mode_off_txt
-	ldy #>rpt_mode_off_txt
-	jsr print_msg
-rts
-
-show_input_device
-	ldx #<idev_pos
-	ldy #>idev_pos
-	jsr print_msg
-
-	ldx #9
-	cpx load_device
-	bmi +
-	lda #$20	; print a leading space if dev 8 or 9
-	jsr CHROUT
-
-+	ldx load_device
-	ldy #0
-	jsr print_uint16
-rts
-
-change_input_device
-	inc load_device
-	lda load_device
-	cmp #31
+	lda current_menu_page
 	bne +
-	lda #8
-	sta load_device
+	jsr draw_menu_page_a
+	jmp finish_menu
 
-+	jsr check_drive_presence
-	bne change_input_device
-
-	bit current_page
-	bpl +
-	jsr show_input_device
-+ rts
-
-show_sid_addr
-	ldx #<sid_addr_pos
-	ldy #>sid_addr_pos
-	jsr print_msg
-
-	lda stereo_sid_addr+1
-	and #$0f
-	jsr to_hex
-	jsr CHROUT
-	lda stereo_sid_addr
-	lsr
-	lsr
-	lsr
-	lsr
-	jsr to_hex
-	jsr CHROUT
-	lda #$30 ; "0"
-	jsr CHROUT
-rts
-
-change_sid_addr
-	clc
-	lda stereo_sid_addr
-	adc #$20
-	sta stereo_sid_addr
-	bne .show2
-
-	lda stereo_sid_addr+1
-	cmp #$d4
++	cmp #1
 	bne +
-	!ifndef c128 {			; $d500-$d6ff reserved on C128
-		lda #$d5
-	} else {
-		lda #$d7
+	jsr draw_menu_page_b
+	jmp finish_menu
+
++	jsr draw_menu_page_c
+
+finish_menu
+	!ifdef c128 {
+		jsr set_window_playlist_pane
 	}
-	bne .show
+
+main_loop
+	jsr GETIN	; returns $0 if nothing is pressed/buf empty
+	bne chk_key_up
+
+	jsr check_com_key
+	beq main_loop ; a zero exit means the C= key was not pressed
+
+	jsr switch_pages
+	!ifdef c128 {
+		jsr set_window_playlist_pane
+	}
+	jmp redraw_menu
+
+chk_key_up
+	cmp #$91
+	bne chk_key_down
+	lda playlist_length
+	beq chk_key_down
+	jsr playlist_scroll_up
+	jmp main_loop
+
+chk_key_down
+	cmp #$11
+	bne chk_key_p
+	lda playlist_length
+	beq chk_key_p
+	jsr playlist_scroll_down
+	jmp main_loop
+
+chk_key_p
+	cmp #$50
+	bne chk_key_return
+	lda current_file_type
+	beq chk_key_return
+	jsr start_main_player
++	jmp show_main_menu
+
+chk_key_return
+	cmp #$0d
+	bne chk_key_f4
+	lda playlist_length
+	beq chk_key_f4
+	jsr enqueue_file
+	jmp main_loop
+
+chk_key_f4
+	cmp #$8a
+	bne chk_key_f5
+	lda playlist_length
+	beq chk_key_f5
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr toggle_repeat
+	jmp main_loop
+
+chk_key_f5
+	cmp #$87
+	bne chk_key_home
+	jsr load_directory
+	jmp show_main_menu
+
+; keys for page B start here
+
+chk_key_home
+	cmp #$13
+	bne chk_key_clr
+	lda playlist_length
+	beq chk_key_clr
+	lda playlist_scroll_pos
+	beq chk_key_clr
+	lda #0
+	sta playlist_scroll_pos
+	jsr display_playlist
+	jmp main_loop
+
+chk_key_clr
+	cmp #$93
+	bne chk_key_minus
+	lda playlist_length
+	beq chk_key_minus
+	sec
+	lda playlist_length
+	sbc #1
+	cmp playlist_scroll_pos
+	beq chk_key_minus
+	sta playlist_scroll_pos
+	jsr display_playlist
+	jmp main_loop
+
+chk_key_minus
+	cmp #$2d
+	bne chk_key_plus
+	lda playlist_length
+	beq chk_key_plus
+	jsr playlist_page_up
+	jmp main_loop
+
+chk_key_plus
+	cmp #$2b
+	bne chk_key_shift_p
+	lda playlist_length
+	beq chk_key_shift_p
+	jsr playlist_page_down
+	jmp main_loop
+
+chk_key_shift_p
+	cmp #$70
+	beq +
+	cmp #$d0
+	bne chk_key_l
+
++	lda current_file_type
+	beq chk_key_l
+	jsr single_sample_player
+	jmp show_main_menu
+
+chk_key_l
+	cmp #$4c
+	bne chk_key_shf_l
+	lda playlist_length
+	beq chk_key_shf_l
+	clc
+	jsr load_file_to_expansion
+	jmp show_main_menu
+
+chk_key_shf_l
+	cmp #$6c
+	beq +
+	cmp #$cc
+	bne chk_key_number
+
++	jsr request_filename
+	beq + ; if zero length filename, just abort
+	sec
+	jsr load_file_to_expansion
++	jmp show_main_menu
+
+chk_key_number
+	cmp #$23
+	bne chk_key_dollar
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr change_input_device
+	jmp main_loop
+
+chk_key_dollar
+	cmp #$24
+	bne chk_key_d
+	jsr show_directory
+	jmp show_main_menu
+
+
+; keys for page C start here
+
+chk_key_d
+	cmp #$44
+	bne chk_key_m
+	jsr choose_audio_driver
+	jmp show_main_menu
+
+chk_key_m
+	cmp #$4d
+	bne chk_key_s
+	jsr choose_memory_driver
+	jmp show_main_menu
+
+chk_key_s
+	cmp #$53
+	bne chk_key_a
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr toggle_stereo_mode
+
+	lda audio_driver
+	cmp #5
+	beq +
+	cmp #6
+	beq +
+	jmp redraw_menu
+
++	jsr show_stereo_mode
+	jmp main_loop
+
+chk_key_a
+	cmp #$41
+	bne chk_key_f
+	jsr change_audio_addr
+	jmp main_loop
+
+chk_key_f
+	cmp #$46
+	bne chk_key_r
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr change_filter_setting
+	jmp main_loop
+
+chk_key_r
+	cmp #$52
+	bne chk_key_e
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr change_resonance_setting
+	jmp main_loop
+
+chk_key_e
+	!ifndef c128 {
+		cmp #$45
+		bne chk_key_leftarrow
+		jsr toggle_screen_enable
+		jmp main_loop
+	}
+
+chk_key_leftarrow
+	cmp #$5f
+	bne chk_key_at
+	jsr save_config
+	jmp show_main_menu
+
+chk_key_at
+	cmp #$40
+	bne invalid_key
+	jsr request_dos_command
+	jmp show_main_menu
+
+invalid_key
+	jmp main_loop
+
+rp_start = VIC_SCREEN+(2*40)+19
+
+switch_pages
+	inc current_menu_page
+	lda current_menu_page
+	cmp #3
+	bne +
+	lda #0
+	sta current_menu_page
++ rts
+
+draw_menu_page_a
+	!ifndef c128 {
+		lda #0
+		ldx #<prepend_top_margin
+		ldy #>prepend_top_margin
+		jsr print_msg
+	}
+
+	lda playlist_length ; 2 or more items required
+	sec
+	cmp #2
+	bcc +
+
+	ldx #<menu_text_up_down
+	ldy #>menu_text_up_down
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_up_down_gray
+	ldy #>menu_text_up_down_gray
+	jsr print_menu_line
+
+++	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_load_and_play
+	ldy #>menu_text_load_and_play
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_load_gray
+	ldy #>menu_text_load_gray
+	jsr print_menu_line
+
+++	lda current_file_type ; type 0 means nothing is loaded.
+	beq +
+
+	ldx #<menu_text_play_loaded
+	ldy #>menu_text_play_loaded
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_play_loaded_b
+		ldy #>menu_text_play_loaded_b
+		jsr print_menu_line
+	}
+	jmp ++
+
++	ldx #<menu_text_play_loaded_gray
+	ldy #>menu_text_play_loaded_gray
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_play_loaded_gray_b
+		ldy #>menu_text_play_loaded_gray_b
+		jsr print_menu_line
+	}
+
+++	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_add_to_list
+	ldy #>menu_text_add_to_list
+	jsr print_menu_line
+
+	ldx #<menu_text_play_list
+	ldy #>menu_text_play_list
+	jsr print_menu_line
+
+	ldx #<menu_text_play_all
+	ldy #>menu_text_play_all
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_add_to_list_gray
+	ldy #>menu_text_add_to_list_gray
+	jsr print_menu_line
+
+	ldx #<menu_text_play_list_gray
+	ldy #>menu_text_play_list_gray
+	jsr print_menu_line
+
+	ldx #<menu_text_play_all_gray
+	ldy #>menu_text_play_all_gray
+	jsr print_menu_line
+
+++	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_repeat
+	ldy #>menu_text_repeat
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_repeat_gray
+	ldy #>menu_text_repeat_gray
+	jsr print_menu_line
+
+++	ldx #<menu_text_read_dir
+	ldy #>menu_text_read_dir
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_read_dir_b
+		ldy #>menu_text_read_dir_b
+		jsr print_menu_line
+	}
+
+	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_clear_playlist
+	ldy #>menu_text_clear_playlist
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_clear_playlist_gray
+	ldy #>menu_text_clear_playlist_gray
+	jsr print_menu_line
+
+++	lda playlist_length ;  2 or more items required
+	sec
+	cmp #2
+	bcc +
+
+	ldx #<menu_text_play_from_here
+	ldy #>menu_text_play_from_here
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_play_from_here_b
+		ldy #>menu_text_play_from_here_b
+		jsr print_menu_line
+	}
+	jmp ++
+
++	ldx #<menu_text_play_from_here_gray
+	ldy #>menu_text_play_from_here_gray
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_play_from_here_gray_b
+		ldy #>menu_text_play_from_here_gray_b
+		jsr print_menu_line
+	}
+
+++	ldx #<menu_text_exit
+	ldy #>menu_text_exit
+	jsr print_menu_line
+
+	jsr show_repeat_mode
+rts
+
+draw_menu_page_b
+	!ifndef c128 {
+		lda #0
+		ldx #<prepend_top_margin
+		ldy #>prepend_top_margin
+		jsr print_msg
+	}
+
+	lda playlist_length ; 2 or more items required
+	sec
+	cmp #2
+	bcc +
+
+	ldx #<menu_txt_home_clr
+	ldy #>menu_txt_home_clr
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_txt_home_clr_gray
+	ldy #>menu_txt_home_clr_gray
+	jsr print_menu_line
+
+++	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_page_up_down
+	ldy #>menu_text_page_up_down
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_page_up_down_gray
+	ldy #>menu_text_page_up_down_gray
+	jsr print_menu_line
+
+++	lda playlist_length ; 1 or more items required
+	beq +
+
+	ldx #<menu_text_load_only
+	ldy #>menu_text_load_only
+	jsr print_menu_line
+	jmp ++
+
++	ldx #<menu_text_load_only_gray
+	ldy #>menu_text_load_only_gray
+	jsr print_menu_line
+
+++	ldx #<menu_text_load_filename
+	ldy #>menu_text_load_filename
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_load_filename_b
+		ldy #>menu_text_load_filename_b
+		jsr print_menu_line
+	}
+
+	lda current_file_type ; type 0 means nothing is loaded.
+	beq +
+
+	ldx #<menu_text_sample_mode
+	ldy #>menu_text_sample_mode
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_sample_mode_b
+		ldy #>menu_text_sample_mode_b
+		jsr print_menu_line
+	}
+	jmp ++
+
++	ldx #<menu_text_sample_mode_gray
+	ldy #>menu_text_sample_mode_gray
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_sample_mode_gray_b
+		ldy #>menu_text_sample_mode_gray_b
+		jsr print_menu_line
+	}
+
+++	ldx #<menu_text_device_number
+	ldy #>menu_text_device_number
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_device_number_b
+		ldy #>menu_text_device_number_b
+		jsr print_menu_line
+	}
+
+	ldx #<menu_text_view_dir
+	ldy #>menu_text_view_dir
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_view_dir_b
+		ldy #>menu_text_view_dir_b
+		jsr print_menu_line
+	}
+
+	ldx #<menu_text_dos_cmd
+	ldy #>menu_text_dos_cmd
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_dos_cmd_b
+		ldy #>menu_text_dos_cmd_b
+		jsr print_menu_line
+	}
+
+	jsr show_input_device
+rts
+
+draw_menu_page_c
+	!ifndef c128 {
+		lda #0
+		ldx #<prepend_top_margin
+		ldy #>prepend_top_margin
+		jsr print_msg
+	}
+
+	ldx #<menu_text_audio_driver
+	ldy #>menu_text_audio_driver
+	jsr print_menu_line
+
+	ldx #<menu_text_ram_driver
+	ldy #>menu_text_ram_driver
+	jsr print_menu_line
+
+	; display stereo mode
+	ldx #<menu_text_stereo
+	ldy #>menu_text_stereo
+	jsr print_menu_line
+
+	; display either SID or DAC address, if SID addr, only if stereo is on.
+	sec
+	lda audio_driver
+	cmp #5
+	bpl .not_sid_menu
+
+	bit stereo_enable
+	bpl +
+
+	ldx #<menu_text_sid_addr
+	ldy #>menu_text_sid_addr
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_sid_addr_b
+		ldy #>menu_text_sid_addr_b
+		jsr print_menu_line
+	}
+	jmp ++
+
++	ldx #<menu_text_sid_addr_gray
+	ldy #>menu_text_sid_addr_gray
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_sid_addr_gray_b
+		ldy #>menu_text_sid_addr_gray_b
+		jsr print_menu_line
+	}
+	jmp ++
+
+.not_sid_menu
+	cmp #5
+	beq +
+	cmp #6
+	beq +
+	jmp ++
+
++	ldx #<menu_text_dac_addr
+	ldy #>menu_text_dac_addr
+	jsr print_menu_line
+	!ifndef c128 {
+		ldx #<menu_text_dac_addr_b
+		ldy #>menu_text_dac_addr_b
+		jsr print_menu_line
+	}
+
+	; display filter and resonance or not
+++	lda audio_driver
+	cmp #3
+	beq +
+	cmp #4
+	beq +
+	jmp ++
+
++	ldx #<menu_text_filter
+	ldy #>menu_text_filter
+	jsr print_menu_line
+
+	ldx #<menu_text_resonance
+	ldy #>menu_text_resonance
+	jsr print_menu_line
 
 	!ifndef c128 {
-	+ 	cmp #$d5
-		bne +
-		lda #$d6
-		bne .show
-
-	+ 	cmp #$d6
-		bne +
-		lda #$d7
-		bne .show
+	++	ldx #<menu_text_enable_screen
+		ldy #>menu_text_enable_screen
+		jsr print_menu_line
+		
+		ldx #<menu_text_enable_screen_b
+		ldy #>menu_text_enable_screen_b
+		jsr print_menu_line
 	}
 
-+ 	cmp #$d7
-	bne +
-	lda #$de
-	bne .show
+	; display "save config"
+++	ldx #<menu_text_save_config
+	ldy #>menu_text_save_config
+	jsr print_menu_line
 
-+ 	cmp #$de
-	bne +
-	lda #$20
-	sta stereo_sid_addr		; $df00-$df1f is reserved for REU
-	lda #$df
-	bne .show
-
-+ 	cmp #$df
-	bne .show
-	lda #$20
-	sta stereo_sid_addr		; obviously, $d400-$d420 is reserved also :P
-	lda #$d4
-
-.show
-	sta stereo_sid_addr+1
-.show2
-	bit current_page
-	bpl +
+	jsr show_audio_driver
+	jsr show_ram_driver
 	jsr show_sid_addr
-+ rts
-
-show_filter_setting
-	ldx #<filter_setting_pos
-	ldy #>filter_setting_pos
-	jsr print_msg
-
-	ldx #9
-	cpx filter_setting
-	bmi +
-	lda #$20	; print a leading space if 0-9
-	jsr CHROUT
-
-+	ldx filter_setting
-	ldy #0
-	jsr print_uint16
-rts
-
-change_filter_setting
-	inc filter_setting
-	lda filter_setting
-	cmp #16
-	bne +
-	lda #0
-+	sta filter_setting
-	bit current_page
-	bpl +
+	jsr show_dac_addr
+	jsr show_stereo_mode
 	jsr show_filter_setting
-+ rts
+	jsr show_resonance_setting
+	!ifndef c128 {
+		jsr show_screen_enable
+	}
+rts
 
-show_resonance_setting
-	ldx #<resonance_setting_pos
-	ldy #>resonance_setting_pos
+print_menu_line
+	!ifndef c128 {
+		stx tempzp_d
+		sty tempzp_d+1
+		lda #0
+		ldx #<prepend_right_margin
+		ldy #>prepend_right_margin
+		jsr print_msg_rle
+		ldx tempzp_d
+		ldy tempzp_d+1
+	}
+	lda #0
 	jsr print_msg
+rts
 
-	ldx #9
-	cpx resonance_setting
-	bmi +
-	lda #$20	; print a leading space if 0-9
+populate_info_box
+	!ifndef c128 {
+		ibr1col = 18
+		ibr2col = 18
+		ibrow = 20
+		nfcol = 19
+	} else {
+		jsr set_window_infobox
+		ibr1col = 6
+		ibr2col = 4
+		ibrow = 0
+		nfcol = 6
+	}
+
+	lda current_file_type
+	bne +
+
+	ldx #ibrow+1
+	ldy #nfcol
+	clc
+	jsr PLOT
+
+	lda #0
+	ldx #<no_file_loaded_msg
+	ldy #>no_file_loaded_msg
+	!ifndef c128 {
+		jsr print_msg_rle
+	} else {
+		jsr print_msg
+	}
+	rts
+
++	clc
+	ldx #ibrow
+	ldy #ibr1col
+	jsr PLOT
+
+	!ifdef c128 {
+		ldx #<current_file_msg
+		ldy #>current_file_msg
+		jsr print_msg
+	}
+
+	lda #CYAN
 	jsr CHROUT
 
-+	ldx resonance_setting
-	ldy #0
-	jsr print_uint16
-rts
+	lda #21
+	ldx #<current_file_name
+	ldy #>current_file_name
+	jsr center_string
 
-change_resonance_setting
-	inc resonance_setting
-	lda resonance_setting
-	cmp #16
+	lda #$22 ; quote
+	jsr CHROUT
+
+	lda #16
+	ldx #<current_file_name
+	ldy #>current_file_name
+	jsr print_msg
+
+	lda #$22 ; quote
+	jsr CHROUT
+	lda #$0d
+	jsr CHROUT
+
+	clc
+	ldx #ibrow+1
+	ldy #ibr2col
+	jsr PLOT
+
+	!ifdef c128 {
+		lda #DCYN
+		jsr CHROUT
+
+		sec
+		lda current_file_type
+
+		cmp #1
+		bne +
+		ldx #<tracker_name_msg_soundtracker
+		ldy #>tracker_name_msg_soundtracker
+		jmp ++
+
+	+	cmp #4
+		bcs +
+		ldx #<tracker_name_msg_protracker
+		ldy #>tracker_name_msg_protracker
+		jmp ++
+
+	+	cmp #6
+		bcs +
+		ldx #<tracker_name_msg_startrekker
+		ldy #>tracker_name_msg_startrekker
+		jmp ++
+
+		ldx #<tracker_name_msg_fasttracker
+		ldy #>tracker_name_msg_fasttracker
+
+	++	lda #0
+		jsr print_msg
+		lda #","
+		jsr CHROUT
+		lda #" "
+		jsr CHROUT
+	}
+
+	lda #CYAN
+	jsr CHROUT
+
+	lda current_file_tracks
+	jsr to_hex
+	jsr CHROUT
+
+	lda #0
+	ldx #<current_file_tracks_msg
+	ldy #>current_file_tracks_msg
+	jsr print_msg
+
+	lda current_file_type
+	cmp #1
 	bne +
+	ldx #15
+	bne ++
+
++	ldx #31
+++	ldy #0
+	sec
+	jsr print_uint16
+
 	lda #0
-+	sta resonance_setting
-	bit current_page
-	bpl +
-	jsr show_resonance_setting
-+ rts
-
-save_config
-	!ifdef c128 {
-		jsr set_dim_full_screen
-	}
-
-	ldx #<status_line_pos
-	ldy #>status_line_pos
+	ldx #<current_file_samples_msg
+	ldy #>current_file_samples_msg
 	jsr print_msg
 
-	ldx #<saving_msg
-	ldy #>saving_msg
-	jsr print_msg
+	lda #CYAN
+	jsr CHROUT
 
-	lda config_filename_len
-	ldx #<config_filename
-	ldy #>config_filename
-	jsr SETNAM
 	!ifdef c128 {
+		ldx current_file_size_in_kb
+		ldy current_file_size_in_kb+1
+		jsr get_num_length
+		tya
+		clc
+		adc #33
+		sta tempzp_c
+		sec
+		lda #41
+		sbc tempzp_c
+		lsr
+		tay
+		ldx #ibrow+2
+		clc
+		jsr PLOT
+
+		clc
+		ldx number_of_patterns
+		ldy #0
+		jsr uint16_to_string
+
 		lda #0
-		ldx #0
-		jsr SETBNK
+		ldx #<(uint16_string_buffer+3) ; +3 to skip the empty sign byte
+		ldy #>(uint16_string_buffer+3) ; and two of the leading zeroes
+		jsr print_msg
+
+		ldx #<current_file_patterns_msg
+		ldy #>current_file_patterns_msg
+		jsr print_msg
+	} else {
+		clc
+		ldx #ibrow+2
+		ldy #18 ; "ibr3col"
+		jsr PLOT
 	}
-	lda #0
-	ldx boot_device
+
+	lda #CYAN
+	jsr CHROUT
+
+	clc
+	ldx number_of_song_positions
 	ldy #0
-	jsr SETLFS
+	jsr uint16_to_string
 
-	lda #<config_space
-	sta save_addr
-	lda #>config_space
-	sta save_addr+1
-
-	lda #save_addr
-	ldx #<cfg_data_end
-	ldy #>cfg_data_end
-	jsr SAVE
-
-	ldx #<status_line_pos
-	ldy #>status_line_pos
+	lda #0
+	ldx #<(uint16_string_buffer+3) ; +3 to skip the empty sign byte
+	ldy #>(uint16_string_buffer+3) ; and two of the leading zeroes
 	jsr print_msg
 
-	ldx #<clear_status_line
-	ldy #>clear_status_line
+	lda #0
+	ldx #<current_file_song_pos_msg
+	ldy #>current_file_song_pos_msg
+	jsr print_msg
+
+	sec
+	ldx current_file_size_in_kb
+	ldy current_file_size_in_kb+1
+	jsr print_uint16
+
+	!ifndef c128 { ; check if the number is 4 digits i.e. 1000+
+		sec
+		lda current_file_size_in_kb
+		cmp #232
+		lda current_file_size_in_kb+1
+		cmp #3
+		bcs +
+		lda #" "
+		jsr CHROUT
+	}
+
++	lda #LBLU
+	jsr CHROUT
+	lda #0
+	ldx #<kb_msg
+	ldy #>kb_msg
 	jsr print_msg
 rts
-
-!ifdef c128 {
-	set_dim_full_screen
-		lda #0
-		sta SCTOP
-		lda #24
-		sta SCBOT
-		lda #0
-		sta SCLF
-		lda #79
-		sta SCRT
-	rts
-
-	set_dim_left_pane
-		lda #3
-		sta SCTOP
-		lda #19
-		sta SCBOT
-		lda #6
-		sta SCLF
-		lda #29
-		sta SCRT
-	rts
-
-	set_dim_right_pane
-		lda #2
-		sta SCTOP
-		lda #16
-		sta SCBOT
-		lda #33
-		sta SCLF
-		lda #73
-		sta SCRT
-	rts
-}
-
-mm_lo
-	!byte <line_1
-	!byte <line_2
-	!byte <line_3
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_18_and_20
-	!byte <line_19
-	!byte <lines_18_and_20
-	!byte <line_21
-	!byte <lines_4_to_17_and_22
-	!byte <line_23
-	!byte <line_24
-
-mm_hi
-	!byte >line_1
-	!byte >line_2
-	!byte >line_3
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_18_and_20
-	!byte >line_19
-	!byte >lines_18_and_20
-	!byte >line_21
-	!byte >lines_4_to_17_and_22
-	!byte >line_23
-	!byte >line_24
-
-rp_a_lo
-	!byte <rt_txt_a_1
-	!byte <rt_txt_a_2
-	!byte <rt_txt_a_3
-	!byte <rt_txt_a_4
-	!byte <rt_txt_a_5
-	!byte <rt_txt_a_6
-	!byte <rt_txt_a_7
-	!byte <rt_txt_a_8
-	!byte <rt_txt_a_9
-	!byte <rt_txt_a_10
-	!byte <rt_txt_a_11
-	!byte <rt_txt_a_12
-	!byte <rt_txt_a_13
-	!byte <rt_txt_a_14
-	!byte <rt_txt_a_15
-
-rp_a_hi
-	!byte >rt_txt_a_1
-	!byte >rt_txt_a_2
-	!byte >rt_txt_a_3
-	!byte >rt_txt_a_4
-	!byte >rt_txt_a_5
-	!byte >rt_txt_a_6
-	!byte >rt_txt_a_7
-	!byte >rt_txt_a_8
-	!byte >rt_txt_a_9
-	!byte >rt_txt_a_10
-	!byte >rt_txt_a_11
-	!byte >rt_txt_a_12
-	!byte >rt_txt_a_13
-	!byte >rt_txt_a_14
-	!byte >rt_txt_a_15
-
-rp_b_lo
-	!byte <rt_txt_b_1
-	!byte <rt_txt_b_2
-	!byte <rt_txt_b_3
-	!byte <rt_txt_b_4
-	!byte <rt_txt_b_5
-	!byte <rt_txt_b_6
-	!byte <rt_txt_b_7
-	!byte <rt_txt_b_8
-	!byte <rt_txt_b_9
-	!byte <rt_txt_b_10
-	!byte <rt_txt_b_11
-	!byte <rt_txt_b_12
-	!byte <rt_txt_b_13
-
-rp_b_hi
-	!byte >rt_txt_b_1
-	!byte >rt_txt_b_2
-	!byte >rt_txt_b_3
-	!byte >rt_txt_b_4
-	!byte >rt_txt_b_5
-	!byte >rt_txt_b_6
-	!byte >rt_txt_b_7
-	!byte >rt_txt_b_8
-	!byte >rt_txt_b_9
-	!byte >rt_txt_b_10
-	!byte >rt_txt_b_11
-	!byte >rt_txt_b_12
-	!byte >rt_txt_b_13

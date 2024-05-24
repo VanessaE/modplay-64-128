@@ -1,19 +1,21 @@
 ; this code starts and stops the audio interrupt
 
-; Called by the audio driver to set the correct ISR IRQ entry adress
-; enter with .X/.Y = address low/high, .A = SIGNED iteration timer amount
-; .A should not be less than -20 ($eb) or greater than 4, or thereabouts.
-; That corresponds to about 4.3 kHz to 51.1 kHz, but it depends on what each
-; platform can handle, so drivers on a given platform build need to take
-; CPU speed into consideration.
+; ##### Start the ISR and initialize the audio device/driver
 
-isr_start
-	stx isr_entry_lo+1
-	sty isr_entry_hi+1
-	ldx #1
-	bpl +			; if .A  > 0 , it's an exact no. of rasters per iteration
-	beq ++			; if .A == 0 , make it 1 raster per iteration
-	eor #$7f		; if .A  < 0 , use abs. value as no. cycles per iteration
+!align 255,0,0
+
+isr_startup
+	sei
+
+	!ifdef c128 {
+		jsr c128_set_1mhz_mode
+	}
+
+	txa
+	and #$ff
+	bpl +			; if timing  > 0 , it's an exact no. of rasters per iteration
+	beq ++			; if timing == 0 , make it 1 raster per iteration
+	eor #$7f		; if timing  < 0 , use abs. value as no. cycles per iteration
 	clc				;   (allows to use less than one raster per)
 	adc #$81
 	bne +++
@@ -27,138 +29,192 @@ isr_start
 							; drivers which allow the screen to be turned on
 	clc						; on NTSC need another val that's one raster longer
 	adc raster_len			; than the supplied time, so that a raster can be
-	sta isr_cycle_time_alt	; skipped every other frame.  Ignored on PAL.
-
-; initialize audio buffers and ISR variables
-
-	lda #$80
-	ldx #0
-	-	sta audio_buffer_left,x
-		sta audio_buffer_right,x
-		dex
-	bne -
+	sta isr_cycle_time_alt	; skipped every other frame.
 
 	; 'Disable NMI' without using kernal and $0318/$0319 by Sokrates
 	; https://codebase64.org/doku.php?id=base:nmi_lock_without_kernal
 	; (reformatted to match my code style)
 
 	lda #<interrupts_lockout	; change nmi vector to nmiRoutine
-	sta $fffa     
+	sta CPU_NMI_vector
 	lda #>interrupts_lockout
-	sta $fffb
-	lda #$00			; stop Timer A
-	sta CIA2+$0e 
-	sta CIA2+$04		; set Timer A to 0, after starting
-	sta CIA2+$05		; NMI will occur immediately
-	lda #$81  
-	sta CIA2+$0d		; set Timer A as source for NMI 
-	lda #$01  
-	sta CIA2+$0e		; start Timer A -> NMI
+	sta CPU_NMI_vector+1
+	lda #0					; stop CIA #2 Timer A
+	sta CIA2+$0e
+	sta CIA2+$04			; set Timer A interval to 0, after starting
+	sta CIA2+$05			; NMI will occur immediately
+	lda #$81
+	sta CIA2+$0d			; set Timer A as source for NMI
+	lda #$01
+	sta CIA2+$0e			; start Timer A -> NMI
+							; from here on NMI's are disabled
 
-	; from here on NMI is disabled
+	+JSR_INDIRECT (audio_start_vec)
 
-; Point IRQ to the address provided by the audio driver and set the
-; interval to whatever it specified (it will overwrite these lda's)
+; One-shot ISR kick-off, based on "Double-IRQ" stable interrupt method from
+; https://codebase64.org/doku.php?id=base:the_double_irq_method
+; (author unknown)
 
-isr_entry_lo
-	lda #0
-	sta cpu_irq_vector
-isr_entry_hi
-	lda #0
-	sta cpu_irq_vector+1
+; NTSC fix: turn two of the nop's below (in irq_stage_2) into 'lda ($ea,x)'
+; turning 2 bytes/4 cycles into 2 bytes/6 cycles
 
-	lda isr_cycle_time
+	bit pal_flag
+	bmi +
+	lda #$a1
+	sta ntsc_adj
+
++	ldx #0
+	sta CIA1+$0f			; ensure that timer B is turned off
+	lda isr_cycle_time		; set CIA #1 timer B interval
 	sta CIA1+$06
 	lda #0
 	sta CIA1+$07
-
-	lda #$7f			; clear CIA interrupt masks
+	lda #$01				; disable timer A IRQ
 	sta CIA1+$0d
+	lda #$82				; enable timer B IRQ
+	sta CIA1+$0d
+	bit CIA1+$0d			; and clear any pending IRQ
+	lda #$81
+	sta VIC+$1a				; enable VIC raster IRQ
+	lda #<irq_stage_1
+	sta CPU_IRQ_vector
+	lda #>irq_stage_1
+	sta CPU_IRQ_vector+1
 
-	ldx #0				; disable VIC-II interrupts
-	stx VIC+$1a
-	lda VIC+$19
-	and #$81
-	sta VIC+$19
-	stx VIC+$19
+	lda #$38				; stage 1 IRQ will fire on line $38
+	sta VIC+$12
+	lsr VIC+$19				; clear any VIC IRQ that's pending
 
-	lda #$82			; set Timer B to continuous mode, counting Phi2 cycles
-	sta CIA1+$0d		; no output on PB6, and start it
+	; ask the audio driver for the ISR entry address
+	; returns with .X/.Y = address low/high
 
-	!ifdef c128 {
-		jsr c128_set_1mhz_mode
-	}
+	+JSR_INDIRECT (audio_init_vec)
 
-; Jackasser's polling sync method, reformatted to match my code style
-; https://codebase64.org/doku.php?id=base:the_polling_method
+	stx .iel + 1
+	stx .iel + 1
+	sty .ieh + 1
 
-; NTSC fix: if pal_flag is clear, turn the last two nop's in JA's
-; code into 'cmp ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
-
-	lda pal_flag
-	bmi sync_vic
-	lda #$c1
-	sta +
-
-sync_vic
-	lda #$11		; to be used below...
-	ldx #250
-
-	-	cpx VIC+$12
-		bne -
-	+DELAY_LOOP Y, 10	; need 52 cycles.  this loop is 49
-	bit $ea				; burn 3 more cycles
-	inx
-	cpx VIC+$12
-	beq skip1
-	nop
-	nop
-skip1
-	+DELAY_LOOP Y, 10
-	bit $ea
-	inx
-	cpx VIC+$12
-	beq skip2
-	bit $ea
-skip2
-	+DELAY_LOOP Y, 10
-	bit $ea
-	+	nop
-		nop
-		inx
-		cpx VIC+$12
-	bne +				; we should now be right at the start of line #251
-
-; add a 59-cycle delay to put us a few cycles before the end of the next line.
-
-+	+DELAY_LOOP X, 10	; 49 cycles
-	nop					; 2 cycles
-	nop					; 2 cycles
-	nop					; 2 cycles
-	sta CIA1+$0f		; 4 cycles
-
-	!ifndef c128 {
-		lda disable_screen_on_playback
-		bpl +
-		jsr disable_screen
-	}
+	cli
 rts
 
-interrupts_lockout   rti ; exit any interrupt that gets here, unacknowledged 
+irq_stage_1					; 7 cycles to enter
+	inc VIC+$12				; 6
+	lsr VIC+$19				; 6
 
-!macro ISR_ENTRY {
-	inc VIC+$20			; 6 cycles / just so we can see it running.
-	dec VIC+$20			; 6 cycles
+	sta .s1a + 1			; 4 / we're about to trash .A so back it up
+	lda #<irq_stage_2		; 2
+	sta CPU_IRQ_vector		; 4
+	lda #>irq_stage_2		; 2
+	sta CPU_IRQ_vector+1	; 4
+	cli						; 2 / 37 cycles for switchover
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop						; 55 cycles / stage 2 could fire here on PAL if
+	nop						;             stage 1's jitter maxed-out at 7 cycles
+	nop
+	nop
+	nop						; 63 / or as late as here if stage 1 was on-time on PAL
+	nop						; 65 / or as late as here on NTSC
+	nop
 
-	sta isr_accu		; 3 cycles
-	stx isr_regx
-	sty isr_regy
-}
+irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
+	lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
+	sta VIC+$1a				; 4 / the IRQ from now on.
 
-!macro ISR_EXIT {
-	ldy isr_regy
-	ldx isr_regx
-	lda isr_accu		; 3 cycles
-	bit CIA1+$0d		; 4 cycles / acknowledge Timer B interrupt
-	rti					; 6 cycles
-}
+	pla						; 4 / discard stage 2's return address and cpu status
+	pla						; 4 / so that we return via stage 1's stack values
+	pla 					; 4
+
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+ntsc_adj
+	nop						; 2 \__ these become 'lda ($ea,x)'
+	nop						; 2 /   on NTSC to add 2 more cycles
+	nop						; 2
+	nop						; 2
+	lda VIC+$12				; 4 / 61 cycles, -0/+1
+	cmp #$39				; 2
+	beq fixcycle			; 3 or 2
+
+fixcycle
+							; we are now at cycle 5 of the line.
+
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6  / waste 48 cycles
+
+	lda #$11				; 2
+
+							; we should now be on cycle 55 of line $39, JUST
+							; past where the delay on bad line $3b will end.
+
+	sta CIA1+$0f			; 4 / start the CIA timer in continuous mode,
+							;     counting Phi2 cycles, no output on PB6
+
+	!ifdef c128 {
+		jsr c128_set_2mhz_mode
+	}
+
+.iel lda #0					; re-point the IRQ to the audio driver entry that
+	sta CPU_IRQ_vector		; was fetched at the start of the ISR setup
+.ieh lda #0
+	sta CPU_IRQ_vector+1
+
+.s1a lda #0					; restore .A
+	cli
+interrupts_lockout ; exit any NMI that gets here, unacknowledged
+rti
+; ##### end of ISR Init
+
+
+; ##### just what it says on the tin, this stops the ISR and silences the audio
+
+isr_shutdown
+	sei
+
+	+JSR_INDIRECT (audio_stop_vec)
+
+	lda #1
+	sta CIA1+$0e
+	lda #0
+	sta CIA1+$0f
+
+	sta CIA2+$0d
+	sta CIA2+$0e
+	sta CIA2+$0f
+
+	!ifndef c128 {
+		lda #0
+		sta VIC+$1a
+		lda #$81
+		sta CIA1+$0d
+	} else {
+		lda #$81
+		sta VIC+$1a
+	}
+
+	lda VIC+$19
+	lda CIA1+$0d
+	lda CIA2+$0d
+
+	!ifdef c128 {
+		lda #36
+		sta VDC
+		lda #0
+		sta VDC+1
+		jsr c128_set_2mhz_mode
+	}
+rts

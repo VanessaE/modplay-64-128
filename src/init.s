@@ -4,14 +4,42 @@ init
 	!ifdef c128 {
 		jsr c128_set_2mhz_mode
 		jsr disable_screen
+		lda #$20
+		sta RPTFLAG ; disables key repeat other than cursor, space, delete
 	}
 
 	jsr RESTOR ; this also undoes the "READY. trap"
 	jsr CLALL
 
+	lda #0
 	ldx #<initializing_msg
 	ldy #>initializing_msg
 	jsr print_msg
+
+	sei
+	jsr disable_roms
+
+	!ifdef c128 { ; reset F-keys to normal PETSCII codes
+		ldy #9
+	-	lda #1
+		sta PKYBUF,y
+		lda fkey_codes,y
+		sta PKYDEF,y
+		dey
+		bpl -
+	}
+
+	lda #0
+
+	!ifndef c128 {
+		ldy #203
+	} else {
+		ldy #161
+	}
+
+-	dey
+	sta low_mem_zone,y
+	bne -
 
 	ldy #15
 -	lda default_config,y
@@ -26,37 +54,11 @@ init
 	sta MSGFLG ; suppress "SEARCHING FOR..." message
 
 	lda #0
-	sta current_page
+	sta current_menu_page
 	!ifdef c128 {
 		lda #$80
 		sta clear_menu_screen_flag
 	}
-
-;	lda config_filename_len
-;	ldx #<config_filename
-;	ldy #>config_filename
-;	jsr SETNAM
-;
-;	!ifdef c128 {
-;		lda #0
-;		ldx #0
-;		jsr SETBNK
-;	}
-;
-;	lda #0
-;	ldx boot_device
-;	ldy #$ff
-;	jsr SETLFS
-;
-;	lda #0
-;	ldx #<config_space
-;	ldy #>config_space
-;	jsr LOAD
-;	bcc +
-;	jsr read_err_channel
-
-+	sei
-	jsr disable_roms
 
 	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
 	; Code by Graham (reformatted for Acme and my code style)
@@ -103,74 +105,112 @@ init
 		inx
 	bne -
 
-; generate volume scaler tables according to:
-;
-; (byte_val * (vol_level + 1)) / 64  +  (63 - vol_level + 1) * 2
+	sec
+	lda #>free_memory_end
+	sbc #>free_memory_start
+	sta main_memory_free_pages
+	dec main_memory_free_pages
 
-	lda #<volume_tables_base
-	sta tempzp_d
-	lda #>volume_tables_base
-	sta tempzp_d+1
-	lda #0
-	sta bval_cnt		; byte value count
-	sta vol_cnt			; volume count
+	; test highest C128 bank number (normally it'll only return 1 or 3, unless
+	; the user's MMU hack is broken :-P)
 
-	--	lda vol_cnt
-	-	ldx bval_cnt
-		jsr multiply_8x8 	; returns 14 bit value in 'product' (top 2 bits are 
-							; always 0 here) MSB is also in .A at exit.
+	!ifdef c128 {
 
-		lsr					; divide result by 64: 14 bit --> 8 bit
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product			; .A is now 0, product LSB has the final mult result
-
-		sec					; add double (inverse of vol + 1) to shift values up
-		lda #63				; to keep ~$7f in the middle of each page
-		sbc vol_cnt
-		clc
-		adc #1
-		asl
-		clc
-		adc product
+		lda #<free_memory_end
+		sta indstash_addr
+		lda #>free_memory_end
+		sta indstash_addr+1
 
 		ldy #0
-		sta (tempzp_d),y
-		inc tempzp_d
-		inc bval_cnt
-		bne --
-		inc tempzp_d+1
-		inc vol_cnt
-		lda vol_cnt
-		cmp #64
-	bne -
 
-	jsr reu_get_size
+		ldx #%11111110	; select bank 3
+		lda #$33
+		jsr IND_STASH
 
-	!ifdef c128 { ; reset F-keys to normal PETSCII codes
-		ldy #9
-	-	lda #1
-		sta PKYBUF,y
-		lda fkey_codes,y
-		sta PKYDEF,y
-		dey
-		bpl -
+		ldx #%10111110	; select bank 2
+		lda #$22
+		jsr IND_STASH
+
+		ldx #%01111110	; select bank 1
+		lda #$11
+		jsr IND_STASH
+
+		lda #0
+		sta free_memory_end
+
+	; now try to read them back
+
+		lda #<free_memory_end
+		sta indfetch_addr
+		lda #>free_memory_end
+		sta indfetch_addr+1
+
+		ldx #%11111110	; select bank 3
+		jsr IND_FETCH
+		cmp #$33
+		bne +
+		lda #3
+		jmp ++
+
+	+	ldx #%10111110	; select bank 2
+		jsr IND_FETCH
+		cmp #$22
+		bne +
+		lda #2
+		jmp ++
+
+	+	ldx #%01111110	; select bank 1
+		jsr IND_FETCH
+		cmp #$11
+		bne +
+		lda #1
+		jmp ++
+
+	+	lda #0
+	++	sta c128_highest_bank
+
 	}
 
-	jsr enable_kernal
-	cli
+	jsr reu_get_size
+	lda #<reu_stash_block
+	sta stash_block_vec
+	lda #>reu_stash_block
+	sta stash_block_vec+1
 
-rts ; ############# dump out early
+	lda #0						; refers to the addr in REU
+	sta free_memory_start		; main mem driver will use main_mem_free_start for this
+	sta free_memory_start+1
+	sta free_memory_start+2
 
-; Codefault's count raster lines code, to know if PAL or NTSC
+	lda #<sid_4b_timing_resolution
+	sta audio_timing_res_vec
+	lda #>sid_4b_timing_resolution
+	sta audio_timing_res_vec+1
+
+	lda #<sid_4b_init
+	sta audio_init_vec
+	lda #>sid_4b_init
+	sta audio_init_vec+1
+
+	lda #<sid_4b_start
+	sta audio_start_vec
+	lda #>sid_4b_start
+	sta audio_start_vec+1
+
+	lda #<sid_4b_stop
+	sta audio_stop_vec
+	lda #>sid_4b_stop
+	sta audio_stop_vec+1
+
+	!ifndef c128 {
+		lda #0
+		sta enable_screen_on_playback
+	}
+
+	+JSR_INDIRECT (audio_timing_res_vec)
+	jsr generate_volume_tables
+
+	; Codefault's count raster lines code, to know if PAL or NTSC
 
 --	ldx #$aa
 	-	tax
@@ -190,9 +230,199 @@ rts ; ############# dump out early
 	inx
 	inx
 +	stx raster_len
+
+	jsr charset_copy
+	jsr blur_table_copy
+
+	jsr final_clear_copy
+
+	!ifdef c128 {
+		jsr erase_file_list
+	}
+
+; ############# we're dumping-out early here
+	jmp clear_main_memory
+
+
+
+
+	lda config_filename_len
+	ldx #<config_filename
+	ldy #>config_filename
+	jsr SETNAM
+
+	!ifdef c128 {
+		lda #0
+		ldx #0
+		jsr SETBNK
+	}
+
+	lda #0
+	ldx boot_device
+	ldy #$ff
+	jsr SETLFS
+
+	lda #0
+	ldx #<config_space
+	ldy #>config_space
+	jsr LOAD
+	bcc +
+	jsr read_err_channel
+
+
+
+; ####### end of main init code
+
+
+zero_count	!byte 0
+
+copy_code				; call this with tempzp_d = source,
+	ldy #0				; tempzp_e = target, data will be copied
+--	lda #3				; until three 0's are found.
+	sta zero_count
+-	lda (tempzp_d),y
+	sta (tempzp_e),y
+	inc tempzp_d
+	bne +
+	inc tempzp_d+1
+
++	inc tempzp_e
+	bne +
+	inc tempzp_e+1
+
++	and #$ff
+	bne --
+	dec zero_count
+	bne -
+rts
+
+final_clear_copy
+	lda #<clear_main_memory_origin
+	sta tempzp_d
+	lda #>clear_main_memory_origin
+	sta tempzp_d+1
+	lda #<clear_main_memory
+	sta tempzp_e
+	lda #>clear_main_memory
+	sta tempzp_e+1
+	jsr copy_code
+rts
+
+clear_main_memory_origin
+	lda #<wipe_memory_start
+	sta tempzp_d
+	lda #>wipe_memory_start
+	sta tempzp_d+1
+	lda #0
+	ldy #0
+-	sta (tempzp_d),y
+	inc tempzp_d
+	bne -
+	inc tempzp_d+1
+	ldx tempzp_d+1
+	cpx #>free_memory_end
+	bne -
+	rts
+!byte 0,0,0
+
+charset_copy
+	!ifndef c128 {
+		jsr enable_char_rom_only
+
+		; park the ASCII charset in RAM at $d000
+
+		lda #<charset_64
+		sta tempzp_d
+		lda #>charset_64
+		sta tempzp_d+1
+		lda #<VIC_CHARSETS
+		sta tempzp_e
+		lda #>VIC_CHARSETS
+		sta tempzp_e+1
+		ldy #0
+	-	lda (tempzp_d),y
+		sta (tempzp_e),y
+		inc tempzp_d
+		bne +
+		inc tempzp_d+1
+	+	inc tempzp_e
+		bne -
+		inc tempzp_e+1
+		lda tempzp_e+1
+		cmp #>(VIC_CHARSETS+$0800)
+		bne -
+
+		; download the standard lower/upper charset to RAM at $d800
+		lda #<(VIC_CHARSETS+$0800)
+		sta tempzp_d
+		lda #>(VIC_CHARSETS+$0800)
+		sta tempzp_d+1
+		ldy #0
+	-	lda (tempzp_d),y
+		sta (tempzp_d),y
+		iny
+		bne -
+		inc tempzp_d+1
+		lda tempzp_d+1
+		cmp #>(VIC_CHARSETS+$1000)
+		bne -
+
+		jsr disable_roms
+	rts
+	} else {				; on the C128, upload it to the VDC
+		lda #<charset_128_alt
+		sta tempzp_d
+		lda #>charset_128_alt
+		sta tempzp_d+1
+		lda #18
+		sta VDC
+		lda #>VDC_CHARSETS
+		sta VDC+1
+		lda #19
+		sta VDC
+		lda #<VDC_CHARSETS
+		sta VDC+1
+	.nextchar
+		lda #31
+		sta VDC
+		ldy #0
+	-	bit VDC
+		bpl -
+		lda (tempzp_d),y
+		sta VDC+1
+		iny
+		cpy #8
+		bne -
+		lda #0
+	-	bit VDC
+		bpl -
+		sta VDC+1
+		dey
+		bne -
+		clc
+		lda tempzp_d
+		adc #8
+		sta tempzp_d
+		bcc +
+		inc tempzp_d+1
+	+	lda tempzp_d+1
+		cmp #>(charset_128_alt+$0800)
+		bne .nextchar
+	rts
+}
+
+blur_table_copy
+	ldy #0
+-	lda blur_table_origin,y
+	sta blurring_table,y
+	iny
+	bne -
 rts
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
+
+vol_cnt		!byte 0
+bval_cnt	!byte 0
 
 default_config
 	!ifndef c128 {			; signature
@@ -200,13 +430,62 @@ default_config
 	} else {
 		!byte $ff,"c",1,2,8
 	}
-	!byte 10				; default device
+	!byte 8					; default device
 	!word $d700				; default stereo SID addr
-	!word $de00				; default stereo SID addr
+	!word $dd01				; default DigiMAX/DAC addr
 	!byte 0					; default audio driver
-	!byte 0					; default RAM driver
+	!byte 1					; default RAM driver
+	!byte $80				; default Stereo mode (on/off)
 	!byte 0					; default filter setting
 	!byte 0					; default resonance setting
+	!byte 0					; default screen enable
 	!byte $ff				; end of file marker
-
 configuration_data_end
+
+initializing_msg
+!ifndef c128 {
+		!byte HOME
+		!fill 14,DOWN
+		!fill 12,RIGHT
+		!text CYAN,  "Initializing..."
+		!byte 0
+} else {
+		!byte HOME
+		!fill 14,DOWN
+		!fill 29,RIGHT
+		!text CYAN,  "   Initializing...    "
+		!byte 0
+}
+
+!align 255,0,$ff
+
+; signature we write to REU banks, first byte is bank number
+reu_signature_start
+reu_banknum
+	!text 0,"reutest!"
+
+; target buffer when reading signatures back from REU
+reu_sig_candidate_start
+	!text $ff,"icanhaz?"; same length as above
+
+blur_table_origin
+	!fill 32,132		; "@" through "z", "[" through "🠜"
+	!byte 32			; space
+	!fill 31,132		; ' !"#... ' through "?"
+	!byte 134				;"━"
+	!fill 28,132		; "A" through "Z", "╋" and "🮌" 
+	!byte 133				; "┃"
+	!byte 132,132		; "🮕" and "🮘"
+	!byte 32			; "shift space"
+	!fill 10,132		; "▌" thorugh the second "🮇"
+	!byte 139			; "┣"
+	!byte 132			; "▗"
+	!byte 137			; "┗"
+	!byte 136			; "┓"
+	!byte 132			; "▂"
+	!byte 135			; "┏"
+	!byte 132,132		; "┻" and "┳"
+	!byte 140			; "┫"
+	!fill 9,132			; "▎" through "▝"
+	!byte 138			; "┛"
+	!byte 132,132		; "▘" and "▚"

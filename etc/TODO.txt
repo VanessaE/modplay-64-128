@@ -1,0 +1,50 @@
+############
+##  TODO  ##
+############
+
+* add options to choose audio and RAM drivers
+
+* playlist repaint is too slow
+
+* cursor-left in main menu triggers switch pages code on C128
+
+* C64: display dir inside popup like on C128
+
+* C128 main memory driver: file has to be split across banks, maximum file
+  size is ~81k on most machines, or ~199k if the banks 2+3 MMU hack is
+  installed. This requires adding a check to the loader pointer and to the
+  player's memory pointer steppers if an increment crosses banks.  Pattern
+  data can be split across banks as long at the split happens between
+  patterns.
+
+* C64 main memory and all other memory drivers: just check that file will fit,
+  else throw an error, "file too big" -- in the playlist it would be a good
+  idea to just filter-out files that are too big when loading the dir.  The
+  check is still needed for the load-by-filename function though.
+
+* strings that should be centered are off by one: disk name is 1 to the left,
+  file size in loader is 1 to the right
+
+* C128: file name in infobox overwrites "Current"
+
+* C64: if list is positioned not to fill the pane (e.g. close to start or end),
+  file sizes aren't shown properly at bottom when scrolling with cursor keys
+  (but page up/down, top/bottom, and C128 are all fine)
+
+* add constants for GeoRAM, SCPU RAM, RAMLink DACC, and system RAM sizes
+
+* tinker with ISR sync code, try to get a consistently-better place on
+  the raster.  Ideal would be to get the very last write that enables the
+  interrupt to happen just as a bad line starts, so that the write doesn't
+  complete until the end of the line, so that the ISR will always just after
+  the end of any bad lines present from then on (this actually only matters on
+  C64 when screen is on, but not if it's off, and not on C128 at all)
+
+* C128: blur-out function has a minor bug, occasionally converts to the wrong
+  symbol, but always in the same screen locations.  VDC overrun?
+
+* add a function to change directory: it shall read the current dir looking
+  for items with "DIR" filetype, offer a list thereof along with a ".." item,
+  using the audio buffers for scratch space.
+
+* C64: after loading, re-paints the loader popup over itself, fully populated

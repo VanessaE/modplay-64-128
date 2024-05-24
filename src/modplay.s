@@ -5,7 +5,7 @@
 ;
 ; To build this project, you will need GNU Make (probably part of your
 ; operating system's "build essential" package), Acme Assembler, xxd, and the
-; c1541 tool from VICE.
+; cc1541 tool from https://bitbucket.org/ptv_claus/cc1541/src/master/
 ;
 ; Just enter the top directory and type 'make'.  By default, it builds
 ; everything, but you can specify targets such as "c64" or "c128" to limit
@@ -23,50 +23,77 @@
 ; main program code
 
 !source "src/constants.h"
-!source "src/misc-macros.s"
 
 !convtab pet
 !cpu 6510
 
-!ifndef c128 {
-	* = $0801
-} else {
-	* = $1301
+* = program_start
+
+	jmp start
+
+; extra macro calls used as functions should be placed here
+; so that they don't end up under BASIC-LOW ROM on the C128
+
+!source "src/misc-macros.s"
+
++ROM_SWITCHING
++SCREEN_ONOFF
+
+print_msg
+	+PRINT_MSG
+rts
+
+print_msg_rle
+	+PRINT_MSG_RLE
+rts
+
+!ifdef c128 {
+	+CPU_FREQ
 }
 
 start
+	php
+	sei
+	jsr enable_kernal_only
 	jsr init
+	jsr enable_kernal_only
+	plp
+
+	!ifndef c128 {
+		jsr disable_screen
+		jsr erase_file_list
+		jsr switch_to_primary_screen
+		lda #CLR
+		jsr CHROUT
+		jsr enable_screen
+	}
 
 	jmp show_main_menu ; and away we go!
 
-; macro calls, as needed
-
-+STRING_OPS
-+SCREEN_ONOFF
-+ROM_SWITCHING
-+ZERO_PAGE_OPS
-+NUMERIC_OPS
-+MATH_OPS
-
-!ifdef c128 {
-	+VDC_OPS
-	+C128_CPU_FREQ
-}
 
 ; additional code goes here
 
-!source "src/init.s"
 !source "src/main-menu.s"
-!source "src/player.s"
-!source "src/directory.s"
-!source "src/load-file-exp.s"
+!source "src/change-show.s"
 !source "src/file-ops.s"
-
-!source "src/drv-reu.s"
+!source "src/directory.s"
+!source "src/playlist.s"
 !source "src/isr-common.s"
-!source "src/drv-sid-4b.s"
 
-; text/PETSCII stuff goes here
+!source "src/driver-reu.s"
+!source "src/driver-sid.s"
+
+!source "src/player.s"
+
+!source "src/loader-exp.s"
+
+!source "src/screen-fx.s"
+!source "src/windowing.s"
+
+!source "src/misc-functions.s"
+
+
+; generic text/PETSCII stuff that's used by multiple functions goes here
 
 !ifndef  c128 {
 	!source "src/mm-text-64.s"
@@ -74,51 +101,93 @@ start
 	!source "src/mm-text-128.s"
 }
 
-!macro SPLASH_STATUS_LINE {
-	!byte HOME
-	!ifndef c128 {
-		!fill 14,DOWN
-		!fill 12,RIGHT
-	} else {
-		!fill 14,DOWN
-		!fill 29,RIGHT
-	}
-}
+dirname
+		!text "$"
 
 !ifndef c128 {
-	initializing_msg
-		+SPLASH_STATUS_LINE
-		!text CYAN,  "Initializing..."
-		!byte 0
-
-	detect_hw_msg
-		+SPLASH_STATUS_LINE
-		!text YEL,"Detect hardware"
-		!byte 0
+	config_filename_len !byte 13
+	config_filename     !text "modplay64.cfg",0
 } else {
-	initializing_msg
-		+SPLASH_STATUS_LINE
-		!text CYAN,  "   Initializing...    "
-		!byte 0
+	config_filename_len !byte 14
+	config_filename     !text "modplay128.cfg",0
 }
 
-press_key_msg
-	!text "Press any key",0
-
-
-!ifndef c128 {
-	config_filename_len !byte 8
-	config_filename     !text "mp64.cfg",0
-} else {
-	config_filename_len !byte 9
-	config_filename     !text "mp128.cfg",0
-}
-
-; this area is used to temporarily store portions the contents of zero page
+; this area is used to temporarily store the contents of zero page when
 ; the player is running, since the player needs a lot of it and the KERNAL
 ; and BASIC will be switched-off anyway.
 
-	!align 255,0,$ff
-
 zp_backup
 	!fill 256,0
+
+; Audio and RAM driver assignments
+;
+; RAM:
+; 0 = system memory -- C128 only
+; 1 = REU
+; 2 = GeoRAM
+; 3 = RAMLink DACC
+; 4 = SuperCPU expansion RAM
+;
+; Audio:
+; 0 = SID 4-bit volume register
+; 1 = SID 4-bit volume reg with dithering
+; 2 = SID 4-bit volume reg with interpolating -- C128 or accel only
+; 3 = SID 8-bit PWM
+; 4 = SID 8-bit PWM with interpolating -- C128 or accel only
+; 5 = DAC/DigiMAX
+; 6 = DAC/DigiMAX with interpolating -- C128 or accel only
+
+
+; File list flags
+;
+; file entries are stored one after the other in 20-byte increments:
+;
+; bit 7: set if this item is selected for the playlist
+; bit 0: set if this file is 15-sample MOD, or is unrecognized
+
+; anything appended after this point will be wiped-out after program init,
+; and must either be one-time-use stuff, or must be something that'll be
+; copied to another part of memory for runtime use, or which reserves memory
+; via the program counter.
+
+wipe_memory_start
+
+!source "src/init.s"
+
+!align 255,0
+
+!ifndef c128 {
+charset_64
+	!binary "etc/charset-64a.bin"
+} else {
+charset_128_alt
+	!binary "etc/charset-128a.bin"
+}
+
+; mods' lengths are big-endian, but addrs and lengths here are little-endian
+
+mod_instrument_names				= wipe_memory_start
+sample_start_addresses_lows			= mod_instrument_names + 32*31
+sample_start_addresses_mids			= sample_start_addresses_lows + 32
+sample_start_addresses_highs		= sample_start_addresses_mids + 32
+sample_end_addresses_lows			= sample_start_addresses_highs + 32
+sample_end_addresses_mids			= sample_end_addresses_lows + 32
+sample_end_addresses_highs			= sample_end_addresses_mids + 32
+sample_loop_start_addresses_lows	= sample_end_addresses_highs + 32
+sample_loop_start_addresses_mids	= sample_loop_start_addresses_lows + 32
+sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
+sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
+sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
+sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
+sample_default_fine_tunes			= sample_loop_end_addresses_highs + 32
+sample_default_volume_levels		= sample_default_fine_tunes + 32
+
+!ifndef c128 { 
+	pattern_table					= sample_default_volume_levels + 32
+	main_mem_free_start				= ((>pattern_table) + 1) * 256
+} else { ; on C128 the pattern table is in the low memory area
+	main_mem_free_start				= ((>sample_default_volume_levels) + 1) * 256
+}
+
+; anything appended after this point will be overwritten by the loaded file
+; when using main memory driver

@@ -2,10 +2,8 @@
 
 show_directory
 	!ifdef c128 {
-		jsr draw_dir_window
-		jsr set_dim_dir_win
-		lda #HOME
-		jsr CHROUT
+		clc
+		jsr draw_tall_popup
 	} else {
 		lda #CLR
 		jsr CHROUT
@@ -23,8 +21,13 @@ show_directory
 	jsr CHRIN
 
 	jsr dir_read_entry_size
-	ldx #<string_16_bit_trimmed
-	ldy #>string_16_bit_trimmed
+
+	lda #RIGHT
+	jsr CHROUT
+
+	lda #0
+	ldx #<uint16_string_buf_trim
+	ldy #>uint16_string_buf_trim
 	jsr print_msg
 
 	jsr dir_read_line		; first line is the dir/disk name
@@ -32,6 +35,10 @@ show_directory
 	lda #" "
 	jsr CHROUT				; add a space
 
+	lda #RIGHT
+	jsr CHROUT
+
+	lda #0
 	ldx #<string_buffer
 	ldy #>string_buffer
 	jsr print_msg
@@ -44,8 +51,13 @@ show_directory
 	jsr dir_err_check		; check for EOF/err
 
 	jsr dir_read_entry_size
-	ldx #<string_16_bit_trimmed
-	ldy #>string_16_bit_trimmed
+
+	lda #RIGHT
+	jsr CHROUT
+
+	lda #0
+	ldx #<uint16_string_buf_trim
+	ldy #>uint16_string_buf_trim
 	jsr print_msg
 
 	lda #" "
@@ -53,12 +65,15 @@ show_directory
 
 	jsr dir_read_line
 
+	lda #0
 	ldx #<string_buffer
 	ldy #>string_buffer
 	jsr print_msg
 
 	lda #$0d
 	jsr CHROUT				; print return
+
+	jsr check_com_key		; we just care that if pressed, it'll hold there.
 
 	jsr STOP				; run/stop pressed?
 	bne -					; no run/stop -> continue
@@ -73,12 +88,14 @@ dir_err_check
 	beq +					; in which case we just exit normally.
 
 	pha						; any other value is an error code
-	ldx #<errmsg
-	ldy #>errmsg
+	lda #0
+	ldx #<default_error_message
+	ldy #>default_error_message
 	jsr print_msg
+
+	sec
 	pla
 	tax
-
 	ldy #0
 	jsr print_uint16
 
@@ -93,24 +110,27 @@ dir_finish
 
 	lda #$0d
 	jsr CHROUT
-	ldx #<press_key_msg
-	ldy #>press_key_msg
-	jsr print_msg
 
--	jsr GETIN			; wait for keypress
-	beq -
+	lda #RIGHT
+	jsr CHROUT
+
+	jsr press_any_key
 
 	!ifdef c128 {
 		lda #0
 		sta clear_menu_screen_flag
-		jsr erase_dir_window
+		ldx #tall_popup_height
+		ldy #medium_popup_width
+		jsr erase_popup
 	}
 rts
 
+
 dir_open
-	lda #0				; open_file will notice this and assume 1 byte len and SA=0
+	lda #1
 	ldx #<dirname
 	ldy #>dirname
+	sec
 	jsr open_file
 rts						; will exit with carry set if it can't open
 
@@ -118,87 +138,52 @@ dir_read_entry_size
 	jsr CHRIN	; LSB
 	pha
 	jsr CHRIN	; MSB
+
+	sec
 	tay
 	pla
 	tax
-	jsr int16_to_string
+	jsr uint16_to_string
 	jsr trim_num
 rts
 
 dir_read_line
-	ldy #39
-	lda #0
--	sta string_buffer,y
-	dey
-	bpl -
-	ldy #0
+	jsr clear_string_buffer
 
+	ldy #0
 -	jsr CHRIN
 	sta string_buffer,y
 	beq +					; continue until end of line
 	iny
-	cpy #40
+	cpy #48
 	bne -					; ...or until string buf is full
 + rts
 
-dirname
-		!text "$"
+dir_file_unquote	; routine returns clear carry and a quote-less string at
+					; string buffer + 32, .X = length, else it exits with set carry
 
-errmsg
-		!text 13,"Error #",0
+	ldx #0
+-	lda string_buffer,x
+	cmp #$22				; look for the first quote mark
+	beq +
+	inx
+	cpx #16
+	bne -					; keep looking for up to 16 chars (max filename length)
 
-!ifdef c128 {
-	draw_dir_window
-		jsr erase_dir_window
+	sec						; if we got that far, there's no filename,
+	ldy #0
+	rts						; so tell caller to discard the string buffer.
 
-		ldx #<dir_popup_top
-		ldy #>dir_popup_top
-		jsr print_msg
++	inx
+	ldy #0
 
-		lda #17
-		sta tempzp_d
-	-	ldx #<dir_popup_mid
-		ldy #>dir_popup_mid
-		jsr print_msg
-		dec tempzp_d
-		bpl -
-
-		ldx #<dir_popup_bot
-		ldy #>dir_popup_bot
-		jsr print_msg
-	rts
-
-	erase_dir_window
-		jsr set_dim_full_screen
-		lda #HOME
-		jsr CHROUT
-		jsr set_dim_dir_win_extra
-		lda #CLR
-		jsr CHROUT
-		jsr set_dim_full_screen
-		lda #HOME
-		jsr CHROUT
-	rts
-
-	set_dim_dir_win
-		lda #3
-		sta SCTOP
-		lda #20
-		sta SCBOT
-		lda #26
-		sta SCLF
-		lda #54
-		sta SCRT
-	rts
-
-	set_dim_dir_win_extra
-		lda #2
-		sta SCTOP
-		lda #21
-		sta SCBOT
-		lda #23
-		sta SCLF
-		lda #56
-		sta SCRT
-	rts
-}
+-	lda string_buffer,x
+	cmp #$22				; look for the next quote mark
+	beq +
+	sta string_buffer+32,y
+	inx
+	iny
+	cpy #16					; give up if we hit the max
+	bne -
++	clc
+rts

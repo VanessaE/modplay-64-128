@@ -5,17 +5,12 @@
 !convtab pet
 !cpu 6510
 
-!ifndef c128 {
-	* = $0801
-} else {
-	* = $13d3
-}
+* = program_start
 
 show_splash
-	!ifdef c128 {	; on C128, it'll try to run the splash twice because the
-		!fill 13,0	; advance the PC to $13e0
-	}
-
+	php
+	sei
+	jsr enable_kernal_only
 	lda #0
 	sta VIC+$20
 	sta VIC+$21
@@ -27,7 +22,11 @@ show_splash
 		bmi + ; if negative, already on 80 columns
 		jsr SWAPPER
 
-	+	ldx #<splash_data
+	+	lda #36 ; reduce VDC refresh rate, speeds it up
+		sta VDC
+		lda #0
+		sta VDC+1
+		ldx #<splash_data
 		ldy #>splash_data
 		jsr print_msg_rle
 
@@ -35,6 +34,7 @@ show_splash
 		bmi out ; if started on 80 columns, just exit.
 
 		jsr SWAPPER
+		lda #0
 		ldx #<wrong_screen_msg
 		ldy #>wrong_screen_msg
 		jsr print_msg
@@ -47,15 +47,25 @@ show_splash
 		jsr print_msg_rle
 	}
 out
+	jsr enable_roms
+	plp
 	rts ; return to the autorunner, which will load the rest of the file.
 
 !source "src/misc-macros.s"
 
-+STRING_OPS
+print_msg
+	+PRINT_MSG
+rts
+
+print_msg_rle
+	+PRINT_MSG_RLE
+rts
+
++SCREEN_ONOFF
++ROM_SWITCHING
 
 !ifdef c128 {
-	+SCREEN_ONOFF
-	+C128_CPU_FREQ
+	+CPU_FREQ
 }
 
 !ifdef c128 {
@@ -72,7 +82,8 @@ splash_data
 		!byte 0,0,0
 	} else {
 		!binary "etc/splash-128.rle"
-		!byte 0
-		!align 255,0
+		!byte 0,0,0
+		* = splash_128_end_check
+		!byte $ea
 	}
 
