@@ -19,15 +19,13 @@ start_sequencer
 	sta vibrato_waveform
 	sta tremolo_waveform
 	sta delay_pattern_divisions
-	sta seq_current_pattern_number
-	sta seq_current_row
 	sta pattern_break_target_row
 
 	ldx #7
 -	sta current_sample_volume_levels,x
 	sta current_sample_numbers,x
 
-	sta track_enable_flags,x
+	sta track_current_enable_flags,x
 
 	sta current_pitch_slide_flags,x
 	sta pitch_slide_up_rates,x
@@ -41,7 +39,7 @@ start_sequencer
 	sta retrigger_rates,x
 	sta cut_sample_ticks,x
 	sta delay_sample_ticks,x
-	sta track_loop_flags,x
+	sta track_current_loop_flags,x
 	sta vibrato_rates,x
 	sta tremolo_rates,x
 	sta volume_slide_rates,x
@@ -67,12 +65,38 @@ start_sequencer
 	bpl -
 
 	lda #$80
-	sta track_enable_flags
+	ldx #7
+-	sta track_current_enable_flags
+	dex
+	bpl -
+
 	lda #125
 	sta seq_tempo_bpm
 	lda #6
 	sta seq_tempo_ticks_per_div
-	jsr calculate_samples_per_division
+	jsr calculate_mixer_loops_per_tick
+
+	lda #0
+	sta current_song_pos
+	sta seq_current_row
+	jmp +
+
+next_pattern
+
+	inc current_song_pos
+	lda current_song_pos
+	cmp number_of_song_positions
+	bne +
+
+	jmp stop_song
+
++	tax
+	lda pattern_table,x
+	sta seq_current_pattern_number
+
+	bit seq_debug_mode
+	bpl next_row
+	jsr debug_print_new_pattern_mark
 
 ; row format
 ;
@@ -87,7 +111,11 @@ start_sequencer
 ; repeat for as many channels as the mod has
 
 next_row
-	+JSR_INDIRECT (fetch_row_vec)
+	bit seq_debug_mode
+	bpl +
+	jsr debug_print_new_row_mark
+
++	+JSR_INDIRECT (fetch_row_vec)
 	ldy #0
 
 next_track_this_row
@@ -149,11 +177,30 @@ next_track_this_row
 	cpy #4
 	bne next_track_this_row
 
-	lda seq_tempo_ticks_per_div
+	clc								; by adding like this, we allow the mixer
+	lda mixer_loops_per_tick_fract	; count to vary slightly so that a tick
+	adc seq_ticks_counter_fract		; will get one more loop than normal every
+	sta seq_ticks_counter_fract		; so often, for precise speed control
+	lda mixer_loops_per_tick
+	adc #0
 	sta seq_ticks_counter
 
 next_tick
-	ldy #0
+
+	; check for spacebar
+	lda #$7f		; column 7 low
+	sta CIA1
+
+	lda #$ef		; look for row 4
+	cmp CIA1+$01
+	bne +
+	jmp stop_song
+
++	bit seq_debug_mode
+	bpl +
+	jsr debug_print_new_tick_mark
+
++	ldy #0
 	sty seq_current_track
 
 next_track_this_tick
@@ -186,63 +233,153 @@ next_track_this_tick
 	beq +
 	jmp next_row
 
-+	inc current_song_pos
-	lda current_song_pos
-	cmp number_of_song_positions
-	beq stop_song
++	lda #0
+	sta seq_current_row
+	jmp next_pattern
 
-	tax
-	lda pattern_table,x
-	sta seq_current_pattern_number
-	jmp next_row
+stop_song
+rts
 
-stop_song rts
+; effect command decoders -- start-of-row/init routines
+; enter each one with .Y = track number
 
-; ============
+run_effect_set_speed
+	sec
+	lda seq_command_arguments,y
+	cmp #32
+	bcc +
+	sta seq_tempo_bpm
+	bcs ++
 
-calculate_samples_per_division
++	sta seq_tempo_ticks_per_div
+++	jsr calculate_mixer_loops_per_tick
+
+	lda mixer_loops_per_tick_fract
+	sta seq_ticks_counter_fract
+	lda mixer_loops_per_tick
+	sta seq_ticks_counter
+rts
+
+;==================
+; auxillary routines
+
+debug_print_new_pattern_mark
+	sei
+	jsr enable_kernal_only
+	lda #RETURN
+	jsr CHROUT
+	jsr CHROUT
+	lda #"p"
+	jsr CHROUT
+	lda #RETURN
+	jsr CHROUT
+	jsr disable_roms
+	cli
+rts
+
+debug_print_new_row_mark
+	sei
+	jsr enable_kernal_only
+	lda #RETURN
+	jsr CHROUT
+	lda #"r"
+	jsr CHROUT
+	jsr disable_roms
+	cli
+rts
+
+debug_print_new_tick_mark
+	sei
+	jsr enable_kernal_only
+	lda #"t"
+	jsr CHROUT
+	jsr disable_roms
+	cli
+rts
+
+; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
+;
+; example timings:
+; suppose bpm = 159, tpd = 9
+;
+; then dpm = (24 * 159) / 9 = 424
+; 424 * 9 / 60 = 63.6 ticks/sec
+;
+; at 1022727 cycles/sec, one tick would be ~16081 cycles
+; with an ISR time of 132, that's ~122 samples per tick
+;
+; 132 / 159 * 147 = ~122
+
+tick_sample_count_scaler = 147
+
+calculate_mixer_loops_per_tick
+	lda isr_cycle_time
+	ldx tick_sample_count_scaler
+	jsr multiply_8x8
+
+	lda product
+	sta dividend
+	lda product+1
+	sta dividend+1
+	lda seq_tempo_bpm
+	sta divisor
+	lda #0
+	sta divisor+1
+	jsr divide_16by16
+
+	lda #0
+	sta mixer_loops_per_tick_fract
+	lda quotient
+	lsr
+	ror mixer_loops_per_tick_fract
+	lsr
+	ror mixer_loops_per_tick_fract
+	lsr
+	ror mixer_loops_per_tick_fract
+	sta mixer_loops_per_tick
 rts
 
 get_row_address
 rts
 
+unused
+rts
+
 start_effect_command_jump_table
-;	!word start_effect_arpeggio
-;	!word start_effect_pitch_slide_up
-;	!word start_effect_pitch_slide_down
-;	!word start_effect_pitch_slide_to_note
-;	!word start_effect_vibrato
-;	!word start_effect_pitch_slide_plus_volume_slide
-;	!word start_effect_vibrato_plus_volume_slide
-;	!word unused
-;	!word unused
-;	!word run_effect_set_sample_offset
-;	!word start_effect_volume_slide
-;	!word run_effect_position_jump
-;	!word run_effect_set_volume
-;	!word run_effect_pattern_break
-;	!word unused
-;	!word run_effect_set_speed
-	!byte 0,0
+	!word unused ; start_effect_arpeggio
+	!word unused ; start_effect_pitch_slide_up
+	!word unused ; start_effect_pitch_slide_down
+	!word unused ; start_effect_pitch_slide_to_note
+	!word unused ; start_effect_vibrato
+	!word unused ; start_effect_pitch_slide_plus_volume_slide
+	!word unused ; start_effect_vibrato_plus_volume_slide
+	!word unused
+	!word unused
+	!word unused ; run_effect_set_sample_offset
+	!word unused ; start_effect_volume_slide
+	!word unused ; run_effect_position_jump
+	!word unused ; run_effect_set_volume
+	!word unused ; run_effect_pattern_break
+	!word unused
+	!word unused ; run_effect_set_speed
 
 run_effect_command_jump_table
-;	!word run_effect_arpeggio
-;	!word run_effect_pitch_slide_up
-;	!word run_effect_pitch_slide_down
-;	!word run_effect_pitch_slide_to_note
-;	!word run_effect_vibrato
-;	!word run_effect_pitch_slide_plus_volume_slide
-;	!word run_effect_vibrato_plus_volume_slide
-;	!word unused
-;	!word unused
-;	!word unused
-;	!word run_effect_volume_slide
-;	!word unused
-;	!word unused
-;	!word unused
-;	!word unused
-;	!word unused
-	!byte 0,0
+	!word unused ; run_effect_arpeggio
+	!word unused ; run_effect_pitch_slide_up
+	!word unused ; run_effect_pitch_slide_down
+	!word unused ; run_effect_pitch_slide_to_note
+	!word unused ; run_effect_vibrato
+	!word unused ; run_effect_pitch_slide_plus_volume_slide
+	!word unused ; run_effect_vibrato_plus_volume_slide
+	!word unused
+	!word unused
+	!word unused
+	!word unused ; run_effect_volume_slide
+	!word unused
+	!word unused
+	!word unused
+	!word unused
+	!word unused
 
 sequencer_temp_a			!fill 4,0
 sequencer_temp_b			!fill 4,0
@@ -253,10 +390,17 @@ sequencer_temp_y			!byte 0
 
 seq_tempo_bpm				!byte 0
 seq_tempo_ticks_per_div		!byte 0
+
+seq_ticks_counter_fract		!byte 0
 seq_ticks_counter			!byte 0
 
-seq_abort_flag				!byte 0
+mixer_loops_per_tick_fract	!byte 0
+mixer_loops_per_tick		!byte 0
+
 seq_current_track			!byte 0
 
 seq_current_row				!byte 0
 seq_current_pattern			!byte 0
+
+seq_abort_flag				!byte 0
+seq_debug_mode				!byte $80

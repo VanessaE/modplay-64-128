@@ -96,6 +96,7 @@
 	pitch_slide_up_rates			= $3a ; 8 bytes
 	pitch_slide_down_rates			= $42 ; 8 bytes
 	pitch_slide_to_note_rates		= $4a ; 8 bytes
+
 	glissando_flag					= $52
 	vibrato_waveform				= $53
 	tremolo_waveform				= $54
@@ -111,17 +112,17 @@
 	number_of_patterns				= $5f
 	pattern_address					= $60 ; 3 bytes
 	pattern_break_target_row		= $63
-	tempzp_g						= $64 ; 2 bytes
+	tempzp_g						= $64 ; 4 bytes
 
-	; free: $66 through $6d
+	; free: $68 through $6d
 
 	mixer_output_countdown			= $6e ; 2 bytes
-	current_sample_numbers			= $70 ; 8 bytes
+	track_current_loop_flags		= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes
 	cut_sample_ticks				= $88 ; 8 bytes
 	delay_sample_ticks				= $90 ; 8 bytes
-	track_loop_flags				= $98 ; 8 bytes
+	current_sample_numbers			= $98
 	vibrato_rates					= $a0 ; 8 bytes
 	tremolo_rates					= $a8 ; 8 bytes
 	volume_slide_rates				= $b0 ; 8 bytes
@@ -226,7 +227,7 @@
 
 		load_buffer					= $8b00 ; 5 pages
 		load_buffer_end				= $9000
-		divide_by_16_table			= $9100
+		divide_by_16_table			= $9000
 
 		playlist_file_flags			= $9100 ; 1 byte * 192 (64 bytes unused)
 		playlist_filenames			= $9200 ; 16 bytes * 192 (3 kB)
@@ -331,9 +332,8 @@
 		uint16_string_buffer		= $1060 ; 7 bytes (of 8)
 		uint16_string_buf_trim		= $1068 ; 7 bytes (of 8)
 
-		; free memory -- $1070 to $107f
+		; free memory -- $1070 to $10ff
 
-		pattern_table				= $1080 ; 128 bytes
 		audio_buffer_left			= $1100 ; 256 bytes
 		audio_buffer_right			= $1200 ; 256 bytes
 		; those two pages are only safe to use when KERNAL is switched-out
@@ -544,3 +544,8 @@ RVSOFF							= $92
 
 X = "X" ; so that the delay routine doesn't
 Y = "Y" ; need to be called with X or Y in quotes.
+
+header15_seek_to_pt				= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
+header31_seek_to_pt				= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
+header_first_inst_meta_offset	= 20
+instrument_metadata_size		= 22+2+1+1+2+2 ; (30)

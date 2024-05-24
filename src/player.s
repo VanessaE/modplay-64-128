@@ -73,7 +73,9 @@ start_main_player
 	ldx #0
 	jsr isr_startup
 
-	; wait for spacebar
+;	jsr start_sequencer
+
+	; check for spacebar
 	lda #$7f		; column 7 low
 	sta CIA1
 

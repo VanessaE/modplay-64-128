@@ -20,14 +20,6 @@ rts
 ; This little stub just needs to return the audio driver's desired IRQ
 ; interval and the output resolution of the volume tables.
 
-; .A shall hold the resolution value
-; .X shall hold iteration timer value (SIGNED)
-
-; .X should not be less than -20 ($eb) or greater than 4, or thereabouts.
-; That corresponds to about 4.3 kHz to 51.1 kHz, but it depends on what each
-; platform can handle, so drivers on a given platform build need to take
-; CPU speed into consideration.
-
 sid_4b_timing_resolution
 	!ifndef c128 {
 		ldx #3		; C64 cycle time is 3 rasters, about 5.2 kHz

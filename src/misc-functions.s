@@ -300,6 +300,7 @@ sm4	sbc multab2hi,x
 	rts
 
 ; https://codebase64.org/doku.php?id=base:16bit_division_16-bit_result
+; reminder:  quotient+remainder = dividend ÷ divisor  😛
 
 divide_16by16
 	lda #0				; preset remainder to 0

@@ -170,7 +170,8 @@ charset_128_alt
 
 ; mods' lengths are big-endian, but addrs and lengths here are little-endian
 
-mod_instrument_names				= wipe_memory_start
+pattern_table						= wipe_memory_start
+mod_instrument_names				= pattern_table + 128
 sample_start_addresses_lows			= mod_instrument_names + 32*31
 sample_start_addresses_mids			= sample_start_addresses_lows + 32
 sample_start_addresses_highs		= sample_start_addresses_mids + 32
@@ -183,17 +184,18 @@ sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
 sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
 sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
 sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
-sample_default_fine_tunes			= sample_loop_end_addresses_highs + 32
+sample_default_loop_flags			= sample_loop_end_addresses_mids + 32
+sample_default_fine_tunes			= sample_default_loop_flags + 32
 sample_default_volume_levels		= sample_default_fine_tunes + 32
-sample_data_lookahead_cache			= sample_default_volume_levels + 64
-track_lookahead_indexes				= sample_data_lookahead_cache + 32
+sample_data_lookahead_cache			= sample_default_volume_levels + 32
+track_lookahead_indexes				= sample_data_lookahead_cache + 64
 current_note_periods_lows			= track_lookahead_indexes + 64
 current_note_periods_highs			= current_note_periods_lows + 8
 current_node_period_offsets			= current_note_periods_highs + 8
 
-track_enable_flags					= current_node_period_offsets + 8
+track_current_enable_flags			= current_node_period_offsets + 8
 
-seq_current_row_data				= track_enable_flags + 8
+seq_current_row_data				= track_current_enable_flags + 8
 
 seq_commands						= seq_current_row_data + 32
 seq_prev_commands					= seq_commands + 8
@@ -204,12 +206,8 @@ current_pitch_slide_flags			= seq_prev_command_arguments + 8
 seq_pitch_slide_stop_point_lows		= current_pitch_slide_flags + 8
 seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
-!ifndef c128 { 
-	pattern_table					= seq_pitch_slide_stop_point_highs + 8
-	main_mem_free_start				= ((>pattern_table) + 1) * 256
-} else { ; on C128 the pattern table is in the low memory area
-	main_mem_free_start				= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
-}
+
+main_mem_free_start					= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
 
 ; anything appended after this point will be overwritten by the loaded file
 ; when using main memory driver

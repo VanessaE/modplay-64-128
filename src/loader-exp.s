@@ -2,11 +2,6 @@
 ; enter with carry set to use the filename in the string buffer
 ; and if it's set, .Y must be the string length
 
-header15_seek_to_pt				= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
-header31_seek_to_pt				= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
-header_first_inst_meta_offset	= 20
-instrument_metadata_size		= 22+2+1+1+2+2 ; (30)
-
 load_file_to_expansion
 	lda #0
 	sta header_loaded
@@ -512,6 +507,7 @@ update_progress
 	!ifndef c128 {	; on the C64,
 		lda #RVSON	; we use the regular CHROUT routine to "print" the progbar
 		jsr CHROUT
+
 		lda #" "
 	-	dey
 		beq +
@@ -560,6 +556,7 @@ update_progress
 		bpl -
 		sta VDC+1
 	}
+
 rts
 
 .load_err
@@ -586,7 +583,7 @@ rts
 rts
 
 ; if there's a tag at all, it'll always be here (because otherwise, it's a
-; 15 sample mod and has no tag at all)
+; 15 sample mod)
 
 magic_number_location = load_buffer + header31_seek_to_pt + 128
 
@@ -625,7 +622,6 @@ decode_header
 	inc tempzp_c
 	lda match_hdr
 	bne --
-
 	jmp set_num_tracks
 
 ; last ditch effort: see if there's something in the title, if the "restart"
@@ -674,7 +670,6 @@ filetype_unsure
 	bpl -
 	and #$ff ; was .A is non-zero?
 	beq +
-
 	lda #1						; if all of that is present, there is a
 	sta current_file_type		; reasonable chance that it's a 15-sample mod
 	lda #4
@@ -814,8 +809,8 @@ parse_instruments
 	beq ++
 
 +	lda #$80
-++	sta track_loop_flags,x
-	asl tempzp_f						; double it:  # words to # bytes
+++	sta sample_default_loop_flags,x
+	asl tempzp_f						; double the len:  # words to # bytes
 	sta tempzp_f
 	rol tempzp_f+1
 	rol tempzp_f+2
@@ -865,6 +860,7 @@ parse_instruments
 	sta number_of_song_positions
 
 ; get pattern table
+
 	ldy #127
 	lda current_file_type
 	cmp #1

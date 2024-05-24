@@ -4,6 +4,15 @@
 
 !align 255,0,0
 
+; When calling this routine:
+
+; .A shall hold the resolution value
+; .X shall hold iteration timer value
+
+; if .X is 10 or less, it's the number of raster lines between ISR runs
+; if it greater than 10, it's an exact number of 1 MHz cycles between runs
+; a value of 0 is the same as 1.
+
 isr_startup
 	sei
 
@@ -12,24 +21,25 @@ isr_startup
 	}
 
 	txa
-	and #$ff
-	bpl +			; if timing  > 0 , it's an exact no. of rasters per iteration
-	beq ++			; if timing == 0 , make it 1 raster per iteration
-	eor #$7f		; if timing  < 0 , use abs. value as no. cycles per iteration
-	clc				;   (allows to use less than one raster per)
-	adc #$81
-	bne +++
-+	tax
-++	lda raster_len
-	jsr multiply_8x8		; .A * raster_len = #cycles per iteration
+	sec
+	cmp #10			; if .X > 10 then it's an exact number of cycles
+	bcs ++
+
+	and #$ff		; otherwise it's number of rasters; if it was 0, make it 1
+	bne +
+	lda #1
+
++	ldx raster_len
+	jsr multiply_8x8
 	lda product
-+++	sec
+++	sec
+
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
 	sta isr_cycle_time
 							; drivers which allow the screen to be turned on
 	clc						; on NTSC need another val that's one raster longer
 	adc raster_len			; than the supplied time, so that a raster can be
-	sta isr_cycle_time_alt	; skipped every other frame.
+	sta isr_cycle_time_alt	; skipped every other frame if necessary.
 
 	; 'Disable NMI' without using kernal and $0318/$0319 by Sokrates
 	; https://codebase64.org/doku.php?id=base:nmi_lock_without_kernal

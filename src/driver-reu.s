@@ -1,16 +1,44 @@
 ; RAM driver for standard REU
 
-reu_fetch_byte
-	; code here
-	rts
-
-reu_stash_byte
-	; code here
-	rts
-
 reu_fetch_row
-	; code here
-	rts
+	lda current_file_type
+	cmp #1
+	bne +
+
+	lda #<(header15_seek_to_pt+128)
+	ldx #>(header15_seek_to_pt+128)
+	jmp ++
+
++	lda #<(header31_seek_to_pt+132)
+	ldx #>(header31_seek_to_pt+132)
+
+++	sta DMA_LO
+	stx tempzp_g
+
+	ldx current_song_pos
+	lda pattern_table,x
+	asl
+	asl
+	adc tempzp_g
+	sta DMA_HI
+	lda #0
+	rol
+	sta DMA_BANK
+
+	lda #<seq_current_row_data
+	sta DMA_ADL
+	lda #>seq_current_row_data
+	sta DMA_ADH
+
+	lda #8
+	sta DMA_DAL
+	lda #0
+	sta DMA_DAH
+
+	lda #$b1	; execute, enable auto-load, fetching
+	sta DMA_CMD ; run it twice to get 16 bytes so that the ISQ won't get more
+	sta DMA_CMD ; than an 8-cycle delay
+rts
 
 reu_stash_block
 	!ifdef c128 {
@@ -169,7 +197,7 @@ reu_gen_sample_loop
 			cmp current_sample_end_addr_highs+track		; 3
 			bcc .reu_fetch_sample_data					; 3/2
 
-			lda track_loop_flags+track					; 3
+			lda track_current_loop_flags+track			; 3
 			bne .reu_sample_has_loop					; 3/2
 			sta current_steprates_fract+track			; 3
 			sta current_steprates_lows+track			; 3
