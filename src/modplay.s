@@ -84,6 +84,7 @@ start
 !source "src/driver-sid.s"
 
 !source "src/player.s"
+!source "src/sequencer.s"
 
 !source "src/loader-exp.s"
 
@@ -111,6 +112,9 @@ start
 
 dirname
 		!text "$"
+
+bittable
+ !byte $01, $02, $04, $08, $10, $20, $40, $80
 
 ; this area is used to temporarily store the contents of zero page when
 ; the player is running, since the player needs a lot of it and the KERNAL
@@ -186,13 +190,25 @@ track_lookahead_indexes				= sample_data_lookahead_cache + 32
 current_note_periods_lows			= track_lookahead_indexes + 64
 current_note_periods_highs			= current_note_periods_lows + 8
 current_node_period_offsets			= current_note_periods_highs + 8
-current_sample_volume_levels		= current_node_period_offsets + 8
+
+track_enable_flags					= current_node_period_offsets + 8
+
+seq_current_row_data				= track_enable_flags + 8
+
+seq_commands						= seq_current_row_data + 32
+seq_prev_commands					= seq_commands + 8
+seq_command_arguments				= seq_prev_commands + 8
+seq_prev_command_arguments			= seq_command_arguments + 8
+
+current_pitch_slide_flags			= seq_prev_command_arguments + 8
+seq_pitch_slide_stop_point_lows		= current_pitch_slide_flags + 8
+seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
 !ifndef c128 { 
-	pattern_table					= current_sample_volume_levels + 8
+	pattern_table					= seq_pitch_slide_stop_point_highs + 8
 	main_mem_free_start				= ((>pattern_table) + 1) * 256
 } else { ; on C128 the pattern table is in the low memory area
-	main_mem_free_start				= ((>current_sample_volume_levels) + 1) * 256
+	main_mem_free_start				= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
 }
 
 ; anything appended after this point will be overwritten by the loaded file

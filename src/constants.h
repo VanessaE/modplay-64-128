@@ -81,7 +81,7 @@
 	; these various multiples of 8 bytes are in order by track number
 
 	volume_table_vectors			= $02 ; 16 bytes
-	current_volume_levels			= $12 ; 8 bytes
+	current_sample_volume_levels	= $12 ; 8 bytes
 	track_byte_to_mix				= $1a ; 8 bytes
 	audio_in_buf_index				= $22
 	audio_out_buf_index				= $23
@@ -107,7 +107,7 @@
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	current_pattern_number			= $5e
+	seq_current_pattern_number		= $5e
 	number_of_patterns				= $5f
 	pattern_address					= $60 ; 3 bytes
 	pattern_break_target_row		= $63
@@ -192,6 +192,8 @@
 		audio_start_vec				= $0393 ; 2 bytes
 		audio_stop_vec				= $0395 ; 2 bytes
 		print_vec					= $0397 ; 2 bytes
+		fetch_row_vec				= $0399 ; 2 bytes
+		run_mixer_vec				= $039b ; 2 bytes
 
 		; more vectors can go here
 
@@ -218,12 +220,13 @@
 		; putting the end of free memory at the end of the load buffer allows
 		; the program to reclaim it when using the main memory driver.
 
-		free_memory_end				= $9100
+		free_memory_end				= $9000
 
 		;log_table_base				= ???? ; will need 2k
 
-		load_buffer					= $8c00 ; 5 pages
-		load_buffer_end				= $9100
+		load_buffer					= $8b00 ; 5 pages
+		load_buffer_end				= $9000
+		divide_by_16_table			= $9100
 
 		playlist_file_flags			= $9100 ; 1 byte * 192 (64 bytes unused)
 		playlist_filenames			= $9200 ; 16 bytes * 192 (3 kB)
@@ -285,17 +288,16 @@
 		audio_start_vec				= $0265 ; 2 bytes
 		audio_stop_vec				= $0267 ; 2 bytes
 		print_vec					= $0269 ; 2 bytes
+		fetch_row_vec				= $026a ; 2 bytes
+		run_mixer_vec				= $026c ; 2 bytes
 
 		; more vectors can go here
 
-		free_memory_start			= $026d ; 3 bytes
-		main_memory_free_pages		= $0270 ; refers to bank 0
-		c128_highest_bank			= $0271
-		reu_highest_bank			= $0272
-		parse_header_sample_pointer = $0273 ; 3 bytes
-
-		; free memory through $0286
-
+		free_memory_start			= $027e ; 3 bytes
+		main_memory_free_pages		= $0281 ; refers to bank 0
+		c128_highest_bank			= $0282
+		reu_highest_bank			= $0283
+		parse_header_sample_pointer = $0284 ; 3 bytes
 		arpeggio_counters			= $0287 ; 8 bytes
 		arpeggio_extra_note_first	= $028f ; \___ 16 bytes
 		arpeggio_extra_note_second	= $0297 ; /
@@ -344,13 +346,15 @@
 		; accounting for load addr, plus one disk block for expansion sake.
 		splash_128_end_check = program_start + (254*6) - 1
 
-		free_memory_end				= $a100 ; this allows to reclaim the load buf
+		free_memory_end				= $a000 ; this allows to reclaim the load buf
 											; when using the main mem driver
 
-		load_buffer					= $9b00 ; 5*254 bytes (plus some waste)
-		load_buffer_end				= $9ff5 ; plus one page for overflow
+		load_buffer					= $9a00 ; 5*254 bytes (plus some waste)
+		load_buffer_end				= $9ef5 ; plus one page for overflow
 
 		;log_table_base				= ???? ; will need 2k
+
+		divide_by_16_table			= $a000
 
 		blurring_table				= $a100 ; 128 bytes
 

@@ -105,6 +105,16 @@ init
 		inx
 	bne -
 
+	ldx #0
+-	txa
+	lsr
+	lsr
+	lsr
+	lsr
+	sta divide_by_16_table,x
+	inx
+	bne -
+
 	sec
 	lda #>free_memory_end
 	sbc #>free_memory_start
@@ -176,6 +186,16 @@ init
 	sta stash_block_vec
 	lda #>reu_stash_block
 	sta stash_block_vec+1
+
+	lda #<reu_fetch_row
+	sta fetch_row_vec
+	lda #>reu_fetch_row
+	sta fetch_row_vec+1
+
+	lda #<reu_mixer_entry
+	sta run_mixer_vec
+	lda #>reu_mixer_entry
+	sta run_mixer_vec+1
 
 	lda #0						; refers to the addr in REU
 	sta free_memory_start		; main mem driver will use main_mem_free_start for this
