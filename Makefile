@@ -1,9 +1,10 @@
 OPTIONS = -Wno-label-indent -v3
 C1541 = /home/vanessa/.local/bin/c1541 # change this to point to your copy, part of VICE
+TMPDIR= /tmp/mp-trim-ws-compress-tmp
 
 all:
 
-	rm -f /tmp/mp-trim-ws-compress-tmp/*
+	rm -f "$(TMPDIR)/*"
 
 	$(MAKE) clean
 	$(MAKE) c64_disk
@@ -11,12 +12,9 @@ all:
 	$(MAKE) mod_disks
 
 clean:
+	rm -f bin/*.prg
 	rm -f src/*.o
-	rm -f etc/*l.seq
-	$(MAKE) distclean
-
-distclean:
-	rm -f bin/*
+	rm -f etc/*.rle
 	rm -f disk-images/*
 
 mod_disks:
@@ -35,19 +33,16 @@ mod_disks:
 c64:
 	@echo -e '\nBuilding Modplay 64...\n'
 
-	etc/trim-whitespc.sh 40 etc/splash-64.seq   etc/splash-64-t.seq
-	etc/compress-rle.sh  40 etc/splash-64-t.seq etc/splash-64.rle   etc/splash-64.seq
+	etc/trim-whitespc.sh 40 etc/splash-64.seq          $(TMPDIR)/splash-64-t.seq
+	etc/compress-rle.sh  40 $(TMPDIR)/splash-64-t.seq  etc/splash-64.rle   etc/splash-64.seq
 
-	etc/trim-whitespc.sh 40 etc/main-64.seq   etc/main-64-t.seq
-	etc/compress-rle.sh  40 etc/main-64-t.seq etc/main-64.rle etc/main-64.seq
-
-	acme $(OPTIONS) -o src/autorun-hdr.o src/autorun-hdr.s
+	acme $(OPTIONS) -o src/autorun-64.o src/autorun-64.s
 	acme $(OPTIONS) -o src/display-splash.o src/display-splash.s
-	acme $(OPTIONS) -o src/main.o src/main.s
+	acme $(OPTIONS) -o src/mp64.o src/modplay.s
 
-	cat src/autorun-hdr.o \
+	cat src/autorun-64.o \
 		src/display-splash.o \
-		src/main.o \
+		src/mp64.o \
 		> bin/mp64.prg
 
 c64_disk: c64
@@ -56,19 +51,16 @@ c64_disk: c64
 c128:
 	@echo -e '\nBuilding Modplay 128...\n'
 
-	etc/trim-whitespc.sh 80 etc/splash-128.seq   etc/splash-128-t.seq
-	etc/compress-rle.sh  80 etc/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
+	etc/trim-whitespc.sh 80 etc/splash-128.seq   $(TMPDIR)/splash-128-t.seq
+	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
 
-	etc/trim-whitespc.sh 80 etc/main-128.seq   etc/main-128-t.seq
-	etc/compress-rle.sh  80 etc/main-128-t.seq etc/main-128.rle etc/main-128.seq
+	acme $(OPTIONS) -Dc128=1 -o src/autorun-128.o src/autorun-128.s
+		acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
+	acme $(OPTIONS) -Dc128=1 -o src/mp128.o src/modplay.s
 
-	acme $(OPTIONS) -Dc128=1 -o src/autorun-hdr-128.o src/autorun-hdr.s
-	acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
-	acme $(OPTIONS) -Dc128=1 -o src/main-128.o src/main.s
-
-	cat src/autorun-hdr-128.o \
+	cat src/autorun-128.o \
 		src/display-splash-128.o \
-		src/main-128.o \
+		src/mp128.o \
 		> bin/mp128.prg
 
 c128_disk: c128

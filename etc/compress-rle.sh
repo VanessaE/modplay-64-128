@@ -11,6 +11,9 @@
 # https://github.com/rsa9000/rle-util/blob/master/rle.c
 #
 # (with minor tweaks here and there for my project's needs)
+#
+# This script is NOT binary-safe.  Do not use it on anything other
+# than text files or PETSCII graphics.
 
 verbose=0
 if [[ "$1" == "-v" ]] ; then
@@ -18,7 +21,7 @@ if [[ "$1" == "-v" ]] ; then
 	verbose=1
 fi
 
-cols=$1			# screen width input file was for, only for file-naming
+cols=$1			# screen width input file was for, only used for temp file names here
 in_file=$2		# input file
 out_file=$3		# compressed output file
 orig_file=$4		# if set, this is the non-trimmed uncompressed original .SEQ
@@ -61,13 +64,12 @@ function write_buffer {
 }
 
 
-while read -u 6 -n 1 -d '' -r bin ; do
+while true ; do
+	read -u 6 -n 1 -d '' -r bin
 	printf -v ch %d \'$bin  # converts the raw file byte to decimal
 
-	if [ -n "$ch" ] ; then
-
-		bl="${#buf[@]}"
-		buf[$((bl + 1))]=$(printf "%01.2x" "$ch")
+	if [ -n "$bin" ] ; then
+		buf[len]=$(printf "%01.2x" "$ch")
 		((len++))
 	fi
 
@@ -80,7 +82,7 @@ while read -u 6 -n 1 -d '' -r bin ; do
 		if [[ "$m2" != "$m1" ]] ; then
 			flush=$(( len - 1 ))
 			repeat=0
-		elif (( len == "0x7f" )) || [ -z "$ch" ] ; then
+		elif (( len == "0x7f" )) || [ -z "$bin" ] ; then
 			flush="$len"
 			repeat=0
 		fi
@@ -89,7 +91,7 @@ while read -u 6 -n 1 -d '' -r bin ; do
 			if (( verbose )); then
 				echo " [RUN] Declared run of $len bytes of value \$${buf[0]}."
 			fi
-			printf "\n%01.2x " "$(( flush + 1))" >> "$rle_hex_file"
+			printf "\n%01.2x " "$(( flush ))" >> "$rle_hex_file"
 			printf "%s"        "${buf[0]}"       >> "$rle_hex_file"
 
 		fi
@@ -99,7 +101,7 @@ while read -u 6 -n 1 -d '' -r bin ; do
 			repeat=1
 		elif (( len == "0x81" )) ; then
 			flush="0x80"
-		elif [ -z "$ch" ] ; then
+		elif [ -z "$bin" ] ; then
 			flush="$len"
 		fi
 
@@ -118,6 +120,8 @@ while read -u 6 -n 1 -d '' -r bin ; do
 		len=$(( len - flush ))
 		flush=0
 	fi
+
+	if [ -z "$bin" ]; then break ; fi
 done
 
 echo "" >> "$rle_hex_file"
@@ -133,7 +137,7 @@ out_len=$(wc -c < "$out_file")
 rle_change=$(( in_len-out_len ))
 ratio=$(printf "%.1f"  $(bc <<< "100 - ($out_len/$in_len)*100"))
 
-echo "COMPRESS RLE: input file shortened by ${rle_change#-} bytes."
+echo -e "\n\nCOMPRESS RLE: input file shortened by ${rle_change#-} bytes."
 
 if [ -n "$orig_file" ] ; then
 	orig_len=$(wc -c < "$orig_file")

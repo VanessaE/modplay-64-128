@@ -1,10 +1,5 @@
 ; this code starts and stops the audio interrupt
 
-; pad until the next page boundary, to ensure that branches below won't cross
-pc2 = *
-padding = 256 - (pc2 & $00ff)
-!fill padding,0
-
 ; Called by the audio driver to set the correct ISR IRQ entry adress
 ; enter with .X/.Y = address low/high, .A = SIGNED iteration timer amount
 ; .A should not be less than -20 ($eb) or greater than 4, or thereabouts.
@@ -12,17 +7,10 @@ padding = 256 - (pc2 & $00ff)
 ; platform can handle, so drivers on a given platform build need to take
 ; CPU speed into consideration.
 
-a_tmp !byte 0
-
 isr_start
-	sta a_tmp
-	sei
-	jsr disable_roms
-
 	stx isr_entry_lo+1
 	sty isr_entry_hi+1
 	ldx #1
-	lda a_tmp
 	bpl +			; if .A  > 0 , it's an exact no. of rasters per iteration
 	beq ++			; if .A == 0 , make it 1 raster per iteration
 	eor #$7f		; if .A  < 0 , use abs. value as no. cycles per iteration
@@ -108,7 +96,7 @@ isr_entry_hi
 ; code into 'cmp ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
 
 	lda pal_flag
-	bne sync_vic
+	bmi sync_vic
 	lda #$c1
 	sta +
 
@@ -149,28 +137,28 @@ skip2
 	nop					; 2 cycles
 	sta CIA1+$0f		; 4 cycles
 
-	!ifdef c128 {
-		jsr c128_set_2mhz_mode
-	} else {
+	!ifndef c128 {
 		lda disable_screen_on_playback
-		beq +
+		bpl +
 		jsr disable_screen
 	}
-
-+	cli
-rts
-
-isr_stop ; not used yet
-	sei
-	lda #0
-	sta CIA1+$0d
-	lda #<interrupts_lockout
-	sta cpu_nmi_vector
-	lda #>interrupts_lockout
-	sta cpu_nmi_vector+1
-
-	jsr enable_roms
-	cli
 rts
 
 interrupts_lockout   rti ; exit any interrupt that gets here, unacknowledged 
+
+!macro ISR_ENTRY {
+	inc VIC+$20			; 6 cycles / just so we can see it running.
+	dec VIC+$20			; 6 cycles
+
+	sta isr_accu		; 3 cycles
+	stx isr_regx
+	sty isr_regy
+}
+
+!macro ISR_EXIT {
+	ldy isr_regy
+	ldx isr_regx
+	lda isr_accu		; 3 cycles
+	bit CIA1+$0d		; 4 cycles / acknowledge Timer B interrupt
+	rti					; 6 cycles
+}

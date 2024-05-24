@@ -8,6 +8,8 @@
 # were printing, inserting RETURNs in place of the last
 # space char on the line
 
+# This script is NOT binary-safe.
+
 verbose=0
 if [[ "$1" == "-v" ]] ; then
 	shift
