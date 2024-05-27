@@ -19,13 +19,15 @@ rts
 
 ; This little stub just needs to return the audio driver's desired IRQ
 ; interval and the output resolution of the volume tables.
+; it shall return .A = sample resolution
+; and .X = number of raster lines per ISR call, times 8
 
 sid_4b_timing_resolution
 	!ifndef c128 {
-		ldx #3		; C64 cycle time is 3 rasters, about 5.2 kHz
+		ldx #24		; C64 cycle time is 3 rasters, about 5.2 kHz
 	} else {
-		ldx #95		; C128 at 2 MHz is twice as fast, and we don't have to
-					; sync to the VIC-IIe raster since it's blanked, so 10.4 kHz
+		ldx #12		; C128 at 2 MHz is twice as fast, and we don't have to
+					; care about the VIC-IIe raster since it's blanked, so 10.4 kHz
 	}
 
 	lda #4	; tell voltab generator routine that we want 4-bit data 

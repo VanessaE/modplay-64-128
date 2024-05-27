@@ -160,8 +160,9 @@
 		rasters_lo					= $0334
 		raster_len					= $0335
 		pal_flag					= $0336
-		isr_cycle_time				= $0337
-		isr_cycle_time_alt			= $0338
+		isr_trigger_interval		= $0337
+
+		; free: $0338
 
 		repeat_mode					= $0339
 		volume_tables_resolution	= $033a
@@ -256,8 +257,9 @@
 		rasters_lo					= $0200
 		raster_len					= $0201
 		pal_flag					= $0202
-		isr_cycle_time				= $0203
-		isr_cycle_time_alt			= $0204
+		isr_trigger_interval		= $0203
+
+		; free: $0204
 
 		repeat_mode					= $0205
 		volume_tables_resolution	= $0206

@@ -299,21 +299,18 @@ rts
 
 ; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
 ;
-; example timings:
-; suppose bpm = 159, tpd = 9
+; at a default of 125 bpm and 6 tpd, that's 500 div/min or 8.3/sec
+; and ~50 ticks/sec or 20454 cycles/tick (NTSC)
 ;
-; then dpm = (24 * 159) / 9 = 424
-; 424 * 9 / 60 = 63.6 ticks/sec
+; with an ISR of every 3rd raster (24), that's 20454/(65*3) = ~105 samples
+; per tick, or 13 28/256 runs of the mixer loop
 ;
-; at 1022727 cycles/sec, one tick would be ~16081 cycles
-; with an ISR time of 132, that's ~122 samples per tick
-;
-; 132 / 159 * 147 = ~122
+; a scaler of 69 would give (24*69)/125 = 13.248 == 13 63/256 runs of the loop
 
-tick_sample_count_scaler = 147
+tick_sample_count_scaler = 69
 
 calculate_mixer_loops_per_tick
-	lda isr_cycle_time
+	lda isr_trigger_interval
 	ldx tick_sample_count_scaler
 	jsr multiply_8x8
 
@@ -327,15 +324,12 @@ calculate_mixer_loops_per_tick
 	sta divisor+1
 	jsr divide_16by16
 
-	lda #0
+	lda remainder
 	sta mixer_loops_per_tick_fract
 	lda quotient
 	lsr
-	ror mixer_loops_per_tick_fract
 	lsr
-	ror mixer_loops_per_tick_fract
 	lsr
-	ror mixer_loops_per_tick_fract
 	sta mixer_loops_per_tick
 rts
 

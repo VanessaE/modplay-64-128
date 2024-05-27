@@ -9,9 +9,8 @@
 ; .A shall hold the resolution value
 ; .X shall hold iteration timer value
 
-; if .X is 10 or less, it's the number of raster lines between ISR runs
-; if it greater than 10, it's an exact number of 1 MHz cycles between runs
-; a value of 0 is the same as 1.
+; ISR timer is always a number of raster lines, times 8 (so for example,
+; every 3rd raster line would be .X=24).
 
 isr_startup
 	sei
@@ -20,26 +19,27 @@ isr_startup
 		jsr c128_set_1mhz_mode
 	}
 
+	stx isr_trigger_interval
 	txa
-	sec
-	cmp #10			; if .X > 10 then it's an exact number of cycles
-	bcs ++
-
-	and #$ff		; otherwise it's number of rasters; if it was 0, make it 1
+	and #$ff		; if it was 0, make it 1
 	bne +
 	lda #1
 
 +	ldx raster_len
 	jsr multiply_8x8
+	lsr product+1
 	lda product
-++	sec
-
+	ror
+	lsr product+1
+	ror
+	lsr product+1
+	ror
+	sec
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
-	sta isr_cycle_time
-							; drivers which allow the screen to be turned on
-	clc						; on NTSC need another val that's one raster longer
-	adc raster_len			; than the supplied time, so that a raster can be
-	sta isr_cycle_time_alt	; skipped every other frame if necessary.
+	sta CIA1+$06			; set the result as CIA #1 timer B interval
+	lda product+1
+	sbc #0
+	sta CIA1+$07
 
 	; 'Disable NMI' without using kernal and $0318/$0319 by Sokrates
 	; https://codebase64.org/doku.php?id=base:nmi_lock_without_kernal
@@ -75,10 +75,6 @@ isr_startup
 
 +	ldx #0
 	sta CIA1+$0f			; ensure that timer B is turned off
-	lda isr_cycle_time		; set CIA #1 timer B interval
-	sta CIA1+$06
-	lda #0
-	sta CIA1+$07
 	lda #$01				; disable timer A IRQ
 	sta CIA1+$0d
 	lda #$82				; enable timer B IRQ
