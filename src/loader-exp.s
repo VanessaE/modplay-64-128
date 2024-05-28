@@ -2,6 +2,8 @@
 ; enter with carry set to use the filename in the string buffer
 ; and if it's set, .Y must be the string length
 
+!text "loader-exp",0
+
 load_file_to_expansion
 	lda #0
 	sta header_loaded

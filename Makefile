@@ -43,7 +43,7 @@ c64:
 
 	acme $(OPTIONS) -o src/autorun-64.o src/autorun-64.s
 	acme $(OPTIONS) -o src/display-splash.o src/display-splash.s
-	acme $(OPTIONS) -o src/mp64.o src/modplay.s
+	acme $(OPTIONS) -l etc/mp64-sym.txt -o src/mp64.o src/modplay.s
 
 	cat src/autorun-64.o \
 		src/display-splash.o \
@@ -62,7 +62,7 @@ c128:
 	acme $(OPTIONS) -Dc128=1 -o src/autorun-128.o src/autorun-128.s
 	acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
 	acme $(OPTIONS) -Dc128=1 -o src/mp128.o src/modplay.s
-	acme $(OPTIONS) -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
+	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o src/c128-boot-sect.o src/c128-boot-sect.s
 
 	cat src/autorun-128.o \
 		src/display-splash-128.o \

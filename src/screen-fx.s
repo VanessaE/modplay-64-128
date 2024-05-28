@@ -1,5 +1,7 @@
 ; this file handles various screen effects like the gray-out-blur-out action
 
+!text "screen fx",0
+
 gray_out_blur_out
 	jsr gray_out
 	jsr blur_out
@@ -28,8 +30,6 @@ gray_out
 rts
 
 blur_out
-	jsr disable_roms
-
 	!ifndef c128 {
 		ldy #0
 	-	!for .page, 0, 3 {
@@ -103,7 +103,6 @@ blur_out
 		cmp #>(vdc_secondary_screen+$0800)
 		bne .nextpage
 	}
-	jsr enable_kernal_only
 rts
 
 switch_to_primary_screen ; also switches to the PETSCII charset on C64

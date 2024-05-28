@@ -1,5 +1,7 @@
 ; miscellanious functions
 
+!text "misc functions",0
+
 ;#####################
 ;# STRING OPERATIONS #
 ;#####################
@@ -58,6 +60,12 @@ backup_zero_page
 -	lda $00,y
 	sta zp_backup,y
 	stx $00,y
+	iny
+	bne -
+
+	lda #0
+	ldy #2
+-	sta $00,y
 	iny
 	bne -
 rts

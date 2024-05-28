@@ -4,13 +4,12 @@
 
 !align 255,0,0
 
+!text "isr common",0
+
 ; When calling this routine:
 
 ; .A shall hold the resolution value
-; .X shall hold iteration timer value
-
-; ISR timer is always a number of raster lines, times 8 (so for example,
-; every 3rd raster line would be .X=24).
+; .X/Y shall hold iteration timer value in cycles
 
 isr_startup
 	sei
@@ -19,25 +18,16 @@ isr_startup
 		jsr c128_set_1mhz_mode
 	}
 
-	stx isr_trigger_interval
-	txa
-	and #$ff		; if it was 0, make it 1
-	bne +
-	lda #1
+	+JSR_INDIRECT (audio_timing_vec)
 
-+	ldx raster_len
-	jsr multiply_8x8
-	lsr product+1
-	lda product
-	ror
-	lsr product+1
-	ror
-	lsr product+1
-	ror
+	stx isr_trigger_interval
+	sty isr_trigger_interval+1
+
 	sec
+	txa
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
 	sta CIA1+$06			; set the result as CIA #1 timer B interval
-	lda product+1
+	tya
 	sbc #0
 	sta CIA1+$07
 

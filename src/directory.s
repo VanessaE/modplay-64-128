@@ -1,5 +1,7 @@
 ; show disk directory, C= hacking #6, greatly modified
 
+!text "directory",0
+
 show_directory
 	!ifdef c128 {
 		clc

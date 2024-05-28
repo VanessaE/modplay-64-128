@@ -1,5 +1,7 @@
 ; this file handles changing and showing settings in the main menu
 
+!text "change-show",0
+
 !ifndef c128 {
 	rpt_row			= 9
 	rpt_col			= 34

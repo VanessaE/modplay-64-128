@@ -2,18 +2,21 @@
 ; Originally I was gonna just port the old Modplay 64 v1.2 sequencer since
 ; it works pretty well, but that code is an absolute mess.
 
+!text "sequencer",0
+
 start_sequencer
+	lda #<volume_tables_low
+	sta volume_table_vectors
+	sta volume_table_vectors+2
+	sta volume_table_vectors+4
+	sta volume_table_vectors+6
 	lda #>volume_tables_low
 	sta volume_table_vectors+1
 	sta volume_table_vectors+3
 	sta volume_table_vectors+5
 	sta volume_table_vectors+7
-	lda #0
-	sta volume_table_vectors
-	sta volume_table_vectors+2
-	sta volume_table_vectors+4
-	sta volume_table_vectors+6
 
+	lda #0
 	sta seq_abort_flag
 	sta glissando_flag
 	sta vibrato_waveform
@@ -66,7 +69,7 @@ start_sequencer
 
 	lda #$80
 	ldx #7
--	sta track_current_enable_flags
+-	sta track_current_enable_flags,x
 	dex
 	bpl -
 
@@ -74,12 +77,12 @@ start_sequencer
 	sta seq_tempo_bpm
 	lda #6
 	sta seq_tempo_ticks_per_div
-	jsr calculate_mixer_loops_per_tick
+	jsr set_mixer_loops_per_tick
 
 	lda #0
 	sta current_song_pos
 	sta seq_current_row
-	jmp +
+	beq +
 
 next_pattern
 
@@ -94,9 +97,8 @@ next_pattern
 	lda pattern_table,x
 	sta seq_current_pattern_number
 
-	bit seq_debug_mode
-	bpl next_row
-	jsr debug_print_new_pattern_mark
+	stx $c800
+	sta $c801
 
 ; row format
 ;
@@ -111,9 +113,8 @@ next_pattern
 ; repeat for as many channels as the mod has
 
 next_row
-	bit seq_debug_mode
-	bpl +
-	jsr debug_print_new_row_mark
+	lda seq_current_row
+	sta $c802
 
 +	+JSR_INDIRECT (fetch_row_vec)
 	ldy #0
@@ -165,11 +166,19 @@ next_track_this_row
 	sta seq_commands,y
 
 	; initialize/start the appropriate effect for this track
+	asl
 	tax
 	lda start_effect_command_jump_table,x
 	sta .sc+1
 	lda start_effect_command_jump_table+1,x
 	sta .sc+2
+
+
+
+
+jam ; #### done for the night, jump table seems correct now, need to fix the
+	; 		mixer loop countdown calc
+
 
 .sc jsr $1234
 
@@ -196,11 +205,9 @@ next_tick
 	bne +
 	jmp stop_song
 
-+	bit seq_debug_mode
-	bpl +
-	jsr debug_print_new_tick_mark
-
-+	ldy #0
++	lda seq_ticks_counter
+	sta $c803
+	ldy #0
 	sty seq_current_track
 
 next_track_this_tick
@@ -252,68 +259,38 @@ run_effect_set_speed
 	bcs ++
 
 +	sta seq_tempo_ticks_per_div
-++	jsr calculate_mixer_loops_per_tick
+++	jsr set_mixer_loops_per_tick
 
-	lda mixer_loops_per_tick_fract
-	sta seq_ticks_counter_fract
-	lda mixer_loops_per_tick
-	sta seq_ticks_counter
 rts
 
 ;==================
 ; auxillary routines
 
-debug_print_new_pattern_mark
-	sei
-	jsr enable_kernal_only
-	lda #RETURN
-	jsr CHROUT
-	jsr CHROUT
-	lda #"p"
-	jsr CHROUT
-	lda #RETURN
-	jsr CHROUT
-	jsr disable_roms
-	cli
-rts
 
-debug_print_new_row_mark
-	sei
-	jsr enable_kernal_only
-	lda #RETURN
-	jsr CHROUT
-	lda #"r"
-	jsr CHROUT
-	jsr disable_roms
-	cli
-rts
-
-debug_print_new_tick_mark
-	sei
-	jsr enable_kernal_only
-	lda #"t"
-	jsr CHROUT
-	jsr disable_roms
-	cli
-rts
+; this routine converts the current "bpm" setting into a mixer loops per tick
+; value
 
 ; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
 ;
 ; at a default of 125 bpm and 6 tpd, that's 500 div/min or 8.3/sec
 ; and ~50 ticks/sec or 20454 cycles/tick (NTSC)
 ;
-; with an ISR of every 3rd raster (24), that's 20454/(65*3) = ~105 samples
-; per tick, or 13 28/256 runs of the mixer loop
+; with an ISR of 195 cycles (i.e. every 3 rasters), that's 20454/195 = 104.895
+; samples per tick, or ~13.112 runs of the mixer loop
 ;
-; a scaler of 69 would give (24*69)/125 = 13.248 == 13 63/256 runs of the loop
+; a scaler of 68.5 would give (24*68.5)/125 = 13.152 == 13 & 39/256 runs of
+; the loop
 
-tick_sample_count_scaler = 69
+tempo_fine_adjust_constant = 137
 
-calculate_mixer_loops_per_tick
-	lda isr_trigger_interval
-	ldx tick_sample_count_scaler
-	jsr multiply_8x8
-
+set_mixer_loops_per_tick
+	lda isr_trigger_interval+1		; we divide the ISR interval by 2 to make
+	lsr								; sure that it can't possibly be > 8 bits,
+	lda isr_trigger_interval		; and compensate for that by using a fine
+	ror								; adjust constant that's twice as high.  We
+	ldx #tempo_fine_adjust_constant	; lose a tiny bit of precision from the
+	jsr multiply_8x8				; ISR timer, but gain it back in the mixer
+									; loop counter.
 	lda product
 	sta dividend
 	lda product+1
@@ -324,13 +301,43 @@ calculate_mixer_loops_per_tick
 	sta divisor+1
 	jsr divide_16by16
 
-	lda remainder
-	sta mixer_loops_per_tick_fract
 	lda quotient
-	lsr
-	lsr
-	lsr
+	sta mixer_loops_per_tick_fract
+	sta seq_ticks_counter_fract
+	lda quotient+1
 	sta mixer_loops_per_tick
+	sta seq_ticks_counter
+
+rts
+
+; this routine converts a note period into a sample stepper value: audio
+; driver timer multiplied by a constant, and then divided by the note period.
+; enter with .A/.X set to the desired note period
+; returns the stepper value in .A/.X
+
+pitch_fine_adjust_constant = 80
+
+calculate_stepper_value
+	sta tempzp_d
+	stx tempzp_d+1
+	lda isr_trigger_interval+1	; as before, divide the ISR interval by 2 to
+	lsr							; make sure that it can't be > 8 bits, then
+	lda isr_trigger_interval	; compensate by doubling the constant.
+	ror
+	ldx #pitch_fine_adjust_constant
+	jsr multiply_8x8
+
+	lda product
+	sta dividend
+	lda product+1
+	sta dividend+1
+	lda tempzp_d
+	sta divisor
+	lda tempzp_d+1
+	sta divisor+1
+	jsr divide_16by16
+	lda quotient
+	ldx quotient+1
 rts
 
 get_row_address
@@ -381,20 +388,6 @@ sequencer_temp_c			!fill 4,0
 sequencer_temp_d			!fill 4,0
 sequencer_temp_x			!byte 0
 sequencer_temp_y			!byte 0
-
-seq_tempo_bpm				!byte 0
-seq_tempo_ticks_per_div		!byte 0
-
-seq_ticks_counter_fract		!byte 0
-seq_ticks_counter			!byte 0
-
-mixer_loops_per_tick_fract	!byte 0
-mixer_loops_per_tick		!byte 0
-
-seq_current_track			!byte 0
-
-seq_current_row				!byte 0
-seq_current_pattern			!byte 0
 
 seq_abort_flag				!byte 0
 seq_debug_mode				!byte $80

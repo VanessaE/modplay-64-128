@@ -1,6 +1,8 @@
 ; this file loads the current directory into memory as a set of "arrays"
 ; for, and manages most aspects of the main menu playlist.
 
+!text "playlist",0
+
 !ifndef c128 {
 	playlist_top_row			= 3
 	playlist_bottom_row			= 19

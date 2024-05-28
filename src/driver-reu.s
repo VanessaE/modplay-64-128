@@ -1,5 +1,21 @@
 ; RAM driver for standard REU
 
+; this bit tells other code how fast the RAM driver actually is
+; and is the average number of 1 MHz cycles consumed by the RAM driver mixer
+; per final sample byte pair, plus some fudge (so on C128 this will be a bit
+; over half the number of cycles needed).
+
+!text "reu driver",0,0,0
+
+reu_get_mixer_cpu_usage
+	!ifndef c128 {
+		lda #120
+	} else {
+		lda #65
+	}
+	sta ram_driver_cpu_usage
+rts
+
 reu_fetch_row
 	lda current_file_type
 	cmp #1

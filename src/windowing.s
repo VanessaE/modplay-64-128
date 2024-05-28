@@ -9,6 +9,8 @@
 
 ; these dimensions are all the CONTENT of the windows, excluding their frames
 
+!text "windowing",0
+
 !ifndef c128 {
 	mini_popup_left_column			= 10
 	mini_popup_width				= 18

@@ -1,39 +1,64 @@
 ; Audio driver for SID chip, 4-bit mode
 
-	; ISR init will call this first function to get the proper IRQ entry point
-	; returns .X/.Y = address low/high
+; ISR init will call this first function to get the proper IRQ entry point
+; returns .X/.Y = address low/high
 
-sid_4b_init
-	jsr sid_4b_mute
+!text "sid driver",0,0,0
+
+sid_init
+	jsr sid_mute
 
 	bit stereo_enable
 	bmi +
 
-	ldx #<sid_4b_isr_mono
-	ldy #>sid_4b_isr_mono
+	ldx #<sid_isr_4b_mono
+	ldy #>sid_isr_4b_mono
 	rts
 
-+	ldx #<sid_4b_isr_stereo
-	ldy #>sid_4b_isr_stereo
++	ldx #<sid_isr_4b_stereo
+	ldy #>sid_isr_4b_stereo
 rts
 
-; This little stub just needs to return the audio driver's desired IRQ
+; This returns the audio driver's desired IRQ
 ; interval and the output resolution of the volume tables.
 ; it shall return .A = sample resolution
-; and .X = number of raster lines per ISR call, times 8
+; and .X/Y = number of cycles between ISR calls, plus some fudge
 
-sid_4b_timing_resolution
+sid_get_timing
+		clc							; some RAM devices ared faster than others
+		lda ram_driver_cpu_usage	; so we have to factor that in.
+
 	!ifndef c128 {
-		ldx #24		; C64 cycle time is 3 rasters, about 5.2 kHz
-	} else {
-		ldx #12		; C128 at 2 MHz is twice as fast, and we don't have to
-					; care about the VIC-IIe raster since it's blanked, so 10.4 kHz
-	}
+		adc #60						; SID ISR needs at least 57 cycles, call it 60.
+		sta dividend				; on C64 we need to sync to the VIC-II
+		lda #0						; raster, so we divide the total CPU usage
+		rol							; figure by the raster line length
+		sta dividend+1
+		lda raster_len
+		sta divisor
+		lda #0
+		sta divisor+1
+		jsr divide_16by16
 
-	lda #4	; tell voltab generator routine that we want 4-bit data 
+		clc
+		lda quotient				; discard the remainder and add 1
+		adc #1
+		ldx raster_len
+		jsr multiply_8x8			; and multiply it back up, thus rounding
+		ldx product					; the ISR time to the next whole multiple
+		ldy product+1				; of the raster length
+	} else {
+		adc #30						; on the C128 we don't need all that BS 😛
+		tax							; because VIC-IIe is always blanked, so
+		ldy #0						; there's no need to sync to the raster.
+	}
 rts
 
-sid_4b_start
+sid_get_resolution
+	lda #4
+rts
+
+sid_start
 	clc
 	lda stereo_sid_addr
 	adc #$18
@@ -42,11 +67,11 @@ sid_4b_start
 	sta .s2a+2
 rts
 
-sid_4b_stop
-	jsr sid_4b_mute
+sid_stop
+	jsr sid_mute
 rts
 
-sid_4b_mute
+sid_mute
 	lda #0
 	ldx #$20
 
@@ -56,7 +81,7 @@ sid_4b_mute
 rts
 
 
-sid_4b_isr_mono					; 7 cycles coming in
+sid_isr_4b_mono					; 7 cycles coming in
 	sta .iam + 1				; 4
 	stx .ixm + 1				; 4
 
@@ -64,7 +89,7 @@ sid_4b_isr_mono					; 7 cycles coming in
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
 	sta SID+$18					; 4
-	sta VIC+$20
+	inc VIC+$20
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
@@ -72,7 +97,7 @@ sid_4b_isr_mono					; 7 cycles coming in
 rti								; 6 cycles to exit
 
 
-sid_4b_isr_stereo				; 7 cycles coming in
+sid_isr_4b_stereo				; 7 cycles coming in
 	sta .ias + 1				; 4
 	stx .ixs + 1				; 4
 
@@ -80,7 +105,7 @@ sid_4b_isr_stereo				; 7 cycles coming in
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
 	sta SID+$18					; 4
-	sta VIC+$20
+	inc VIC+$20
 
 	lda audio_buffer_right,x	; 4
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above

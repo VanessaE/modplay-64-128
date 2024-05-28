@@ -22,8 +22,13 @@
 
 ; main program code
 
-!source "src/constants.h"
+!source "src/constants-com.h"
 
+!ifndef c128 {
+	!source "src/constants-64.h"
+} else {
+	!source "src/constants-128.h"
+}
 !convtab pet
 !cpu 6510
 
@@ -93,6 +98,7 @@ start
 
 !source "src/misc-functions.s"
 
+!source "src/tables.s"
 
 ; generic text/PETSCII stuff that's used by multiple functions goes here
 
@@ -153,6 +159,8 @@ zp_backup
 ; and must either be one-time-use stuff, or must be something that'll be
 ; copied to another part of memory for runtime use, or which reserves memory
 ; via the program counter.
+
+!text "free mem",0,0,0
 
 wipe_memory_start
 

@@ -197,29 +197,39 @@ init
 	lda #>reu_mixer_entry
 	sta run_mixer_vec+1
 
+	lda #<reu_get_mixer_cpu_usage
+	sta ram_driver_mixer_cpu_usage_vec
+	lda #>reu_get_mixer_cpu_usage
+	sta ram_driver_mixer_cpu_usage_vec+1
+
 	lda #0						; refers to the addr in REU
 	sta free_memory_start		; main mem driver will use main_mem_free_start for this
 	sta free_memory_start+1
 	sta free_memory_start+2
 
-	lda #<sid_4b_timing_resolution
-	sta audio_timing_res_vec
-	lda #>sid_4b_timing_resolution
-	sta audio_timing_res_vec+1
+	lda #<sid_get_timing
+	sta audio_timing_vec
+	lda #>sid_get_timing
+	sta audio_timing_vec+1
 
-	lda #<sid_4b_init
+	lda #<sid_get_resolution
+	sta audio_resolution_vec
+	lda #>sid_get_resolution
+	sta audio_resolution_vec+1
+
+	lda #<sid_init
 	sta audio_init_vec
-	lda #>sid_4b_init
+	lda #>sid_init
 	sta audio_init_vec+1
 
-	lda #<sid_4b_start
+	lda #<sid_start
 	sta audio_start_vec
-	lda #>sid_4b_start
+	lda #>sid_start
 	sta audio_start_vec+1
 
-	lda #<sid_4b_stop
+	lda #<sid_stop
 	sta audio_stop_vec
-	lda #>sid_4b_stop
+	lda #>sid_stop
 	sta audio_stop_vec+1
 
 	!ifndef c128 {
@@ -227,7 +237,7 @@ init
 		sta enable_screen_on_playback
 	}
 
-	+JSR_INDIRECT (audio_timing_res_vec)
+	+JSR_INDIRECT (audio_resolution_vec)
 	jsr generate_volume_tables
 
 	; Codefault's count raster lines code, to know if PAL or NTSC
@@ -260,9 +270,10 @@ init
 		jsr erase_file_list
 	}
 
+
+
 ; ############# we're dumping-out early here
 	jmp clear_main_memory
-
 
 
 
@@ -292,6 +303,7 @@ init
 
 
 ; ####### end of main init code
+
 
 
 zero_count	!byte 0

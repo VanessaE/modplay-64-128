@@ -1,7 +1,12 @@
 ; display the splash screen
 
-!source "src/constants.h"
+!source "src/constants-com.h"
 
+!ifndef c128 {
+	!source "src/constants-64.h"
+} else {
+	!source "src/constants-128.h"
+}
 !convtab pet
 !cpu 6510
 
