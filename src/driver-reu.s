@@ -7,13 +7,30 @@
 
 !text "reu driver",0,0,0
 
-reu_get_mixer_cpu_usage
+reu_set_mixer_speed_figures
 	!ifndef c128 {
 		lda #120
 	} else {
 		lda #65
 	}
 	sta ram_driver_cpu_usage
+
+	; since the REU mixer generates 8 sample pairs per loop, the constants below
+	; will result in calculated values 8x higher than are "correct",
+	; but we do it this way for the sake of precision later.
+
+	lda #135
+	sta tempo_fine_adjust_constant
+
+	lda #56
+	sta pitch_fine_adjust_constant
+
+	; this shifts value is used to divide that "overage" back down (referring
+	; to the number of divide-by-two lsr/ror pairs needed)
+
+	lda #3
+	sta mixer_count_shifts
+
 rts
 
 reu_fetch_row

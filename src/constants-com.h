@@ -31,9 +31,8 @@
 	number_of_patterns				= $2a
 	pattern_address					= $2b ; 3 bytes
 	pattern_break_target_row		= $2e
-
-	; free: $2f to $32
-
+	mixer_loops_dividend_precalc	= $2f ; 2 bytes
+	stepper_dividend_precalc		= $31 ; 2 bytes
 	seq_current_pattern_number		= $33
 	seq_current_row					= $34
 	seq_current_track				= $35
@@ -57,8 +56,9 @@
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	; free: $5e through $67
+	; free: $5e through $66
 
+	mixer_count_shifts				= $67
 	tempzp_g						= $68 ; 4 bytes
 	mixer_loops_per_tick_fract		= $6c
 	mixer_loops_per_tick			= $6d

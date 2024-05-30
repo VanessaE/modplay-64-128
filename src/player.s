@@ -44,7 +44,7 @@ start_main_player
 	iny
 	bne -
 
-	+JSR_INDIRECT (ram_driver_mixer_cpu_usage_vec)
+	+JSR_INDIRECT (mixer_set_timings_vec)
 	+JSR_INDIRECT (audio_resolution_vec)
 	jsr generate_volume_tables ; will only regenerate if needed
 

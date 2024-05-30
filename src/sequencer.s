@@ -73,6 +73,46 @@ start_sequencer
 	dex
 	bpl -
 
+	; pre-calculate the dividends for the mixer loops per tick and
+	; the period-to-steppers divisions
+
+	; for both of these, we divide the ISR interval by 2 to make sure that it
+	; can't possibly be > 8 bits, and compensate for that by using constants
+	; that are twice as high.  We lose a tiny bit of precision from the ISR
+	; timer, but that's okay, it'll be imperceptible.
+
+	; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
+	;
+	; at a default of 125 bpm and 6 tpd, that's 500 div/min or 8.3/sec
+	; giving ~50 ticks/sec, or 20454 cycles/tick (NTSC)
+	;
+	; with an ISR of 195 cycles (i.e. every 3 rasters), that's 20454/195 =
+	; 104.895 samples per tick, or ideally ~13.112 runs of the mixer loop
+
+	lda isr_trigger_interval+1
+	lsr
+	lda isr_trigger_interval
+	ror
+	ldx tempo_fine_adjust_constant
+	jsr multiply_8x8
+
+	lda product
+	sta mixer_loops_dividend_precalc
+	lda product+1
+	sta mixer_loops_dividend_precalc+1
+
+	lda isr_trigger_interval+1
+	lsr
+	lda isr_trigger_interval
+	ror
+	ldx pitch_fine_adjust_constant
+	jsr multiply_8x8
+
+	lda product
+	sta stepper_dividend_precalc
+	lda product+1
+	sta stepper_dividend_precalc+1
+
 	lda #125
 	sta seq_tempo_bpm
 	lda #6
@@ -173,13 +213,6 @@ next_track_this_row
 	lda start_effect_command_jump_table+1,x
 	sta .sc+2
 
-
-
-
-jam ; #### done for the night, jump table seems correct now, need to fix the
-	; 		mixer loop countdown calc
-
-
 .sc jsr $1234
 
 	iny
@@ -267,33 +300,13 @@ rts
 ; auxillary routines
 
 
-; this routine converts the current "bpm" setting into a mixer loops per tick
-; value
-
-; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
-;
-; at a default of 125 bpm and 6 tpd, that's 500 div/min or 8.3/sec
-; and ~50 ticks/sec or 20454 cycles/tick (NTSC)
-;
-; with an ISR of 195 cycles (i.e. every 3 rasters), that's 20454/195 = 104.895
-; samples per tick, or ~13.112 runs of the mixer loop
-;
-; a scaler of 68.5 would give (24*68.5)/125 = 13.152 == 13 & 39/256 runs of
-; the loop
-
-tempo_fine_adjust_constant = 137
+; convert the current "bpm" setting into a mixer loops per tick value
+; and set the speed that value.
 
 set_mixer_loops_per_tick
-	lda isr_trigger_interval+1		; we divide the ISR interval by 2 to make
-	lsr								; sure that it can't possibly be > 8 bits,
-	lda isr_trigger_interval		; and compensate for that by using a fine
-	ror								; adjust constant that's twice as high.  We
-	ldx #tempo_fine_adjust_constant	; lose a tiny bit of precision from the
-	jsr multiply_8x8				; ISR timer, but gain it back in the mixer
-									; loop counter.
-	lda product
+	lda mixer_loops_dividend_precalc
 	sta dividend
-	lda product+1
+	lda mixer_loops_dividend_precalc+1
 	sta dividend+1
 	lda seq_tempo_bpm
 	sta divisor
@@ -302,41 +315,49 @@ set_mixer_loops_per_tick
 	jsr divide_16by16
 
 	lda quotient
+
+	ldx mixer_count_shifts
+-	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	dex
+	bne -
+
 	sta mixer_loops_per_tick_fract
-	sta seq_ticks_counter_fract
 	lda quotient+1
 	sta mixer_loops_per_tick
+	lda #0
+	sta seq_ticks_counter_fract
 	sta seq_ticks_counter
-
 rts
 
-; this routine converts a note period into a sample stepper value: audio
-; driver timer multiplied by a constant, and then divided by the note period.
+; convert a note period into a sample stepper value
+;
 ; enter with .A/.X set to the desired note period
-; returns the stepper value in .A/.X
+; returns the stepper value in .A/.X (.A will be the fraction)
 
-pitch_fine_adjust_constant = 80
-
-calculate_stepper_value
-	sta tempzp_d
-	stx tempzp_d+1
-	lda isr_trigger_interval+1	; as before, divide the ISR interval by 2 to
-	lsr							; make sure that it can't be > 8 bits, then
-	lda isr_trigger_interval	; compensate by doubling the constant.
-	ror
-	ldx #pitch_fine_adjust_constant
-	jsr multiply_8x8
-
-	lda product
-	sta dividend
-	lda product+1
-	sta dividend+1
-	lda tempzp_d
+get_stepper_value
 	sta divisor
-	lda tempzp_d+1
-	sta divisor+1
+	stx divisor+1
+	lda stepper_dividend_precalc
+	sta dividend
+	lda stepper_dividend_precalc+1
+	sta dividend+1
 	jsr divide_16by16
+
 	lda quotient
+
+	ldx mixer_count_shifts
+-	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	dex
+	bne -
+
 	ldx quotient+1
 rts
 

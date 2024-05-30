@@ -6,8 +6,10 @@
 
 	print_msg_char_limit			= $22
 
-	; free memory -- $02a7 to $02ac
+	; free memory -- $02a7 to $02aa
 
+	tempo_fine_adjust_constant		= $02ab
+	pitch_fine_adjust_constant		= $02ac
 	ram_driver_cpu_usage			= $02ad
 	playback_speed_fine_tune		= $02ae ; 2 bytes
 	config_space					= $02b0 ; 16 bytes
@@ -57,7 +59,7 @@
 	print_vec						= $0399 ; 2 bytes
 	fetch_row_vec					= $039b ; 2 bytes
 	run_mixer_vec					= $039d ; 2 bytes
-	ram_driver_mixer_cpu_usage_vec	= $039f ; 2 bytes
+	mixer_set_timings_vec	= $039f ; 2 bytes
 
 	; more vectors can go here
 	; free memory through $03e4

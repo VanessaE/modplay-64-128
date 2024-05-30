@@ -39,8 +39,10 @@
 	file_to_load_size				= $0259 ; 2 bytes
 	file_size_in_kb					= $025b ; 2 bytes
 
-	; free memory through $027a
+	; free memory through $0278
 
+	tempo_fine_adjust_constant		= $0279
+	pitch_fine_adjust_constant		= $027a
 	ram_driver_cpu_usage			= $027b
 	playback_speed_fine_tune		= $027c ; 2 bytes
 	free_memory_start				= $027e ; 3 bytes
@@ -90,7 +92,7 @@
 	print_vec						= $107c ; 2 bytes
 	fetch_row_vec					= $107e ; 2 bytes
 	run_mixer_vec					= $1080 ; 2 bytes
-	ram_driver_mixer_cpu_usage_vec	= $1082 ; 2 bytes
+	mixer_set_timings_vec	= $1082 ; 2 bytes
 
 	; more vectors can go here
 	; free memory through $10ff

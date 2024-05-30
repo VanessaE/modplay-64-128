@@ -197,10 +197,10 @@ init
 	lda #>reu_mixer_entry
 	sta run_mixer_vec+1
 
-	lda #<reu_get_mixer_cpu_usage
-	sta ram_driver_mixer_cpu_usage_vec
-	lda #>reu_get_mixer_cpu_usage
-	sta ram_driver_mixer_cpu_usage_vec+1
+	lda #<reu_set_mixer_speed_figures
+	sta mixer_set_timings_vec
+	lda #>reu_set_mixer_speed_figures
+	sta mixer_set_timings_vec+1
 
 	lda #0						; refers to the addr in REU
 	sta free_memory_start		; main mem driver will use main_mem_free_start for this
