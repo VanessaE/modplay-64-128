@@ -139,6 +139,9 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 	VIC_COLOR_RAM					= $d800
 
 	VIC								= $d000
+; C128 only note:  in $D030, only bits 1 & 0 matter, so "test" and 1/2 MHz mode
+; switches will work with any stored value as long as those two bits are correct.
+
 	SID								= $d400
 	CIA1							= $dc00
 	CIA2							= $dd00

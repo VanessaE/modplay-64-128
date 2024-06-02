@@ -97,10 +97,19 @@ reu_fetch_row
 	ldy #$91
 	lda #8
 	sta DMA_DAL		; run it twice to get 16 bytes, so that the ISR won't
+
+	!ifdef c128 {
+		sta VIC+$30
+	}
+
 	sty DMA_CMD		; get more than an 8-cycle delay
 	sta DMA_DAL
 	sty DMA_CMD
 
+	!ifdef c128 {
+		sty VIC+$30
+	}
+	
 	ldy #15
 -	lda seq_current_row_data,y
 	sta $c828,y
@@ -110,13 +119,6 @@ reu_fetch_row
 rts
 
 reu_stash_block
-	!ifdef c128 {
-		lda VIC+$30
-		and #$01
-		pha
-		jsr c128_set_1mhz_mode
-	}
-
 	lda #<load_buffer
 	sta DMA_ADL
 	lda #>load_buffer
@@ -135,11 +137,15 @@ reu_stash_block
 	sta DMA_DAH
 
 	lda #$90
+
+	!ifdef c128 {
+		sta VIC+$30
+	}
+
 	sta DMA_CMD
 
 	!ifdef c128 {
-		pla
-		sta VIC+$30
+		inc VIC+$30
 	}
 rts
 
@@ -150,6 +156,10 @@ REUCOMMAND_STASH    = $90   ; immediately, no reload
 REUCOMMAND_FETCH    = $91   ; immediately, no reload
 
 reu_get_size
+	!ifdef c128 {
+		dec VIC+$30
+	}
+
 	ldx #0  ; pre-init
 	; first write signatures to banks in *descending* order (banks 255..0):
 .wrlp
@@ -190,6 +200,9 @@ reu_get_size
 +	dex
 	stx reu_highest_bank		; if 0, REU not detected at all.
 
+	!ifdef c128 {
+		inc VIC+$30
+	}
 rts
 
 set_registers_AXY ; setup REU registers (used for both reading and writing in size test only)
@@ -305,7 +318,16 @@ reu_gen_sample_loop
 		.reu_fetch_sample_data
 			lda #8										; 2
 			sta DMA_DAL									; 4
+			
+			!ifdef c128 {
+				sta VIC+$30								; 4
+			}
+
 			stx DMA_CMD									; 4 + 8
+
+			!ifdef c128 {
+				inc VIC+$30								; 6
+			}
 		}
 	}
 

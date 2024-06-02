@@ -15,7 +15,8 @@ isr_startup
 	sei
 
 	!ifdef c128 {
-		jsr c128_set_1mhz_mode
+		lda #0
+		sta VIC+$30
 	}
 
 	+JSR_INDIRECT (audio_timing_vec)
@@ -161,8 +162,9 @@ fixcycle
 							;     counting Phi2 cycles, no output on PB6
 
 	!ifdef c128 {
-		jsr c128_set_2mhz_mode
+		inc VIC+$30
 	}
+
 
 .iel lda #0					; re-point the IRQ to the audio driver entry that
 	sta CPU_IRQ_vector		; was fetched at the start of the ISR setup
@@ -211,6 +213,5 @@ isr_shutdown
 		sta VDC
 		lda #0
 		sta VDC+1
-		jsr c128_set_2mhz_mode
 	}
 rts

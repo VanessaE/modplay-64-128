@@ -2,7 +2,8 @@
 
 init
 	!ifdef c128 {
-		jsr c128_set_2mhz_mode
+		lda #1
+		sta VIC+$30
 		jsr disable_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete

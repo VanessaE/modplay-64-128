@@ -21,7 +21,9 @@ show_splash
 	sta VIC+$21
 	!ifdef c128 {
 		jsr disable_screen
-		jsr c128_set_2mhz_mode
+		lda #1
+		sta VIC+$30
+
 		lda kernal_4080_mode
 		pha
 		bmi + ; if negative, already on 80 columns
@@ -44,7 +46,7 @@ show_splash
 		ldy #>wrong_screen_msg
 		jsr print_msg
 		jsr enable_screen
-		jsr c128_set_1mhz_mode
+		dec VIC+$30
 		jsr SWAPPER
 	} else {
 		ldx #<splash_data
@@ -68,10 +70,6 @@ rts
 
 +SCREEN_ONOFF
 +ROM_SWITCHING
-
-!ifdef c128 {
-	+CPU_FREQ
-}
 
 !ifdef c128 {
 	wrong_screen_msg

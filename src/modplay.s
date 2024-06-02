@@ -52,10 +52,6 @@ print_msg_rle
 	+PRINT_MSG_RLE
 rts
 
-!ifdef c128 {
-	+CPU_FREQ
-}
-
 start
 	php
 	sei

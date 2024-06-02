@@ -169,18 +169,6 @@
 	rts
 }
 
-!macro CPU_FREQ {
-	c128_set_1mhz_mode
-		lda #$00
-		sta VIC+$30
-	rts
-
-	c128_set_2mhz_mode
-		lda #$01
-		sta VIC+$30
-	rts
-}
-
 ;#################
 ;# ROM SWITCHING #
 ;#################

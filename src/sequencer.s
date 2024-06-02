@@ -156,7 +156,7 @@ next_row
 	lda seq_current_row
 	sta $c802
 
-+	+JSR_INDIRECT (fetch_row_vec)
+	+JSR_INDIRECT (fetch_row_vec)
 	ldy #0
 
 next_track_this_row
