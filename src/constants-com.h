@@ -37,11 +37,10 @@
 	seq_current_row					= $34
 	seq_current_track				= $35
 	seq_tempo_bpm					= $36
-	seq_tempo_ticks_per_div			= $37
-	seq_ticks_counter_fract			= $38
-	seq_ticks_counter				= $39
-
-	pitch_slide_up_rates			= $3a ; 8 bytes
+	seq_ticks_per_division			= $37
+	seq_ticks_counter				= $38
+	mixer_count_shifts				= $39
+ 	pitch_slide_up_rates			= $3a ; 8 bytes
 	pitch_slide_down_rates			= $42 ; 8 bytes
 	pitch_slide_to_note_rates		= $4a ; 8 bytes
 
@@ -56,13 +55,15 @@
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	; free: $5e through $66
+	tempzpbk_g						= $5e ; 4 bytes
 
-	mixer_count_shifts				= $67
-	tempzp_g						= $68 ; 4 bytes
+	; free: $62 - 63
+
+	sample_data_target				= $64 ; 8 bytes
 	mixer_loops_per_tick_fract		= $6c
 	mixer_loops_per_tick			= $6d
-	mixer_output_countdown			= $6e ; 2 bytes
+	mixer_output_countdown_fract	= $6e
+	mixer_output_countdown			= $6f
 	track_current_loop_flags		= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes

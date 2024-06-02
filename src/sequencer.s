@@ -116,7 +116,7 @@ start_sequencer
 	lda #125
 	sta seq_tempo_bpm
 	lda #6
-	sta seq_tempo_ticks_per_div
+	sta seq_ticks_per_division
 	jsr set_mixer_loops_per_tick
 
 	lda #0
@@ -174,24 +174,55 @@ next_track_this_row
 	lsr
 	lsr
 	lsr
-	ora sequencer_temp_a
-	beq +
+	ora sequencer_temp_a			; if sample number is 0, keep using the
+	beq +							; previous sample number
 	sta current_sample_numbers,y
 
 	; get sample period
++	lda seq_current_row_data,x		; if period is 0, keep using the
+	and #$0f						; previous period value
+	ora seq_current_row_data+1
+	bne +
+	jmp getcmd
+
 +	lda seq_current_row_data,x
 	and #$0f
-	sta sequencer_temp_a
-	ora seq_current_row_data+1,x
-	beq +
-
-	lda sequencer_temp_a
 	sta current_note_periods_highs,y
+	tax
 	lda seq_current_row_data+1,x
-	sta current_note_periods_highs,y
+	sta current_note_periods_lows,y
+
+	stx sequencer_temp_x
+	sty sequencer_temp_y
+
+	jsr get_stepper_value
+
+	ldy sequencer_temp_y
+	sta current_steprates_fract,y
+	sta sequencer_temp_b
+	stx current_steprates_lows,y
+	stx sequencer_temp_b+1
+
+	tya
+	asl
+	asl
+	asl
+	tax ; .X = track number times 8
+
+	!for .idx, 1, 7 {
+		lda sequencer_temp_b
+		adc current_steprates_fract,y
+		sta sequencer_temp_b
+		lda sequencer_temp_b+1
+		adc current_steprates_lows,y
+		lda sequencer_temp_b+1
+		sta sample_data_lookahead_indexes + .idx,x
+	}
 
 	; get effect command and its parameters
-+	lda seq_commands,y
+getcmd
+	ldx sequencer_temp_x
+	lda seq_commands,y
 	sta seq_prev_commands,y
 	lda seq_command_arguments,y
 	lda seq_prev_command_arguments,y
@@ -202,12 +233,16 @@ next_track_this_row
 	lsr
 	lsr
 	lsr
+	tax
 	lsr
 	sta seq_commands,y
 
 	; initialize/start the appropriate effect for this track
-	asl
-	tax
+
+	lda seq_command_arguments,y		; if both the command and its args are 0
+	ora seq_commands,y				; then there's no command
+	beq +							; (command #0 + nonzero args = arpeggio)
+
 	lda start_effect_command_jump_table,x
 	sta .sc+1
 	lda start_effect_command_jump_table+1,x
@@ -215,16 +250,12 @@ next_track_this_row
 
 .sc jsr $1234
 
-	iny
++	iny
 	cpy #4
-	bne next_track_this_row
+	beq +
+	jmp next_track_this_row
 
-	clc								; by adding like this, we allow the mixer
-	lda mixer_loops_per_tick_fract	; count to vary slightly so that a tick
-	adc seq_ticks_counter_fract		; will get one more loop than normal every
-	sta seq_ticks_counter_fract		; so often, for precise speed control
-	lda mixer_loops_per_tick
-	adc #0
++	lda seq_ticks_per_division
 	sta seq_ticks_counter
 
 next_tick
@@ -260,6 +291,18 @@ next_track_this_tick
 	cmp #4
 	bne next_track_this_tick
 
+	; By adding the loops per tick with a fract byte, rather than just
+	; resetting the count to zero, the mixer will occasionally add one extra
+	; loop, for precise speed control.
+
+	clc
+	lda mixer_output_countdown_fract
+	adc mixer_loops_per_tick_fract
+	sta mixer_output_countdown_fract
+	lda #0
+	adc mixer_loops_per_tick
+	sta mixer_output_countdown
+
 	+JSR_INDIRECT (run_mixer_vec)
 
 	dec seq_ticks_counter
@@ -291,7 +334,7 @@ run_effect_set_speed
 	sta seq_tempo_bpm
 	bcs ++
 
-+	sta seq_tempo_ticks_per_div
++	sta seq_ticks_per_division
 ++	jsr set_mixer_loops_per_tick
 
 rts
@@ -301,36 +344,36 @@ rts
 
 
 ; convert the current "bpm" setting into a mixer loops per tick value
-; and set the speed that value.
+; and set the speed that value.  Note we're setting the values to 256x the
+; actual amounts, so that quotient low byte can act as a fraction.
 
 set_mixer_loops_per_tick
-	lda mixer_loops_dividend_precalc
+	lda #0
 	sta dividend
-	lda mixer_loops_dividend_precalc+1
+	sta divisor+1
+	sta divisor+2
+
+	lda mixer_loops_dividend_precalc
 	sta dividend+1
+	lda mixer_loops_dividend_precalc+1
+	sta dividend+2
 	lda seq_tempo_bpm
 	sta divisor
+
+	jsr divide_24by24
+
 	lda #0
-	sta divisor+1
-	jsr divide_16by16
-
-	lda quotient
-
 	ldx mixer_count_shifts
--	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
+-	lsr
+	ror quotient+1
+	ror quotient+2
 	dex
 	bne -
 
+	lda quotient
 	sta mixer_loops_per_tick_fract
 	lda quotient+1
 	sta mixer_loops_per_tick
-	lda #0
-	sta seq_ticks_counter_fract
-	sta seq_ticks_counter
 rts
 
 ; convert a note period into a sample stepper value
@@ -352,9 +395,6 @@ get_stepper_value
 	ldx mixer_count_shifts
 -	lsr quotient+1
 	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
 	dex
 	bne -
 

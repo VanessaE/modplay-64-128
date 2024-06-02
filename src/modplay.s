@@ -195,9 +195,8 @@ sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
 sample_default_loop_flags			= sample_loop_end_addresses_mids + 32
 sample_default_fine_tunes			= sample_default_loop_flags + 32
 sample_default_volume_levels		= sample_default_fine_tunes + 32
-sample_data_lookahead_cache			= sample_default_volume_levels + 32
-track_lookahead_indexes				= sample_data_lookahead_cache + 64
-current_note_periods_lows			= track_lookahead_indexes + 64
+
+current_note_periods_lows			= sample_default_volume_levels + 32
 current_note_periods_highs			= current_note_periods_lows + 8
 current_node_period_offsets			= current_note_periods_highs + 8
 
@@ -205,7 +204,7 @@ track_current_enable_flags			= current_node_period_offsets + 8
 
 seq_current_row_data				= track_current_enable_flags + 8
 
-seq_commands						= seq_current_row_data + 32
+seq_commands						= seq_current_row_data + 64
 seq_prev_commands					= seq_commands + 8
 seq_command_arguments				= seq_prev_commands + 8
 seq_prev_command_arguments			= seq_command_arguments + 8
@@ -214,8 +213,11 @@ current_pitch_slide_flags			= seq_prev_command_arguments + 8
 seq_pitch_slide_stop_point_lows		= current_pitch_slide_flags + 8
 seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
+; the lookahead buffer is arranged as track number * 8 plus byte number
+sample_data_buffer					= seq_pitch_slide_stop_point_highs + 8
+sample_data_lookahead_indexes		= sample_data_buffer + 64; 64 bytes also
 
-main_mem_free_start					= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
+main_mem_free_start					= ((>sample_data_lookahead_indexes) + 1) * 256
 
 ; anything appended after this point will be overwritten by the loaded file
 ; when using main memory driver
