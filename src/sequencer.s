@@ -230,12 +230,10 @@ getcmd
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
 	lda seq_current_row_data+2,x
-	lsr
-	lsr
-	lsr
-	tax
-	lsr
+	and #$0f
 	sta seq_commands,y
+	asl
+	tax
 
 	; initialize/start the appropriate effect for this track
 

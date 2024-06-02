@@ -115,7 +115,6 @@ reu_fetch_row
 	sta $c828,y
 	dey
 	bpl -
-
 rts
 
 reu_stash_block
