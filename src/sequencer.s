@@ -192,12 +192,10 @@ next_track_this_row
 	lda seq_current_row_data+1,x
 	sta current_note_periods_lows,y
 
-	stx sequencer_temp_x
 	sty sequencer_temp_y
-
 	jsr get_stepper_value
-
 	ldy sequencer_temp_y
+
 	sta current_steprates_fract,y
 	sta sequencer_temp_b
 	stx current_steprates_lows,y
@@ -246,7 +244,9 @@ getcmd
 	lda start_effect_command_jump_table+1,x
 	sta .sc+2
 
+	sty sequencer_temp_y
 .sc jsr $1234
+	ldy sequencer_temp_y
 
 +	iny
 	cpy #4
@@ -282,7 +282,9 @@ next_track_this_tick
 	lda run_effect_command_jump_table+1,x
 	sta .rc+2
 
+	sty sequencer_temp_y
 .rc jsr $1234
+	ldy sequencer_temp_y
 
 	inc seq_current_track
 	lda seq_current_track
@@ -324,26 +326,19 @@ rts
 ; effect command decoders -- start-of-row/init routines
 ; enter each one with .Y = track number
 
+; Note we're setting the values to 256x the actual amounts temporarily, so
+; that the quotient low byte can act as a fraction.
+
+
 run_effect_set_speed
 	sec
 	lda seq_command_arguments,y
-	cmp #32
+	cmp #33
 	bcc +
 	sta seq_tempo_bpm
-	bcs ++
+	bcs set_mixer_loops_per_tick
 
 +	sta seq_ticks_per_division
-++	jsr set_mixer_loops_per_tick
-
-rts
-
-;==================
-; auxillary routines
-
-
-; convert the current "bpm" setting into a mixer loops per tick value
-; and set the speed that value.  Note we're setting the values to 256x the
-; actual amounts, so that quotient low byte can act as a fraction.
 
 set_mixer_loops_per_tick
 	lda #0
@@ -374,6 +369,10 @@ set_mixer_loops_per_tick
 	sta mixer_loops_per_tick
 rts
 
+;==================
+; auxillary routines
+
+
 ; convert a note period into a sample stepper value
 ;
 ; enter with .A/.X set to the desired note period
@@ -399,9 +398,6 @@ get_stepper_value
 	ldx quotient+1
 rts
 
-get_row_address
-rts
-
 unused
 rts
 
@@ -421,7 +417,7 @@ start_effect_command_jump_table
 	!word unused ; run_effect_set_volume
 	!word unused ; run_effect_pattern_break
 	!word unused
-	!word unused ; run_effect_set_speed
+	!word run_effect_set_speed
 
 run_effect_command_jump_table
 	!word unused ; run_effect_arpeggio
