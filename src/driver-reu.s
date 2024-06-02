@@ -225,12 +225,12 @@ rts
 reu_mixer_entry
 	lda #0
 	sta DMA_DAH
-	lda #>sample_data_target
+	lda #>sample_data_buffer
 	sta DMA_ADH
 	ldx #REUCOMMAND_FETCH
 
 reu_gen_sample_loop
-	lda #<sample_data_target							; 2
+	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
 
 	!for track, 0, 3 {

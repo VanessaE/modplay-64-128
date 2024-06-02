@@ -57,9 +57,8 @@
 
 	tempzpbk_g						= $5e ; 4 bytes
 
-	; free: $62 - 63
+	; free: $62 - 6b
 
-	sample_data_target				= $64 ; 8 bytes
 	mixer_loops_per_tick_fract		= $6c
 	mixer_loops_per_tick			= $6d
 	mixer_output_countdown_fract	= $6e
