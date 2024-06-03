@@ -28,7 +28,7 @@
 	; for divide, divisor uses $24 to $26
 	; dividend/quotient uses $27 to $29
 
-	number_of_patterns				= $2a
+	; free: $2a
 	pattern_address					= $2b ; 3 bytes
 	pattern_break_target_row		= $2e
 	mixer_loops_dividend_precalc	= $2f ; 2 bytes
@@ -50,15 +50,19 @@
 	delay_pattern_divisions			= $55
 	song_speed						= $56
 	current_song_pos				= $57
-	number_of_song_positions		= $58
+	; free: $58
 
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
 	tempzpbk_g						= $5e ; 4 bytes
 
-	; free: $62 - 6b
 
+	; free: $62 - $65
+
+	sequencer_temp_x				= $66
+	sequencer_temp_y				= $67
+	sequencer_temp_a				= $68 ; 4 bytes
 	mixer_loops_per_tick_fract		= $6c
 	mixer_loops_per_tick			= $6d
 	mixer_output_countdown_fract	= $6e

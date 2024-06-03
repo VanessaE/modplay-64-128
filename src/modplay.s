@@ -188,7 +188,7 @@ sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
 sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
 sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
 sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
-sample_default_loop_flags			= sample_loop_end_addresses_mids + 32
+sample_default_loop_flags			= sample_loop_end_addresses_highs + 32
 sample_default_fine_tunes			= sample_default_loop_flags + 32
 sample_default_volume_levels		= sample_default_fine_tunes + 32
 
@@ -210,10 +210,11 @@ seq_pitch_slide_stop_point_lows		= current_pitch_slide_flags + 8
 seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
 ; the lookahead buffer is arranged as track number * 8 plus byte number
-sample_data_buffer					= seq_pitch_slide_stop_point_highs + 8
-sample_data_lookahead_indexes		= sample_data_buffer + 64; indexes are 64 bytes also
+sample_data_buffer					= $c850; seq_pitch_slide_stop_point_highs + 8
+sample_data_lookahead_indexes		= sample_data_buffer + 256; indexes are 64 bytes
 
-main_mem_free_start					= ((>sample_data_lookahead_indexes) + 1) * 256
+;main_mem_free_start					= ((>sample_data_lookahead_indexes) + 1) * 256
+main_mem_free_start					= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
 
 ; anything appended after this point will be overwritten by the loaded file
 ; when using main memory driver

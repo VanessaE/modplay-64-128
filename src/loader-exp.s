@@ -676,7 +676,7 @@ filetype_unsure
 	sta current_file_type		; reasonable chance that it's a 15-sample mod
 	lda #4
 	sta current_file_tracks
-	bne parse_instruments
+	bne get_pattern_table
 
 +	sec							; if any of that is missing, consider the file
 	rts							; as unknown and signal the loader to abort.
@@ -690,7 +690,7 @@ set_num_tracks
 	bcs +
 -	lda #4						; filetypes 1-4 (no tag, "M.K.", "M!K!",
 	sta current_file_tracks 	; and "FLT4") have 4 tracks
-	bne parse_instruments
+	bne get_pattern_table
 
 +	cmp #6						; so does filetype 6 ("4CHN")
 	beq -
@@ -699,22 +699,101 @@ set_num_tracks
 	bne +
 	lda #6
 	sta current_file_tracks
-	bne parse_instruments
+	bne get_pattern_table
 
 +	lda #8						; file types 5 and 8 ("FLT8" or "8CHN") are
 	sta current_file_tracks		; all that's left, they have 8 tracks
 
-parse_instruments
-	lda #<(load_buffer + header_first_inst_meta_offset)
+get_pattern_table
+
+; get pattern table
+
+	ldy #127
+	lda current_file_type
+	cmp #1
+	bne +
+
+	lda #<(header15_seek_to_pt + 128)
+	sta parse_header_sample_pointer
+	lda #>(header15_seek_to_pt + 128)
+	sta parse_header_sample_pointer+1
+
+	lda #<(load_buffer + header15_seek_to_pt - 2)
 	sta tempzp_d
-	lda #>(load_buffer + header_first_inst_meta_offset)
+	lda #>(load_buffer + header15_seek_to_pt - 2)
 	sta tempzp_d+1
+
+-	lda load_buffer + header15_seek_to_pt,y
+	sta pattern_table,y
+	dey
+	bpl -
+	bmi count_patterns
+
++	lda #<(header31_seek_to_pt + 132)
+	sta parse_header_sample_pointer
+	lda #>(header31_seek_to_pt + 132)
+	sta parse_header_sample_pointer+1
+
+	lda #<(load_buffer + header31_seek_to_pt - 2)
+	sta tempzp_d
+	lda #>(load_buffer + header31_seek_to_pt - 2)
+	sta tempzp_d+1
+
+-	lda load_buffer + header31_seek_to_pt,y
+	sta pattern_table,y
+	dey
+	bpl -
+
+count_patterns
+	ldy #0
+	sty number_of_patterns
+	lda (tempzp_d),y
+	sta number_of_song_positions
+
+-	sec
+	lda pattern_table,y
+	cmp number_of_patterns
+	beq +
+	bcc +
+	sta number_of_patterns
+
++	iny
+	cpy number_of_song_positions
+	bne -
+	inc number_of_patterns
+
+parse_instruments
+
+	clc
+	lda free_memory_start
+	adc parse_header_sample_pointer
+	sta parse_header_sample_pointer
+	lda free_memory_start+1
+	adc parse_header_sample_pointer+1
+	sta parse_header_sample_pointer+1
+	lda free_memory_start+2
+	adc #0
+	sta parse_header_sample_pointer+2
+
+	lda number_of_patterns
+	asl
+	asl
+	clc
+	adc parse_header_sample_pointer+1
+	sta parse_header_sample_pointer+1
+	lda parse_header_sample_pointer+2
+	adc #0
+	sta parse_header_sample_pointer+2
 
 	lda #<mod_instrument_names
 	sta tempzp_e
 	lda #>mod_instrument_names
 	sta tempzp_e+1
 
+	lda #<(load_buffer + header_first_inst_meta_offset)
+	sta tempzp_d
+	lda #>(load_buffer + header_first_inst_meta_offset)
+	sta tempzp_d+1
 	ldx #0
 
 .next_instr
@@ -807,13 +886,20 @@ parse_instruments
 	cmp #2
 	bcs +
 
+	lda sample_end_addresses_lows,x			; otherwise, we just set the "loop
+	sta sample_loop_end_addresses_lows,x	; end" equal to the sample end to
+	lda sample_end_addresses_mids,x			; reduce the mixer's workload.
+	sta sample_loop_end_addresses_mids,x
+	lda sample_end_addresses_highs,x
+	sta sample_loop_end_addresses_highs,x
+
 	lda #0
+	sta sample_default_loop_flags,x
 	beq ++
 
 +	lda #$80
-++	sta sample_default_loop_flags,x
+	sta sample_default_loop_flags,x
 	asl tempzp_f						; double the len:  # words to # bytes
-	sta tempzp_f
 	rol tempzp_f+1
 	rol tempzp_f+2
 
@@ -828,7 +914,7 @@ parse_instruments
 	adc sample_loop_start_addresses_highs,x
 	sta sample_loop_end_addresses_highs,x
 
-	clc
+++	clc
 	lda tempzp_d
 	adc #instrument_metadata_size
 	sta tempzp_d
@@ -849,53 +935,14 @@ parse_instruments
 	bne +
 
 	cpx #15
-	beq .phd
+	beq .ldex
 	jmp .next_instr
 
 +	cpx #31
-	beq .phd
+	beq .ldex
 	jmp .next_instr
 
-.phd		; tempzp_d is now pointing at the # of song positions byte
-	ldy #0
-	lda (tempzp_d),y
-	sta number_of_song_positions
-
-; get pattern table
-
-	ldy #127
-	lda current_file_type
-	cmp #1
-	bne +
-
--	lda load_buffer + header15_seek_to_pt,y
-	sta pattern_table,y
-	dey
-	bpl -
-	bmi count_patterns
-
-+
--	lda load_buffer + header31_seek_to_pt,y
-	sta pattern_table,y
-	dey
-	bpl -
-
-count_patterns
-	ldy #0
-	sty number_of_patterns
-
--	sec
-	lda pattern_table,y
-	cmp number_of_patterns
-	beq +
-	bcc +
-	sta number_of_patterns
-
-+	iny
-	cpy number_of_song_positions
-	bne -
-	inc number_of_patterns
-
+.ldex
 	clc ; exit with carry clear to indicate successful parse, okay to load
 rts
 

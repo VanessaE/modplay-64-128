@@ -6,8 +6,10 @@
 
 	print_msg_char_limit			= $22
 
-	; free memory -- $02a7 to $02aa
+	; free memory -- $02a7, $02a8
 
+	number_of_song_positions		= $02a9
+	number_of_patterns				= $02aa
 	tempo_fine_adjust_constant		= $02ab
 	pitch_fine_adjust_constant		= $02ac
 	ram_driver_cpu_usage			= $02ad

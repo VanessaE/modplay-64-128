@@ -5,16 +5,21 @@
 !text "sequencer",0
 
 start_sequencer
-	lda #<volume_tables_low
-	sta volume_table_vectors
+	lda #<volume_tables_high
 	sta volume_table_vectors+2
 	sta volume_table_vectors+4
 	sta volume_table_vectors+6
-	lda #>volume_tables_low
+	lda #>(volume_tables_high+$1e00)
 	sta volume_table_vectors+1
 	sta volume_table_vectors+3
 	sta volume_table_vectors+5
 	sta volume_table_vectors+7
+
+	lda #64
+	ldx #7
+-	sta current_sample_volume_levels,x
+	dex
+	bpl -
 
 	lda #0
 	sta seq_abort_flag
@@ -25,8 +30,7 @@ start_sequencer
 	sta pattern_break_target_row
 
 	ldx #7
--	sta current_sample_volume_levels,x
-	sta current_sample_numbers,x
+-	sta current_sample_numbers,x
 
 	sta track_current_enable_flags,x
 
@@ -160,28 +164,33 @@ next_row
 	ldy #0
 
 next_track_this_row
+	sty seq_current_track
 	tya
 	asl
 	asl
-	tax
+	tax ; .X = track number x 4
 
 	; get sample number
 	lda seq_current_row_data,x
 	and #$f0
-	sta sequencer_temp_a
+	sta tempzpbk_g
 	lda seq_current_row_data+2,x
 	lsr
 	lsr
 	lsr
 	lsr
-	ora sequencer_temp_a			; if sample number is 0, keep using the
+	ora tempzpbk_g					; if sample number is 0, keep using the
 	beq +							; previous sample number
 	sta current_sample_numbers,y
+
+
+; ##### sample addresses aren't being set!
+
 
 	; get sample period
 +	lda seq_current_row_data,x		; if period is 0, keep using the
 	and #$0f						; previous period value
-	ora seq_current_row_data+1
+	ora seq_current_row_data+1,x
 	bne +
 	jmp getcmd
 
@@ -192,14 +201,13 @@ next_track_this_row
 	lda seq_current_row_data+1,x
 	sta current_note_periods_lows,y
 
-	sty sequencer_temp_y
 	jsr get_stepper_value
-	ldy sequencer_temp_y
+	ldy seq_current_track
 
 	sta current_steprates_fract,y
-	sta sequencer_temp_b
+	sta sequencer_temp_a
 	stx current_steprates_lows,y
-	stx sequencer_temp_b+1
+	stx sequencer_temp_a+1
 
 	tya
 	asl
@@ -208,12 +216,12 @@ next_track_this_row
 	tax ; .X = track number times 8
 
 	!for .idx, 1, 7 {
-		lda sequencer_temp_b
+		lda sequencer_temp_a
 		adc current_steprates_fract,y
-		sta sequencer_temp_b
-		lda sequencer_temp_b+1
+		sta sequencer_temp_a
+		lda sequencer_temp_a+1
 		adc current_steprates_lows,y
-		lda sequencer_temp_b+1
+		sta sequencer_temp_a+1
 		sta sample_data_lookahead_indexes + .idx,x
 	}
 
@@ -244,9 +252,8 @@ getcmd
 	lda start_effect_command_jump_table+1,x
 	sta .sc+2
 
-	sty sequencer_temp_y
 .sc jsr $1234
-	ldy sequencer_temp_y
+	ldy seq_current_track
 
 +	iny
 	cpy #4
@@ -255,8 +262,10 @@ getcmd
 
 +	lda seq_ticks_per_division
 	sta seq_ticks_counter
-
+	
 next_tick
+	lda seq_ticks_counter
+	sta $c803
 
 	; check for spacebar
 	lda #$7f		; column 7 low
@@ -267,29 +276,8 @@ next_tick
 	bne +
 	jmp stop_song
 
-+	lda seq_ticks_counter
-	sta $c803
-	ldy #0
++	ldy #0
 	sty seq_current_track
-
-next_track_this_tick
-	ldy seq_current_track
-	lda seq_commands,y
-	asl
-	tax
-	lda run_effect_command_jump_table,x
-	sta .rc+1
-	lda run_effect_command_jump_table+1,x
-	sta .rc+2
-
-	sty sequencer_temp_y
-.rc jsr $1234
-	ldy sequencer_temp_y
-
-	inc seq_current_track
-	lda seq_current_track
-	cmp #4
-	bne next_track_this_tick
 
 	; By adding the loops per tick with a fract byte, rather than just
 	; resetting the count to zero, the mixer will occasionally add one extra
@@ -304,6 +292,24 @@ next_track_this_tick
 	sta mixer_output_countdown
 
 	+JSR_INDIRECT (run_mixer_vec)
+
+next_track_this_tick
+	ldy seq_current_track
+	lda seq_commands,y
+	asl
+	tax
+	lda run_effect_command_jump_table,x
+	sta .rc+1
+	lda run_effect_command_jump_table+1,x
+	sta .rc+2
+
+.rc jsr $1234
+	ldy sequencer_temp_y
+
+	inc seq_current_track
+	lda seq_current_track
+	cmp #4
+	bne next_track_this_tick
 
 	dec seq_ticks_counter
 	lda seq_ticks_counter
@@ -355,11 +361,11 @@ set_mixer_loops_per_tick
 
 	jsr divide_24by24
 
-	lda #0
+	lda quotient
 	ldx mixer_count_shifts
--	lsr
+-	lsr quotient+2
 	ror quotient+1
-	ror quotient+2
+	ror
 	dex
 	bne -
 
@@ -381,16 +387,19 @@ rts
 get_stepper_value
 	sta divisor
 	stx divisor+1
-	lda stepper_dividend_precalc
+	lda #0
+	sta divisor+2
 	sta dividend
-	lda stepper_dividend_precalc+1
+	lda stepper_dividend_precalc
 	sta dividend+1
-	jsr divide_16by16
+	lda stepper_dividend_precalc+1
+	sta dividend+2
+	jsr divide_24by24
 
 	lda quotient
-
 	ldx mixer_count_shifts
--	lsr quotient+1
+-	lsr quotient+2
+	ror quotient+1
 	ror
 	dex
 	bne -
@@ -437,12 +446,4 @@ run_effect_command_jump_table
 	!word unused
 	!word unused
 
-sequencer_temp_a			!fill 4,0
-sequencer_temp_b			!fill 4,0
-sequencer_temp_c			!fill 4,0
-sequencer_temp_d			!fill 4,0
-sequencer_temp_x			!byte 0
-sequencer_temp_y			!byte 0
-
 seq_abort_flag				!byte 0
-seq_debug_mode				!byte $80

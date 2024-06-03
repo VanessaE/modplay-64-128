@@ -16,19 +16,20 @@ reu_set_mixer_speed_figures
 	sta ram_driver_cpu_usage
 
 	; since the REU driver fetches/buffers 8 sample pairs per mixer loop
-	; these figures will result in calculated values 8x higher than is
+	; this adjustment will result in calculated tick times 8x higher than is
 	; "correct", for precision-sake later on.
 
 	lda #135
 	sta tempo_fine_adjust_constant
 
-	lda #56
-	sta pitch_fine_adjust_constant
-
-	; this count divides those figures back down to normal.
+	; this count divides that figure back down to normal.
 
 	lda #3
 	sta mixer_count_shifts
+
+	lda #56
+	sta pitch_fine_adjust_constant
+
 rts
 
 reu_fetch_row
@@ -227,7 +228,7 @@ reu_mixer_entry
 	sta DMA_DAH
 	lda #>sample_data_buffer
 	sta DMA_ADH
-	ldx #REUCOMMAND_FETCH
+	ldx #$91
 
 reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
@@ -274,9 +275,13 @@ reu_gen_sample_loop
 			sec											; 2
 			lda sample_pointers_lows+track				; 3
 			cmp current_sample_end_addr_lows+track		; 3
+			bcc .reu_fetch_sample_data					; 3/2
+
 			lda sample_pointers_mids+track				; 3
 			cmp current_sample_end_addr_mids+track		; 3
-			lda sample_pointers_highs					; 3
+			bcc .reu_fetch_sample_data					; 3/2
+
+			lda sample_pointers_highs+track				; 3
 			cmp current_sample_end_addr_highs+track		; 3
 			bcc .reu_fetch_sample_data					; 3/2
 
@@ -315,17 +320,17 @@ reu_gen_sample_loop
 			sta current_sample_end_addr_highs+track		; 3
 
 		.reu_fetch_sample_data
-			lda #8										; 2
+			lda #32										; 2
 			sta DMA_DAL									; 4
-			
+
 			!ifdef c128 {
 				sta VIC+$30								; 4
 			}
 
-			stx DMA_CMD									; 4 + 8
+			stx DMA_CMD									; 4 + 32
 
 			!ifdef c128 {
-				inc VIC+$30								; 6
+				stx VIC+$30								; 6
 			}
 		}
 	}
@@ -346,7 +351,7 @@ reu_gen_sample_loop
 
 ; add 23 cycles per track for the end-of-sample check
 
-; add 2+4+4+8 = 18 cycles per track to get 8 bytes from the REU
+; add 2+4+4+32 = 42 cycles per track to get 32 bytes from the REU
 
 ; next step is to mix:
 
@@ -373,7 +378,7 @@ reu_gen_sample_loop
 	inx														; 2
 
 	!for .idx2, 1, 7 {
-
+		stx audio_in_buf_index								; 3
 	-	cpx audio_out_buf_index								; 3    /  wait for a free
 		beq -												; 3/2  /  slot in the buffer
 
@@ -400,7 +405,6 @@ reu_gen_sample_loop
 		sta audio_buffer_right,x							; 5
 
 		inx													; 2
-		stx audio_in_buf_index								; 3
 	}
 
 	lda mixer_output_countdown_fract
@@ -425,10 +429,10 @@ reu_gen_sample_loop
 ; grand totals for four tracks:
 
 ; best case:
-; 2+4 + (35 + 23 + 18) * 4 + 61 + 87*7 + 13 = 993 cycles, avg. ~124 cycles per sample pair
+; 2+4 + (35 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1089 cycles, avg. ~137 cycles per sample pair
 
 ; most common likely case:
-; 2+4 + (43 + 23 + 18) * 4 + 61 + 87*7 + 13 = 1025 cycles, avg. ~128 cycles per sample pair
+; 2+4 + (43 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1121 cycles, avg. ~141 cycles per sample pair
 
 ; worst case:
-; 2+4 + (57 + 23 + 18) * 4 + 61 + 87*7 + 13 = 1081 cycles, avg. ~135 cycles per sample pair
+; 2+4 + (57 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1177 cycles, avg. ~147 cycles per sample pair
