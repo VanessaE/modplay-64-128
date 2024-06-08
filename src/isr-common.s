@@ -19,7 +19,34 @@ isr_startup
 		sta VIC+$30
 	}
 
-	+JSR_INDIRECT (audio_timing_vec)
+	+JSR_INDIRECT (audio_timing_vec) ; get audio driver cycle count
+	clc								; some RAM devices are faster than others
+	adc ram_driver_mixer_cycle_count ; so we have to factor that in.
+
+	!ifdef c128 {
+		sta dividend				; on C64 we need to sync to the VIC-II
+		lda #0						; raster, so we divide that total cycles
+		rol							; figure by the raster line length
+		sta dividend+1
+		lda raster_len
+		sta divisor
+		lda #0
+		sta divisor+1
+		jsr divide_16by16
+
+		clc
+		lda quotient				; discard the remainder and add 1
+		adc #1
+		ldx raster_len
+		jsr multiply_8x8			; and multiply it back up, thus rounding
+		ldx product					; the ISR time to the next whole multiple
+		ldy product+1				; of the raster length
+	} else {
+		tax							; on the C128 we don't need all that BS 😛
+		lda #0						; because VIC-IIe is always blanked, so
+		rol							; there's no need to sync to the raster.
+		tay
+	}
 
 	stx isr_trigger_interval
 	sty isr_trigger_interval+1

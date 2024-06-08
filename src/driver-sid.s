@@ -25,32 +25,10 @@ rts
 ; and .X/Y = number of cycles between ISR calls, plus some fudge
 
 sid_get_timing
-		clc							; some RAM devices ared faster than others
-		lda ram_driver_cpu_usage	; so we have to factor that in.
-
 	!ifndef c128 {
-		adc #60						; SID ISR needs at least 57 cycles, call it 60.
-		sta dividend				; on C64 we need to sync to the VIC-II
-		lda #0						; raster, so we divide the total CPU usage
-		rol							; figure by the raster line length
-		sta dividend+1
-		lda raster_len
-		sta divisor
-		lda #0
-		sta divisor+1
-		jsr divide_16by16
-
-		clc
-		lda quotient				; discard the remainder and add 1
-		adc #1
-		ldx raster_len
-		jsr multiply_8x8			; and multiply it back up, thus rounding
-		ldx product					; the ISR time to the next whole multiple
-		ldy product+1				; of the raster length
+		lda #60
 	} else {
-		adc #30						; on the C128 we don't need all that BS 😛
-		tax							; because VIC-IIe is always blanked, so
-		ldy #0						; there's no need to sync to the raster.
+		lda #30
 	}
 rts
 

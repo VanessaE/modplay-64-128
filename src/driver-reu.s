@@ -13,7 +13,7 @@ reu_set_mixer_speed_figures
 	} else {
 		lda #65
 	}
-	sta ram_driver_cpu_usage
+	sta ram_driver_mixer_cycle_count
 
 	; since the REU driver fetches/buffers 8 sample pairs per mixer loop
 	; this adjustment will result in calculated tick times 8x higher than is

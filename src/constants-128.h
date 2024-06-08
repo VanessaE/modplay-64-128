@@ -45,7 +45,7 @@
 	number_of_patterns				= $0278
 	tempo_fine_adjust_constant		= $0279
 	pitch_fine_adjust_constant		= $027a
-	ram_driver_cpu_usage			= $027b
+	ram_driver_mixer_cycle_count	= $027b
 	playback_speed_fine_tune		= $027c ; 2 bytes
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0
