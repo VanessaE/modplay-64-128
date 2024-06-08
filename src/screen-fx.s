@@ -151,12 +151,12 @@ switch_to_secondary_screen ; also switches to the ASCII charset on C64
 	} else {
 		lda #12
 		sta VDC
-		lda #>(VDC_SCREEN+$1000)
+		lda #>(vdc_secondary_screen)
 		sta VDC+1
 		sta VDC_VM3 ; point the KERNAL
 		lda #13
 		sta VDC
-		lda #<(VDC_SCREEN+$1000)
+		lda #<(vdc_secondary_screen)
 		sta VDC+1
 	}
 rts

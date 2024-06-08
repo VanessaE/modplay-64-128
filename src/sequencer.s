@@ -127,11 +127,10 @@ start_sequencer
 	sta current_song_pos
 	sta seq_current_row
 
-	!ifndef c128 {
-		; #######  THE C128 UI is missing!
+	ldx number_of_song_positions
+	dex
 
-		ldx number_of_song_positions
-		dex
+	!ifndef c128 {
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 11*40 + 18
@@ -139,6 +138,32 @@ start_sequencer
 		and #$0f
 		jsr to_hex
 		sta secondary_screen + 11*40 + 19
+	} else {
+		!addr {
+			vdc_target = (vdc_secondary_screen + 12*80 + 38)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
 	}
 
 	lda #0
@@ -158,8 +183,6 @@ next_pattern
 	sta seq_current_pattern_number
 
 	!ifndef c128 {
-		; #######  THE C128 UI is missing!
-
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 11*40 + 15
@@ -176,6 +199,58 @@ next_pattern
 		and #$0f
 		jsr to_hex
 		sta secondary_screen + 11*40 + 34
+	} else {
+		!addr {
+			vdc_target2 = (vdc_secondary_screen + 12*80 + 35)
+			vdc_target3 = (vdc_secondary_screen + 12*80 + 53)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target2
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target2
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
+
+		lda #18
+		sta VDC
+		lda #>vdc_target3
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target3
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx seq_current_pattern_number
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
 	}
 
 ; row format
@@ -191,11 +266,9 @@ next_pattern
 ; repeat for as many channels as the mod has
 
 next_row
+	ldx seq_current_row
 
 	!ifndef c128 {
-	; #######  THE C128 UI is missing!
-
-		ldx seq_current_row
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 13
@@ -206,6 +279,32 @@ next_row
 
 		+JSR_INDIRECT (fetch_row_vec)
 		ldy #0
+	}  else {
+		!addr {
+			vdc_target4 = (vdc_secondary_screen + 13*80 + 34)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target4
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target4
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
 	}
 
 next_track_this_row
@@ -425,10 +524,9 @@ set_mixer_loops_per_tick
 	lda quotient+1
 	sta mixer_loops_per_tick
 
-	!ifndef c128 {
-		; #######  THE C128 UI is missing!
+	ldx seq_ticks_per_division
 
-		ldx seq_ticks_per_division
+	!ifndef c128 {
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 27
@@ -445,6 +543,57 @@ set_mixer_loops_per_tick
 		and #$0f
 		jsr to_hex
 		sta secondary_screen + 12*40 + 31
+	} else {
+		!addr {
+			vdc_target5 = (vdc_secondary_screen + 13*80 + 48)
+			vdc_target6 = (vdc_secondary_screen + 13*80 + 51)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target5
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target5
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
+
+		lda #18
+		sta VDC
+		lda #>vdc_target6
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target6
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx seq_tempo_bpm
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
 	}
 
 rts

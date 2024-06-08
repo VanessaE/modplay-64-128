@@ -231,6 +231,7 @@ RIGHT								= $1d
 RETURN								= $0d
 
 LOWER								= $0e
+UPPER								= $8e
 
 RVSON								= $12
 RVSOFF								= $92

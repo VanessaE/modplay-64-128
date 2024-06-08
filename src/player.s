@@ -32,12 +32,17 @@ start_main_player
 		ldy #>main_player_title_msg
 		jsr print_msg
 
+		lda #UPPER
+		jsr CHROUT
+
 		lda #0
 		ldx #<current_file_title
 		ldy #>current_file_title
-		jsr print_msg
+		jsr print_msg_ascii
 
 		lda #RETURN
+		jsr CHROUT
+		lda #LOWER
 		jsr CHROUT
 
 		jsr print_filetype
