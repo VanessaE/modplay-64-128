@@ -8,29 +8,133 @@ start_main_player
 
 		clc
 		jsr draw_medium_popup
+
 		lda #0
-		ldx #<music_player_msg
-		ldy #>music_player_msg
+		ldx #<main_player_now_playing_msg
+		ldy #>main_player_now_playing_msg
 		jsr print_msg
+
+		lda #0
+		ldx #<main_player_file_msg
+		ldy #>main_player_file_msg
+		jsr print_msg
+
+		lda #0
+		ldx #<current_file_name
+		ldy #>current_file_name
+		jsr print_msg
+
+		lda #RETURN
+		jsr CHROUT
+
+		lda #0
+		ldx #<main_player_title_msg
+		ldy #>main_player_title_msg
+		jsr print_msg
+
+		lda #0
+		ldx #<current_file_title
+		ldy #>current_file_title
+		jsr print_msg
+
+		lda #RETURN
+		jsr CHROUT
+
+		jsr print_filetype
+
+		lda #0
+		ldx #<main_player_hline
+		ldy #>main_player_hline
+		jsr print_msg_rle
+
+		lda #0
+		ldx #<main_player_song_pos_pat_msg
+		ldy #>main_player_song_pos_pat_msg
+		jsr print_msg
+
+		lda #0
+		ldx #<main_player_row
+		ldy #>main_player_row
+		jsr print_msg
+
+		lda #0
+		ldx #<main_player_speed_msg
+		ldy #>main_player_speed_msg
+		jsr print_msg
+
+		lda #0
+		ldx #<main_player_hline
+		ldy #>main_player_hline
+		jsr print_msg_rle
 
 	} else {
 		bit enable_screen_on_playback
 		bmi +
 		jsr disable_screen
-
-		clc
-		jsr draw_mini_popup
-		lda #0
-		ldx #<between_songs_msg
-		ldy #>between_songs_msg
-		jsr print_msg_rle
 		jmp ++
 
 	+	jsr gray_out_blur_out
-
 		sec
 		jsr draw_medium_popup
-	}
+		lda #0
+		ldx #<main_player_now_playing_msg_ascii
+		ldy #>main_player_now_playing_msg_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_file_msg_ascii
+		ldy #>main_player_file_msg_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<current_file_name
+		ldy #>current_file_name
+		jsr print_msg_ascii
+
+		lda #RETURN
+		jsr CHROUT
+
+		lda #0
+		ldx #<main_player_title_msg_ascii
+		ldy #>main_player_title_msg_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<current_file_title
+		ldy #>current_file_title
+		jsr print_msg_ascii
+
+		lda #RETURN
+		jsr CHROUT
+
+		jsr print_filetype_ascii
+
+		lda #0
+		ldx #<main_player_hline_ascii
+		ldy #>main_player_hline_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_song_pos_pat_msg_ascii
+		ldy #>main_player_song_pos_pat_msg_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_row_ascii
+		ldy #>main_player_row_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_speed_msg_ascii
+		ldy #>main_player_speed_msg_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_hline_ascii
+		ldy #>main_player_hline_ascii
+		jsr print_msg_ascii
+
+}
 
 ++	php
 	sei

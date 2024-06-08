@@ -18,7 +18,7 @@
 
 	medium_popup_left_column		= 4
 	medium_popup_width				= 30
-	medium_popup_height				= 10
+	medium_popup_height				= 13
 
 	tall_popup_left_column			= 4
 	tall_popup_width				= 30

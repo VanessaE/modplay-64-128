@@ -763,31 +763,9 @@ populate_info_box
 		lda #DCYN
 		jsr CHROUT
 
-		sec
-		lda current_file_type
+		jsr print_filetype
 
-		cmp #1
-		bne +
-		ldx #<tracker_name_msg_soundtracker
-		ldy #>tracker_name_msg_soundtracker
-		jmp ++
-
-	+	cmp #4
-		bcs +
-		ldx #<tracker_name_msg_protracker
-		ldy #>tracker_name_msg_protracker
-		jmp ++
-
-	+	cmp #6
-		bcs +
-		ldx #<tracker_name_msg_startrekker
-		ldy #>tracker_name_msg_startrekker
-		jmp ++
-
-		ldx #<tracker_name_msg_fasttracker
-		ldy #>tracker_name_msg_fasttracker
-
-	++	lda #0
+		lda #0
 		jsr print_msg
 		lda #","
 		jsr CHROUT

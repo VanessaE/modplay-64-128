@@ -39,15 +39,17 @@ center_string
 	bne -
 + rts
 
-; converts a 0-15 value in .A into printable "0" to "f", returns it in .A
+; converts a 0-15 value in .A into printable "0" to "F", returns it in .A
 to_hex
-	clc
+	sec
+	cmp #10
+	bcs +
 	adc #$30
-	cmp #$39
-	bmi +
-	adc #38
-+ rts
+rts
 
++	clc
+	adc #$37
+rts
 
 ;########################
 ;# ZERO-PAGE OPERATIONS #
@@ -622,6 +624,60 @@ print_msg_ascii
 	inc print_msg_addr+1
 	bne -
 + rts
+
+print_filetype
+	sec
+	lda current_file_type
+
+	cmp #1
+	bne +
+	ldx #<tracker_name_msg_soundtracker
+	ldy #>tracker_name_msg_soundtracker
+	jmp ++
+
++	cmp #4
+	bcs +
+	ldx #<tracker_name_msg_protracker
+	ldy #>tracker_name_msg_protracker
+	jmp ++
+
++	cmp #6
+	bcs +
+	ldx #<tracker_name_msg_startrekker
+	ldy #>tracker_name_msg_startrekker
+	jmp ++
+
++	ldx #<tracker_name_msg_fasttracker
+	ldy #>tracker_name_msg_fasttracker
+++ rts
+
+!ifndef c128 {
+	print_filetype_ascii
+		sec
+		lda current_file_type
+
+		cmp #1
+		bne +
+		ldx #<tracker_name_msg_soundtracker_ascii
+		ldy #>tracker_name_msg_soundtracker_ascii
+		jmp ++
+
+	+	cmp #4
+		bcs +
+		ldx #<tracker_name_msg_protracker_ascii
+		ldy #>tracker_name_msg_protracker_ascii
+		jmp ++
+
+	+	cmp #6
+		bcs +
+		ldx #<tracker_name_msg_startrekker_ascii
+		ldy #>tracker_name_msg_startrekker_ascii
+		jmp ++
+
+	+	ldx #<tracker_name_msg_fasttracker_ascii
+		ldy #>tracker_name_msg_fasttracker_ascii
+	++ rts
+}
 
 ; if the byte equals its PETSCII value in that pos, it can hold a new char to
 ; print in ASCII mode.  If there's a 0, it's a control code that we need to

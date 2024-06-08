@@ -72,7 +72,7 @@
 	retrigger_rates					= $80 ; 8 bytes
 	cut_sample_ticks				= $88 ; 8 bytes
 	delay_sample_ticks				= $90 ; 8 bytes
-	current_sample_numbers			= $98
+	current_sample_numbers			= $98 ; 8 bytes
 	vibrato_rates					= $a0 ; 8 bytes
 	tremolo_rates					= $a8 ; 8 bytes
 	volume_slide_rates				= $b0 ; 8 bytes

@@ -126,6 +126,22 @@ start_sequencer
 	lda #0
 	sta current_song_pos
 	sta seq_current_row
+
+	!ifndef c128 {
+		; #######  THE C128 UI is missing!
+
+		ldx number_of_song_positions
+		dex
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 18
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 19
+	}
+
+	lda #0
 	beq +
 
 next_pattern
@@ -141,8 +157,26 @@ next_pattern
 	lda pattern_table,x
 	sta seq_current_pattern_number
 
-	stx $c800
-	sta $c801
+	!ifndef c128 {
+		; #######  THE C128 UI is missing!
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 15
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 16
+
+		ldx seq_current_pattern_number
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 33
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 34
+	}
 
 ; row format
 ;
@@ -157,11 +191,22 @@ next_pattern
 ; repeat for as many channels as the mod has
 
 next_row
-	lda seq_current_row
-	sta $c802
 
-	+JSR_INDIRECT (fetch_row_vec)
-	ldy #0
+	!ifndef c128 {
+	; #######  THE C128 UI is missing!
+
+		ldx seq_current_row
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 13
+		lda seq_current_row
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 14
+
+		+JSR_INDIRECT (fetch_row_vec)
+		ldy #0
+	}
 
 next_track_this_row
 	sty seq_current_track
@@ -169,6 +214,7 @@ next_track_this_row
 	asl
 	asl
 	tax ; .X = track number x 4
+	stx sequencer_temp_x
 
 	; get sample number
 	lda seq_current_row_data,x
@@ -182,10 +228,9 @@ next_track_this_row
 	ora tempzpbk_g					; if sample number is 0, keep using the
 	beq +							; previous sample number
 	sta current_sample_numbers,y
-
-
-; ##### sample addresses aren't being set!
-
+	jsr start_sample
+	ldx sequencer_temp_x
+	ldy seq_current_track
 
 	; get sample period
 +	lda seq_current_row_data,x		; if period is 0, keep using the
@@ -205,9 +250,11 @@ next_track_this_row
 	ldy seq_current_track
 
 	sta current_steprates_fract,y
-	sta sequencer_temp_a
 	stx current_steprates_lows,y
-	stx sequencer_temp_a+1
+
+	lda #0
+	sta sequencer_temp_a
+	sta sequencer_temp_a+1
 
 	tya
 	asl
@@ -224,6 +271,13 @@ next_track_this_row
 		sta sequencer_temp_a+1
 		sta sample_data_lookahead_indexes + .idx,x
 	}
+
+	lda sequencer_temp_a
+	adc current_steprates_fract,y
+	sta current_steprates_fract,y
+	lda sequencer_temp_a+1
+	adc current_steprates_lows,y
+	sta current_steprates_lows,y
 
 	; get effect command and its parameters
 getcmd
@@ -262,11 +316,8 @@ getcmd
 
 +	lda seq_ticks_per_division
 	sta seq_ticks_counter
-	
-next_tick
-	lda seq_ticks_counter
-	sta $c803
 
+next_tick
 	; check for spacebar
 	lda #$7f		; column 7 low
 	sta CIA1
@@ -373,11 +424,93 @@ set_mixer_loops_per_tick
 	sta mixer_loops_per_tick_fract
 	lda quotient+1
 	sta mixer_loops_per_tick
+
+	!ifndef c128 {
+		; #######  THE C128 UI is missing!
+
+		ldx seq_ticks_per_division
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 27
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 28
+
+		ldx seq_tempo_bpm
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 30
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 31
+	}
+
 rts
+
 
 ;==================
 ; auxillary routines
 
+; [re-]start a new sample
+; enter with .A = sample number, .Y = track number
+
+start_sample
+	tax
+	lda #0
+	sta vibrato_rates,y
+	sta tremolo_rates,y
+	sta volume_slide_rates,y
+	sta pitch_slide_up_rates,y
+	sta pitch_slide_down_rates,y
+	sta pitch_slide_to_note_rates,y
+
+	sta sample_pointers_fract,y
+	lda sample_start_addresses_lows,x
+	sta sample_pointers_lows,y
+	lda sample_start_addresses_mids,x
+	sta sample_pointers_mids,y
+	lda sample_start_addresses_highs,x
+	sta sample_pointers_highs,y
+
+	lda sample_end_addresses_lows,x
+	sta current_sample_end_addr_lows,y
+	lda sample_end_addresses_mids,x
+	sta current_sample_end_addr_mids,y
+	lda sample_end_addresses_highs,x
+	sta current_sample_end_addr_highs,y
+
+	lda sample_default_volume_levels,x
+	; now just fall through into set_volume
+
+; set the sample's volume
+; enter with .A = volume level, .Y = track number
+
+set_volume
+	sta current_sample_volume_levels,y
+	tya
+	asl
+	tay ; track number x2
+
+	sec
+	cmp #33
+	bcc +
+
+	clc
+	adc #>volume_tables_low
+	sta volume_table_vectors+1,y
+	bcc ++
+
++	sec
+	sbc #34
+	clc
+	adc #>volume_tables_high
+	sta volume_table_vectors+1,y
+
+++	lda #0
+	sta volume_table_vectors,y
+rts
 
 ; convert a note period into a sample stepper value
 ;

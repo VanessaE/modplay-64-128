@@ -19,7 +19,7 @@ reu_set_mixer_speed_figures
 	; this adjustment will result in calculated tick times 8x higher than is
 	; "correct", for precision-sake later on.
 
-	lda #135
+	lda #103
 	sta tempo_fine_adjust_constant
 
 	; this count divides that figure back down to normal.
@@ -110,12 +110,6 @@ reu_fetch_row
 	!ifdef c128 {
 		sty VIC+$30
 	}
-	
-	ldy #15
--	lda seq_current_row_data,y
-	sta $c828,y
-	dey
-	bpl -
 rts
 
 reu_stash_block
@@ -407,14 +401,9 @@ reu_gen_sample_loop
 		inx													; 2
 	}
 
-	lda mixer_output_countdown_fract
-	sta $c804
-	lda mixer_output_countdown
-	sta $c805
-
-	dec mixer_output_countdown							; 5
-	beq +												; 3/2
-	jmp reu_gen_sample_loop								; 6
+	dec mixer_output_countdown								; 5
+	beq +													; 3/2
+	jmp reu_gen_sample_loop									; 6
 
 + rts
 
