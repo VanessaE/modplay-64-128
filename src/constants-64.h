@@ -6,11 +6,10 @@
 
 	print_msg_char_limit			= $22
 
-	; free memory -- $02a7, $02a8
-
+	one_ten_thousandth_second		= $02a7 ; 2 bytes
 	number_of_song_positions		= $02a9
 	number_of_patterns				= $02aa
-	tempo_fine_adjust_constant		= $02ab
+	; free: $02ab
 	pitch_fine_adjust_constant		= $02ac
 	ram_driver_mixer_cycle_count	= $02ad
 	playback_speed_fine_tune		= $02ae ; 2 bytes

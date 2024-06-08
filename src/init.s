@@ -262,7 +262,20 @@ init
 	inx
 +	stx raster_len
 
-	jsr charset_copy
+	bit pal_flag
+	bpl +
+	lda #<one_ten_thou_pal
+	sta one_ten_thousandth_second
+	lda #>one_ten_thou_pal
+	sta one_ten_thousandth_second+1
+	bne ++
+
++	lda #<one_ten_thou_ntsc
+	sta one_ten_thousandth_second
+	lda #>one_ten_thou_ntsc
+	sta one_ten_thousandth_second+1
+
+++	jsr charset_copy
 	jsr blur_table_copy
 
 	jsr final_clear_copy

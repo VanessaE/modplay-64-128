@@ -67,15 +67,6 @@ isr_startup
 	sta CPU_NMI_vector
 	lda #>interrupts_lockout
 	sta CPU_NMI_vector+1
-	lda #0					; stop CIA #2 Timer A
-	sta CIA2+$0e
-	sta CIA2+$04			; set Timer A interval to 0, after starting
-	sta CIA2+$05			; NMI will occur immediately
-	lda #$81
-	sta CIA2+$0d			; set Timer A as source for NMI
-	lda #$01
-	sta CIA2+$0e			; start Timer A -> NMI
-							; from here on NMI's are disabled
 
 	+JSR_INDIRECT (audio_start_vec)
 
@@ -217,10 +208,6 @@ isr_shutdown
 	lda #0
 	sta CIA1+$0f
 
-	sta CIA2+$0d
-	sta CIA2+$0e
-	sta CIA2+$0f
-
 	!ifndef c128 {
 		lda #0
 		sta VIC+$1a
@@ -233,7 +220,6 @@ isr_shutdown
 
 	lda VIC+$19
 	lda CIA1+$0d
-	lda CIA2+$0d
 
 	!ifdef c128 {
 		lda #36

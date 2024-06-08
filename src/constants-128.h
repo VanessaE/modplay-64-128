@@ -39,11 +39,12 @@
 	file_to_load_size				= $0259 ; 2 bytes
 	file_size_in_kb					= $025b ; 2 bytes
 
-	; free memory through $0276
+	; free memory through $0274
 
+	one_ten_thousandth_second		= $0275
 	number_of_song_positions		= $0277
 	number_of_patterns				= $0278
-	tempo_fine_adjust_constant		= $0279
+	; free: $0279
 	pitch_fine_adjust_constant		= $027a
 	ram_driver_mixer_cycle_count	= $027b
 	playback_speed_fine_tune		= $027c ; 2 bytes

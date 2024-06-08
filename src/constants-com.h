@@ -31,7 +31,7 @@
 	; free: $2a
 	pattern_address					= $2b ; 3 bytes
 	pattern_break_target_row		= $2e
-	mixer_loops_dividend_precalc	= $2f ; 2 bytes
+	; free: $2f and $30
 	stepper_dividend_precalc		= $31 ; 2 bytes
 	seq_current_pattern_number		= $33
 	seq_current_row					= $34
@@ -63,10 +63,8 @@
 	sequencer_temp_x				= $66
 	sequencer_temp_y				= $67
 	sequencer_temp_a				= $68 ; 4 bytes
-	mixer_loops_per_tick_fract		= $6c
-	mixer_loops_per_tick			= $6d
-	mixer_output_countdown_fract	= $6e
-	mixer_output_countdown			= $6f
+	thousandths_seconds_per_tick	= $6c ; 2 bytes
+	; free: $6e and $6f
 	track_current_loop_flags		= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes
@@ -113,16 +111,6 @@
 	load_pointer					= $fe ; and $ff
 	filename_addr					= $fe ; and $ff
 }
-
-; Misc
-
-X = "X" ; so that the delay routine doesn't
-Y = "Y" ; need to be called with X or Y in quotes.
-
-header15_seek_to_pt					= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
-header31_seek_to_pt					= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
-header_first_inst_meta_offset		= 20
-instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 
 ; =================================================================
 ; From here on down are hard-coded KERNAL/system variables common
@@ -235,3 +223,18 @@ UPPER								= $8e
 
 RVSON								= $12
 RVSOFF								= $92
+
+; Misc stuff not specific to the machine's OS
+
+X = "X" ; so that the delay routine doesn't
+Y = "Y" ; need to be called with X or Y in quotes.
+
+header15_seek_to_pt					= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
+header31_seek_to_pt					= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
+header_first_inst_meta_offset		= 20
+instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
+
+one_ten_thou_pal = int(985248 / 10000) - 1
+one_ten_thou_ntsc = int(1022727 / 10000) - 1
+
+tempo_fine_adjust_constant = 19000

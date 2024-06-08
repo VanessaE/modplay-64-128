@@ -19,17 +19,13 @@ reu_set_mixer_speed_figures
 	; this adjustment will result in calculated tick times 8x higher than is
 	; "correct", for precision-sake later on.
 
-	lda #103
-	sta tempo_fine_adjust_constant
+	lda #56
+	sta pitch_fine_adjust_constant
 
 	; this count divides that figure back down to normal.
 
 	lda #3
 	sta mixer_count_shifts
-
-	lda #56
-	sta pitch_fine_adjust_constant
-
 rts
 
 reu_fetch_row
@@ -401,7 +397,8 @@ reu_gen_sample_loop
 		inx													; 2
 	}
 
-	dec mixer_output_countdown								; 5
+	lda CIA2+$0f											; 4
+	and #$01												; 2
 	beq +													; 3/2
 	jmp reu_gen_sample_loop									; 6
 

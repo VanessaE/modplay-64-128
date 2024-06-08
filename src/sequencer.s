@@ -77,33 +77,12 @@ start_sequencer
 	dex
 	bpl -
 
-	; pre-calculate the dividends for the mixer loops per tick and
-	; the period-to-steppers divisions
+	; pre-calculate the dividend for the period-to-steppers routine
 
-	; for both of these, we divide the ISR interval by 2 to make sure that it
-	; can't possibly be > 8 bits, and compensate for that by using constants
-	; that are twice as high.  We lose a tiny bit of precision from the ISR
-	; timer, but that's okay, it'll be imperceptible.
-
-	; mod speed is [divisions per minute] = (24 * bpm)/[ticks per div]
-	;
-	; at a default of 125 bpm and 6 tpd, that's 500 div/min or 8.3/sec
-	; giving ~50 ticks/sec, or 20454 cycles/tick (NTSC)
-	;
-	; with an ISR of 195 cycles (i.e. every 3 rasters), that's 20454/195 =
-	; 104.895 samples per tick, or ideally ~13.112 runs of the mixer loop
-
-	lda isr_trigger_interval+1
-	lsr
-	lda isr_trigger_interval
-	ror
-	ldx tempo_fine_adjust_constant
-	jsr multiply_8x8
-
-	lda product
-	sta mixer_loops_dividend_precalc
-	lda product+1
-	sta mixer_loops_dividend_precalc+1
+	; for that, we divide the ISR interval by 2 to make sure that it
+	; can't possibly be > 8 bits, and compensate by using a constant
+	; that's twice as high.  We lose a tiny bit of precision, but
+	; that's okay, it'll be imperceptible.
 
 	lda isr_trigger_interval+1
 	lsr
@@ -121,7 +100,18 @@ start_sequencer
 	sta seq_tempo_bpm
 	lda #6
 	sta seq_ticks_per_division
-	jsr set_mixer_loops_per_tick
+	jsr set_time_per_tick
+
+	lda #$03		; disable both CIA #2 timer interrupts
+	sta CIA2+$0d
+	lda #0			; make sure both timers are stopped
+	sta CIA2+$0f
+	sta CIA2+$0e
+
+	lda one_ten_thousandth_second	; timer A will always run for 1/10000 second
+	sta CIA2+$04
+	lda one_ten_thousandth_second+1
+	sta CIA2+$05
 
 	lda #0
 	sta current_song_pos
@@ -429,17 +419,12 @@ next_tick
 +	ldy #0
 	sty seq_current_track
 
-	; By adding the loops per tick with a fract byte, rather than just
-	; resetting the count to zero, the mixer will occasionally add one extra
-	; loop, for precise speed control.
+; restart start CIA #2 timers
 
-	clc
-	lda mixer_output_countdown_fract
-	adc mixer_loops_per_tick_fract
-	sta mixer_output_countdown_fract
-	lda #0
-	adc mixer_loops_per_tick
-	sta mixer_output_countdown
+	lda #$11		; A counts cycles, continuous mode, force-load, start now
+	sta CIA2+$0e
+	lda #$59		; B counts timer A underflows, one-shot, force-load, start now
+	sta CIA2+$0f
 
 	+JSR_INDIRECT (run_mixer_vec)
 
@@ -477,6 +462,11 @@ next_track_this_tick
 	jmp next_pattern
 
 stop_song
+	lda #0
+	sta CIA2+$0d
+	sta CIA2+$0e
+	sta CIA2+$0f
+	lda CIA2+$0d
 rts
 
 ; effect command decoders -- start-of-row/init routines
@@ -485,44 +475,35 @@ rts
 ; Note we're setting the values to 256x the actual amounts temporarily, so
 ; that the quotient low byte can act as a fraction.
 
-
 run_effect_set_speed
 	sec
 	lda seq_command_arguments,y
 	cmp #33
 	bcc +
 	sta seq_tempo_bpm
-	bcs set_mixer_loops_per_tick
+	bcs set_time_per_tick
 
 +	sta seq_ticks_per_division
 
-set_mixer_loops_per_tick
-	lda #0
+set_time_per_tick
+	lda #<tempo_fine_adjust_constant
 	sta dividend
-	sta divisor+1
-	sta divisor+2
-
-	lda mixer_loops_dividend_precalc
+	lda #>tempo_fine_adjust_constant
 	sta dividend+1
-	lda mixer_loops_dividend_precalc+1
-	sta dividend+2
+
 	lda seq_tempo_bpm
 	sta divisor
+	lda #0
+	sta divisor+1
 
-	jsr divide_24by24
-
-	lda quotient
-	ldx mixer_count_shifts
--	lsr quotient+2
-	ror quotient+1
-	ror
-	dex
-	bne -
+	jsr divide_16by16
 
 	lda quotient
-	sta mixer_loops_per_tick_fract
+	sta thousandths_seconds_per_tick
+	sta CIA2+$06
 	lda quotient+1
-	sta mixer_loops_per_tick
+	sta thousandths_seconds_per_tick+1
+	sta CIA2+$07
 
 	ldx seq_ticks_per_division
 
