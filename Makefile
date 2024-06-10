@@ -107,10 +107,12 @@ endif
 					-f 'a few mod files:'	-L							\
 					-f '                '	-L							\
 		$(INTLV)	-f 'Acidbat II'			-w 'mods/Acidbat II.mod'	\
-		$(INTLV)	-f 'On the Telly'		-w 'mods/On the Telly.mod'	\
+		$(INTLV)	-f 'Cutie Pie'			-w 'mods/Cutie Pie.mod'		\
+		$(INTLV)	-f 'Fun Tune'			-w 'mods/Fun Tune.mod'		\
 																		$(DISK_IMG)
 
 ifeq ($(MACHINE),128)
-	$(CC1541) $(INTLV)	-f 'Cutie Pie'			-w 'mods/Cutie Pie.mod'	$(DISK_IMG)
-#	$(INTLV) -f 'Cybernoid 1'		-w 'mods/Cybernoid 1.mod'	$(DISK_IMG)
+	$(CC1541) $(INTLV)	-f 'On the Telly'	-w 'mods/On the Telly.mod' \
+		$(INTLV) -f 'Skate or Die'	\
+			-w 'mods/Skate or Die Intro (cover by Delorean).mod'		$(DISK_IMG)
 endif
