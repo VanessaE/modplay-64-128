@@ -387,13 +387,6 @@ next_tick
 +	ldy #0
 	sty seq_current_track
 
-; restart start CIA #2 timers
-
-	lda #$11		; A counts cycles, continuous mode, force-load, start now
-	sta CIA2+$0e
-	lda #$59		; B counts timer A underflows, one-shot, force-load, start now
-	sta CIA2+$0f
-
 	jsr set_lookahead_addrs
 
 	+JSR_INDIRECT (run_mixer_vec)

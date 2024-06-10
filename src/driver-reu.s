@@ -220,6 +220,13 @@ reu_mixer_entry
 	sta DMA_ADH
 	ldx audio_in_buf_index
 
+	; restart start CIA #2 timers
+
+	lda #$11		; A counts cycles, continuous mode, force-load, start now
+	sta CIA2+$0e
+	lda #$59		; B counts timer A underflows, one-shot, force-load, start now
+	sta CIA2+$0f
+
 reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
@@ -356,7 +363,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_3_6 = * }
 		!if .idx2 = 7 { la_3_7 = * }
 
-		ldy sample_data_buffer + 3*lookahead_track_offset				; 4
+		ldy sample_data_buffer + 3*lookahead_track_offset	; 4
 		adc (volume_table_vectors+3*2),y					; 5
 		sta audio_buffer_left,x								; 5
 
@@ -368,7 +375,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_1_6 = * }
 		!if .idx2 = 7 { la_1_7 = * }
 
-		ldy sample_data_buffer + 1*lookahead_track_offset				; 4
+		ldy sample_data_buffer + 1*lookahead_track_offset	; 4
 		lda (volume_table_vectors+1*2),y					; 5
 
 		!if .idx2 = 1 { la_2_1 = * }
@@ -379,7 +386,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_2_6 = * }
 		!if .idx2 = 7 { la_2_7 = * }
 
-		ldy sample_data_buffer + 2*lookahead_track_offset				; 4
+		ldy sample_data_buffer + 2*lookahead_track_offset	; 4
 		adc (volume_table_vectors+2*2),y					; 5
 		sta audio_buffer_right,x							; 5
 	}

@@ -237,4 +237,4 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
-tempo_fine_adjust_constant = 19000
+tempo_fine_adjust_constant = 17500
