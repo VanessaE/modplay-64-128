@@ -51,7 +51,9 @@ generate_volume_tables
 		adc product
 
 ; divide the final value down to the resolution the audio driver needs
-; only 4 or 8 bits allowed
+; only 4 or 8 bits allowed -- note that we actually shift one extra step
+; so the volume tables actually output 3-bit or 7-bit values to avoid the
+; mixer needing to do that shift in realtime.
 
 		ldx volume_tables_resolution
 		cpx #4
@@ -62,7 +64,8 @@ generate_volume_tables
 		lsr
 		lsr
 
-	.nd	sta (tempzp_d),y
+	.nd	lsr
+		sta (tempzp_d),y
 		inc bval_cnt
 		bne --
 		inc tempzp_d+1

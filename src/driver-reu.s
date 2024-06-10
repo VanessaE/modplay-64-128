@@ -334,15 +334,12 @@ reu_gen_sample_loop
 	lda (volume_table_vectors),y							; 5
 	ldy sample_data_buffer + 3*8							; 3  / track 4
 	adc (volume_table_vectors+3*2),y						; 5
-	ror														; 2
 	sta audio_buffer_left,x									; 5
 
-	clc														; 2
 	ldy sample_data_buffer + 1*8							; 3  / track 2
 	lda (volume_table_vectors+1*2),y						; 5
 	ldy sample_data_buffer + 2*8							; 3  / track 3
 	adc (volume_table_vectors+2*2),y						; 5
-	ror														; 2
 	sta audio_buffer_right,x								; 5
 
 	inx														; 2
@@ -352,25 +349,21 @@ reu_gen_sample_loop
 	-	cpx audio_out_buf_index								; 3    /  wait for a free
 		beq -												; 3/2  /  slot in the buffer
 
-		clc													; 2
 		ldx sample_data_lookahead_indexes       + .idx2		; 4  / track 1
 		ldy sample_data_buffer,x							; 4
 		lda (volume_table_vectors),y						; 5
 		ldx sample_data_lookahead_indexes + 3*8 + .idx2		; 4  / track 4
 		ldy sample_data_buffer + 3*8,x						; 4
 		adc (volume_table_vectors+3*2),y					; 5
-		ror													; 2
 		ldx audio_in_buf_index								; 3
 		sta audio_buffer_left,x								; 5
 
-		clc													; 2
 		ldx sample_data_lookahead_indexes + 1*8 + .idx2		; 4  / track 2
 		ldy sample_data_buffer + 1*8,x						; 4
 		lda (volume_table_vectors+1*2),y					; 5
 		ldx sample_data_lookahead_indexes + 2*8 + .idx2		; 4  / track 3
 		ldy sample_data_buffer + 2*8,x						; 4
 		adc (volume_table_vectors+2*2),y					; 5
-		ror													; 2
 		ldx audio_in_buf_index								; 3
 		sta audio_buffer_right,x							; 5
 
@@ -383,4 +376,3 @@ reu_gen_sample_loop
 	jmp reu_gen_sample_loop									; 6
 
 + rts
-
