@@ -334,39 +334,7 @@ next_track_this_row
 	tax
 	lda seq_current_row_data+1,x
 	sta current_note_periods_lows,y
-
-	jsr get_stepper_value
-	ldy seq_current_track
-
-	sta current_steprates_fract,y
-	stx current_steprates_lows,y
-
-	lda #0
-	sta sequencer_temp_a
-	sta sequencer_temp_a+1
-
-	tya
-	asl
-	asl
-	asl
-	tax ; .X = track number times 8
-
-	!for .idx, 1, 7 {
-		lda sequencer_temp_a
-		adc current_steprates_fract,y
-		sta sequencer_temp_a
-		lda sequencer_temp_a+1
-		adc current_steprates_lows,y
-		sta sequencer_temp_a+1
-		sta sample_data_lookahead_indexes + .idx,x
-	}
-
-	lda sequencer_temp_a
-	adc current_steprates_fract,y
-	sta current_steprates_fract,y
-	lda sequencer_temp_a+1
-	adc current_steprates_lows,y
-	sta current_steprates_lows,y
+	jsr set_pitch
 
 	; get effect command and its parameters
 getcmd
@@ -425,6 +393,8 @@ next_tick
 	sta CIA2+$0e
 	lda #$59		; B counts timer A underflows, one-shot, force-load, start now
 	sta CIA2+$0f
+
+	jsr set_lookahead_addrs
 
 	+JSR_INDIRECT (run_mixer_vec)
 
@@ -670,6 +640,80 @@ get_stepper_value
 	ldx quotient+1
 rts
 
+set_pitch
+	jsr get_stepper_value
+	ldy seq_current_track
+
+	sta current_steprates_fract,y
+	stx current_steprates_lows,y
+rts
+
+set_lookahead_addrs
+	!for lookahead_track, 0, 3 {
+		lda #0
+		sta sequencer_temp_a
+		sta sequencer_temp_a+1
+		clc
+
+		!zone lookahead_idx_set {
+			!for .idx4, 1, 7 {
+
+				!if lookahead_track = 0 {
+					!if .idx4 = 1 { !set .t = la_0_1 }
+					!if .idx4 = 2 { !set .t = la_0_2 }
+					!if .idx4 = 3 { !set .t = la_0_3 }
+					!if .idx4 = 4 { !set .t = la_0_4 }
+					!if .idx4 = 5 { !set .t = la_0_5 }
+					!if .idx4 = 6 { !set .t = la_0_6 }
+					!if .idx4 = 7 { !set .t = la_0_7 }
+				}
+
+				!if lookahead_track = 1 {
+					!if .idx4 = 1 { !set .t = la_1_1 }
+					!if .idx4 = 2 { !set .t = la_1_2 }
+					!if .idx4 = 3 { !set .t = la_1_3 }
+					!if .idx4 = 4 { !set .t = la_1_4 }
+					!if .idx4 = 5 { !set .t = la_1_5 }
+					!if .idx4 = 6 { !set .t = la_1_6 }
+					!if .idx4 = 7 { !set .t = la_1_7 }
+				}
+
+				!if lookahead_track = 2 {
+					!if .idx4 = 1 { !set .t = la_2_1 }
+					!if .idx4 = 2 { !set .t = la_2_2 }
+					!if .idx4 = 3 { !set .t = la_2_3 }
+					!if .idx4 = 4 { !set .t = la_2_4 }
+					!if .idx4 = 5 { !set .t = la_2_5 }
+					!if .idx4 = 6 { !set .t = la_2_6 }
+					!if .idx4 = 7 { !set .t = la_2_7 }
+				}
+
+				!if lookahead_track = 3 {
+					!if .idx4 = 1 { !set .t = la_3_1 }
+					!if .idx4 = 2 { !set .t = la_3_2 }
+					!if .idx4 = 3 { !set .t = la_3_3 }
+					!if .idx4 = 4 { !set .t = la_3_4 }
+					!if .idx4 = 5 { !set .t = la_3_5 }
+					!if .idx4 = 6 { !set .t = la_3_6 }
+					!if .idx4 = 7 { !set .t = la_3_7 }
+				}
+
+				lda sequencer_temp_a
+				adc current_steprates_fract + lookahead_track
+				sta sequencer_temp_a
+				lda sequencer_temp_a+1
+				adc current_steprates_lows + lookahead_track
+				sta sequencer_temp_a+1
+				adc #<(sample_data_buffer + lookahead_track * 32)
+				sta .t + 1
+				lda #>(sample_data_buffer + lookahead_track * 32)
+				adc #0
+				sta .t + 2
+			}
+		}
+	}
+rts
+
 unused
 rts
 
@@ -690,6 +734,10 @@ start_effect_command_jump_table
 	!word unused ; run_effect_pattern_break
 	!word unused
 	!word run_effect_set_speed
+
+; note: when implementing any tick-domain volume adjustment, check first if
+; the track's stepper value is 0 (this signals that the mixer reached the end
+; of the sample and had no loop to continue with).
 
 run_effect_command_jump_table
 	!word unused ; run_effect_arpeggio

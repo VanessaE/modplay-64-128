@@ -211,9 +211,8 @@ seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
 ; the lookahead buffer is arranged as track number * 8 plus byte number
 sample_data_buffer					= $cb00; seq_pitch_slide_stop_point_highs + 8
-sample_data_lookahead_indexes		= $cc00; indexes are 64 bytes
 
-;main_mem_free_start					= ((>sample_data_lookahead_indexes) + 1) * 256
+;main_mem_free_start					= ((>sample_data_buffer) + 1) * 256
 main_mem_free_start					= ((>seq_pitch_slide_stop_point_highs) + 1) * 256
 
 ; anything appended after this point will be overwritten by the loaded file

@@ -218,16 +218,16 @@ reu_mixer_entry
 	sta DMA_DAH
 	lda #>sample_data_buffer
 	sta DMA_ADH
-	ldx #$91
+	ldx audio_in_buf_index
 
 reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
+	clc
 
 	!for track, 0, 3 {
 		!zone fetchloop {
 
-			clc											; 2
 			lda sample_pointers_fract+track				; 3
 			adc current_steprates_fract+track			; 3
 			sta sample_pointers_fract+track				; 3
@@ -275,19 +275,21 @@ reu_gen_sample_loop
 			cmp current_sample_end_addr_highs+track		; 3
 			bcc .reu_fetch_sample_data					; 3/2
 
+			clc											; 2
 			lda track_current_loop_flags+track			; 3
 			bne .reu_sample_has_loop					; 3/2
+			lda #0										; 2
+			sta current_sample_volume_levels			; 3
+			sta volume_table_vectors + track*2			; 3
+			sta sample_pointers_fract+track				; 3
+			sta sample_pointers_lows+track				; 3
+			sta sample_pointers_mids+track				; 3
+			sta sample_pointers_highs+track				; 3
 			sta current_steprates_fract+track			; 3
 			sta current_steprates_lows+track			; 3
-			sta sample_data_lookahead_indexes+track*8   ; 4
-			sta sample_data_lookahead_indexes+track*8+1 ; 4
-			sta sample_data_lookahead_indexes+track*8+2 ; 4
-			sta sample_data_lookahead_indexes+track*8+3 ; 4
-			sta sample_data_lookahead_indexes+track*8+4 ; 4
-			sta sample_data_lookahead_indexes+track*8+5 ; 4
-			sta sample_data_lookahead_indexes+track*8+6 ; 4
-			sta sample_data_lookahead_indexes+track*8+7 ; 4
-			beq .reu_fetch_sample_data					; 3
+			lda #>volume_tables_low						; 2
+			sta volume_table_vectors + track*2 + 1		; 3
+			bcc .reu_fetch_sample_data					; 3
 
 		.reu_sample_has_loop
 			lda #0										; 2
@@ -317,57 +319,68 @@ reu_gen_sample_loop
 				sta VIC+$30								; 4
 			}
 
-			stx DMA_CMD									; 4 + 32
+			lda #$91									; 2
+			sta DMA_CMD									; 4 + 32
 
 			!ifdef c128 {
-				stx VIC+$30								; 6
+				sta VIC+$30								; 4
 			}
 		}
 	}
 
-	ldx audio_in_buf_index									; 3
--	cpx audio_out_buf_index									; 3    /  wait for a free
-	beq -													; 3/2  /  slot in the buffer
+	!for .idx2, 0, 7 {
+		inx													; 2
+	-	cpx audio_out_buf_index								; 3    / wait for a free
+		beq -												; 3/2  / slot in the buffer
 
-	clc														; 2
-	ldy sample_data_buffer									; 3  / track 1
-	lda (volume_table_vectors),y							; 5
-	ldy sample_data_buffer + 3*8							; 3  / track 4
-	adc (volume_table_vectors+3*2),y						; 5
-	sta audio_buffer_left,x									; 5
+		!if .idx2 = 1 { la_0_1 = * }
+		!if .idx2 = 2 { la_0_2 = * }
+		!if .idx2 = 3 { la_0_3 = * }
+		!if .idx2 = 4 { la_0_4 = * }
+		!if .idx2 = 5 { la_0_5 = * }
+		!if .idx2 = 6 { la_0_6 = * }
+		!if .idx2 = 7 { la_0_7 = * }
 
-	ldy sample_data_buffer + 1*8							; 3  / track 2
-	lda (volume_table_vectors+1*2),y						; 5
-	ldy sample_data_buffer + 2*8							; 3  / track 3
-	adc (volume_table_vectors+2*2),y						; 5
-	sta audio_buffer_right,x								; 5
+		; these LDY addrs are correct for lookahead pass 0, and they all get
+		; overwritten entirely by the sequencer in passes 1-7
 
-	inx														; 2
-
-	!for .idx2, 1, 7 {
-		stx audio_in_buf_index								; 3
-	-	cpx audio_out_buf_index								; 3    /  wait for a free
-		beq -												; 3/2  /  slot in the buffer
-
-		ldx sample_data_lookahead_indexes       + .idx2		; 4  / track 1
-		ldy sample_data_buffer,x							; 4
+		ldy sample_data_buffer								; 4 
 		lda (volume_table_vectors),y						; 5
-		ldx sample_data_lookahead_indexes + 3*8 + .idx2		; 4  / track 4
-		ldy sample_data_buffer + 3*8,x						; 4
+
+		!if .idx2 = 1 { la_3_1 = * }
+		!if .idx2 = 2 { la_3_2 = * }
+		!if .idx2 = 3 { la_3_3 = * }
+		!if .idx2 = 4 { la_3_4 = * }
+		!if .idx2 = 5 { la_3_5 = * }
+		!if .idx2 = 6 { la_3_6 = * }
+		!if .idx2 = 7 { la_3_7 = * }
+
+		ldy sample_data_buffer + 3*32						; 4
 		adc (volume_table_vectors+3*2),y					; 5
-		ldx audio_in_buf_index								; 3
 		sta audio_buffer_left,x								; 5
 
-		ldx sample_data_lookahead_indexes + 1*8 + .idx2		; 4  / track 2
-		ldy sample_data_buffer + 1*8,x						; 4
-		lda (volume_table_vectors+1*2),y					; 5
-		ldx sample_data_lookahead_indexes + 2*8 + .idx2		; 4  / track 3
-		ldy sample_data_buffer + 2*8,x						; 4
-		adc (volume_table_vectors+2*2),y					; 5
-		ldx audio_in_buf_index								; 3
-		sta audio_buffer_right,x							; 5
+		!if .idx2 = 1 { la_1_1 = * }
+		!if .idx2 = 2 { la_1_2 = * }
+		!if .idx2 = 3 { la_1_3 = * }
+		!if .idx2 = 4 { la_1_4 = * }
+		!if .idx2 = 5 { la_1_5 = * }
+		!if .idx2 = 6 { la_1_6 = * }
+		!if .idx2 = 7 { la_1_7 = * }
 
-		inx													; 2
+		ldy sample_data_buffer + 1*32						; 4
+		lda (volume_table_vectors+1*2),y					; 5
+
+		!if .idx2 = 1 { la_2_1 = * }
+		!if .idx2 = 2 { la_2_2 = * }
+		!if .idx2 = 3 { la_2_3 = * }
+		!if .idx2 = 4 { la_2_4 = * }
+		!if .idx2 = 5 { la_2_5 = * }
+		!if .idx2 = 6 { la_2_6 = * }
+		!if .idx2 = 7 { la_2_7 = * }
+
+		ldy sample_data_buffer + 2*32						; 4
+		adc (volume_table_vectors+2*2),y					; 5
+		sta audio_buffer_right,x							; 5
 	}
 
 	lda CIA2+$0f											; 4
@@ -375,4 +388,6 @@ reu_gen_sample_loop
 	beq +													; 3/2
 	jmp reu_gen_sample_loop									; 6
 
-+ rts
++	stx audio_in_buf_index
+rts
+
