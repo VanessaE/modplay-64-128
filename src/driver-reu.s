@@ -325,26 +325,6 @@ reu_gen_sample_loop
 		}
 	}
 
-; loop start: 2+4 = 6 cycles
-
-; update fract bytes:
-; 2+3+3+3+3 +3+4 +3+4 +3+4 = 35 cycles, per track
-
-; update fract + low:
-; minus 8 (1+3+4) plus 16 (3+3+3+4+3) --- 35 + 8 = 43 cycles per track
-
-; update fract + low + mid:
-; minus 8 (1+3+4) plus 15 (5+3+4+3) --- 43 + 7 = 50 cycles per track
-
-; update fract + low + mid + high (so all four bytes):
-; minus 8 (1+3+4) plus 15 (5+3+4+3) --- 50 + 7 = 57 cycles per track
-
-; add 23 cycles per track for the end-of-sample check
-
-; add 2+4+4+32 = 42 cycles per track to get 32 bytes from the REU
-
-; next step is to mix:
-
 	ldx audio_in_buf_index									; 3
 -	cpx audio_out_buf_index									; 3    /  wait for a free
 	beq -													; 3/2  /  slot in the buffer
@@ -404,21 +384,3 @@ reu_gen_sample_loop
 
 + rts
 
-; so downmixing costs:
-; 3+3+3 +2+3+5+3+5+2+5 +2+3+5+3+5+2+5 + 2 = 61 cycles for the first sample pair
-;
-; plus 3+3 +2+4+4+5+4+4+5+2+3+5 +2+4+4+5+4+4+5+2+3+5 +2+3 = 87 cycles
-;     for each additional pair (times 7)
-;
-; plus 5+2+6 = 13 cycles to close the loop
-
-; grand totals for four tracks:
-
-; best case:
-; 2+4 + (35 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1089 cycles, avg. ~137 cycles per sample pair
-
-; most common likely case:
-; 2+4 + (43 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1121 cycles, avg. ~141 cycles per sample pair
-
-; worst case:
-; 2+4 + (57 + 23 + 42) * 4 + 61 + 87*7 + 13 = 1177 cycles, avg. ~147 cycles per sample pair
