@@ -312,15 +312,16 @@ reu_gen_sample_loop
 			sta current_sample_end_addr_highs+track		; 3
 
 		.reu_fetch_sample_data
-			lda #32										; 2
+
+			lda #lookahead_track_offset							; 2
 			sta DMA_DAL									; 4
 
 			!ifdef c128 {
-				sta VIC+$30								; 4
+				sta VIC+$30									; 4
 			}
 
 			lda #$91									; 2
-			sta DMA_CMD									; 4 + 32
+			sta DMA_CMD									; 4 + (32 or 16)
 
 			!ifdef c128 {
 				sta VIC+$30								; 4
@@ -355,7 +356,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_3_6 = * }
 		!if .idx2 = 7 { la_3_7 = * }
 
-		ldy sample_data_buffer + 3*32						; 4
+		ldy sample_data_buffer + 3*lookahead_track_offset				; 4
 		adc (volume_table_vectors+3*2),y					; 5
 		sta audio_buffer_left,x								; 5
 
@@ -367,7 +368,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_1_6 = * }
 		!if .idx2 = 7 { la_1_7 = * }
 
-		ldy sample_data_buffer + 1*32						; 4
+		ldy sample_data_buffer + 1*lookahead_track_offset				; 4
 		lda (volume_table_vectors+1*2),y					; 5
 
 		!if .idx2 = 1 { la_2_1 = * }
@@ -378,7 +379,7 @@ reu_gen_sample_loop
 		!if .idx2 = 6 { la_2_6 = * }
 		!if .idx2 = 7 { la_2_7 = * }
 
-		ldy sample_data_buffer + 2*32						; 4
+		ldy sample_data_buffer + 2*lookahead_track_offset				; 4
 		adc (volume_table_vectors+2*2),y					; 5
 		sta audio_buffer_right,x							; 5
 	}

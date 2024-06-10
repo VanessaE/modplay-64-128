@@ -213,3 +213,5 @@ ESC									= $1b
 
 FLASHON								= $0f
 FLASHOFF							= $8f
+
+lookahead_track_offset = 32

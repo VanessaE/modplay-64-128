@@ -704,9 +704,9 @@ set_lookahead_addrs
 				lda sequencer_temp_a+1
 				adc current_steprates_lows + lookahead_track
 				sta sequencer_temp_a+1
-				adc #<(sample_data_buffer + lookahead_track * 32)
+				adc #<(sample_data_buffer + lookahead_track * lookahead_track_offset)
 				sta .t + 1
-				lda #>(sample_data_buffer + lookahead_track * 32)
+				lda #>(sample_data_buffer + lookahead_track * lookahead_track_offset)
 				adc #0
 				sta .t + 2
 			}
