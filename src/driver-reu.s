@@ -231,6 +231,7 @@ reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
 	clc													; 2
+	ldy #$91											; 2
 
 	!for track, 0, 3 {
 		!zone fetchloop {
@@ -317,74 +318,112 @@ reu_gen_sample_loop
 			sta current_sample_end_addr_mids+track		; 3
 			lda sample_loop_end_addresses_highs,y		; 5
 			sta current_sample_end_addr_highs+track		; 3
+			ldy #$91									; 2
 
 		.reu_fetch_sample_data
 
-			lda #lookahead_track_offset							; 2
-			sta DMA_DAL									; 4
-
-			!ifdef c128 {
-				sta VIC+$30									; 4
-			}
-
-			lda #$91									; 2
-			sta DMA_CMD									; 4 + (32 or 16)
+			lda #(lookahead_track_offset/4)				; 2
 
 			!ifdef c128 {
 				sta VIC+$30								; 4
 			}
+
+			sta DMA_DAL									; 4
+			sty DMA_CMD									; 4 + (8 or 16)
+			sta DMA_DAL									; 4
+			sty DMA_CMD									; 4 + (8 or 16)
+			sta DMA_DAL									; 4
+			sty DMA_CMD									; 4 + (8 or 16)
+			sta DMA_DAL									; 4
+			sty DMA_CMD									; 4 + (8 or 16)
+
+			!ifdef c128 {
+				sty VIC+$30								; 4
+			}
 		}
 	}
 
-	!for .idx2, 0, 7 {
+	!for .idx2, 0, 15 {
 		inx													; 2
 	-	cpx audio_out_buf_index								; 3    / wait for a free
 		beq -												; 3/2  / slot in the buffer
 
-		!if .idx2 = 1 { la_0_1 = * }
-		!if .idx2 = 2 { la_0_2 = * }
-		!if .idx2 = 3 { la_0_3 = * }
-		!if .idx2 = 4 { la_0_4 = * }
-		!if .idx2 = 5 { la_0_5 = * }
-		!if .idx2 = 6 { la_0_6 = * }
-		!if .idx2 = 7 { la_0_7 = * }
+		!if .idx2 = 1  { la_0_1  = * }
+		!if .idx2 = 2  { la_0_2  = * }
+		!if .idx2 = 3  { la_0_3  = * }
+		!if .idx2 = 4  { la_0_4  = * }
+		!if .idx2 = 5  { la_0_5  = * }
+		!if .idx2 = 6  { la_0_6  = * }
+		!if .idx2 = 7  { la_0_7  = * }
+		!if .idx2 = 8  { la_0_8  = * }
+		!if .idx2 = 9  { la_0_9  = * }
+		!if .idx2 = 10 { la_0_10 = * }
+		!if .idx2 = 11 { la_0_11 = * }
+		!if .idx2 = 12 { la_0_12 = * }
+		!if .idx2 = 13 { la_0_13 = * }
+		!if .idx2 = 14 { la_0_14 = * }
+		!if .idx2 = 15 { la_0_15 = * }
 
 		; these LDY addrs are correct for lookahead pass 0, and they all get
-		; overwritten entirely by the sequencer in passes 1-7
+		; overwritten entirely by the sequencer in passes 1-15
 
 		ldy sample_data_buffer								; 4 
 		lda (volume_table_vectors),y						; 5
 
-		!if .idx2 = 1 { la_3_1 = * }
-		!if .idx2 = 2 { la_3_2 = * }
-		!if .idx2 = 3 { la_3_3 = * }
-		!if .idx2 = 4 { la_3_4 = * }
-		!if .idx2 = 5 { la_3_5 = * }
-		!if .idx2 = 6 { la_3_6 = * }
-		!if .idx2 = 7 { la_3_7 = * }
+		!if .idx2 = 1  { la_3_1  = * }
+		!if .idx2 = 2  { la_3_2  = * }
+		!if .idx2 = 3  { la_3_3  = * }
+		!if .idx2 = 4  { la_3_4  = * }
+		!if .idx2 = 5  { la_3_5  = * }
+		!if .idx2 = 6  { la_3_6  = * }
+		!if .idx2 = 7  { la_3_7  = * }
+		!if .idx2 = 8  { la_3_8  = * }
+		!if .idx2 = 9  { la_3_9  = * }
+		!if .idx2 = 10 { la_3_10 = * }
+		!if .idx2 = 11 { la_3_11 = * }
+		!if .idx2 = 12 { la_3_12 = * }
+		!if .idx2 = 13 { la_3_13 = * }
+		!if .idx2 = 14 { la_3_14 = * }
+		!if .idx2 = 15 { la_3_15 = * }
 
 		ldy sample_data_buffer + 3*lookahead_track_offset	; 4
 		adc (volume_table_vectors+3*2),y					; 5
 		sta audio_buffer_left,x								; 5
 
-		!if .idx2 = 1 { la_1_1 = * }
-		!if .idx2 = 2 { la_1_2 = * }
-		!if .idx2 = 3 { la_1_3 = * }
-		!if .idx2 = 4 { la_1_4 = * }
-		!if .idx2 = 5 { la_1_5 = * }
-		!if .idx2 = 6 { la_1_6 = * }
-		!if .idx2 = 7 { la_1_7 = * }
+		!if .idx2 = 1  { la_1_1  = * }
+		!if .idx2 = 2  { la_1_2  = * }
+		!if .idx2 = 3  { la_1_3  = * }
+		!if .idx2 = 4  { la_1_4  = * }
+		!if .idx2 = 5  { la_1_5  = * }
+		!if .idx2 = 6  { la_1_6  = * }
+		!if .idx2 = 7  { la_1_7  = * }
+		!if .idx2 = 8  { la_1_8  = * }
+		!if .idx2 = 9  { la_1_9  = * }
+		!if .idx2 = 10 { la_1_10 = * }
+		!if .idx2 = 11 { la_1_11 = * }
+		!if .idx2 = 12 { la_1_12 = * }
+		!if .idx2 = 13 { la_1_13 = * }
+		!if .idx2 = 14 { la_1_14 = * }
+		!if .idx2 = 15 { la_1_15 = * }
 
 		ldy sample_data_buffer + 1*lookahead_track_offset	; 4
 		lda (volume_table_vectors+1*2),y					; 5
 
-		!if .idx2 = 1 { la_2_1 = * }
-		!if .idx2 = 2 { la_2_2 = * }
-		!if .idx2 = 3 { la_2_3 = * }
-		!if .idx2 = 4 { la_2_4 = * }
-		!if .idx2 = 5 { la_2_5 = * }
-		!if .idx2 = 6 { la_2_6 = * }
-		!if .idx2 = 7 { la_2_7 = * }
+		!if .idx2 = 1  { la_2_1  = * }
+		!if .idx2 = 2  { la_2_2  = * }
+		!if .idx2 = 3  { la_2_3  = * }
+		!if .idx2 = 4  { la_2_4  = * }
+		!if .idx2 = 5  { la_2_5  = * }
+		!if .idx2 = 6  { la_2_6  = * }
+		!if .idx2 = 7  { la_2_7  = * }
+		!if .idx2 = 8  { la_2_8  = * }
+		!if .idx2 = 9  { la_2_9  = * }
+		!if .idx2 = 10 { la_2_10 = * }
+		!if .idx2 = 11 { la_2_11 = * }
+		!if .idx2 = 12 { la_2_12 = * }
+		!if .idx2 = 13 { la_2_13 = * }
+		!if .idx2 = 14 { la_2_14 = * }
+		!if .idx2 = 15 { la_2_15 = * }
 
 		ldy sample_data_buffer + 2*lookahead_track_offset	; 4
 		adc (volume_table_vectors+2*2),y					; 5
@@ -400,36 +439,36 @@ reu_gen_sample_loop
 rts
 
 ; mixer loop open:
-; 2+4+2 = 8 cycles
+; 2+4+2+2 = 10 cycles
 
-; time to fetch data for one track
-; 2+4+2+4+32 = 44 cycles
+; time to fetch 64 bytes of lookahead data for one track
+; 2 +4+4+16 +4+4+16 +4+4+16 +4+4+16 = 98 cycles
 
 ; mixer minimum time - all four tracks update only the fract bytes
 ; end of sample check needs to do only one byte, but not end of sample yet
-; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3)*4 + 44*4 = 352 cycles
+; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3)*4 + 98*4 = 568 cycles
 ;
 ; mixer likely average case, 4 tracks updating two bytes
 ; two bytes to check end of sample, but not end yet
-; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+2 +3+3+3)*4 + 44*4 = 416
+; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+2 +3+3+3)*4 + 98*4 = 632
 
 ; mixer worst case, all four tracks have to update all four bytes, and all four
 ; end-of-sample bytes need to be checked, but not end of sample yet
-; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+2 +3+3+2 +3+3+3)*4 + 44*4 = 504
+; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+2 +3+3+2 +3+3+3)*4 + 98*4 = 720
 
 ; time inside the lookahead code:
-; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*8 = 432 cycles
+; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*16 = 864 cycles
 
 ; time to close the loop: 4+2+2+6 = 14 cycles
 
 ; best case:
-; 8 + 352 + 432 + 14 = 806 cycles for 8 sample pairs
-; 806 / 8 = average of 101 cycles/sample
+; 10 + 568 + 864 + 14 = 1456 cycles for 8 sample pairs
+; 1456 / 16 = average of 91 cycles/sample
 
 ; likely average:
-; 8 + 416 + 432 + 14 = 870 cycles
-; 870 / 8 = average of 109 cycles/sample
+; 10 + 632 + 864 + 14 = 1520 cycles
+; 1520 / 16 = average of 95 cycles/sample
 
 ; worst case:
-; 8 + 504 + 432 + 14 = 958 cycles
-; 958 / 8 = average of 120 cycles/sample
+; 10 + 720 + 864 + 14 = 1608 cycles
+; 1608 / 16 = average of ~101 cycles/sample
