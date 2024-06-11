@@ -357,16 +357,16 @@ abort_load
 	lda #0
 	ldx #<unknown_file_msg
 	ldy #>unknown_file_msg
-	jsr print_msg
+
 	!ifndef c128 {
+		jsr print_msg
 		lda #0
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
 		jsr print_msg_rle
 		lda #RIGHT
 	} else {
-		lda #RETURN
-		jsr CHROUT
+		jsr print_msg_rle
 		lda #RIGHT
 		jsr CHROUT
 		jsr CHROUT

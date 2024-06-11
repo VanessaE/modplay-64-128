@@ -322,9 +322,11 @@ tracker_name_msg_fasttracker
 	!text "FastTracker",0
 
 unknown_file_msg
-	!byte DOWN
-	!fill 6,RIGHT
-	!text RED,"Unknown file type",RETURN,0
+	!byte $81,DOWN
+	!byte 6,RIGHT
+	!byte $80+20
+	!text RED,"Unknown file type",RETURN,RETURN
+	!byte 0
 
 dirname_background
 	!byte $83,RVSON,CYAN,"["
