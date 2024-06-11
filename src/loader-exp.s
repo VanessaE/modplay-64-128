@@ -172,7 +172,7 @@ load_by_filename_entry
 
 		; however, there's a caveat:  while the LOAD call can abort if the drive
 		; errors-out mid-file, there's no obvious way to force it to abort
-		; from "user space, so the parse-header part has to be done by first
+		; from "user space", so the parse-header part has to be done by first
 		; using ACPTR to read-in the file's header.
 
 		ldy #0
@@ -182,7 +182,7 @@ load_by_filename_entry
 		bne -
 		inc EAL+1
 		lda EAL+1
-		cmp #>(load_buffer+3*256)
+		cmp #>(load_buffer+5*256)
 		bne -
 
 		jsr close_file
@@ -193,6 +193,7 @@ load_by_filename_entry
 		lda #$80
 		sta header_loaded
 		jsr decode_header
+
 		bcc +
 		jmp abort_load
 
