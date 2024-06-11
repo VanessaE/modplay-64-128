@@ -220,7 +220,7 @@ reu_mixer_entry
 	sta DMA_ADH
 	ldx audio_in_buf_index
 
-	; restart start CIA #2 timers
+	; restart CIA #2 timers
 
 	lda #$11		; A counts cycles, continuous mode, force-load, start now
 	sta CIA2+$0e
@@ -230,7 +230,7 @@ reu_mixer_entry
 reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
-	clc
+	clc													; 2
 
 	!for track, 0, 3 {
 		!zone fetchloop {
@@ -399,3 +399,37 @@ reu_gen_sample_loop
 +	stx audio_in_buf_index
 rts
 
+; mixer loop open:
+; 2+4+2 = 8 cycles
+
+; time to fetch data for one track
+; 2+4+2+4+32 = 44 cycles
+
+; mixer minimum time - all four tracks update only the fract bytes
+; end of sample check needs to do only one byte, but not end of sample yet
+; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3)*4 + 44*4 = 352 cycles
+;
+; mixer likely average case, 4 tracks updating two bytes
+; two bytes to check end of sample, but not end yet
+; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+2 +3+3+3)*4 + 44*4 = 416
+
+; mixer worst case, all four tracks have to update all four bytes, and all four
+; end-of-sample bytes need to be checked, but not end of sample yet
+; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+2 +3+3+2 +3+3+3)*4 + 44*4 = 504
+
+; time inside the lookahead code:
+; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*8 = 432 cycles
+
+; time to close the loop: 4+2+2+6 = 14 cycles
+
+; best case:
+; 8 + 352 + 432 + 14 = 806 cycles for 8 sample pairs
+; 806 / 8 = average of 101 cycles/sample
+
+; likely average:
+; 8 + 416 + 432 + 14 = 870 cycles
+; 870 / 8 = average of 109 cycles/sample
+
+; worst case:
+; 8 + 504 + 432 + 14 = 958 cycles
+; 958 / 8 = average of 120 cycles/sample
