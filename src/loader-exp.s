@@ -161,8 +161,7 @@ load_by_filename_entry
 	bcc +
 	jmp .load_err
 
-	+
-	!ifdef c128 {
++	!ifdef c128 {
 
 		; On the C128, we can use the "STOP wedge" trick to cause the KERNAL
 		; LOAD routine to do more of the work, enabling BURST mode on
@@ -171,14 +170,33 @@ load_by_filename_entry
 		; blocks (so 1270/$04f6 bytes) to ensure FAST and BURST load the same
 		; amount and that the file header can be loaded all in one go.
 
-		jsr CHRIN			; read the first two bytes from the open file
-		sta load_buffer		; and close it
-		jsr CHRIN
-		sta load_buffer+1
+		; however, there's a caveat:  while the LOAD call can abort if the drive
+		; errors-out mid-file, there's no obvious way to force it to abort
+		; from "user space, so the parse-header part has to be done by first
+		; using ACPTR to read-in the file's header.
+
+		ldy #0
+	-	jsr ACPTR
+		sta (EAL),y
+		iny
+		bne -
+		inc EAL+1
+		lda EAL+1
+		cmp #>(load_buffer+3*256)
+		bne -
 
 		jsr close_file
 
-		lda #<fill_load_buffer
+		lda #>load_buffer
+		sta EAL+1
+
+		lda #$80
+		sta header_loaded
+		jsr decode_header
+		bcc +
+		jmp abort_load
+
+	+	lda #<fill_load_buffer
 		sta STOP_vec
 		lda #>fill_load_buffer
 		sta STOP_vec+1
@@ -241,14 +259,8 @@ load_by_filename_entry
 		sta stash_size+1
 
 		+JSR_INDIRECT (stash_block_vec)
-		bit header_loaded
-		bmi +
-		lda #$80
-		sta header_loaded
-		jsr decode_header
-		bcs abort_load
 
-	+	clc
+		clc
 		lda stash_pointer
 		adc stash_size
 		sta stash_pointer
@@ -351,11 +363,18 @@ abort_load
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
 		jsr print_msg_rle
+		lda #RIGHT
 	} else {
 		lda #RETURN
 		jsr CHROUT
+		lda #RIGHT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
 	}
-	lda #RIGHT
 	jsr CHROUT
 	jsr CHROUT
 	jsr press_any_key
