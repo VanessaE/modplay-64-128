@@ -46,5 +46,3 @@
 * add a function to change directory: it shall read the current dir looking
   for items with "DIR" filetype, offer a list thereof along with a ".." item,
   using the audio buffers for scratch space.
-
-* C64: after loading, re-paints the loader popup over itself, fully populated

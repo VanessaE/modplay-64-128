@@ -218,6 +218,7 @@ load_by_filename_entry
 		iny
 		cpy #16
 		bne -
+	+ jsr zero_first_exp_pages
 	rts
 
 	fill_load_buffer				; STOP vector enters here after a byte is loaded
@@ -334,6 +335,7 @@ load_by_filename_entry
 		iny
 		cpy #16
 		bne -
+	+ jsr zero_first_exp_pages
 	rts
 	}
 
@@ -946,6 +948,25 @@ parse_instruments
 	clc ; exit with carry clear to indicate successful parse, okay to load
 rts
 
+zero_first_exp_pages
+	lda #0
+	ldx #0
+
+-	sta load_buffer,x
+	sta load_buffer+256,x
+	dex
+	bne -
+
+	sta stash_pointer
+	sta stash_pointer+1
+	sta stash_pointer+2
+
+	sta stash_size
+	lda #2
+	sta stash_size+1
+
+	+JSR_INDIRECT (stash_block_vec)
+rts
 progress_bar_segments
 !ifndef c128 {
 	!byte RVSOFF," "

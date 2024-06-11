@@ -760,10 +760,6 @@ start_effect_command_jump_table
 	!word unused
 	!word run_effect_set_speed
 
-; note: when implementing any tick-domain volume adjustment, check first if
-; the track's stepper value is 0 (this signals that the mixer reached the end
-; of the sample and had no loop to continue with).
-
 run_effect_command_jump_table
 	!word unused ; run_effect_arpeggio
 	!word unused ; run_effect_pitch_slide_up

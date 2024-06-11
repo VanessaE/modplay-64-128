@@ -286,17 +286,10 @@ reu_gen_sample_loop
 			clc											; 2
 			lda track_current_loop_flags+track			; 3
 			bne .reu_sample_has_loop					; 3/2
-			lda #0										; 2
-			sta current_sample_volume_levels			; 3
-			sta volume_table_vectors + track*2			; 3
-			sta sample_pointers_fract+track				; 3
-			sta sample_pointers_lows+track				; 3
 			sta sample_pointers_mids+track				; 3
 			sta sample_pointers_highs+track				; 3
 			sta current_steprates_fract+track			; 3
 			sta current_steprates_lows+track			; 3
-			lda #>volume_tables_low						; 2
-			sta volume_table_vectors + track*2 + 1		; 3
 			bcc .reu_fetch_sample_data					; 3
 
 		.reu_sample_has_loop
