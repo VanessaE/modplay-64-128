@@ -359,7 +359,7 @@ getcmd
 	lda seq_commands,y
 	sta seq_prev_commands,y
 	lda seq_command_arguments,y
-	lda seq_prev_command_arguments,y
+	sta seq_prev_command_arguments,y
 
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
