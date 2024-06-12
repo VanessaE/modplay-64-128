@@ -277,7 +277,7 @@ next_row
 
 	!ifndef c128 {
 		bit enable_screen_on_playback
-		bpl fr
+		bpl fetch_row_vec
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 13
@@ -313,8 +313,8 @@ next_row
 		sta VDC+1
 	}
 
-fr
-	+JSR_INDIRECT (fetch_row_vec)
+fetch_row_vec			; fetch the next row from expansion RAM
+	jsr $1234
 	ldy #0
 	sty seq_current_track
 

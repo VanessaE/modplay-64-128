@@ -189,9 +189,9 @@ init
 	sta stash_block_vec+1
 
 	lda #<reu_fetch_row
-	sta fetch_row_vec
-	lda #>reu_fetch_row
 	sta fetch_row_vec+1
+	lda #>reu_fetch_row
+	sta fetch_row_vec+2
 
 	lda #<reu_mixer_entry
 	sta run_mixer_vec+1

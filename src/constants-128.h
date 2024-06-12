@@ -92,8 +92,7 @@
 	audio_start_vec					= $1078 ; 2 bytes
 	audio_stop_vec					= $107a ; 2 bytes
 	print_vec						= $107c ; 2 bytes
-	fetch_row_vec					= $107e ; 2 bytes
-	mixer_set_timings_vec			= $1080 ; 2 bytes
+	mixer_set_timings_vec			= $107e ; 2 bytes
 
 	; more vectors can go here
 	; free memory through $10ff
