@@ -495,6 +495,9 @@ set_mixer_loops_per_tick
 	ldx seq_ticks_per_division
 
 	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl elpt
+
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 27
@@ -564,6 +567,7 @@ set_mixer_loops_per_tick
 		sta VDC+1
 	}
 
+  elpt
 rts
 
 
