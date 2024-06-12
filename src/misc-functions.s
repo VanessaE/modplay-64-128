@@ -359,13 +359,13 @@ divloop
 	tay					;LSB result -> Y, for we may need it later
 	lda remainder+1
 	sbc divisor+1
-	sta tempzp_c
+	sta divide24_tmp
 	lda remainder+2
 	sbc divisor+2
 	bcc +				;if carry=0 then divisor didn't fit in yet
 
 	sta remainder+2		;else save substraction result as new remainder,
-	lda tempzp_c
+	lda divide24_tmp
 	sta remainder+1
 	sty remainder
 	inc dividend		;and INCrement result cause divisor fit in 1 times

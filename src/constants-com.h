@@ -28,11 +28,11 @@
 	; for divide, divisor uses $24 to $26
 	; dividend/quotient uses $27 to $29
 
-	; free: $2a
-	pattern_address					= $2b ; 3 bytes
-	pattern_break_target_row		= $2e
-	; free: $2f and $30
-	stepper_dividend_precalc		= $31 ; 2 bytes
+
+	tempo_dividend_precalc			= $2a ; 3 bytes
+	stepper_dividend_precalc		= $2d ; 2 bytes
+	pattern_address					= $2f ; 3 bytes
+	pattern_break_target_row		= $32
 	seq_current_pattern_number		= $33
 	seq_current_row					= $34
 	seq_current_track				= $35
@@ -55,16 +55,18 @@
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	tempzpbk_g						= $5e ; 4 bytes
+	; free: $5e
+	; divide24_tmp uses $5f
+	; free: $60, $61
 
-
-	; free: $62 - $65
-
-	sequencer_temp_x				= $66
-	sequencer_temp_y				= $67
-	sequencer_temp_a				= $68 ; 4 bytes
-	thousandths_seconds_per_tick	= $6c ; 2 bytes
-	; free: $6e and $6f
+	tempzpbk_g						= $62 ; 4 bytes
+	mixer_loops_per_tick_fract		= $66
+	mixer_loops_per_tick			= $67 
+	mixer_countdown_fract			= $68
+	mixer_countdown					= $69
+	sequencer_temp_x				= $6a
+	sequencer_temp_y				= $6b
+	sequencer_temp_a				= $6c ; 4 bytes
 	track_current_loop_flags		= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes
@@ -94,6 +96,8 @@
 	dividend						= $27 ; to $29
 	remainder						= $59 ; to $5b
 	quotient = dividend ;save memory by reusing dividend to store the result
+
+	divide24_tmp					= $5f 
 
 	product							= $5c ; and $5d / the product from multiply routine
 
@@ -237,9 +241,10 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
-tempo_fine_adjust_constant = 14250
 
 ; this value is around 16x higher than "proper", for the sake of precision
 pitch_fine_adjust_constant = 100
 
+; and this one ...well... it's big 😛
+tempo_fine_adjust_constant = 155000
 

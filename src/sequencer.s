@@ -96,24 +96,36 @@ start_sequencer
 	lda product+1
 	sta stepper_dividend_precalc+1
 
+	lda #<tempo_fine_adjust_constant
+	sta dividend
+	lda #>tempo_fine_adjust_constant
+	sta dividend+1
+	lda #^tempo_fine_adjust_constant ; "^" means "bank" i.e. bits 16-23
+	sta dividend+2
+
+	lda isr_trigger_interval
+	sta divisor
+	lda isr_trigger_interval+1
+	sta divisor+1
+	lda #0
+	sta divisor+2
+
+	jsr divide_24by24
+
+	lda quotient
+	sta tempo_dividend_precalc
+	lda quotient+1
+	sta tempo_dividend_precalc+1
+
 	lda #125
 	sta seq_tempo_bpm
 	lda #6
 	sta seq_ticks_per_division
-	jsr set_time_per_tick
-
-	lda #$03		; disable both CIA #2 timer interrupts
-	sta CIA2+$0d
-	lda #0			; make sure both timers are stopped
-	sta CIA2+$0f
-	sta CIA2+$0e
-
-	lda one_ten_thousandth_second	; timer A will always run for 1/10000 second
-	sta CIA2+$04
-	lda one_ten_thousandth_second+1
-	sta CIA2+$05
+	jsr set_mixer_loops_per_tick
 
 	lda #0
+	sta mixer_countdown_fract
+
 	sta current_song_pos
 	sta seq_current_row
 
@@ -393,11 +405,6 @@ next_tick
 +	ldy #0
 	sty seq_current_track
 
-	jsr set_lookahead_addrs
-
-	+JSR_INDIRECT (run_mixer_vec)
-	ldy seq_current_track
-
 next_track_this_tick
 	lda seq_commands,y
 	asl
@@ -413,9 +420,25 @@ next_track_this_tick
 	cpy #4
 	bne next_track_this_tick
 
+	jsr set_lookahead_addrs
+
+	; resetting the countdown this way allows the mixer to run one extra loop
+	; every so often, for more accurate timing control (even if the ISR were
+	; run every 4 rasters, that's only 4 thousandths of a second variance per
+	; song tick).
+
+	clc
+	lda mixer_countdown_fract
+	adc mixer_loops_per_tick_fract
+	sta mixer_countdown_fract
+	lda mixer_loops_per_tick
+	adc #0
+	sta mixer_countdown
+
+	+JSR_INDIRECT (run_mixer_vec)
+	ldy seq_current_track
+
 	dec seq_ticks_counter
-	lda seq_ticks_counter
-	cmp #$ff
 	bne next_tick
 
 	inc seq_current_row
@@ -429,11 +452,6 @@ next_track_this_tick
 	jmp next_pattern
 
 stop_song
-	lda #0
-	sta CIA2+$0d
-	sta CIA2+$0e
-	sta CIA2+$0f
-	lda CIA2+$0d
 rts
 
 ; effect command decoders -- start-of-row/init routines
@@ -448,29 +466,31 @@ run_effect_set_speed
 	cmp #33
 	bcc +
 	sta seq_tempo_bpm
-	bcs set_time_per_tick
+	bcs set_mixer_loops_per_tick
 
 +	sta seq_ticks_per_division
 
-set_time_per_tick
-	lda #<tempo_fine_adjust_constant
-	sta dividend
-	lda #>tempo_fine_adjust_constant
+set_mixer_loops_per_tick
+
+	lda tempo_dividend_precalc
 	sta dividend+1
+	lda tempo_dividend_precalc+1
+	sta dividend+2
 
 	lda seq_tempo_bpm
 	sta divisor
-	lda #0
-	sta divisor+1
 
-	jsr divide_16by16
+	lda #0
+	sta dividend
+	sta divisor+1
+	sta divisor+2
+
+	jsr divide_24by24
 
 	lda quotient
-	sta thousandths_seconds_per_tick
-	sta CIA2+$06
+	sta mixer_loops_per_tick_fract
 	lda quotient+1
-	sta thousandths_seconds_per_tick+1
-	sta CIA2+$07
+	sta mixer_loops_per_tick
 
 	ldx seq_ticks_per_division
 

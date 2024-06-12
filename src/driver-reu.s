@@ -208,13 +208,6 @@ reu_mixer_entry
 	sta DMA_ADH
 	ldx audio_in_buf_index
 
-	; restart CIA #2 timers
-
-	lda #$11		; A counts cycles, continuous mode, force-load, start now
-	sta CIA2+$0e
-	lda #$59		; B counts timer A underflows, one-shot, force-load, start now
-	sta CIA2+$0f
-
 reu_gen_sample_loop
 	lda #<sample_data_buffer							; 2
 	sta DMA_ADL											; 4
@@ -407,12 +400,13 @@ reu_gen_sample_loop
 		sta audio_buffer_right,x							; 5
 	}
 
-	lda CIA2+$0f											; 4
-	and #$01												; 2
+	stx audio_in_buf_index									; 3
+
+	dec mixer_countdown										; 5
 	beq +													; 3/2
 	jmp reu_gen_sample_loop									; 6
 
-+	stx audio_in_buf_index
+  +
 rts
 
 ; mixer loop open:
@@ -441,37 +435,36 @@ rts
 ; time inside the lookahead code:
 ; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*16 = 864 cycles
 
-; time to close the loop: 4+2+2+6 = 14 cycles
-
+; time to close the loop: 3+5+2+6 = 16 cycles
 
 ; C64 final timings:
 
 ; best case:
-; 10 + 616 + 864 + 14 = 1504 cycles for 8 sample pairs
-; 1504 / 16 = average of 94 cycles/sample
+; 10 + 616 + 864 + 16 = 1506 cycles for 8 sample pairs
+; 1506 / 16 = average of ~95 cycles/sample
 
 ; likely average:
-; 10 + 648 + 864 + 14 = 1536 cycles
-; 1536 / 16 = average of 96 cycles/sample -- we'll rouind this up to 100.
+; 10 + 648 + 864 + 16 = 1538 cycles
+; 1538 / 16 = average of ~97 cycles/sample -- we'll round this up to 100.
 
 ; worst case:
-; 10 + 704 + 864 + 14 = 1592 cycles
-; 1592 / 16 = average of ~100 cycles/sample
+; 10 + 704 + 864 + 16 = 1594 cycles
+; 1594 / 16 = average of ~100 cycles/sample
 
 
 ; C128 final timings, just add 40*4 to each of the above:
 
 ; best case:
-; 10 + 616 + 864 + 14 + 40*4 = 1664 cycles for 8 sample pairs
-; 1664 / 16 = average of 104 cycles/sample (equivalent to ~51, 1 MHz cycles)
+; 10 + 616 + 864 + 16 + 40*4 = 1666 cycles for 8 sample pairs
+; 1666 / 16 = average of ~105 cycles/sample (equivalent to 52.5, 1 MHz cycles)
 
 ; likely average:
-; 10 + 648 + 864 + 14 + 40*4 = 1696 cycles
-; 1696 / 16 = average of 106 cycles/sample (53 / 1 MHz) -- round up to 110 (55)
+; 10 + 648 + 864 + 16 + 40*4 = 1698 cycles
+; 1698 / 16 = average of ~107 cycles/sample (53.5 / 1 MHz) -- round up to 110 (55)
 
 ; worst case:
-; 10 + 704 + 864 + 14 + 40*4 = 1752 cycles
-; 1752 / 16 = average of ~110 cycles/sample (~56 / 1 MHz)
+; 10 + 704 + 864 + 16 + 40*4 = 1754 cycles
+; 1754 / 16 = average of ~110 cycles/sample (55.5 / 1 MHz)
 
 
 ; C64 should be able to hit almost 6.7 kHz with the screen off, SID 4-bit stereo:
@@ -480,6 +473,6 @@ rts
 ; or 5.2 KHz with the screen on:
 ; 1022727/195 = ~5244.75
 
-; C128 should be able to max-out at about 12.6 kHz, SID 4-bit stereo:
+; C128 should be able to max-out at about 12.6 kHz
 ; (1022727*2)/(110+52)  OR  1022727/((110+52)/2) = ~12626.26
 
