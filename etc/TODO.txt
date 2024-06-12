@@ -41,8 +41,16 @@
   C64 when screen is on, but not if it's off, and not on C128 at all)
 
 * C128: blur-out function has a minor bug, occasionally converts to the wrong
-  symbol, but always in the same screen locations.  VDC overrun?
+  symbol, but always in the same screen locations.  VDC overrun?  But then
+  again the blur-out function isn't needed on the C128.  I kept it to match
+  the look of the C64 build, but maybe I'll just get rid of it.
 
 * add a function to change directory: it shall read the current dir looking
   for items with "DIR" filetype, offer a list thereof along with a ".." item,
   using the audio buffers for scratch space.
+
+* Loading from CMD HD over HD/RAMLink parallel is broken in the C128 build, at
+  least in VICE. Works fine on the C64 build, albeit not exactly blazingly-
+  fast.  Can't really dig into this one since I don't have a working RL, and
+  VICE/x128 is known to be not-entirely-machine-accurate, so I've no idea
+  where to begin looking -- could be VICE, could be my code.  Who knows?
