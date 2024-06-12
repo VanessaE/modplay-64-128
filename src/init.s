@@ -194,9 +194,9 @@ init
 	sta fetch_row_vec+1
 
 	lda #<reu_mixer_entry
-	sta run_mixer_vec
-	lda #>reu_mixer_entry
 	sta run_mixer_vec+1
+	lda #>reu_mixer_entry
+	sta run_mixer_vec+2
 
 	lda #<reu_set_mixer_speed_figures
 	sta mixer_set_timings_vec

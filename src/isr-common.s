@@ -114,7 +114,6 @@ isr_startup
 	+JSR_INDIRECT (audio_init_vec)
 
 	stx .iel + 1
-	stx .iel + 1
 	sty .ieh + 1
 
 	cli

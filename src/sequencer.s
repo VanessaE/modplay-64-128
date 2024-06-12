@@ -435,7 +435,8 @@ next_track_this_tick
 	adc #0
 	sta mixer_countdown
 
-	+JSR_INDIRECT (run_mixer_vec)
+run_mixer_vec
+	jsr $1234
 	ldy seq_current_track
 
 	dec seq_ticks_counter
