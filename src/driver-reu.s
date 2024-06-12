@@ -9,9 +9,9 @@
 
 reu_set_mixer_speed_figures
 	!ifndef c128 {
-		lda #105
+		lda #100
 	} else {
-		lda #56
+		lda #55
 	}
 	sta ram_driver_mixer_cycle_count
 rts
@@ -261,12 +261,8 @@ reu_gen_sample_loop
 			sec											; 2
 			lda sample_pointers_lows+track				; 3
 			cmp current_sample_end_addr_lows+track		; 3
-			bcc .reu_fetch_sample_data					; 3/2
-
 			lda sample_pointers_mids+track				; 3
 			cmp current_sample_end_addr_mids+track		; 3
-			bcc .reu_fetch_sample_data					; 3/2
-
 			lda sample_pointers_highs+track				; 3
 			cmp current_sample_end_addr_highs+track		; 3
 			bcc .reu_fetch_sample_data					; 3/2
@@ -430,17 +426,17 @@ rts
 ; half as much data being fetched, the timings for C128 are:
 ; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +8 = 138 cycles
 
-; mixer minimum time - all four tracks update only the fract bytes
-; end of sample check needs to do only one byte, but not end of sample yet
-; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3)*4 + 98*4 = 568 cycles
+; mixer minimum time - all four tracks update only the fract bytes,
+; and not end of sample yet
+; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 616 cycles
 ;
-; mixer likely average case, 4 tracks updating two bytes
-; two bytes to check end of sample, but not end yet
-; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+2 +3+3+3)*4 + 98*4 = 632
+; mixer likely average case, all four tracks updating two bytes
+; and not end of sample yet
+; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 648
 
-; mixer worst case, all four tracks have to update all four bytes, and all four
-; end-of-sample bytes need to be checked, but not end of sample yet
-; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+2 +3+3+2 +3+3+3)*4 + 98*4 = 720
+; mixer worst case, all four tracks have to update all four bytes,
+; and not end of sample yet
+; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 704
 
 ; time inside the lookahead code:
 ; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*16 = 864 cycles
@@ -451,39 +447,39 @@ rts
 ; C64 final timings:
 
 ; best case:
-; 10 + 568 + 864 + 14 = 1456 cycles for 8 sample pairs
-; 1456 / 16 = average of 91 cycles/sample
+; 10 + 616 + 864 + 14 = 1504 cycles for 8 sample pairs
+; 1504 / 16 = average of 94 cycles/sample
 
 ; likely average:
-; 10 + 632 + 864 + 14 = 1520 cycles
-; 1520 / 16 = average of 95 cycles/sample
+; 10 + 648 + 864 + 14 = 1536 cycles
+; 1536 / 16 = average of 96 cycles/sample -- we'll rouind this up to 100.
 
 ; worst case:
-; 10 + 720 + 864 + 14 = 1608 cycles
-; 1608 / 16 = average of ~101 cycles/sample
+; 10 + 704 + 864 + 14 = 1592 cycles
+; 1592 / 16 = average of ~100 cycles/sample
 
 
 ; C128 final timings, just add 40*4 to each of the above:
 
 ; best case:
-; 10 + 568 + 864 + 14 + 40*4 = 1616 cycles for 8 sample pairs
-; 1616 / 16 = average of 101 cycles/sample (equivalent to ~51, 1 MHz cycles)
+; 10 + 616 + 864 + 14 + 40*4 = 1664 cycles for 8 sample pairs
+; 1664 / 16 = average of 104 cycles/sample (equivalent to ~51, 1 MHz cycles)
 
 ; likely average:
-; 10 + 632 + 864 + 14 + 40*4 = 1680 cycles
-; 1680 / 16 = average of 105 cycles/sample (~53 / 1 MHz)
+; 10 + 648 + 864 + 14 + 40*4 = 1696 cycles
+; 1696 / 16 = average of 106 cycles/sample (53 / 1 MHz) -- round up to 110 (55)
 
 ; worst case:
-; 10 + 720 + 864 + 14 + 40*4 = 1768 cycles
-; 1768 / 16 = average of ~111 cycles/sample (~56 / 1 MHz)
+; 10 + 704 + 864 + 14 + 40*4 = 1752 cycles
+; 1752 / 16 = average of ~110 cycles/sample (~56 / 1 MHz)
 
 
-; C64 should be able to hit almost 6.5 kHz with the screen off, SID 4-bit stereo:
-; 1022727/(105+53) = ~6472.96
+; C64 should be able to hit almost 6.7 kHz with the screen off, SID 4-bit stereo:
+; 1022727/(100+53) = ~6684.49
 
 ; or 5.2 KHz with the screen on:
 ; 1022727/195 = ~5244.75
 
-; C128 should be able to max-out at almost 12.5 kHz, SID 4-bit stereo:
-; (1022727*2)/(112+52)  OR  1022727/((112+52)/2) = ~12472.28
+; C128 should be able to max-out at about 12.6 kHz, SID 4-bit stereo:
+; (1022727*2)/(110+52)  OR  1022727/((110+52)/2) = ~12626.26
 
