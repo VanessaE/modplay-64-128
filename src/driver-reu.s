@@ -238,7 +238,7 @@ reu_gen_sample_loop
 			inc sample_pointers_mids+track				; 5
 			lda sample_pointers_mids+track				; 3
 			sta DMA_HI									; 4
-			beq .reu_fix_dma_bank						; 3/2
+			bne .reu_fix_dma_bank						; 3/2
 
 			inc sample_pointers_highs+track				; 5
 			lda sample_pointers_highs+track				; 3
