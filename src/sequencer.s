@@ -121,6 +121,8 @@ start_sequencer
 	dex
 
 	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl nple
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 11*40 + 18
@@ -157,22 +159,25 @@ start_sequencer
 	}
 
 	lda #0
-	beq +
+	beq nple
 
 next_pattern
 
 	inc current_song_pos
 	lda current_song_pos
 	cmp number_of_song_positions
-	bne +
+	bne nple
 
 	jmp stop_song
 
-+	tax
+nple
+	tax
 	lda pattern_table,x
 	sta seq_current_pattern_number
 
 	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl next_row
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 11*40 + 15
@@ -259,6 +264,8 @@ next_row
 	ldx seq_current_row
 
 	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl fr
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 13
@@ -294,6 +301,7 @@ next_row
 		sta VDC+1
 	}
 
+fr
 	+JSR_INDIRECT (fetch_row_vec)
 	ldy #0
 	sty seq_current_track
