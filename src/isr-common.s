@@ -23,11 +23,15 @@ isr_startup
 	clc								; some RAM devices are faster than others
 	adc ram_driver_mixer_cycle_count ; so we have to factor that in.
 
-	!ifdef c128 {
-		sta dividend				; on C64 we need to sync to the VIC-II
-		lda #0						; raster, so we divide that total cycles
-		rol							; figure by the raster line length
-		sta dividend+1
+	!ifndef c128 {
+
+		bit enable_screen_on_playback
+		bpl +
+
+		sta dividend				; on C64 with the screen on, we need to
+		lda #0						; sync to the VIC-II raster, so we divide
+		rol							; that total cycles figure by the raster
+		sta dividend+1				; line length
 		lda raster_len
 		sta divisor
 		lda #0
@@ -41,14 +45,18 @@ isr_startup
 		jsr multiply_8x8			; and multiply it back up, thus rounding
 		ldx product					; the ISR time to the next whole multiple
 		ldy product+1				; of the raster length
-	} else {
-		tax							; on the C128 we don't need all that BS 😛
-		lda #0						; because VIC-IIe is always blanked, so
-		rol							; there's no need to sync to the raster.
-		tay
+		jmp ++
 	}
 
-	stx isr_trigger_interval
+; if the screen is off, or on C128 in any case, we don't need all that BS 😛
+; because no VIC-II/IIe screen means no need to sync to the raster.
+
++	tax 
+	lda #0
+	rol
+	tay
+
+++	stx isr_trigger_interval
 	sty isr_trigger_interval+1
 
 	sec

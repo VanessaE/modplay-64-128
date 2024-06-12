@@ -9,9 +9,9 @@
 
 reu_set_mixer_speed_figures
 	!ifndef c128 {
-		lda #120
+		lda #105
 	} else {
-		lda #65
+		lda #56
 	}
 	sta ram_driver_mixer_cycle_count
 
@@ -316,12 +316,12 @@ reu_gen_sample_loop
 		.reu_fetch_sample_data
 
 			lda #(lookahead_track_offset/4)				; 2
+			sta DMA_DAL									; 4
 
 			!ifdef c128 {
 				sta VIC+$30								; 4
 			}
 
-			sta DMA_DAL									; 4
 			sty DMA_CMD									; 4 + (8 or 16)
 			sta DMA_DAL									; 4
 			sty DMA_CMD									; 4 + (8 or 16)
@@ -437,6 +437,11 @@ rts
 ; time to fetch 64 bytes of lookahead data for one track
 ; 2 +4+4+16 +4+4+16 +4+4+16 +4+4+16 = 98 cycles
 
+; on C128, add 8 cycles for the 1/2 MHz switches.  Since most of the DMA
+; commands, including the actual fetch, are run in 1 MHz mode, and there's
+; half as much data being fetched, the timings for C128 are:
+; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +8 = 138 cycles
+
 ; mixer minimum time - all four tracks update only the fract bytes
 ; end of sample check needs to do only one byte, but not end of sample yet
 ; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3)*4 + 98*4 = 568 cycles
@@ -454,6 +459,9 @@ rts
 
 ; time to close the loop: 4+2+2+6 = 14 cycles
 
+
+; C64 final timings:
+
 ; best case:
 ; 10 + 568 + 864 + 14 = 1456 cycles for 8 sample pairs
 ; 1456 / 16 = average of 91 cycles/sample
@@ -465,3 +473,29 @@ rts
 ; worst case:
 ; 10 + 720 + 864 + 14 = 1608 cycles
 ; 1608 / 16 = average of ~101 cycles/sample
+
+
+; C128 final timings, just add 40*4 to each of the above:
+
+; best case:
+; 10 + 568 + 864 + 14 + 40*4 = 1616 cycles for 8 sample pairs
+; 1616 / 16 = average of 101 cycles/sample (equivalent to ~51, 1 MHz cycles)
+
+; likely average:
+; 10 + 632 + 864 + 14 + 40*4 = 1680 cycles
+; 1680 / 16 = average of 105 cycles/sample (~53 / 1 MHz)
+
+; worst case:
+; 10 + 720 + 864 + 14 + 40*4 = 1768 cycles
+; 1768 / 16 = average of ~111 cycles/sample (~56 / 1 MHz)
+
+
+; C64 should be able to hit almost 6.5 kHz with the screen off, SID 4-bit stereo:
+; 1022727/(105+53) = ~6472.96
+
+; or 5.2 KHz with the screen on:
+; 1022727/195 = ~5244.75
+
+; C128 should be able to max-out at almost 12.5 kHz, SID 4-bit stereo:
+; (1022727*2)/(112+52)  OR  1022727/((112+52)/2) = ~12472.28
+

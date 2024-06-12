@@ -26,9 +26,9 @@ rts
 
 sid_get_timing
 	!ifndef c128 {
-		lda #60
+		lda #53
 	} else {
-		lda #30
+		lda #26
 	}
 rts
 
