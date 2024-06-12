@@ -14,18 +14,6 @@ reu_set_mixer_speed_figures
 		lda #56
 	}
 	sta ram_driver_mixer_cycle_count
-
-	; since the REU driver fetches/buffers 8 sample pairs per mixer loop
-	; this adjustment will result in calculated tick times 8x higher than is
-	; "correct", for precision-sake later on.
-
-	lda #56
-	sta pitch_fine_adjust_constant
-
-	; this count divides that figure back down to normal.
-
-	lda #3
-	sta mixer_count_shifts
 rts
 
 reu_fetch_row

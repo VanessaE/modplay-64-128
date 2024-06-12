@@ -39,7 +39,7 @@
 	seq_tempo_bpm					= $36
 	seq_ticks_per_division			= $37
 	seq_ticks_counter				= $38
-	mixer_count_shifts				= $39
+	; free: $39
  	pitch_slide_up_rates			= $3a ; 8 bytes
 	pitch_slide_down_rates			= $42 ; 8 bytes
 	pitch_slide_to_note_rates		= $4a ; 8 bytes
@@ -237,4 +237,9 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
-tempo_fine_adjust_constant = 14500
+tempo_fine_adjust_constant = 14250
+
+; this value is around 16x higher than "proper", for the sake of precision
+pitch_fine_adjust_constant = 100
+
+

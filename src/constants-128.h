@@ -44,8 +44,7 @@
 	one_ten_thousandth_second		= $0275
 	number_of_song_positions		= $0277
 	number_of_patterns				= $0278
-	; free: $0279
-	pitch_fine_adjust_constant		= $027a
+	; free: $0279, $027a
 	ram_driver_mixer_cycle_count	= $027b
 	playback_speed_fine_tune		= $027c ; 2 bytes
 	free_memory_start				= $027e ; 3 bytes

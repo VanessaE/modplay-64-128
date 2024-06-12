@@ -88,7 +88,7 @@ start_sequencer
 	lsr
 	lda isr_trigger_interval
 	ror
-	ldx pitch_fine_adjust_constant
+	ldx #pitch_fine_adjust_constant
 	jsr multiply_8x8
 
 	lda product
@@ -621,15 +621,16 @@ get_stepper_value
 	lda stepper_dividend_precalc+1
 	sta dividend+2
 	jsr divide_24by24
-
+	clc
 	lda quotient
-	ldx mixer_count_shifts
--	lsr quotient+2
-	ror quotient+1
+	lsr quotient+1
 	ror
-	dex
-	bne -
-
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
 	ldx quotient+1
 rts
 

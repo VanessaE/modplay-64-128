@@ -9,8 +9,7 @@
 	one_ten_thousandth_second		= $02a7 ; 2 bytes
 	number_of_song_positions		= $02a9
 	number_of_patterns				= $02aa
-	; free: $02ab
-	pitch_fine_adjust_constant		= $02ac
+	; free: $02ab, $02ac
 	ram_driver_mixer_cycle_count	= $02ad
 	playback_speed_fine_tune		= $02ae ; 2 bytes
 	config_space					= $02b0 ; 16 bytes
