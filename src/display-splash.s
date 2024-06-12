@@ -75,7 +75,7 @@ rts
 	wrong_screen_msg
 		!byte LGRY,CLR,LOWER
 		!fill 12, DOWN
-		!text "Please switch to the 80-column display."
+		!text "please switch to the 80-column display."
 		!byte 0
 }
 
