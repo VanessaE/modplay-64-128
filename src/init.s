@@ -287,8 +287,10 @@ init
 
 
 ; ############# we're dumping-out early here
+
 	jmp clear_main_memory
 
+; ############
 
 
 	lda config_filename_len
@@ -317,8 +319,6 @@ init
 
 
 ; ####### end of main init code
-
-
 
 zero_count	!byte 0
 
@@ -352,6 +352,12 @@ final_clear_copy
 	lda #>clear_main_memory
 	sta tempzp_e+1
 	jsr copy_code
+
+	ldy #$ff
+-	iny
+	lda fmemtxt,y
+	sta clear_main_memory+$40,y
+	bne -
 rts
 
 clear_main_memory_origin
@@ -368,8 +374,15 @@ clear_main_memory_origin
 	ldx tempzp_d+1
 	cpx #>free_memory_end
 	bne -
+
+	ldy #$ff
+-	iny
+	lda clear_main_memory+$40,y
+	sta main_mem_free_start,y
+	bne -
 	rts
-!byte 0,0,0
+
+	!byte 0,0,0
 
 charset_copy
 	!ifndef c128 {
@@ -535,3 +548,6 @@ blur_table_origin
 	!fill 9,132			; "▎" through "▝"
 	!byte 138			; "┛"
 	!byte 132,132		; "▘" and "▚"
+
+fmemtxt
+	!text "free memory start",0

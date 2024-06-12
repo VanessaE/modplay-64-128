@@ -61,8 +61,8 @@ c128:
 
 	acme $(OPTIONS) -Dc128=1 -o src/autorun-128.o src/autorun-128.s
 	acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
-	acme $(OPTIONS) -Dc128=1 -o src/mp128.o src/modplay.s
-	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o src/c128-boot-sect.o src/c128-boot-sect.s
+	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o src/mp128.o src/modplay.s
+	acme $(OPTIONS) -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
 
 	cat src/autorun-128.o \
 		src/display-splash-128.o \

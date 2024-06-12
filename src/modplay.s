@@ -156,8 +156,6 @@ zp_backup
 ; copied to another part of memory for runtime use, or which reserves memory
 ; via the program counter.
 
-!text "free mem",0,0,0
-
 wipe_memory_start
 
 !source "src/init.s"
