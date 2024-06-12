@@ -4,7 +4,7 @@
 
 start_main_player
 	!ifdef c128 {
-		jsr gray_out_blur_out
+		jsr gray_out
 
 		clc
 		jsr draw_medium_popup
@@ -181,14 +181,16 @@ rts
 single_sample_player
 	php
 	sei
-	jsr gray_out_blur_out
-	jsr switch_to_secondary_screen
 
 	!ifdef c128 {
+		jsr gray_out
 		clc
 	} else {
+		jsr gray_out_blur_out
 		sec
 	}
+
+	jsr switch_to_secondary_screen
 
 	jsr draw_medium_popup
 

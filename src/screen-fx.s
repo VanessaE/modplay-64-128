@@ -2,14 +2,13 @@
 
 !text "screen fx",0
 
-gray_out_blur_out
-	jsr gray_out
-	jsr blur_out
-	jsr switch_to_secondary_screen
-	!ifdef c128 {
-		jsr reset_attributes_charset
-	}
-rts
+!ifndef c128 {
+	gray_out_blur_out
+		jsr gray_out
+		jsr blur_out
+		jsr switch_to_secondary_screen
+	rts
+}
 
 gray_out
 	!ifndef c128 {
@@ -29,8 +28,8 @@ gray_out
 	}
 rts
 
-blur_out
-	!ifndef c128 {
+!ifndef c128 {
+	blur_out
 		ldy #0
 	-	!for .page, 0, 3 {
 			lda #132
@@ -43,67 +42,8 @@ blur_out
 		}
 		dey
 		bne -
-	} else {
-		lda #>VDC_SCREEN
-		sta tempzp_d
-		lda #>vdc_secondary_screen
-		sta tempzp_d+1
-
-	.nextpage
-	-	bit VDC
-		bpl -
-		lda #18
-		sta VDC
-		lda tempzp_d
-		sta VDC+1
-		lda #19
-		sta VDC
-		lda #0
-		sta VDC+1
-		lda #31
-		sta VDC
-
-		ldy #0
-	-	bit VDC
-		bpl -
-		lda VDC+1
-		sta audio_buffer_left,y
-		iny
-		bne -
-
-	-	bit VDC
-		bpl -
-		lda #18
-		sta VDC
-		lda tempzp_d+1
-		sta VDC+1
-		lda #19
-		sta VDC
-		lda #0
-		sta VDC+1
-		lda #31
-		sta VDC
-
-		ldy #0
-	-	bit VDC
-		bpl -
-		lda #132
-		sec
-		ldx audio_buffer_left,y
-		cpx #128
-		bcs +
-		lda blurring_table,x
-	+	sta VDC+1
-		iny
-		bne -
-
-		inc tempzp_d
-		inc tempzp_d+1
-		lda tempzp_d+1
-		cmp #>(vdc_secondary_screen+$0800)
-		bne .nextpage
-	}
-rts
+	rts
+}
 
 switch_to_primary_screen ; also switches to the PETSCII charset on C64
 	!ifndef c128 {
