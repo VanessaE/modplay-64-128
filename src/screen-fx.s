@@ -79,8 +79,8 @@ clear_primary_screen_early	; redirect the KERNAL and clear
 	jsr CHROUT
 rts
 
-switch_to_secondary_screen ; also switches to the ASCII charset on C64
-	!ifndef c128 {
+!ifndef c128 {
+	switch_to_secondary_screen ; also switches to the ASCII charset on C64
 		lda CIA2
 		and #$fc
 		sta CIA2
@@ -88,18 +88,8 @@ switch_to_secondary_screen ; also switches to the ASCII charset on C64
 		sta VIC+$18
 		lda #>secondary_screen ; point the KERNAL
 		sta HIBASE
-	} else {
-		lda #12
-		sta VDC
-		lda #>(vdc_secondary_screen)
-		sta VDC+1
-		sta VDC_VM3 ; point the KERNAL
-		lda #13
-		sta VDC
-		lda #<(vdc_secondary_screen)
-		sta VDC+1
-	}
-rts
+	rts
+}
 
 !ifdef c128 {
 	reset_attributes_charset

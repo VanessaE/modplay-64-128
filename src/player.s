@@ -188,9 +188,8 @@ single_sample_player
 	} else {
 		jsr gray_out_blur_out
 		sec
+		jsr switch_to_secondary_screen
 	}
-
-	jsr switch_to_secondary_screen
 
 	jsr draw_medium_popup
 

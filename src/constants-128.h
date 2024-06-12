@@ -110,14 +110,12 @@
 	; accounting for load addr, plus one disk block for expansion sake.
 	splash_128_end_check = program_start + (254*6) - 1
 
-	free_memory_end					= $a000 ; this allows to reclaim the load buf
+	free_memory_end					= $a100 ; this allows to reclaim the load buf
 											; when using the main mem driver
 
-	load_buffer						= $9a00 ; 5*254 bytes (plus some waste)
-	load_buffer_end					= $9ef5 ; plus one page for overflow
-	divide_by_16_table				= $a000
-
-	blurring_table					= $a100 ; 128 bytes
+	load_buffer						= $9b00 ; 5*254 bytes (plus some waste)
+	load_buffer_end					= $9ff5 ; plus one page for overflow
+	divide_by_16_table				= $a100
 
 	playlist_filenames				= $a200 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $ae00
@@ -182,7 +180,6 @@
 	VIC_SCREEN						= $0400
 	VDC_SCREEN						= $0000
 	VDC_ATTRIBUTES					= $0800
-	vdc_secondary_screen			= $1000
 	VDC_CHARSETS					= $2000
 	VDC_VM3							= $0a2e ; base of VDC screen mem
 

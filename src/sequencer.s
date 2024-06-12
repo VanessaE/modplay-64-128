@@ -144,7 +144,7 @@ start_sequencer
 		sta secondary_screen + 11*40 + 19
 	} else {
 		!addr {
-			vdc_target = (vdc_secondary_screen + 12*80 + 38)
+			vdc_target = (VDC_SCREEN + 12*80 + 38)
 		}
 
 		lda #18
@@ -208,8 +208,8 @@ nple
 		sta secondary_screen + 11*40 + 34
 	} else {
 		!addr {
-			vdc_target2 = (vdc_secondary_screen + 12*80 + 35)
-			vdc_target3 = (vdc_secondary_screen + 12*80 + 53)
+			vdc_target2 = (VDC_SCREEN + 12*80 + 35)
+			vdc_target3 = (VDC_SCREEN + 12*80 + 53)
 		}
 
 		lda #18
@@ -287,7 +287,7 @@ next_row
 		sta secondary_screen + 12*40 + 14
 	}  else {
 		!addr {
-			vdc_target4 = (vdc_secondary_screen + 13*80 + 34)
+			vdc_target4 = (VDC_SCREEN + 13*80 + 34)
 		}
 
 		lda #18
@@ -517,8 +517,8 @@ set_mixer_loops_per_tick
 		sta secondary_screen + 12*40 + 31
 	} else {
 		!addr {
-			vdc_target5 = (vdc_secondary_screen + 13*80 + 48)
-			vdc_target6 = (vdc_secondary_screen + 13*80 + 51)
+			vdc_target5 = (VDC_SCREEN + 13*80 + 48)
+			vdc_target6 = (VDC_SCREEN + 13*80 + 51)
 		}
 
 		lda #18

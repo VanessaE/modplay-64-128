@@ -276,7 +276,10 @@ init
 	sta one_ten_thousandth_second+1
 
 ++	jsr charset_copy
-	jsr blur_table_copy
+
+	!ifndef c128 {
+		jsr blur_table_copy
+	}
 
 	jsr final_clear_copy
 
@@ -470,13 +473,15 @@ charset_copy
 	rts
 }
 
-blur_table_copy
-	ldy #0
--	lda blur_table_origin,y
-	sta blurring_table,y
-	iny
-	bne -
-rts
+!ifndef c128 {
+	blur_table_copy
+		ldy #0
+	-	lda blur_table_origin,y
+		sta blurring_table,y
+		iny
+		bne -
+	rts
+}
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
@@ -527,27 +532,29 @@ reu_banknum
 reu_sig_candidate_start
 	!text $ff,"icanhaz?"; same length as above
 
-blur_table_origin
-	!fill 32,132		; "@" through "z", "[" through "🠜"
-	!byte 32			; space
-	!fill 31,132		; ' !"#... ' through "?"
-	!byte 134				;"━"
-	!fill 28,132		; "A" through "Z", "╋" and "🮌" 
-	!byte 133				; "┃"
-	!byte 132,132		; "🮕" and "🮘"
-	!byte 32			; "shift space"
-	!fill 10,132		; "▌" thorugh the second "🮇"
-	!byte 139			; "┣"
-	!byte 132			; "▗"
-	!byte 137			; "┗"
-	!byte 136			; "┓"
-	!byte 132			; "▂"
-	!byte 135			; "┏"
-	!byte 132,132		; "┻" and "┳"
-	!byte 140			; "┫"
-	!fill 9,132			; "▎" through "▝"
-	!byte 138			; "┛"
-	!byte 132,132		; "▘" and "▚"
+!ifndef c128 {
+	blur_table_origin
+		!fill 32,132		; "@" through "z", "[" through "🠜"
+		!byte 32			; space
+		!fill 31,132		; ' !"#... ' through "?"
+		!byte 134				;"━"
+		!fill 28,132		; "A" through "Z", "╋" and "🮌" 
+		!byte 133				; "┃"
+		!byte 132,132		; "🮕" and "🮘"
+		!byte 32			; "shift space"
+		!fill 10,132		; "▌" thorugh the second "🮇"
+		!byte 139			; "┣"
+		!byte 132			; "▗"
+		!byte 137			; "┗"
+		!byte 136			; "┓"
+		!byte 132			; "▂"
+		!byte 135			; "┏"
+		!byte 132,132		; "┻" and "┳"
+		!byte 140			; "┫"
+		!fill 9,132			; "▎" through "▝"
+		!byte 138			; "┛"
+		!byte 132,132		; "▘" and "▚"
+}
 
 fmemtxt
 	!text "free memory start",0
