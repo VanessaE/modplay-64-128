@@ -266,9 +266,6 @@ next_row
 		and #$0f
 		jsr to_hex
 		sta secondary_screen + 12*40 + 14
-
-		+JSR_INDIRECT (fetch_row_vec)
-		ldy #0
 	}  else {
 		!addr {
 			vdc_target4 = (vdc_secondary_screen + 13*80 + 34)
@@ -297,13 +294,15 @@ next_row
 		sta VDC+1
 	}
 
-next_track_this_row
+	+JSR_INDIRECT (fetch_row_vec)
+	ldy #0
 	sty seq_current_track
+
+next_track_this_row
 	tya
 	asl
-	asl
-	tax ; .X = track number x 4
-	stx sequencer_temp_x
+	asl					; .X = track number x 4
+	tax
 
 	; get sample number
 	lda seq_current_row_data,x
@@ -317,9 +316,8 @@ next_track_this_row
 	ora tempzpbk_g					; if sample number is 0, keep using the
 	beq +							; previous sample number
 	sta current_sample_numbers,y
+
 	jsr start_sample
-	ldx sequencer_temp_x
-	ldy seq_current_track
 
 	; get sample period
 +	lda seq_current_row_data,x		; if period is 0, keep using the
@@ -331,14 +329,13 @@ next_track_this_row
 +	lda seq_current_row_data,x
 	and #$0f
 	sta current_note_periods_highs,y
-	tax
 	lda seq_current_row_data+1,x
 	sta current_note_periods_lows,y
+
 	jsr set_pitch
 
 	; get effect command and its parameters
 getcmd
-	ldx sequencer_temp_x
 	lda seq_commands,y
 	sta seq_prev_commands,y
 	lda seq_command_arguments,y
@@ -367,6 +364,7 @@ getcmd
 	ldy seq_current_track
 
 +	iny
+	sty seq_current_track
 	cpy #4
 	beq +
 	jmp next_track_this_row
@@ -390,9 +388,9 @@ next_tick
 	jsr set_lookahead_addrs
 
 	+JSR_INDIRECT (run_mixer_vec)
+	ldy seq_current_track
 
 next_track_this_tick
-	ldy seq_current_track
 	lda seq_commands,y
 	asl
 	tax
@@ -402,11 +400,9 @@ next_track_this_tick
 	sta .rc+2
 
 .rc jsr $1234
-	ldy sequencer_temp_y
-
 	inc seq_current_track
-	lda seq_current_track
-	cmp #4
+	ldy seq_current_track
+	cpy #4
 	bne next_track_this_tick
 
 	dec seq_ticks_counter
@@ -548,8 +544,10 @@ rts
 
 ; [re-]start a new sample
 ; enter with .A = sample number, .Y = track number
+; .X/.Y-safe
 
 start_sample
+	stx sequencer_temp_x
 	tax
 	lda #0
 	sta vibrato_rates,y
@@ -575,10 +573,14 @@ start_sample
 	sta current_sample_end_addr_highs,y
 
 	lda sample_default_volume_levels,x
+
+	ldx sequencer_temp_x
+
 	; now just fall through into set_volume
 
 ; set the sample's volume
 ; enter with .A = volume level, .Y = track number
+; .Y will be preserved
 
 set_volume
 	sta current_sample_volume_levels,y
@@ -603,16 +605,21 @@ set_volume
 
 ++	lda #0
 	sta volume_table_vectors,y
+	ldy seq_current_track
 rts
 
 ; convert a note period into a sample stepper value
 ;
-; enter with .A/.X set to the desired note period
+; enter with .Y set to the track number whose period needs converted
 ; returns the stepper value in .A/.X (.A will be the fraction)
+; .Y will be preserved.
 
-get_stepper_value
+set_pitch
+	stx sequencer_temp_x
+	lda current_note_periods_lows,y
 	sta divisor
-	stx divisor+1
+	lda current_note_periods_highs,y
+	sta divisor+1
 	lda #0
 	sta divisor+2
 	sta dividend
@@ -631,15 +638,12 @@ get_stepper_value
 	ror
 	lsr quotient+1
 	ror
-	ldx quotient+1
-rts
 
-set_pitch
-	jsr get_stepper_value
+	ldx sequencer_temp_x
 	ldy seq_current_track
-
 	sta current_steprates_fract,y
-	stx current_steprates_lows,y
+	lda quotient+1
+	sta current_steprates_lows,y
 rts
 
 set_lookahead_addrs
