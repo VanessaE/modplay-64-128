@@ -65,9 +65,11 @@ sid_isr_4b_mono					; 7 cycles coming in
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
+	clc							; 2
 	lda audio_buffer_left,x		; 4
+	adc audio_buffer_right,x	; 4
+	lsr							; 2
 	sta SID+$18					; 4
-	inc VIC+$20
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
@@ -83,8 +85,6 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
 	sta SID+$18					; 4
-	inc VIC+$20
-
 	lda audio_buffer_right,x	; 4
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
@@ -93,4 +93,4 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
-; ISR requires 45+4 cycles in mono, 53+4 cycles for stereo
+; each of the ISRs runs for 53 cycles
