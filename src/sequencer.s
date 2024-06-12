@@ -376,11 +376,12 @@ getcmd
 	beq +							; (command #0 + nonzero args = arpeggio)
 
 	lda start_effect_command_jump_table,x
-	sta .sc+1
+	sta start_command_vec+1
 	lda start_effect_command_jump_table+1,x
-	sta .sc+2
+	sta start_command_vec+2
 
-.sc jsr $1234
+start_command_vec					; start or initialize an effect command
+	jsr $1234						; (also for stuff that just runs once)
 	ldy seq_current_track
 
 +	iny
@@ -410,11 +411,12 @@ next_track_this_tick
 	asl
 	tax
 	lda run_effect_command_jump_table,x
-	sta .rc+1
+	sta run_command_vec+1
 	lda run_effect_command_jump_table+1,x
-	sta .rc+2
+	sta run_command_vec+2
 
-.rc jsr $1234
+run_command_vec					; run effect command if it needs tick-interval timing
+	jsr $1234
 	inc seq_current_track
 	ldy seq_current_track
 	cpy #4
@@ -435,7 +437,7 @@ next_track_this_tick
 	adc #0
 	sta mixer_countdown
 
-run_mixer_vec
+run_mixer_vec					; call the mixer loop!
 	jsr $1234
 	ldy seq_current_track
 
