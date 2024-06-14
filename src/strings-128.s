@@ -402,6 +402,18 @@ main_player_speed_msg
 	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"  ",RETURN
 	!byte 0
 
+main_player_regen_tables_msg
+	!byte RETURN,YEL
+	!text "  A player setting changed", RETURN
+	!text "that altered the sample rate,",RETURN
+	!text "    re-generating pitch",RETURN
+	!text "    and tempo tables..."
+	!byte 0
+
+main_player_regen_erase_tables_msg
+	!fill 4,UP
+	!byte RETURN,ESC,"@",0
+
 press_key_msg
 	!text "Press any key",0
 

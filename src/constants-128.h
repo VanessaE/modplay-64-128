@@ -16,9 +16,7 @@
 
 	repeat_mode						= $0203
 	volume_tables_resolution		= $0204
-	tempo_table_isr_time			= $0205
-	pitch_table_isr_time			= $0206
-
+	; free $0205, $0206
 	playlist_length					= $0207
 	playlist_scroll_pos				= $0208
 	playlist_print_file_counter		= $0209
@@ -50,8 +48,9 @@
 	audio_driver_isr_cycle_count	= $0277
 	ram_driver_cycle_count			= $0278
 	isr_trigger_interval			= $0279
+	last_isr_trigger_interval		= $027a
 
-	; free: $027a to $027d
+	; free: $027b to $027d
 
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0

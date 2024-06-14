@@ -74,11 +74,9 @@ start_main_player
 
 	} else {
 		bit enable_screen_on_playback
-		bmi +
-		jsr disable_screen
-		jmp ++
+		bpl ++
 
-	+	jsr gray_out_blur_out
+		jsr gray_out_blur_out
 		sec
 		jsr draw_medium_popup
 		lda #0
@@ -138,26 +136,83 @@ start_main_player
 		ldx #<main_player_hline_ascii
 		ldy #>main_player_hline_ascii
 		jsr print_msg_ascii
-
 }
 
 ++	php
 	sei
 	jsr disable_roms
-	jsr backup_zero_page
 
-	; these tables will only regenerate if needed
 	+JSR_INDIRECT (audio_get_resolution_vec)
 	jsr generate_volume_tables
 	jsr isr_set_interval
+
+	lda isr_trigger_interval
+	cmp last_isr_trigger_interval
+	beq no_regen
+	sta last_isr_trigger_interval
+
+	jsr enable_kernal_only
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bmi +
+
+		jsr draw_short_popup
+		lda #0
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		jsr print_msg
+		jmp gentabs
+
+	+	lda #0
+		ldx #<main_player_regen_tables_msg_ascii
+		ldy #>main_player_regen_tables_msg_ascii
+		jsr print_msg_ascii
+	} else {
+		lda #0
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		jsr print_msg
+	}
+
+gentabs
+	jsr disable_roms
+
 	jsr generate_tempo_table
 	jsr generate_pitch_table
+
+	jsr enable_kernal_only
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl noemsg
+
+		lda #0
+		ldx #<main_player_regen_erase_tables_msg_ascii
+		ldy #>main_player_regen_erase_tables_msg_ascii
+		jsr print_msg_ascii
+	} else {
+		lda #0
+		ldx #<main_player_regen_erase_tables_msg
+		ldy #>main_player_regen_erase_tables_msg
+		jsr print_msg
+	}
+
+noemsg
+	jsr disable_roms
+
+no_regen
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bmi bkzp
+		jsr disable_screen
+	}
+
+bkzp
+	jsr backup_zero_page
 	jsr isr_startup
 
 	jsr start_sequencer
 
 	jsr isr_shutdown
-
 	jsr restore_zero_page
 	jsr enable_kernal_only
 	plp

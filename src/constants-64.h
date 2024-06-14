@@ -13,8 +13,8 @@
 	audio_driver_isr_cycle_count	= $02ab
 	ram_driver_cycle_count			= $02ac
 	isr_trigger_interval			= $02ad
-
-	; free: $02ae, $02af
+	last_isr_trigger_interval		= $02ae
+	; free: $02af
 	config_space					= $02b0 ; 16 bytes
 	string_buffer					= $02c0 ; 48 bytes
 	uint16_string_buffer			= $02f0 ; 7 bytes (of 8)
@@ -29,9 +29,7 @@
 	pal_flag						= $0336
 	repeat_mode						= $0337
 	volume_tables_resolution		= $0338
-	tempo_table_isr_time			= $0339
-	pitch_table_isr_time			= $033a
-
+	; free: $0339, $033a
 	playlist_length					= $033b
 	playlist_scroll_pos				= $033c
 	playlist_print_file_counter		= $033d

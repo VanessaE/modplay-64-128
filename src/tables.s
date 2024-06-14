@@ -81,13 +81,6 @@ generate_volume_tables
 rts
 
 generate_tempo_table
-	lda isr_trigger_interval
-	cmp tempo_table_isr_time
-	bne +
-	rts
-
-+	sta tempo_table_isr_time
-
 	lda #0
 	ldy #31
 -	sta tempo_table_fracts,y
@@ -98,7 +91,7 @@ generate_tempo_table
 	ldx #32 ; entries 0-31 are unused.
 	stx tempzp_d
 
--	lda tempo_table_isr_time
+-	lda isr_trigger_interval
 
 	jsr multiply_8x8
 
@@ -128,13 +121,6 @@ generate_tempo_table
 rts
 
 generate_pitch_table
-	lda isr_trigger_interval
-	cmp pitch_table_isr_time
-	bne +
-	rts
-
-+	sta pitch_table_isr_time
-
 	lda #0
 	sta tempzp_d
 	sta tempzp_e
@@ -155,7 +141,7 @@ generate_pitch_table
 	lda #>pitch_table_lows
 	sta tempzp_e+1
 
-	lda pitch_table_isr_time
+	lda isr_trigger_interval
 	ldx #pitch_fine_adjust_constant
 	jsr multiply_8x8
 

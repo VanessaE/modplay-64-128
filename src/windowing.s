@@ -16,6 +16,10 @@
 	mini_popup_width				= 18
 	mini_popup_height				= 5
 
+	short_popup_left_column			= 4
+	short_popup_width				= 30
+	short_popup_height				= 5
+
 	medium_popup_left_column		= 4
 	medium_popup_width				= 30
 	medium_popup_height				= 13
@@ -32,9 +36,13 @@
 	mini_popup_width				= 30
 	mini_popup_height				= 5
 
+	short_popup_left_column			= 0
+	short_popup_width				= 30
+	short_popup_height				= 5
+
 	medium_popup_left_column		= 0
 	medium_popup_width				= 30
-	medium_popup_height				= 10
+	medium_popup_height				= 13
 
 	tall_popup_left_column			= 0
 	tall_popup_width				= 30
@@ -387,6 +395,12 @@ rts
 draw_mini_popup
 	ldx #mini_popup_height
 	ldy #mini_popup_width
+	jsr draw_window
+rts
+
+draw_short_popup
+	ldx #short_popup_height
+	ldy #short_popup_width
 	jsr draw_window
 rts
 

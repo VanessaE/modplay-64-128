@@ -482,7 +482,37 @@ press_key_msg
 	main_player_speed_msg_ascii
 		!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"  ",RETURN
 		!byte 0
+
+	main_player_regen_tables_msg_ascii
+		!byte RETURN
+		!fill 8,RIGHT
+		!text YEL,"A player setting altered",RETURN
+		!fill 5,RIGHT
+		!text "the sample rate, re-generating",RETURN
+		!fill 8,RIGHT
+		!text "pitch and tempo tables...",RETURN,0
+
+	main_player_regen_erase_tables_msg_ascii
+		!fill 3,UP
+		!fill 5,RIGHT
+		!fill 30," "
+		!byte RETURN
+		!fill 5,RIGHT
+		!fill 30," "
+		!byte RETURN
+		!fill 5,RIGHT
+		!fill 30," "
+		!byte 0
 }
+
+main_player_regen_tables_msg
+	!byte RETURN
+	!fill 8,RIGHT
+	!text YEL,"A player setting altered",RETURN
+	!fill 5,RIGHT
+	!text "the sample rate, re-generating",RETURN
+	!fill 8,RIGHT
+	!text "pitch and tempo tables...",RETURN,0
 
 mm_lo
 	!byte <line_2
