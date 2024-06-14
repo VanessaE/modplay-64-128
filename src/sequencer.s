@@ -437,9 +437,12 @@ run_command_vec					; run effect command if it needs tick-interval timing
 	adc #0
 	sta mixer_countdown
 
-run_mixer_vec					; call the mixer loop!
-	jsr $1234
+	; ----------------------------------
+	; run the mixer!
+	start_mixer_vec
+		jsr $1234
 	ldy seq_current_track
+	; ----------------------------------
 
 	dec seq_ticks_counter
 	bne next_tick
@@ -577,6 +580,9 @@ rts
 ;==================
 ; auxillary routines
 
+; the actual mixer loop where the raltime stuff happens
+; every cycle matters here.
+
 ; [re-]start a new sample
 ; enter with .A = sample number, .Y = track number
 ; .X/.Y-safe
@@ -679,104 +685,6 @@ set_pitch
 	sta current_steprates_fract,y
 	lda quotient+1
 	sta current_steprates_lows,y
-rts
-
-set_lookahead_addrs
-	!for lookahead_track, 0, 3 {
-		lda #0
-		sta sequencer_temp_a
-		sta sequencer_temp_a+1
-		clc
-
-		!zone lookahead_idx_set {
-			!for .idx4, 1, 15 {
-
-				!if lookahead_track = 0 {
-					!if .idx4 = 1  { !set .t = la_0_1  }
-					!if .idx4 = 2  { !set .t = la_0_2  }
-					!if .idx4 = 3  { !set .t = la_0_3  }
-					!if .idx4 = 4  { !set .t = la_0_4  }
-					!if .idx4 = 5  { !set .t = la_0_5  }
-					!if .idx4 = 6  { !set .t = la_0_6  }
-					!if .idx4 = 7  { !set .t = la_0_7  }
-					!if .idx4 = 8  { !set .t = la_0_8  }
-					!if .idx4 = 9  { !set .t = la_0_9  }
-					!if .idx4 = 10 { !set .t = la_0_10 }
-					!if .idx4 = 11 { !set .t = la_0_11 }
-					!if .idx4 = 12 { !set .t = la_0_12 }
-					!if .idx4 = 13 { !set .t = la_0_13 }
-					!if .idx4 = 14 { !set .t = la_0_14 }
-					!if .idx4 = 15 { !set .t = la_0_15 }
-				}
-
-				!if lookahead_track = 1 {
-					!if .idx4 = 1  { !set .t = la_1_1  }
-					!if .idx4 = 2  { !set .t = la_1_2  }
-					!if .idx4 = 3  { !set .t = la_1_3  }
-					!if .idx4 = 4  { !set .t = la_1_4  }
-					!if .idx4 = 5  { !set .t = la_1_5  }
-					!if .idx4 = 6  { !set .t = la_1_6  }
-					!if .idx4 = 7  { !set .t = la_1_7  }
-					!if .idx4 = 8  { !set .t = la_1_8  }
-					!if .idx4 = 9  { !set .t = la_1_9  }
-					!if .idx4 = 10 { !set .t = la_1_10 }
-					!if .idx4 = 11 { !set .t = la_1_11 }
-					!if .idx4 = 12 { !set .t = la_1_12 }
-					!if .idx4 = 13 { !set .t = la_1_13 }
-					!if .idx4 = 14 { !set .t = la_1_14 }
-					!if .idx4 = 15 { !set .t = la_1_15 }
-				}
-
-				!if lookahead_track = 2 {
-					!if .idx4 = 1  { !set .t = la_2_1  }
-					!if .idx4 = 2  { !set .t = la_2_2  }
-					!if .idx4 = 3  { !set .t = la_2_3  }
-					!if .idx4 = 4  { !set .t = la_2_4  }
-					!if .idx4 = 5  { !set .t = la_2_5  }
-					!if .idx4 = 6  { !set .t = la_2_6  }
-					!if .idx4 = 7  { !set .t = la_2_7  }
-					!if .idx4 = 8  { !set .t = la_2_8  }
-					!if .idx4 = 9  { !set .t = la_2_9  }
-					!if .idx4 = 10 { !set .t = la_2_10 }
-					!if .idx4 = 11 { !set .t = la_2_11 }
-					!if .idx4 = 12 { !set .t = la_2_12 }
-					!if .idx4 = 13 { !set .t = la_2_13 }
-					!if .idx4 = 14 { !set .t = la_2_14 }
-					!if .idx4 = 15 { !set .t = la_2_15 }
-				}
-
-				!if lookahead_track = 3 {
-					!if .idx4 = 1  { !set .t = la_3_1  }
-					!if .idx4 = 2  { !set .t = la_3_2  }
-					!if .idx4 = 3  { !set .t = la_3_3  }
-					!if .idx4 = 4  { !set .t = la_3_4  }
-					!if .idx4 = 5  { !set .t = la_3_5  }
-					!if .idx4 = 6  { !set .t = la_3_6  }
-					!if .idx4 = 7  { !set .t = la_3_7  }
-					!if .idx4 = 8  { !set .t = la_3_8  }
-					!if .idx4 = 9  { !set .t = la_3_9  }
-					!if .idx4 = 10 { !set .t = la_3_10 }
-					!if .idx4 = 11 { !set .t = la_3_11 }
-					!if .idx4 = 12 { !set .t = la_3_12 }
-					!if .idx4 = 13 { !set .t = la_3_13 }
-					!if .idx4 = 14 { !set .t = la_3_14 }
-					!if .idx4 = 15 { !set .t = la_3_15 }
-				}
-
-				lda sequencer_temp_a
-				adc current_steprates_fract + lookahead_track
-				sta sequencer_temp_a
-				lda sequencer_temp_a+1
-				adc current_steprates_lows + lookahead_track
-				sta sequencer_temp_a+1
-				adc #<(sample_data_buffer + lookahead_track * lookahead_track_offset)
-				sta .t + 1
-				lda #>(sample_data_buffer + lookahead_track * lookahead_track_offset)
-				adc #0
-				sta .t + 2
-			}
-		}
-	}
 rts
 
 unused

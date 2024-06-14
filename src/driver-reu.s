@@ -1,19 +1,19 @@
 ; RAM driver for standard REU
 
-; this bit tells other code how fast the RAM driver actually is
-; and is the average number of 1 MHz cycles consumed by the RAM driver mixer
-; per final sample byte pair, plus some fudge (so on C128 this will be a bit
-; over half the number of cycles needed).
-
 !text "reu driver",0,0,0
 
-reu_set_mixer_speed_figures
+; this is the average cycles per output sample pair
+; for faster CPUs, divide the raw count by the CPU MHz and round up.
+; written here as fetch routine time plus lookahead/mixer routine time
+; see full details below.
+
+reu_set_cycle_counts
 	!ifndef c128 {
-		lda #100
+		lda #42+54
 	} else {
-		lda #55
+		lda #39+27 ; equivalent 1 MHz cycles
 	}
-	sta ram_driver_mixer_cycle_count
+	sta ram_driver_cycle_count
 rts
 
 reu_fetch_row
@@ -199,121 +199,227 @@ set_registers_AXY ; setup REU registers (used for both reading and writing in si
 	sty DMA_CMD
 rts
 
-; rough draft mixer code
+; SET-UP LOOKAHEAD INDEXES/ADDRESSES
+; This plugs in the necessary adjustments to the mixer routine down below
+; so that it knows where to look for lookahead data.  This and the mixer
+; routine are part of the RAM driver because they have to be carefully
+; tailored to each system's/device's quirks to maximize speed and minimize lag
+; and delays.
 
-reu_mixer_entry
+set_lookahead_addrs
+	!for lookahead_track, 0, 3 {
+		lda #0
+		sta sequencer_temp_a
+		sta sequencer_temp_a+1
+		clc
+
+		!zone lookahead_idx_set {
+			!for .idx4, 1, 15 {
+
+				!if lookahead_track = 0 {
+					!if .idx4 = 1  { !set .t = la_0_1  }
+					!if .idx4 = 2  { !set .t = la_0_2  }
+					!if .idx4 = 3  { !set .t = la_0_3  }
+					!if .idx4 = 4  { !set .t = la_0_4  }
+					!if .idx4 = 5  { !set .t = la_0_5  }
+					!if .idx4 = 6  { !set .t = la_0_6  }
+					!if .idx4 = 7  { !set .t = la_0_7  }
+					!if .idx4 = 8  { !set .t = la_0_8  }
+					!if .idx4 = 9  { !set .t = la_0_9  }
+					!if .idx4 = 10 { !set .t = la_0_10 }
+					!if .idx4 = 11 { !set .t = la_0_11 }
+					!if .idx4 = 12 { !set .t = la_0_12 }
+					!if .idx4 = 13 { !set .t = la_0_13 }
+					!if .idx4 = 14 { !set .t = la_0_14 }
+					!if .idx4 = 15 { !set .t = la_0_15 }
+				}
+
+				!if lookahead_track = 1 {
+					!if .idx4 = 1  { !set .t = la_1_1  }
+					!if .idx4 = 2  { !set .t = la_1_2  }
+					!if .idx4 = 3  { !set .t = la_1_3  }
+					!if .idx4 = 4  { !set .t = la_1_4  }
+					!if .idx4 = 5  { !set .t = la_1_5  }
+					!if .idx4 = 6  { !set .t = la_1_6  }
+					!if .idx4 = 7  { !set .t = la_1_7  }
+					!if .idx4 = 8  { !set .t = la_1_8  }
+					!if .idx4 = 9  { !set .t = la_1_9  }
+					!if .idx4 = 10 { !set .t = la_1_10 }
+					!if .idx4 = 11 { !set .t = la_1_11 }
+					!if .idx4 = 12 { !set .t = la_1_12 }
+					!if .idx4 = 13 { !set .t = la_1_13 }
+					!if .idx4 = 14 { !set .t = la_1_14 }
+					!if .idx4 = 15 { !set .t = la_1_15 }
+				}
+
+				!if lookahead_track = 2 {
+					!if .idx4 = 1  { !set .t = la_2_1  }
+					!if .idx4 = 2  { !set .t = la_2_2  }
+					!if .idx4 = 3  { !set .t = la_2_3  }
+					!if .idx4 = 4  { !set .t = la_2_4  }
+					!if .idx4 = 5  { !set .t = la_2_5  }
+					!if .idx4 = 6  { !set .t = la_2_6  }
+					!if .idx4 = 7  { !set .t = la_2_7  }
+					!if .idx4 = 8  { !set .t = la_2_8  }
+					!if .idx4 = 9  { !set .t = la_2_9  }
+					!if .idx4 = 10 { !set .t = la_2_10 }
+					!if .idx4 = 11 { !set .t = la_2_11 }
+					!if .idx4 = 12 { !set .t = la_2_12 }
+					!if .idx4 = 13 { !set .t = la_2_13 }
+					!if .idx4 = 14 { !set .t = la_2_14 }
+					!if .idx4 = 15 { !set .t = la_2_15 }
+				}
+
+				!if lookahead_track = 3 {
+					!if .idx4 = 1  { !set .t = la_3_1  }
+					!if .idx4 = 2  { !set .t = la_3_2  }
+					!if .idx4 = 3  { !set .t = la_3_3  }
+					!if .idx4 = 4  { !set .t = la_3_4  }
+					!if .idx4 = 5  { !set .t = la_3_5  }
+					!if .idx4 = 6  { !set .t = la_3_6  }
+					!if .idx4 = 7  { !set .t = la_3_7  }
+					!if .idx4 = 8  { !set .t = la_3_8  }
+					!if .idx4 = 9  { !set .t = la_3_9  }
+					!if .idx4 = 10 { !set .t = la_3_10 }
+					!if .idx4 = 11 { !set .t = la_3_11 }
+					!if .idx4 = 12 { !set .t = la_3_12 }
+					!if .idx4 = 13 { !set .t = la_3_13 }
+					!if .idx4 = 14 { !set .t = la_3_14 }
+					!if .idx4 = 15 { !set .t = la_3_15 }
+				}
+
+				lda sequencer_temp_a
+				adc current_steprates_fract + lookahead_track
+				sta sequencer_temp_a
+				lda sequencer_temp_a+1
+				adc current_steprates_lows + lookahead_track
+				sta sequencer_temp_a+1
+				adc #<(sample_data_buffer + lookahead_track * lookahead_track_offset)
+				sta .t + 1
+				lda #>(sample_data_buffer + lookahead_track * lookahead_track_offset)
+				adc #0
+				sta .t + 2
+			}
+		}
+	}
+rts
+
+; THE ACTUAL MIXER ROUTINE
+; The hard work happens here 🙂
+
+reu_start_mixer
 	lda #0
 	sta DMA_DAH
 	lda #>sample_data_buffer
 	sta DMA_ADH
 	ldx audio_in_buf_index
 
-reu_gen_sample_loop
-	lda #<sample_data_buffer							; 2
-	sta DMA_ADL											; 4
-	clc													; 2
-	ldy #$91											; 2
+	reu_mixer_main_loop										; 6 cycles to enter
+		lda #<sample_data_buffer							; 2
+		sta DMA_ADL											; 4
+		clc													; 2
+		ldy #$91											; 2
 
-	!for track, 0, 3 {
-		!zone fetchloop {
+		!for track, 0, 3 {
+			!zone fetchloop {
 
-			lda sample_pointers_fract+track				; 3
-			adc current_steprates_fract+track			; 3
-			sta sample_pointers_fract+track				; 3
-			bcc .reu_fix_dma_top_three_bytes			; 3/2
+				lda sample_pointers_fract+track				; 3
+				adc current_steprates_fract+track			; 3
+				sta sample_pointers_fract+track				; 3
+				bcc .reu_fix_dma_top_three_bytes			; 3/2
 
-			lda sample_pointers_lows+track				; 3
-			adc current_steprates_lows+track			; 3
-			sta sample_pointers_lows+track				; 3
-			sta DMA_LO									; 4
-			bcc .reu_fix_dma_top_two_bytes				; 3/2
+				lda sample_pointers_lows+track				; 3
+				adc current_steprates_lows+track			; 3
+				sta sample_pointers_lows+track				; 3
+				sta DMA_LO									; 4
+				bcc .reu_fix_dma_top_two_bytes				; 3/2
 
-			inc sample_pointers_mids+track				; 5
-			lda sample_pointers_mids+track				; 3
-			sta DMA_HI									; 4
-			bne .reu_fix_dma_top_byte					; 3/2
+				inc sample_pointers_mids+track				; 5
+				lda sample_pointers_mids+track				; 3
+				sta DMA_HI									; 4
+				bne .reu_fix_dma_top_byte					; 3/2
 
-			inc sample_pointers_highs+track				; 5
-			lda sample_pointers_highs+track				; 3
-			sta DMA_BANK								; 4
-			bne .reu_check_end							; 3
+				inc sample_pointers_highs+track				; 5
+				lda sample_pointers_highs+track				; 3
+				sta DMA_BANK								; 4
+				bne .reu_check_end							; 3
 
-		.reu_fix_dma_top_three_bytes
-			lda sample_pointers_lows+track				; 3
-			sta DMA_LO									; 4
+			.reu_fix_dma_top_three_bytes
+				lda sample_pointers_lows+track				; 3
+				sta DMA_LO									; 4
 
-		.reu_fix_dma_top_two_bytes
-			lda sample_pointers_mids+track				; 3
-			sta DMA_HI									; 4
+			.reu_fix_dma_top_two_bytes
+				lda sample_pointers_mids+track				; 3
+				sta DMA_HI									; 4
 
-		.reu_fix_dma_top_byte
-			lda sample_pointers_highs+track				; 3
-			sta DMA_BANK								; 4
+			.reu_fix_dma_top_byte
+				lda sample_pointers_highs+track				; 3
+				sta DMA_BANK								; 4
 
-		.reu_check_end
-			sec											; 2
-			lda sample_pointers_lows+track				; 3
-			cmp current_sample_end_addr_lows+track		; 3
-			lda sample_pointers_mids+track				; 3
-			cmp current_sample_end_addr_mids+track		; 3
-			lda sample_pointers_highs+track				; 3
-			cmp current_sample_end_addr_highs+track		; 3
-			bcc .reu_fetch_sample_data					; 3/2
+			.reu_check_end
+				sec											; 2
+				lda sample_pointers_lows+track				; 3
+				cmp current_sample_end_addr_lows+track		; 3
+				lda sample_pointers_mids+track				; 3
+				cmp current_sample_end_addr_mids+track		; 3
+				lda sample_pointers_highs+track				; 3
+				cmp current_sample_end_addr_highs+track		; 3
+				bcc .reu_fetch_sample_data					; 3/2
 
-			clc											; 2
-			lda track_current_loop_flags+track			; 3
-			bne .reu_sample_has_loop					; 3/2
-			sta sample_pointers_mids+track				; 3
-			sta sample_pointers_highs+track				; 3
-			sta current_steprates_fract+track			; 3
-			sta current_steprates_lows+track			; 3
-			bcc .reu_fetch_sample_data					; 3
+				clc											; 2
+				lda track_current_loop_flags+track			; 3
+				bne .reu_sample_has_loop					; 3/2
+				sta sample_pointers_mids+track				; 3
+				sta sample_pointers_highs+track				; 3
+				sta current_steprates_fract+track			; 3
+				sta current_steprates_lows+track			; 3
+				bcc .reu_fetch_sample_data					; 3
 
-		.reu_sample_has_loop
-			lda #0										; 2
-			sta sample_pointers_fract+track				; 3
-			ldy current_sample_numbers+track			; 3
-			lda sample_loop_start_addresses_lows,y		; 5
-			sta sample_pointers_lows+track				; 4
-			sta DMA_LO									; 4
-			lda sample_loop_start_addresses_mids,y		; 5
-			sta sample_pointers_mids+track				; 4
-			sta DMA_HI									; 4
-			lda sample_loop_start_addresses_highs,y		; 5
-			sta sample_pointers_highs+track				; 4
-			sta DMA_BANK								; 4
-			lda sample_loop_end_addresses_lows,y		; 5
-			sta current_sample_end_addr_lows+track		; 3
-			lda sample_loop_end_addresses_mids,y		; 5
-			sta current_sample_end_addr_mids+track		; 3
-			lda sample_loop_end_addresses_highs,y		; 5
-			sta current_sample_end_addr_highs+track		; 3
-			ldy #$91									; 2
+			.reu_sample_has_loop
+				lda #0										; 2
+				sta sample_pointers_fract+track				; 3
+				ldy current_sample_numbers+track			; 3
+				lda sample_loop_start_addresses_lows,y		; 5
+				sta sample_pointers_lows+track				; 4
+				sta DMA_LO									; 4
+				lda sample_loop_start_addresses_mids,y		; 5
+				sta sample_pointers_mids+track				; 4
+				sta DMA_HI									; 4
+				lda sample_loop_start_addresses_highs,y		; 5
+				sta sample_pointers_highs+track				; 4
+				sta DMA_BANK								; 4
+				lda sample_loop_end_addresses_lows,y		; 5
+				sta current_sample_end_addr_lows+track		; 3
+				lda sample_loop_end_addresses_mids,y		; 5
+				sta current_sample_end_addr_mids+track		; 3
+				lda sample_loop_end_addresses_highs,y		; 5
+				sta current_sample_end_addr_highs+track		; 3
+				ldy #$91									; 2
 
-		.reu_fetch_sample_data
+			.reu_fetch_sample_data
 
-			lda #(lookahead_track_offset/4)				; 2
-			sta DMA_DAL									; 4
+				lda #(lookahead_track_offset/4)				; 2
+				sta DMA_DAL									; 4
 
-			!ifdef c128 {
-				sta VIC+$30								; 4
-			}
+				!ifdef c128 {
+					sta VIC+$30								; 4
+				}
 
-			sty DMA_CMD									; 4 + (8 or 16)
-			sta DMA_DAL									; 4
-			sty DMA_CMD									; 4 + (8 or 16)
-			sta DMA_DAL									; 4
-			sty DMA_CMD									; 4 + (8 or 16)
-			sta DMA_DAL									; 4
-			sty DMA_CMD									; 4 + (8 or 16)
+				sty DMA_CMD									; 4 + (8 or 16)
+				sta DMA_DAL									; 4
+				sty DMA_CMD									; 4 + (8 or 16)
+				sta DMA_DAL									; 4
+				sty DMA_CMD									; 4 + (8 or 16)
+				sta DMA_DAL									; 4
+				sty DMA_CMD									; 4 + (8 or 16)
 
-			!ifdef c128 {
-				sty VIC+$30								; 4
+				!ifdef c128 {
+					sty VIC+$30								; 4
+				}
 			}
 		}
-	}
 
-	!for .idx2, 0, 15 {
+		!for .idx2, 0, 15 {
 		inx													; 2
 	-	cpx audio_out_buf_index								; 3    / wait for a free
 		beq -												; 3/2  / slot in the buffer
@@ -404,75 +510,82 @@ reu_gen_sample_loop
 
 	dec mixer_countdown										; 5
 	beq +													; 3/2
-	jmp reu_gen_sample_loop									; 6
+	jmp reu_mixer_main_loop									; 6
 
-  +
-rts
++ rts
 
-; mixer loop open:
-; 2+4+2+2 = 10 cycles
 
-; time to fetch 64 bytes of lookahead data for one track
-; 2 +4+4+16 +4+4+16 +4+4+16 +4+4+16 = 98 cycles
-
-; on C128, add 8 cycles for the 1/2 MHz switches.  Since most of the DMA
-; commands, including the actual fetch, are run in 1 MHz mode, and there's
-; half as much data being fetched, the timings for C128 are:
-; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +8 = 138 cycles
-
-; mixer minimum time - all four tracks update only the fract bytes,
-; and not end of sample yet
-; (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 616 cycles
+; ============================================================================
+; TIMING INFO, assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo
+; All times rounded-up.
+; C128-specific numbers given are in 1 MHz equivalents.
 ;
-; mixer likely average case, all four tracks updating two bytes
-; and not end of sample yet
-; (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 648
-
-; mixer worst case, all four tracks have to update all four bytes,
-; and not end of sample yet
-; (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 704
-
-; time inside the lookahead code:
-; (2+3+3 +4+5 +4+5+5 +4+5 +4+5+5)*16 = 864 cycles
-
-; time to close the loop: 3+5+2+6 = 16 cycles
-
-; C64 final timings:
-
-; best case:
-; 10 + 616 + 864 + 16 = 1506 cycles for 8 sample pairs
-; 1506 / 16 = average of ~95 cycles/sample
-
-; likely average:
-; 10 + 648 + 864 + 16 = 1538 cycles
-; 1538 / 16 = average of ~97 cycles/sample -- we'll round this up to 100.
-
-; worst case:
-; 10 + 704 + 864 + 16 = 1594 cycles
-; 1594 / 16 = average of ~100 cycles/sample
-
-
-; C128 final timings, just add 40*4 to each of the above:
-
-; best case:
-; 10 + 616 + 864 + 16 + 40*4 = 1666 cycles for 8 sample pairs
-; 1666 / 16 = average of ~105 cycles/sample (equivalent to 52.5, 1 MHz cycles)
-
-; likely average:
-; 10 + 648 + 864 + 16 + 40*4 = 1698 cycles
-; 1698 / 16 = average of ~107 cycles/sample (53.5 / 1 MHz) -- round up to 110 (55)
-
-; worst case:
-; 10 + 704 + 864 + 16 + 40*4 = 1754 cycles
-; 1754 / 16 = average of ~110 cycles/sample (55.5 / 1 MHz)
-
-
-; C64 should be able to hit almost 6.7 kHz with the screen off, SID 4-bit stereo:
+; -----------
+;
+; fetch loop open:
+; 2+4+2+2 = 10 cycles
+;
+; time just to fetch 64 bytes of lookahead data for one track
+; 2 +4+4+16 +4+4+16 +4+4+16 +4+4+16 = 98 cycles
+;
+; minimum time - all four tracks only need to update the fract bytes,
+; and not at the end of sample yet:
+;
+; 10 + (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 626 cycles
+; 626 / 16 = average of ~40 cycles per set of fetched samples
+;
+; most likely case, all four tracks updating two bytes,
+; and not at the end of sample yet:
+;
+; 10 + (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 658
+; 658 / 16 = ~42 cycles per sample set
+;
+; worst case, all four tracks have to update all four bytes,
+; and not at the end of sample yet:
+;
+; 10 + (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 714
+; 714 / 16 = ~45 cycles per sample set
+;
+;
+; For the C128, the hardware does clock stretching on I/O accesses, but only
+; for the one cycle when the actual read/write is being committed.  Most of
+; the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
+; for their whole duration. The explicit 1/2 MHz switching above adds 13,
+; 2 MHz cycles (5 for the shift down to 1 MHz, 8 to shift back up).
+;
+; Since there's half as much data being fetched,
+; that machine's fetch timings are:
+;
+; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +13 = 143 cycles per track, 572 total
+; so (626 + 572 to 714 + 572) / 2 = 599 to 643 cycles total runtime
+;
+; So we'll use 658 / 16 = ~42 cycles for the C64, and for the C128 we'll use
+; (658 + 572) / 16 / 2 = ~39 cycles
+;
+; ---------
+;
+; lookahead/mixer push-to-buffers runtime:
+; 2+3+3 +4+5 +4+5+5 +4+5 +4+5+5 = 54 cycles on C64, 27 cycles on C128
+;
+; mixer loop close:
+; 3+5+2+6 = 16 cycles
+; so we'll just call it 1 cycle per sample set on both machines
+;
+; grand totals for the whole fetch/mix/buffer run (averages per sample pair):
+; C64:  42 + 54 + 1 = 97 cycles, we'll round it up to 100
+; C128: 39 + 27 + 1 = 67 cycles, round up to 68
+;
+; audio ISR takes 53 cycles on C64, 28 on C128
+;
+; ---------
+;
+; So the C64 should be run at almost 6.7 kHz with the screen off, SID 4-bit stereo:
 ; 1022727/(100+53) = ~6684.49
-
-; or 5.2 KHz with the screen on:
-; 1022727/195 = ~5244.75
-
-; C128 should be able to max-out at about 12.6 kHz
-; (1022727*2)/(110+52)  OR  1022727/((110+52)/2) = ~12626.26
-
+;
+; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
+; 1022727/(65*3) = ~5244.75
+;
+; C128 should be able to run at 10.6 kHz:
+; 1022727/(68+28) = ~10653.41
+;
+; ============================================================================

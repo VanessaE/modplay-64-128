@@ -183,6 +183,7 @@ init
 	}
 
 	jsr reu_get_size
+
 	lda #<reu_stash_block
 	sta stash_block_vec
 	lda #>reu_stash_block
@@ -193,30 +194,30 @@ init
 	lda #>reu_fetch_row
 	sta fetch_row_vec+2
 
-	lda #<reu_mixer_entry
-	sta run_mixer_vec+1
-	lda #>reu_mixer_entry
-	sta run_mixer_vec+2
+	lda #<reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec
+	lda #>reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec+1
 
-	lda #<reu_set_mixer_speed_figures
-	sta mixer_set_timings_vec
-	lda #>reu_set_mixer_speed_figures
-	sta mixer_set_timings_vec+1
+	lda #<reu_start_mixer
+	sta start_mixer_vec+1
+	lda #>reu_start_mixer
+	sta start_mixer_vec+2
 
 	lda #0						; refers to the addr in REU
 	sta free_memory_start		; main mem driver will use main_mem_free_start for this
 	sta free_memory_start+1
 	sta free_memory_start+2
 
-	lda #<sid_get_timing
-	sta audio_timing_vec
-	lda #>sid_get_timing
-	sta audio_timing_vec+1
+	lda #<sid_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec
+	lda #>sid_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec+1
 
-	lda #<sid_get_resolution
-	sta audio_resolution_vec
-	lda #>sid_get_resolution
-	sta audio_resolution_vec+1
+	lda #<sid_get_volume_table_resolution
+	sta audio_get_resolution_vec
+	lda #>sid_get_volume_table_resolution
+	sta audio_get_resolution_vec+1
 
 	lda #<sid_init
 	sta audio_init_vec
@@ -238,7 +239,9 @@ init
 		sta enable_screen_on_playback
 	}
 
-	+JSR_INDIRECT (audio_resolution_vec)
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
+	+JSR_INDIRECT (audio_get_resolution_vec)
 	jsr generate_volume_tables
 
 	; Codefault's count raster lines code, to know if PAL or NTSC

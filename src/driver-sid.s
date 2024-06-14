@@ -1,9 +1,21 @@
 ; Audio driver for SID chip, 4-bit mode
 
-; ISR init will call this first function to get the proper IRQ entry point
-; returns .X/.Y = address low/high
-
 !text "sid driver",0,0,0
+
+; This sets the audio ISR's cycle count, in 1 MHz units.
+; for faster CPUs, divide the raw count by the CPU MHz and round up.
+
+sid_set_isr_cycle_count
+	!ifndef c128 {
+		lda #53
+	} else {
+		lda #28
+	}
+	sta audio_driver_isr_cycle_count
+rts
+
+; ISR init will call this function to get the proper IRQ entry point
+; returns .X/.Y = address low/high
 
 sid_init
 	jsr sid_mute
@@ -19,20 +31,9 @@ sid_init
 	ldy #>sid_isr_4b_stereo
 rts
 
-; This returns the audio driver's desired IRQ
-; interval and the output resolution of the volume tables.
-; it shall return .A = sample resolution
-; and .X/Y = number of cycles between ISR calls, plus some fudge
+; this returns the output resolution of the volume tables in .A
 
-sid_get_timing
-	!ifndef c128 {
-		lda #53
-	} else {
-		lda #26
-	}
-rts
-
-sid_get_resolution
+sid_get_volume_table_resolution
 	lda #4
 rts
 
@@ -93,4 +94,5 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
-; each of the ISRs runs for 53 cycles
+; C64: each of the ISRs runs for 53 cycles
+; C128: each runs for 56 cycles including clock stretching, divide by 2 = 28 cycles

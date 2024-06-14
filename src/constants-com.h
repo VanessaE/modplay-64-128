@@ -28,8 +28,9 @@
 	; for divide, divisor uses $24 to $26
 	; dividend/quotient uses $27 to $29
 
+	; free $2a
 
-	tempo_dividend_precalc			= $2a ; 3 bytes
+	tempo_dividend_precalc			= $2b ; 2 bytes
 	stepper_dividend_precalc		= $2d ; 2 bytes
 	pattern_address					= $2f ; 3 bytes
 	pattern_break_target_row		= $32
@@ -246,5 +247,5 @@ one_ten_thou_ntsc = int(1022727 / 10000) - 1
 pitch_fine_adjust_constant = 100
 
 ; and this one ...well... it's big 😛
-tempo_fine_adjust_constant = 155000
+tempo_fine_adjust_constant = 156000
 

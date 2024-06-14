@@ -153,8 +153,7 @@ start_main_player
 	iny
 	bne -
 
-	+JSR_INDIRECT (mixer_set_timings_vec)
-	+JSR_INDIRECT (audio_resolution_vec)
+	+JSR_INDIRECT (audio_get_resolution_vec)
 	jsr generate_volume_tables ; will only regenerate if needed
 
 	jsr isr_startup
@@ -162,6 +161,7 @@ start_main_player
 	jsr start_sequencer
 
 	jsr isr_shutdown
+
 	jsr restore_zero_page
 	jsr enable_kernal_only
 	plp

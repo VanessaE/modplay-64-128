@@ -13,7 +13,7 @@
 	rasters_lo						= $0200
 	raster_len						= $0201
 	pal_flag						= $0202
-	isr_trigger_interval			= $0203 ; 2 bytes
+	; free $0203, $0204
 	repeat_mode						= $0205
 	volume_tables_resolution		= $0206
 
@@ -39,13 +39,17 @@
 	file_to_load_size				= $0259 ; 2 bytes
 	file_size_in_kb					= $025b ; 2 bytes
 
-	; free memory through $0274
+	; free memory through $0273
 
-	one_ten_thousandth_second		= $0275
-	number_of_song_positions		= $0277
-	number_of_patterns				= $0278
-	; free: $0279, $027a
-	ram_driver_mixer_cycle_count	= $027b
+	one_ten_thousandth_second		= $0274
+	number_of_song_positions		= $0275
+	number_of_patterns				= $0276
+
+	; free: $0277
+	audio_driver_isr_cycle_count	= $0278
+	ram_driver_cycle_count			= $0279
+	isr_trigger_interval			= $027a ; 2 bytes
+
 	playback_speed_fine_tune		= $027c ; 2 bytes
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0
@@ -86,13 +90,16 @@
 	uint16_string_buf_trim			= $1068 ; 7 bytes (of 8)
 
 	stash_block_vec					= $1070 ; 2 bytes
-	audio_timing_vec				= $1072 ; 2 bytes
-	audio_resolution_vec			= $1074 ; 2 bytes
+
+	print_vec						= $1072 ; 2 bytes
+
+	audio_get_resolution_vec		= $1074 ; 2 bytes
 	audio_init_vec					= $1076 ; 2 bytes
 	audio_start_vec					= $1078 ; 2 bytes
 	audio_stop_vec					= $107a ; 2 bytes
-	print_vec						= $107c ; 2 bytes
-	mixer_set_timings_vec			= $107e ; 2 bytes
+
+	audio_driver_set_cycle_count_vec = $107c ; 2 bytes
+	ram_driver_set_cycle_counts_vec	= $107e ; 2 bytes
 
 	; more vectors can go here
 	; free memory through $10ff

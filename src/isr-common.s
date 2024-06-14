@@ -19,9 +19,12 @@ isr_startup
 		sta VIC+$30
 	}
 
-	+JSR_INDIRECT (audio_timing_vec) ; get audio driver cycle count
-	clc								; some RAM devices are faster than others
-	adc ram_driver_mixer_cycle_count ; so we have to factor that in.
+	; audio driver and RAM driver times may vary, so we just add them together
+	; according to what the drivers and CPU speed checks indicate
+
+	clc
+	lda audio_driver_isr_cycle_count
+	adc ram_driver_cycle_count
 
 	!ifndef c128 {
 
