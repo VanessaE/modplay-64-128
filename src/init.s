@@ -483,10 +483,11 @@ charset_copy
 	blur_table_copy
 		ldy #0
 	-	lda blur_table_origin,y
+		beq +
 		sta blurring_table,y
 		iny
 		bne -
-	rts
+	+ rts
 }
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
@@ -560,6 +561,7 @@ reu_sig_candidate_start
 		!fill 9,132			; "▎" through "▝"
 		!byte 138			; "┛"
 		!byte 132,132		; "▘" and "▚"
+		!byte 0
 }
 
 fmemtxt
