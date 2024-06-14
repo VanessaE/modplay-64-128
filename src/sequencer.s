@@ -622,8 +622,21 @@ set_pitch
 
 	lda (tempzp_d),y
 	sta current_steprates_fract,x
+
+; the pitch table gen doesn't bother storing the highest 4 pages of the "lows"
+; section (that is, the integers), because they will always return 0 no matter
+; what, so we can just handle that here for note periods whose high byte is 3
+; or more (e.g. 768 and above)
+
+	sec
+	lda current_note_periods_highs,x
+	cmp #3
+	bcs +
 	lda (tempzp_e),y
-	sta current_steprates_lows,x
+	bcc ++
+
++	lda #0
+++	sta current_steprates_lows,x
 
 	ldy seq_current_track
 rts
