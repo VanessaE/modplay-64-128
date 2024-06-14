@@ -21,6 +21,18 @@ isr_startup
 
 	; audio driver and RAM driver times may vary, so we just add them together
 	; according to what the drivers and CPU speed checks indicate
+	;
+	; IMPORTANT:
+	;
+	; for accuracy-sake, the total cycle count *must not* exceed 3 raster
+	; lines (so 195 cycles on NTSC or 189 cycles on PAL) when the screen is
+	; enabled on the C64, otherwise the round-up code below will overflow.
+	; If the screen is off or it's the C128, just keep the total under 255.
+	;
+	; that said, 3 rasters is already a bit slow, so if a combo of drivers
+	; is too slow, that combo should only be allowed when the screen is turned
+	; off, or only on faster machines if that's the only choice (e.g. C128, or
+	; if an accelerator is in use).
 
 	clc
 	lda audio_driver_isr_cycle_count
@@ -32,12 +44,10 @@ isr_startup
 		bpl +
 
 		sta dividend				; on C64 with the screen on, we need to
-		lda #0						; sync to the VIC-II raster, so we divide
-		rol							; that total cycles figure by the raster
-		sta dividend+1				; line length
-		lda raster_len
-		sta divisor
-		lda #0
+		lda raster_len				; sync to the VIC-II raster, so we divide
+		sta divisor					; that total cycles figure by the raster
+		lda #0						; line length
+		sta dividend+1	
 		sta divisor+1
 		jsr divide_16by16
 
@@ -46,35 +56,20 @@ isr_startup
 		adc #1
 		ldx raster_len
 		jsr multiply_8x8			; and multiply it back up, thus rounding
-		ldx product					; the ISR time to the next whole multiple
-		ldy product+1				; of the raster length
-		jmp ++
-	}
+		lda product					; the ISR time to the next whole multiple
+	}								; of the raster length
 
 ; if the screen is off, or on C128 in any case, we don't need all that BS 😛
 ; because no VIC-II/IIe screen means no need to sync to the raster.
 
-+	tax 
-	lda #0
-	rol
-	tay
-
-++	stx isr_trigger_interval
-	sty isr_trigger_interval+1
-
++	sta isr_trigger_interval
 	sec
-	txa
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
 	sta CIA1+$06			; set the result as CIA #1 timer B interval
-	tya
-	sbc #0
+	lda #0
 	sta CIA1+$07
 
-	; 'Disable NMI' without using kernal and $0318/$0319 by Sokrates
-	; https://codebase64.org/doku.php?id=base:nmi_lock_without_kernal
-	; (reformatted to match my code style)
-
-	lda #<interrupts_lockout	; change nmi vector to nmiRoutine
+	lda #<interrupts_lockout
 	sta CPU_NMI_vector
 	lda #>interrupts_lockout
 	sta CPU_NMI_vector+1

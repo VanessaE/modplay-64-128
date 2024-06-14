@@ -10,11 +10,11 @@
 	number_of_song_positions		= $02a9
 	number_of_patterns				= $02aa
 
-	; free: $02ab
-	audio_driver_isr_cycle_count	= $02ac
-	ram_driver_cycle_count			= $02ad
-	isr_trigger_interval			= $02ae ; 2 bytes
+	audio_driver_isr_cycle_count	= $02ab
+	ram_driver_cycle_count			= $02ac
+	isr_trigger_interval			= $02ad
 
+	; free: $02ae, $02af
 	config_space					= $02b0 ; 16 bytes
 	string_buffer					= $02c0 ; 48 bytes
 	uint16_string_buffer			= $02f0 ; 7 bytes (of 8)

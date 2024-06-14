@@ -79,15 +79,7 @@ start_sequencer
 
 	; pre-calculate the dividend for the period-to-steppers routine
 
-	; for that, we divide the ISR interval by 2 to make sure that it
-	; can't possibly be > 8 bits, and compensate by using a constant
-	; that's twice as high.  We lose a tiny bit of precision, but
-	; that's okay, it'll be imperceptible.
-
-	lda isr_trigger_interval+1
-	lsr
 	lda isr_trigger_interval
-	ror
 	ldx #pitch_fine_adjust_constant
 	jsr multiply_8x8
 
@@ -95,27 +87,6 @@ start_sequencer
 	sta stepper_dividend_precalc
 	lda product+1
 	sta stepper_dividend_precalc+1
-
-	lda #<tempo_fine_adjust_constant
-	sta dividend
-	lda #>tempo_fine_adjust_constant
-	sta dividend+1
-	lda #^tempo_fine_adjust_constant ; "^" means "bank" i.e. bits 16-23
-	sta dividend+2
-
-	lda isr_trigger_interval
-	sta divisor
-	lda isr_trigger_interval+1
-	sta divisor+1
-	lda #0
-	sta divisor+2
-
-	jsr divide_24by24
-
-	lda quotient
-	sta tempo_dividend_precalc
-	lda quotient+1
-	sta tempo_dividend_precalc+1
 
 	lda #125
 	sta seq_tempo_bpm
@@ -477,33 +448,36 @@ run_effect_set_speed
 +	sta seq_ticks_per_division
 
 set_mixer_loops_per_tick
-
-	lda tempo_dividend_precalc
-	sta dividend+1
-	lda tempo_dividend_precalc+1
-	sta dividend+2
-
-	lda seq_tempo_bpm
-	sta divisor
+	lda isr_trigger_interval
+	ldx seq_tempo_bpm
+	jsr multiply_8x8
 
 	lda #0
-	sta dividend
-	sta divisor+1
-	sta divisor+2
+	sta dividend32
+	lda #<tempo_fine_adjust_constant
+	sta dividend32+1
+	lda #>tempo_fine_adjust_constant
+	sta dividend32+2
+	lda #^tempo_fine_adjust_constant ; "^" means "bank" e.g. bits 16-23
+	sta dividend32+3
 
-	jsr divide_24by24
+	lda product
+	sta divisor16
+	lda product+1
+	sta divisor16+1
+
+	jsr divide_32by16
 
 	lda quotient
 	sta mixer_loops_per_tick_fract
 	lda quotient+1
 	sta mixer_loops_per_tick
 
-	ldx seq_ticks_per_division
-
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bpl elpt
 
+		ldx seq_ticks_per_division
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta secondary_screen + 12*40 + 27
@@ -539,6 +513,7 @@ set_mixer_loops_per_tick
 		lda #31
 		sta VDC
 
+		ldx seq_ticks_per_division
 		lda divide_by_16_table,x
 		jsr to_hex
 		sta VDC+1
@@ -671,6 +646,8 @@ set_pitch
 	jsr divide_24by24
 	clc
 	lda quotient
+	lsr quotient+1
+	ror
 	lsr quotient+1
 	ror
 	lsr quotient+1

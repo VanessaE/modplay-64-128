@@ -45,11 +45,11 @@
 	number_of_song_positions		= $0275
 	number_of_patterns				= $0276
 
-	; free: $0277
-	audio_driver_isr_cycle_count	= $0278
-	ram_driver_cycle_count			= $0279
-	isr_trigger_interval			= $027a ; 2 bytes
+	audio_driver_isr_cycle_count	= $0277
+	ram_driver_cycle_count			= $0278
+	isr_trigger_interval			= $0279
 
+	; free: $027a, $027b
 	playback_speed_fine_tune		= $027c ; 2 bytes
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0

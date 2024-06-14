@@ -25,8 +25,13 @@
 	; and divide routines' zero page variables have to be in the same places
 	; within the "backup-mode" as they are outside of it.
 
-	; for divide, divisor uses $24 to $26
-	; dividend/quotient uses $27 to $29
+	; for 16/16 or 24/4 divide:
+	; dividend/quotient uses $24 to $26
+	; divisor uses $27 to $29
+
+	; for 32/16 divide:
+	; dividend32/quotient32 uses $24 to $27
+	; divisor16 uses $28 and $29
 
 	; free $2a
 
@@ -93,10 +98,15 @@
 	; The rest of these Zero Page addrs can be the same on both C64 and C128
 	; and are for use when Zero Page is not backed-up.
 
-	divisor							= $24 ; to $26
-	dividend						= $27 ; to $29
+	dividend						= $24 ; to $26
+	divisor							= $27 ; to $29
+
 	remainder						= $59 ; to $5b
-	quotient = dividend ;save memory by reusing dividend to store the result
+	quotient = dividend
+
+	dividend32						= $24 ; to $27
+	divisor16						= $28 ; and $29
+	quotient32 = dividend32
 
 	divide24_tmp					= $5f 
 
@@ -242,10 +252,5 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
-
-; this value is around 16x higher than "proper", for the sake of precision
 pitch_fine_adjust_constant = 100
-
-; and this one ...well... it's big 😛
-tempo_fine_adjust_constant = 156000
-
+tempo_fine_adjust_constant = 159778

@@ -324,7 +324,7 @@ divide_16by16
 	rol remainder+1
 	lda remainder
 	sec
-	sbc divisor			;substract divisor to see if it fits in
+	sbc divisor			;sustract divisor to see if it fits in
 	tay					;lb quotient -> Y, for we may need it later
 	lda remainder+1
 	sbc divisor+1
@@ -336,7 +336,7 @@ divide_16by16
 
 +	dex
 	bne .lp
-	rts
+rts
 
 
 divide_24by24
@@ -346,7 +346,7 @@ divide_24by24
 	sta remainder+2
 	ldx #24				;repeat for each bit: ...
 
-divloop
+.lp2
 	asl dividend		;dividend lb & hb*2, msb -> Carry
 	rol dividend+1
 	rol dividend+2
@@ -355,7 +355,7 @@ divloop
 	rol remainder+2
 	lda remainder
 	sec
-	sbc divisor			;substract divisor to see if it fits in
+	sbc divisor			;subtract divisor to see if it fits in
 	tay					;LSB result -> Y, for we may need it later
 	lda remainder+1
 	sbc divisor+1
@@ -371,7 +371,37 @@ divloop
 	inc dividend		;and INCrement result cause divisor fit in 1 times
 
 +	dex
-	bne divloop
+	bne .lp2
+rts
+
+
+divide_32by16
+	lda #0				; preset remainder to 0
+	sta remainder
+	sta remainder+1
+	ldx #32				;repeat for each bit: ...
+
+.lp3
+	asl dividend32		;dividend lb & hb*3, msb -> Carry
+	rol dividend32+1
+	rol dividend32+2
+	rol dividend32+3
+	rol remainder		;remainder lb & hb * 2 + msb from carry
+	rol remainder+1
+	lda remainder
+	sec
+	sbc divisor16		;sustract divisor to see if it fits in
+	tay					;lb quotient -> Y, for we may need it later
+	lda remainder+1
+	sbc divisor16+1
+	bcc +				;if carry=0 then divisor didn't fit in yet
+
+	sta remainder+1		;else save substraction quotient as new remainder,
+	sty remainder
+	inc quotient32		;and INCrement quotient cause divisor fit in 1 times
+
++	dex
+	bne .lp3
 rts
 
 
