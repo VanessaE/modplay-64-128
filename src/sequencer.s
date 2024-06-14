@@ -295,7 +295,7 @@ next_track_this_row
 	asl					; .X = track number x 4
 	tax
 
-	; get sample number
+; get sample number
 	lda seq_current_row_data,x
 	and #$f0
 	sta tempzpbk_g
@@ -305,19 +305,18 @@ next_track_this_row
 	lsr
 	lsr
 	ora tempzpbk_g					; if sample number is 0, keep using the
-	beq +							; previous sample number
+	beq get_period					; previous sample number
 	sta current_sample_numbers,y
 
 	jsr start_sample
 
-	; get sample period
-+	lda seq_current_row_data,x		; if period is 0, keep using the
+get_period
+	lda seq_current_row_data,x		; if period is 0, keep using the
 	and #$0f						; previous period value
 	ora seq_current_row_data+1,x
-	bne +
-	jmp getcmd
+	beq get_command
 
-+	lda seq_current_row_data,x
+	lda seq_current_row_data,x
 	and #$0f
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+1,x
@@ -325,8 +324,7 @@ next_track_this_row
 
 	jsr set_pitch
 
-	; get effect command and its parameters
-getcmd
+get_command							; and its parameters
 	lda seq_commands,y
 	sta seq_prev_commands,y
 	lda seq_command_arguments,y

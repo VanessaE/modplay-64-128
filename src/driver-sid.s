@@ -1,6 +1,6 @@
 ; Audio driver for SID chip, 4-bit mode
 
-!text "sid driver",0,0,0
+!text "sid driver",0
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
 ; for faster CPUs, divide the raw count by the CPU MHz and round up.
