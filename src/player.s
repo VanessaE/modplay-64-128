@@ -146,11 +146,12 @@ start_main_player
 	jsr disable_roms
 	jsr backup_zero_page
 
+	; these tables will only regenerate if needed
 	+JSR_INDIRECT (audio_get_resolution_vec)
-	jsr generate_volume_tables		; will only regenerate if needed
+	jsr generate_volume_tables
 	jsr isr_set_interval
-	jsr generate_tempo_table		; will only regenerate if needed
-
+	jsr generate_tempo_table
+	jsr generate_pitch_table
 	jsr isr_startup
 
 	jsr start_sequencer

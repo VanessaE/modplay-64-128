@@ -245,6 +245,7 @@ init
 	jsr generate_volume_tables
 	jsr isr_set_interval
 	jsr generate_tempo_table
+	jsr generate_pitch_table
 
 	; Codefault's count raster lines code, to know if PAL or NTSC
 

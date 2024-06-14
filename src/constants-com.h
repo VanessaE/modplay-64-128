@@ -252,5 +252,5 @@ instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
-pitch_fine_adjust_constant = 100
+pitch_fine_adjust_constant = 57
 tempo_fine_adjust_constant = 159778

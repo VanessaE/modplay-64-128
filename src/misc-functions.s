@@ -716,11 +716,3 @@ control_code_flags_table_low
 control_code_flags_table_high
 	!byte 1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 	!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
-; #################
-; generate_pitch_table
-	; dim lt(1023)
-	; lt(0-31) = 0
-	; C64 BASIC LOG() is "natural log" e.g. base 'e'
-	; this translates it into a table of log base 2
-	; lg=log(2) : for x = 32 to 1023: lt(x)=log(x)/lg : next

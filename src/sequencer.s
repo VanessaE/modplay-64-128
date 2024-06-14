@@ -81,17 +81,6 @@ start_sequencer
 	dex
 	bpl -
 
-	; pre-calculate the dividend for the period-to-steppers routine
-
-	lda isr_trigger_interval
-	ldx #pitch_fine_adjust_constant
-	jsr multiply_8x8
-
-	lda product
-	sta stepper_dividend_precalc
-	lda product+1
-	sta stepper_dividend_precalc+1
-
 	lda #125
 	sta seq_tempo_bpm
 	lda #6
@@ -610,41 +599,33 @@ rts
 ; convert a note period into a sample stepper value
 ;
 ; enter with .Y set to the track number whose period needs converted
-; returns the stepper value in .A/.X (.A will be the fraction)
 ; .Y will be preserved.
 
 set_pitch
-	stx sequencer_temp_x
-	lda current_note_periods_lows,y
-	sta divisor
-	lda current_note_periods_highs,y
-	sta divisor+1
-	lda #0
-	sta divisor+2
-	sta dividend
-	lda stepper_dividend_precalc
-	sta dividend+1
-	lda stepper_dividend_precalc+1
-	sta dividend+2
-	jsr divide_24by24
-	clc
-	lda quotient
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
+	tya
+	tax
 
-	ldx sequencer_temp_x
+	lda #0
+	sta tempzp_d
+	sta tempzp_e
+
+	clc
+	lda #>pitch_table_fracts
+	adc current_note_periods_highs,x
+	sta tempzp_d+1
+
+	lda #>pitch_table_lows
+	adc current_note_periods_highs,x
+	sta tempzp_e+1
+
+	ldy current_note_periods_lows,x
+
+	lda (tempzp_d),y
+	sta current_steprates_fract,x
+	lda (tempzp_e),y
+	sta current_steprates_lows,x
+
 	ldy seq_current_track
-	sta current_steprates_fract,y
-	lda quotient+1
-	sta current_steprates_lows,y
 rts
 
 unused

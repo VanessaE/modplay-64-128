@@ -115,8 +115,81 @@ generate_tempo_table
 	sta tempo_table_fracts,x
 	lda quotient+1
 	sta tempo_table_lows,x
-	inx
-	stx tempzp_d
+	inc tempzp_d
+	bne -
+rts
+
+generate_pitch_table
+	lda isr_trigger_interval
+	cmp pitch_table_isr_time
+	bne +
+	rts
+
++	sta pitch_table_isr_time
+
+	lda #0
+	sta tempzp_d
+	sta tempzp_e
+	sta tempzp_f+1
+
+	ldy #31
+-	sta pitch_table_fracts,y
+	sta pitch_table_lows,y
+	dey
+	bpl -
+
+	lda #32				; the lowest known note period is 57, but overflow
+	sta tempzp_f		; doesn't happen until we get down to 32.
+
+	lda #>pitch_table_fracts
+	sta tempzp_d+1
+
+	lda #>pitch_table_lows
+	sta tempzp_e+1
+
+	lda pitch_table_isr_time
+	ldx #pitch_fine_adjust_constant
+	jsr multiply_8x8
+
+-	lda #0
+	sta dividend
+	sta divisor+2
+
+	lda product
+	sta dividend+1
+	lda product+1
+	sta dividend+2
+
+	lda tempzp_f
+	sta divisor
+	lda tempzp_f+1
+	sta divisor+1
+
+	jsr divide_24by24
+
+	lda quotient
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+	lsr quotient+1
+	ror
+
+	ldy tempzp_f
+	sta (tempzp_d),y
+	lda quotient+1
+	sta (tempzp_e),y
+	inc tempzp_f
+	bne -
+
+	inc tempzp_d+1
+	inc tempzp_e+1
+
+	inc tempzp_f+1
+	lda tempzp_f+1
+	cmp #7
 	bne -
 rts
 
