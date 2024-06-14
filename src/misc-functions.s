@@ -55,31 +55,27 @@ rts
 ;# ZERO-PAGE OPERATIONS #
 ;########################
 
- 
-backup_zero_page
-	ldx #0
-	ldy #2
--	lda $00,y
-	sta zp_backup,y
-	stx $00,y
-	iny
+ backup_zero_page
+	ldx #2
+-	lda $00,x
+	sta zp_backup,x
+	inx
 	bne -
 
 	lda #0
-	ldy #2
--	sta $00,y
-	iny
+	ldx #2
+-	sta $00,x
+	inx
 	bne -
 rts
 
 restore_zero_page
-	ldy #2
--	lda zp_backup,y
-	sta $00,y
-	iny
+	ldx #2
+-	lda zp_backup,x
+	sta $00,x
+	inx
 	bne -
 rts
-
 
 ;######################
 ;# NUMERIC_OPERATIONS #
