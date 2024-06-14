@@ -13,9 +13,10 @@
 	rasters_lo						= $0200
 	raster_len						= $0201
 	pal_flag						= $0202
-	; free $0203, $0204
-	repeat_mode						= $0205
-	volume_tables_resolution		= $0206
+	; free $0203
+	repeat_mode						= $0204
+	volume_tables_resolution		= $0205
+	tempo_table_isr_time			= $0206
 
 	playlist_length					= $0207
 	playlist_scroll_pos				= $0208
@@ -49,8 +50,8 @@
 	ram_driver_cycle_count			= $0278
 	isr_trigger_interval			= $0279
 
-	; free: $027a, $027b
-	playback_speed_fine_tune		= $027c ; 2 bytes
+	; free: $027a to $027d
+
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0
 	c128_highest_bank				= $0282
@@ -116,12 +117,15 @@
 	; accounting for load addr, plus one disk block for expansion sake.
 	splash_128_end_check = program_start + (254*6) - 1
 
-	free_memory_end					= $a100 ; this allows to reclaim the load buf
+	free_memory_end					= $9f00 ; this allows to reclaim the load buf
 											; when using the main mem driver
 
-	load_buffer						= $9b00 ; 5*254 bytes (plus some waste)
-	load_buffer_end					= $9ff5 ; plus one page for overflow
-	divide_by_16_table				= $a100
+	load_buffer						= $9a00 ; 5*254 bytes (plus some waste)
+	load_buffer_end					= $9df5 ; plus one page for overflow
+	divide_by_16_table				= $9f00
+
+	tempo_table_fracts				= $a000
+	tempo_table_lows				= $a100
 
 	playlist_filenames				= $a200 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $ae00

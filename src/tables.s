@@ -80,12 +80,52 @@ generate_volume_tables
 		bne -
 rts
 
+generate_tempo_table
+	lda isr_trigger_interval
+	cmp tempo_table_isr_time
+	bne +
+	rts
+
++	sta tempo_table_isr_time
+	ldx #32 ; entries 0-31 are unused.
+	stx tempzp_d
+
+-	lda tempo_table_isr_time
+
+	jsr multiply_8x8
+
+	lda #0
+	sta dividend32
+	lda #<tempo_fine_adjust_constant
+	sta dividend32+1
+	lda #>tempo_fine_adjust_constant
+	sta dividend32+2
+	lda #^tempo_fine_adjust_constant ; "^" means "bank" e.g. bits 16-23
+	sta dividend32+3
+
+	lda product
+	sta divisor16
+	lda product+1
+	sta divisor16+1
+
+	jsr divide_32by16
+
+	ldx tempzp_d
+	lda quotient
+	sta tempo_table_fracts,x
+	lda quotient+1
+	sta tempo_table_lows,x
+	inx
+	stx tempzp_d
+	bne -
+rts
+
+
 !text "arp table",0
 
 twelfth_root_2 = 1.059463
 
 semitones_table_fracts
-
 	!byte 0
 	!for s2, 1, 15 {
 		!zone {
@@ -96,7 +136,6 @@ semitones_table_fracts
 	}
 
 semitones_table_lows
-
 	!byte 1
 	!for s1, 1, 15 {
 		!byte int(twelfth_root_2 ^ s1)

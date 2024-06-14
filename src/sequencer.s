@@ -450,29 +450,10 @@ run_effect_set_speed
 +	sta seq_ticks_per_division
 
 set_mixer_loops_per_tick
-	lda isr_trigger_interval
 	ldx seq_tempo_bpm
-	jsr multiply_8x8
-
-	lda #0
-	sta dividend32
-	lda #<tempo_fine_adjust_constant
-	sta dividend32+1
-	lda #>tempo_fine_adjust_constant
-	sta dividend32+2
-	lda #^tempo_fine_adjust_constant ; "^" means "bank" e.g. bits 16-23
-	sta dividend32+3
-
-	lda product
-	sta divisor16
-	lda product+1
-	sta divisor16+1
-
-	jsr divide_32by16
-
-	lda quotient
+	lda tempo_table_fracts,x
 	sta mixer_loops_per_tick_fract
-	lda quotient+1
+	lda tempo_table_lows,x
 	sta mixer_loops_per_tick
 
 	!ifndef c128 {

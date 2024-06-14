@@ -147,7 +147,9 @@ start_main_player
 	jsr backup_zero_page
 
 	+JSR_INDIRECT (audio_get_resolution_vec)
-	jsr generate_volume_tables ; will only regenerate if needed
+	jsr generate_volume_tables		; will only regenerate if needed
+	jsr isr_set_interval
+	jsr generate_tempo_table		; will only regenerate if needed
 
 	jsr isr_startup
 

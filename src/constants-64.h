@@ -27,9 +27,10 @@
 	rasters_lo						= $0334
 	raster_len						= $0335
 	pal_flag						= $0336
-	playback_speed_fine_tune		= $0337 ; 2 bytes
-	repeat_mode						= $0339
-	volume_tables_resolution		= $033a
+	; free $0337
+	repeat_mode						= $0338
+	volume_tables_resolution		= $0339
+	tempo_table_isr_time			= $033a
 
 	playlist_length					= $033b
 	playlist_scroll_pos				= $033c
@@ -89,11 +90,14 @@
 	; putting the end of free memory at the end of the load buffer allows
 	; the program to reclaim it when using the main memory driver.
 
-	free_memory_end					= $8f00
+	free_memory_end					= $8d00
 
-	load_buffer						= $8a00 ; 5 pages
-	load_buffer_end					= $8f00
-	divide_by_16_table				= $8f00
+	load_buffer						= $8800 ; 5 pages
+	load_buffer_end					= $8d00
+	divide_by_16_table				= $8d00
+
+	tempo_table_fracts				= $8e00
+	tempo_table_lows				= $8f00
 
 	blurring_table					= $9000 ; 128 bytes
 

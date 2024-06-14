@@ -6,21 +6,7 @@
 
 !text "isr common",0
 
-; When calling this routine:
-
-; .A shall hold the resolution value
-; .X/Y shall hold iteration timer value in cycles
-
-isr_startup
-	sei
-
-	ldy #0
-	lda #$80
--	sta audio_buffer_left,y
-	sta audio_buffer_right,y
-	iny
-	bne -
-
+isr_set_interval
 	; audio driver and RAM driver times may vary, so we just add them together
 	; according to what the drivers and CPU speed checks indicate
 	;
@@ -41,7 +27,6 @@ isr_startup
 	adc ram_driver_cycle_count
 
 	!ifndef c128 {
-
 		bit enable_screen_on_playback
 		bpl +
 
@@ -65,6 +50,19 @@ isr_startup
 ; because no VIC-II/IIe screen means no need to sync to the raster.
 
 +	sta isr_trigger_interval
+rts
+
+isr_startup
+	sei
+
+	ldy #0
+	lda #$80
+-	sta audio_buffer_left,y
+	sta audio_buffer_right,y
+	iny
+	bne -
+
+	lda isr_trigger_interval
 	sec
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
 	sta CIA1+$06			; set the result as CIA #1 timer B interval
