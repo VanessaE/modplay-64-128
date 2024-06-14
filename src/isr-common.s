@@ -21,11 +21,6 @@ isr_startup
 	iny
 	bne -
 
-	!ifdef c128 {
-		lda #0
-		sta VIC+$30
-	}
-
 	; audio driver and RAM driver times may vary, so we just add them together
 	; according to what the drivers and CPU speed checks indicate
 	;
@@ -120,6 +115,11 @@ isr_startup
 
 	stx .iel + 1
 	sty .ieh + 1
+
+	!ifdef c128 {
+		lda #0
+		sta VIC+$30
+	}
 
 	cli
 rts
