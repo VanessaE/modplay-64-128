@@ -146,13 +146,6 @@ start_main_player
 	jsr disable_roms
 	jsr backup_zero_page
 
-	ldy #0
-	lda #$80
--	sta audio_buffer_left,y
-	sta audio_buffer_right,y
-	iny
-	bne -
-
 	+JSR_INDIRECT (audio_get_resolution_vec)
 	jsr generate_volume_tables ; will only regenerate if needed
 

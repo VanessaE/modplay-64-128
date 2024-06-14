@@ -14,6 +14,13 @@
 isr_startup
 	sei
 
+	ldy #0
+	lda #$80
+-	sta audio_buffer_left,y
+	sta audio_buffer_right,y
+	iny
+	bne -
+
 	!ifdef c128 {
 		lda #0
 		sta VIC+$30
