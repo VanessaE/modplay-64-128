@@ -520,7 +520,7 @@ set_mixer_loops_per_tick
 		sta VDC+1
 	}
 
-  elpt
+	elpt
 rts
 
 
@@ -602,6 +602,7 @@ rts
 ; .Y will be preserved.
 
 set_pitch
+	stx sequencer_temp_x
 	tya
 	tax
 
@@ -639,6 +640,7 @@ set_pitch
 ++	sta current_steprates_lows,x
 
 	ldy seq_current_track
+	ldx sequencer_temp_x
 rts
 
 unused
