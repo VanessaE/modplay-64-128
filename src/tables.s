@@ -87,6 +87,14 @@ generate_tempo_table
 	rts
 
 +	sta tempo_table_isr_time
+
+	lda #0
+	ldy #31
+-	sta tempo_table_fracts,y
+	sta tempo_table_lows,y
+	dey
+	bpl -
+
 	ldx #32 ; entries 0-31 are unused.
 	stx tempzp_d
 
