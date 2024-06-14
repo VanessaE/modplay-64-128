@@ -5,19 +5,23 @@
 !text "sequencer",0
 
 start_sequencer
-	lda #<volume_tables_high
-	sta volume_table_vectors+2
-	sta volume_table_vectors+4
-	sta volume_table_vectors+6
-	lda #>(volume_tables_high+$1e00)
-	sta volume_table_vectors+1
-	sta volume_table_vectors+3
-	sta volume_table_vectors+5
-	sta volume_table_vectors+7
-
 	lda #64
 	ldx #7
 -	sta current_sample_volume_levels,x
+	dex
+	bpl -
+
+	ldx #14
+	lda #<volume_tables_high
+-	sta volume_table_vectors,x
+	dex
+	dex
+	bpl -
+
+	ldx #15
+	lda #>(volume_tables_high+$1e00)
+-	sta volume_table_vectors,x
+	dex
 	dex
 	bpl -
 
