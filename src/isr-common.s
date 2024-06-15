@@ -76,133 +76,156 @@ isr_startup
 
 	+JSR_INDIRECT (audio_start_vec)
 
-; One-shot ISR kick-off, based on "Double-IRQ" stable interrupt method from
-; https://codebase64.org/doku.php?id=base:the_double_irq_method
-; (author unknown)
-
-; NTSC fix: turn two of the nop's below (in irq_stage_2) into 'lda ($ea,x)'
-; turning 2 bytes/4 cycles into 2 bytes/6 cycles
-
-	bit pal_flag
-	bmi +
-	lda #$a1
-	sta ntsc_adj
-
-+	ldx #0
 	sta CIA1+$0f			; ensure that timer B is turned off
 	lda #$01				; disable timer A IRQ
 	sta CIA1+$0d
 	lda #$82				; enable timer B IRQ
 	sta CIA1+$0d
 	bit CIA1+$0d			; and clear any pending IRQ
-	lda #$81
-	sta VIC+$1a				; enable VIC raster IRQ
-	lda #<irq_stage_1
-	sta CPU_IRQ_vector
-	lda #>irq_stage_1
-	sta CPU_IRQ_vector+1
-
-	lda #$38				; stage 1 IRQ will fire on line $38
-	sta VIC+$12
-	lsr VIC+$19				; clear any VIC IRQ that's pending
 
 	; ask the audio driver for the ISR entry address
 	; returns with .X/.Y = address low/high
 
 	+JSR_INDIRECT (audio_init_vec)
 
-	stx .iel + 1
-	sty .ieh + 1
+	!ifndef c128 {
+		; if the screen is off, don't bother with the double-IRQ code,
+		; just point the IRQ directly to the audio driver entry
 
-	!ifdef c128 {
+		bit enable_screen_on_playback
+		bmi +
+
 		lda #0
-		sta VIC+$30
+		sta VIC+$1a				; disable VIC raster IRQ
+		lsr VIC+$19				; clear any VIC IRQ that's pending
+
+		stx CPU_IRQ_vector
+		sty CPU_IRQ_vector+1
+		lda #$11				; start CIA timer B in continuous mode,
+		sta CIA1+$0f			; counting Phi2 cycles, no output on PB6
+		bne ++
+
+		; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
+		; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
+
+	+	bit pal_flag
+		bmi +
+		lda #$a1
+		sta ntsc_adj
+
+	+	stx .iel + 1
+		sty .ieh + 1
+
+		lda #$81
+		sta VIC+$1a				; enable VIC raster IRQ
+		lda #<irq_stage_1
+		sta CPU_IRQ_vector
+		lda #>irq_stage_1
+		sta CPU_IRQ_vector+1
+
+		lda #$38				; stage 1 IRQ will fire on line $38
+		sta VIC+$12
+		lsr VIC+$19
+
+	} else {
+		; on C128, it's similar to C64 with screen off
+
+		lda #0
+		sta VIC+$1a
+		lsr VIC+$19
+
+		stx CPU_IRQ_vector
+		sty CPU_IRQ_vector+1
+		lda #$11
+		sta CIA1+$0f			; start CIA timer B
 	}
 
-	cli
+++	cli
 rts
 
-irq_stage_1					; 7 cycles to enter
-	inc VIC+$12				; 6
-	lsr VIC+$19				; 6
+!ifndef c128 {
+; This code is based on "Double-IRQ" stable interrupt method from
+; adapted to only be called/run once.
+; https://codebase64.org/doku.php?id=base:the_double_irq_method
+; (author unknown)
 
-	sta .s1a + 1			; 4 / we're about to trash .A so back it up
-	lda #<irq_stage_2		; 2
-	sta CPU_IRQ_vector		; 4
-	lda #>irq_stage_2		; 2
-	sta CPU_IRQ_vector+1	; 4
-	cli						; 2 / 37 cycles for switchover
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop						; 55 cycles / stage 2 could fire here on PAL if
-	nop						;             stage 1's jitter maxed-out at 7 cycles
-	nop
-	nop
-	nop						; 63 / or as late as here if stage 1 was on-time on PAL
-	nop						; 65 / or as late as here on NTSC
-	nop
+	irq_stage_1					; 7 cycles to enter
+		inc VIC+$12				; 6
+		lsr VIC+$19				; 6
 
-irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
-	lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
-	sta VIC+$1a				; 4 / the IRQ from now on.
+		sta .s1a + 1			; 4 / we're about to trash .A so back it up
+		lda #<irq_stage_2		; 2
+		sta CPU_IRQ_vector		; 4
+		lda #>irq_stage_2		; 2
+		sta CPU_IRQ_vector+1	; 4
 
-	pla						; 4 / discard stage 2's return address and cpu status
-	pla						; 4 / so that we return via stage 1's stack values
-	pla 					; 4
+		cli						; 2 / 37 cycles for switchover (43 on C128)
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop						; 55 cycles / stage 2 could fire here on PAL if
+		nop						;             stage 1's jitter maxed-out at 7 cycles
+		nop
+		nop
+		nop						; 63 / or as late as here if stage 1 was on-time on PAL
+		nop						; 65 / or as late as here on NTSC
+		nop
 
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-ntsc_adj
-	nop						; 2 \__ these become 'lda ($ea,x)'
-	nop						; 2 /   on NTSC to add 2 more cycles
-	nop						; 2
-	nop						; 2
-	lda VIC+$12				; 4 / 61 cycles, -0/+1
-	cmp #$39				; 2
-	beq fixcycle			; 3 or 2
+	irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
+		lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
+		sta VIC+$1a				; 4 / the IRQ from now on.
 
-fixcycle
-							; we are now at cycle 5 of the line.
+		pla						; 4 / discard stage 2's return address and cpu status
+		pla						; 4 / so that we return via stage 1's stack values
+		pla 					; 4
 
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6
-	lda (0,x)				; 6  / waste 48 cycles
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+	ntsc_adj
+		nop						; 2 \__ these become 'lda ($ea,x)'
+		nop						; 2 /   on NTSC to add 2 more cycles
+		nop						; 2
+		nop						; 2
+		lda VIC+$12				; 4 / 61 cycles, -0/+1
+		cmp #$39				; 2
+		beq fixcycle			; 3 or 2
 
-	lda #$11				; 2
+	fixcycle
+								; we are now at cycle 5 of the line.
 
-							; we should now be on cycle 55 of line $39, JUST
-							; past where the delay on bad line $3b will end.
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6  / waste 48 cycles
 
-	sta CIA1+$0f			; 4 / start the CIA timer in continuous mode,
-							;     counting Phi2 cycles, no output on PB6
+		lda #$11				; 2
 
-	!ifdef c128 {
-		inc VIC+$30
-	}
+								; we should now be on cycle 55 of line $39, JUST
+								; past where the delay on bad line $3b will end.
 
+		sta CIA1+$0f			; 4 / start CIA timer B
 
-.iel lda #0					; re-point the IRQ to the audio driver entry that
-	sta CPU_IRQ_vector		; was fetched at the start of the ISR setup
-.ieh lda #0
-	sta CPU_IRQ_vector+1
+	.iel lda #0					; re-point the IRQ to the audio driver entry that
+		sta CPU_IRQ_vector		; was fetched at the start of the ISR setup
+	.ieh lda #0
+		sta CPU_IRQ_vector+1
 
-.s1a lda #0					; restore .A
-	cli
-interrupts_lockout ; exit any NMI that gets here, unacknowledged
-rti
+	.s1a lda #0					; restore .A
+		cli
+	rti
+}
+
 ; ##### end of ISR Init
 
 
@@ -238,3 +261,6 @@ isr_shutdown
 		sta VDC+1
 	}
 rts
+
+interrupts_lockout ; exit any NMI that gets here, unacknowledged
+rti
