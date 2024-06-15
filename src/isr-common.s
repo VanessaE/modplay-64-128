@@ -74,8 +74,6 @@ isr_startup
 	lda #>interrupts_lockout
 	sta CPU_NMI_vector+1
 
-	+JSR_INDIRECT (audio_start_vec)
-
 	sta CIA1+$0f			; ensure that timer B is turned off
 	lda #$01				; disable timer A IRQ
 	sta CIA1+$0d
@@ -233,8 +231,6 @@ rts
 
 isr_shutdown
 	sei
-
-	+JSR_INDIRECT (audio_stop_vec)
 
 	lda #1
 	sta CIA1+$0e

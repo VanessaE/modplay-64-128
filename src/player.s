@@ -208,11 +208,15 @@ no_regen
 
 bkzp
 	jsr backup_zero_page
+
 	jsr isr_startup
+	+JSR_INDIRECT (audio_start_vec)
 
 	jsr start_sequencer
 
+	+JSR_INDIRECT (audio_stop_vec)
 	jsr isr_shutdown
+
 	jsr restore_zero_page
 	jsr enable_kernal_only
 	plp

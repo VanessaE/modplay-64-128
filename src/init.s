@@ -229,9 +229,9 @@ init
 	lda #>sid_start
 	sta audio_start_vec+1
 
-	lda #<sid_stop
+	lda #<sid_mute
 	sta audio_stop_vec
-	lda #>sid_stop
+	lda #>sid_mute
 	sta audio_stop_vec+1
 
 	!ifndef c128 {

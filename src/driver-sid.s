@@ -14,11 +14,19 @@ sid_set_isr_cycle_count
 	sta audio_driver_isr_cycle_count
 rts
 
-; ISR init will call this function to get the proper IRQ entry point
+; ISR init will call this function to clear/mute the SID and get the proper
+; IRQ entry point.
 ; returns .X/.Y = address low/high
 
 sid_init
 	jsr sid_mute
+
+	clc
+	lda stereo_sid_addr
+	adc #$18
+	sta .s2a+1
+	lda stereo_sid_addr+1
+	sta .s2a+2
 
 	bit stereo_enable
 	bmi +
@@ -38,16 +46,6 @@ sid_get_volume_table_resolution
 rts
 
 sid_start
-	clc
-	lda stereo_sid_addr
-	adc #$18
-	sta .s2a+1
-	lda stereo_sid_addr+1
-	sta .s2a+2
-rts
-
-sid_stop
-	jsr sid_mute
 rts
 
 sid_mute
