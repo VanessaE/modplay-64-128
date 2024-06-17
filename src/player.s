@@ -142,8 +142,6 @@ start_main_player
 	sei
 	jsr disable_roms
 
-	+JSR_INDIRECT (audio_get_resolution_vec)
-	jsr generate_volume_tables
 	jsr isr_set_interval
 
 	lda isr_trigger_interval
@@ -177,6 +175,8 @@ start_main_player
 gentabs
 	jsr disable_roms
 
+	+JSR_INDIRECT (audio_get_resolution_vec)
+	jsr generate_volume_tables
 	jsr generate_tempo_table
 	jsr generate_pitch_table
 
