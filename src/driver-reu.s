@@ -4,7 +4,6 @@
 
 ; this is the average cycles per output sample pair
 ; for faster CPUs, divide the raw count by the CPU MHz and round up.
-; written here as fetch routine time plus lookahead/mixer routine time
 ; see full details below.
 
 reu_set_cycle_counts
