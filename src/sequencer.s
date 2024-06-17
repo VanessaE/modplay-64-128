@@ -603,7 +603,7 @@ set_pitch
 
 	ldy seq_current_track
 
-	set_lookahead_addrs_vec
+	set_la_mixer_addrs_vec
 		jsr $1234
 
 	ldx sequencer_temp_x

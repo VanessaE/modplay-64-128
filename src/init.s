@@ -204,10 +204,10 @@ init
 	lda #>reu_start_mixer
 	sta start_mixer_vec+2
 
-	lda #<set_lookahead_addrs
-	sta set_lookahead_addrs_vec+1
-	lda #>set_lookahead_addrs
-	sta set_lookahead_addrs_vec+2
+	lda #<set_mixer_and_lookahead_addrs
+	sta set_la_mixer_addrs_vec+1
+	lda #>set_mixer_and_lookahead_addrs
+	sta set_la_mixer_addrs_vec+2
 
 	lda #<set_volume_addrs
 	sta set_volume_addrs_vec+1

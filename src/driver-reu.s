@@ -9,9 +9,9 @@
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #42+54
+		lda #94
 	} else {
-		lda #39+27 ; equivalent 1 MHz cycles
+		lda #65 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -209,8 +209,15 @@ rts
 ; Enter with .Y = track number to work on
 
 mixer_loop_segment_length = mixer_loop_end - mixer_loop_start
+fetch_loop_segment_length = fetch_loop_end - fetch_loop_start
 
-set_lookahead_addrs
+csr_f_idx    = cur_steprate_f - fetch_loop_start + 1
+csr_l_idx    = cur_steprate_l - fetch_loop_start + 1
+chkend_l_idx =        ckend_l - fetch_loop_start + 1
+chkend_m_idx =        ckend_m - fetch_loop_start + 1
+chkend_h_idx =        ckend_h - fetch_loop_start + 1
+
+set_mixer_and_lookahead_addrs
 	tya
 	ldx #lookahead_track_offset
 	jsr multiply_8x8
@@ -242,6 +249,42 @@ set_lookahead_addrs
 			sta rd_la_track_0 + mixer_loop_segment_length*.idx4 + 2,x
 		}
 	}
+
+	tya
+	ldx #fetch_loop_segment_length
+	jsr multiply_8x8
+
+	clc
+	lda #<fetch_loop_start
+	adc product
+	sta sequencer_temp_a
+	lda #>fetch_loop_start
+	adc product+1
+	sta sequencer_temp_a+1
+
+	ldx seq_current_track
+
+	lda current_steprates_fract,x
+	ldy #csr_f_idx
+	sta (sequencer_temp_a),y
+
+	lda current_steprates_lows,x
+	ldy #csr_l_idx
+	sta (sequencer_temp_a),y
+
+	lda current_sample_end_addr_lows,x
+	ldy #chkend_l_idx
+	sta (sequencer_temp_a),y
+
+	lda current_sample_end_addr_mids,x
+	ldy #chkend_m_idx
+	sta (sequencer_temp_a),y
+
+	lda current_sample_end_addr_highs,x
+	ldy #chkend_h_idx
+	sta (sequencer_temp_a),y
+
+	ldy seq_current_track
 rts
 
 ; set the sample's volume, and set the address targets in the mixer below
@@ -298,16 +341,19 @@ reu_start_mixer
 		clc													; 2
 		ldy #$91											; 2
 
-		!for track, 0, 3 {
+		fetch_loop_start
+		  !for track, 0, 3 {
 			!zone fetchloop {
-
 				lda sample_pointers_fract+track				; 3
-				adc current_steprates_fract+track			; 3
+
+				!if track = 0 { !set cur_steprate_f = * }
+				lda #0										; 2
 				sta sample_pointers_fract+track				; 3
 				bcc .reu_fix_dma_top_three_bytes			; 3/2
-
 				lda sample_pointers_lows+track				; 3
-				adc current_steprates_lows+track			; 3
+
+				!if track = 0 { !set cur_steprate_l = * }
+				adc #0										; 2
 				sta sample_pointers_lows+track				; 3
 				sta DMA_LO									; 4
 				bcc .reu_fix_dma_top_two_bytes				; 3/2
@@ -337,11 +383,17 @@ reu_start_mixer
 			.reu_check_end
 				sec											; 2
 				lda sample_pointers_lows+track				; 3
-				cmp current_sample_end_addr_lows+track		; 3
+
+				!if track = 0 { !set ckend_l = * }
+				cmp #0										; 2
 				lda sample_pointers_mids+track				; 3
-				cmp current_sample_end_addr_mids+track		; 3
+
+				!if track = 0 { !set ckend_m = * }
+				cmp #0										; 2
 				lda sample_pointers_highs+track				; 3
-				cmp current_sample_end_addr_highs+track		; 3
+
+				!if track = 0 { !set ckend_h = * }
+				cmp #0										; 2
 				bcc .reu_fetch_sample_data					; 3/2
 
 				clc											; 2
@@ -395,6 +447,7 @@ reu_start_mixer
 					sty VIC+$30								; 4
 				}
 			}
+		!if track = 0 { fetch_loop_end = * }
 		}
 
 	mixer_loop_start
@@ -461,17 +514,17 @@ reu_start_mixer
 ; minimum time - all four tracks only need to update the fract bytes,
 ; and not at the end of sample yet:
 ;
-; 10 + (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 626 cycles
+; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 610 cycles
 ;
 ; most likely case, all four tracks updating two bytes,
 ; and not at the end of sample yet:
 ;
-; 10 + (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 658
+; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 626
 ;
 ; worst case, all four tracks have to update all four bytes,
 ; and not at the end of sample yet:
 ;
-; 10 + (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 714
+; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 682
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
@@ -496,18 +549,21 @@ reu_start_mixer
 ;
 ; Grand totals (using "most likely" fetch scenario):
 ;
-; C64:   (658 + 816 + 16) / 16 + 53 = ~147 cycles   --  round up to 150
-; C128:  (658 + 572 + 816) / 16 + 53 = ~181 cycles  --  round up to 185
+; C64:   (626 + 816 + 16) / 16 = ~92 cycles
+; C128:  (626 + 572 + 816 + 16) / 16 = ~127 cycles
 ;
 ; ---------
 ;
-; So the C64 should be run at about 6.8 kHz with the screen off, SID 4-bit stereo:
-; 1022727/150 = ~6818.2
+; So factoring-in the ISR runtime of 53 cycles, plus 2-3 cycles of fudge...
+;
+; the C64 should be run at about 6.9 kHz with the
+; screen off, SID 4-bit stereo:
+; 1022727 / (92 + 2 + 53) = ~6957.3
 ;
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
-; 1022727/(65*3) = ~5244.8
+; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at 11 kHz:
-; (1022727*2)/185 = ~11056.5
+; C128 should be able to run at 11.2 kHz:
+; (1022727*2) / (127 + 3 + 53) = ~11238.8
 ;
 ; ============================================================================
