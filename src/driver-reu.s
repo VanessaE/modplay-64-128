@@ -9,9 +9,9 @@
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #94
+		lda #84
 	} else {
-		lda #65 ; equivalent 1 MHz cycles
+		lda #96/2 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -216,6 +216,7 @@ csr_l_idx    = cur_steprate_l - fetch_loop_start + 1
 chkend_l_idx =        ckend_l - fetch_loop_start + 1
 chkend_m_idx =        ckend_m - fetch_loop_start + 1
 chkend_h_idx =        ckend_h - fetch_loop_start + 1
+fetchlen_idx =       fetchlen - fetch_loop_start + 1
 
 set_mixer_and_lookahead_addrs
 	tya
@@ -265,6 +266,7 @@ set_mixer_and_lookahead_addrs
 	ldx seq_current_track
 
 	lda current_steprates_fract,x
+	sta sequencer_temp_b
 	ldy #csr_f_idx
 	sta (sequencer_temp_a),y
 
@@ -284,6 +286,16 @@ set_mixer_and_lookahead_addrs
 	ldy #chkend_h_idx
 	sta (sequencer_temp_a),y
 
+	lda current_steprates_lows,x
+	asl sequencer_temp_b
+	rol
+	asl sequencer_temp_b
+	rol
+	bne +
+	lda #1 ; minimum fetch length of 1 even if the track needs "half" a byte 😛
+
++	ldy #fetchlen_idx
+	sta (sequencer_temp_a),y
 	ldy seq_current_track
 rts
 
@@ -428,20 +440,23 @@ reu_start_mixer
 
 			.reu_fetch_sample_data
 
-				lda #(lookahead_track_offset/4)				; 2
+				!if track = 0 { !set fetchlen = * }
+				lda #1										; 2
 				sta DMA_DAL									; 4
 
 				!ifdef c128 {
 					sta VIC+$30								; 4
 				}
 
-				sty DMA_CMD									; 4 + (8 or 16)
+				sty DMA_CMD									; 4 + N*4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + (8 or 16)
+				sty DMA_CMD									; 4 + N*4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + (8 or 16)
+				sty DMA_CMD									; 4 + N*4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + (8 or 16)
+				sty DMA_CMD									; 4 + N*4
+
+				; N will vary by pitch, on average it'll be around 2 on C64
 
 				!ifdef c128 {
 					sty VIC+$30								; 4
@@ -500,31 +515,29 @@ reu_start_mixer
 
 
 ; ============================================================================
-; TIMING INFO, assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo
-; All times rounded-up.
+; REU DRIVER TIMING INFO
+; assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo, C64 screen
+; turned on unless otherwise noted.  All times rounded-up.
 ;
 ; -----------
 ;
 ; fetch loop open:
 ; 2+4+2+2 = 10 cycles
 ;
-; time just to fetch 64 bytes of lookahead data for one track
-; 2 +4+4+16 +4+4+16 +4+4+16 +4+4+16 = 98 cycles
+; lowest possible step rate is about 0.273 on C64, so fetching just 1 byte per
+; transfer, times 4 transfers:
 ;
-; minimum time - all four tracks only need to update the fract bytes,
-; and not at the end of sample yet:
+; 2 +4+4+1 +4+4+1 +4+4+1 +4+4+1 = 38 cycles per track, total 152 cycles
 ;
-; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 610 cycles
+; on average, the step rate will be closer to 1.7, so it'll be fetching 6 
+; bytes per transfer, times 4:
 ;
-; most likely case, all four tracks updating two bytes,
-; and not at the end of sample yet:
+; 2 +4+4+6 +4+4+6 +4+4+6 +4+4+6 = 58 cycles per track, total 232 cycles
 ;
-; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 626
+; Worst possible case would be playing the highest note, B-4, which would have
+; a step rate of about 8.688, so fetching 34 * 4 = 136 bytes:
 ;
-; worst case, all four tracks have to update all four bytes,
-; and not at the end of sample yet:
-;
-; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+2+3+2+3+2+3)*4 + 98*4 = 682
+; 2 +4+4+34 +4+4+34 +4+4+34 +4+4+34 = 170 cycles per track, total 680 cycles
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
@@ -532,10 +545,32 @@ reu_start_mixer
 ; for their whole duration. The explicit 1/2 MHz switching above adds 13,
 ; 2 MHz cycles (5 for the shift down to 1 MHz, 8 to shift back up).
 ;
-; Since there's half as much data being fetched, that machine's fetch timings
-; are:
+; being almost twice as fast, it'll have half the step rates, so best will be
+; about 0.81, typical will be around 1, worst around 6, fetching 1, 3, and 19
+; bytes, respectively.
 ;
-; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +13 = 143 cycles per track, 572 total
+; that machine's fetch timings should be about:
+;
+; best:           2 +4+8+2 +8+8+2 +8+8+2 +8+8+2 + 13 = 83 cycles, total 332
+; most likely:    2 +4+8+6 +8+8+6 +8+8+6 +8+8+6 + 13 = 99 cycles, total 396
+; worst possible: 2 +4+8+19 +8+8+19 +8+8+19 +8+8+19 + 13 = 151 cycles, total 604
+;
+; ----------
+;
+; in the mixer/stuffer loop, minimum time would be if all four tracks only
+; need to update the fract bytes, and not at the end of the sample yet:
+;
+; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 = 218 cycles
+;
+; most likely case, all four tracks updating two bytes, not at the end of
+; the sample yet:
+;
+; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 = 234 cycles
+;
+; worst possible case, all four tracks have to update all four bytes, not at
+; the end of sample yet:
+;
+; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+2+3+2+3+2+3)*4 = 290 cycles
 ;
 ; ---------
 ;
@@ -545,25 +580,31 @@ reu_start_mixer
 ; mixer loop close:
 ; 3+5+2+6 = 16 cycles
 ;
-; audio ISR takes 53 cycles
+; Grand totals (average time per final pair of output samples):
 ;
-; Grand totals (using "most likely" fetch scenario):
+; C64:
+; best:   (152 + 218 + 816 + 16) / 16 =  ~76 cycles
+; likely: (232 + 234 + 816 + 16) / 16 =  ~82 cycles
+; worst:  (680 + 290 + 816 + 16) / 16 =  ~113 cycles
 ;
-; C64:   (626 + 816 + 16) / 16 = ~92 cycles
-; C128:  (626 + 572 + 816 + 16) / 16 = ~127 cycles
+; C128:
+; best:   (332 + 218 + 816 + 16) / 16 =  ~87 cycles
+; likely: (396 + 234 + 816 + 16) / 16 =  ~92 cycles
+; worst:  (604 + 290 + 816 + 16) / 16 = ~108 cycles
 ;
 ; ---------
 ;
-; So factoring-in the ISR runtime of 53 cycles, plus 2-3 cycles of fudge...
+; So factoring-in the ISR runtime of 53 cycles, using the "most likely"
+; conditions as the timing basis, and adding a few cycles of fudge...
 ;
-; the C64 should be run at about 6.9 kHz with the
+; the C64 should be run at about 7.4 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (92 + 2 + 53) = ~6957.3
+; 1022727 / (82 + 2 + 53) = ~7465.2
 ;
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
 ; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at 11.2 kHz:
-; (1022727*2) / (127 + 3 + 53) = ~11238.8
+; C128 should be able to run at about 13.7 kHz:
+; (1022727*2) / (92 + 4 + 53) = ~13727.9
 ;
 ; ============================================================================

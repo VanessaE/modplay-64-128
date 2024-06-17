@@ -126,14 +126,14 @@ generate_pitch_table
 	sta tempzp_e
 	sta tempzp_f+1
 
-	ldy #31
+	ldy #56
 -	sta pitch_table_fracts,y
 	sta pitch_table_lows,y
 	dey
 	bpl -
 
-	lda #32				; the lowest known note period is 57, but overflow
-	sta tempzp_f		; doesn't happen until we get down to 32.
+	lda #57				; the lowest known note period is 57
+	sta tempzp_f
 
 	lda #>pitch_table_fracts
 	sta tempzp_d+1

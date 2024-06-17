@@ -209,7 +209,7 @@ seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
 
 sample_data_buffer					= seq_pitch_slide_stop_point_highs + 8
 
-main_mem_free_start					= ((>sample_data_buffer) + 2) * 256
+main_mem_free_start = (sample_data_buffer + 8*lookahead_track_offset + 256) & $ff00
 
 ; anything appended after this point will be overwritten by the loaded file
 ; when using main memory driver

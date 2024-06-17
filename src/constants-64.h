@@ -173,5 +173,3 @@ NOSHIFTCOM							= $08
 ORG									= $81
 MGRY								= $98
 DGRY								= $97
-
-lookahead_track_offset = 64

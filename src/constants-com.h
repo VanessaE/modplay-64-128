@@ -249,3 +249,10 @@ one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
 pitch_fine_adjust_constant = 57
 tempo_fine_adjust_constant = 159778
+
+; size of the lookahead track offset is calculated as the slowest sample rate
+; of any build playing the highest note (period 57, B-4).  On C64 that'll be
+; 5.2 kHz with a steprate of $0c:$30 (that is, about 12.188), multiplied by
+; 16 for all the lookup indexes.
+
+lookahead_track_offset = 12 * 16
