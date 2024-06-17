@@ -111,8 +111,8 @@
 	multab2lo						= $a200 ; 512 bytes
 	multab2hi						= $a400 ; 512 bytes
 
-	volume_tables_low				= $a600 ; 34 pages \__ 16.25 kB, split between
-	volume_tables_high				= $e000 ; 31 pages /   two memory areas
+	volume_table_lower				= $a600 ; 34 pages \__ 16.25 kB, split between
+	volume_table_upper				= $e000 ; 31 pages /   two memory areas
 
 	secondary_screen				= $c800 ; 1k
 	; primary screen is at $cc00-cfff

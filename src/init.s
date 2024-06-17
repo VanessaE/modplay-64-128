@@ -204,6 +204,16 @@ init
 	lda #>reu_start_mixer
 	sta start_mixer_vec+2
 
+	lda #<set_lookahead_addrs
+	sta set_lookahead_addrs_vec+1
+	lda #>set_lookahead_addrs
+	sta set_lookahead_addrs_vec+2
+
+	lda #<set_volume_addrs
+	sta set_volume_addrs_vec+1
+	lda #>set_volume_addrs
+	sta set_volume_addrs_vec+2
+
 	lda #0						; refers to the addr in REU
 	sta free_memory_start		; main mem driver will use main_mem_free_start for this
 	sta free_memory_start+1

@@ -14,9 +14,9 @@ generate_volume_tables
 	rts
 
 +	sta volume_tables_resolution
-	lda #<volume_tables_low
+	lda #<volume_table_lower
 	sta tempzp_d
-	lda #>volume_tables_low
+	lda #>volume_table_lower
 	sta tempzp_d+1
 	lda #0
 	sta bval_cnt			; byte value counter
@@ -73,7 +73,7 @@ generate_volume_tables
 		lda vol_cnt
 		cmp #34		; the first 33 pages can fit below the screens at $c800...
 		bne +
-		lda #>volume_tables_high	; ...while the rest goes under the KERNAL.
+		lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
 		sta tempzp_d+1
 		bne -
 	+	cmp #65

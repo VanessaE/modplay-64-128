@@ -133,8 +133,8 @@
 	playlist_filenames				= $a200 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $ae00
 
-	volume_tables_low				= $ae00 ; 34 pages \__ 16.25 kB, split between
-	volume_tables_high				= $e000 ; 31 pages /   two memory areas
+	volume_table_lower				= $ae00 ; 34 pages \__ 16.25 kB, split between
+	volume_table_upper				= $e000 ; 31 pages /   two memory areas
 
 	; config file declarations - the actual file gets loaded/saved as above
 

@@ -11,20 +11,6 @@ start_sequencer
 	dex
 	bpl -
 
-	ldx #14
-	lda #<volume_tables_high
--	sta volume_table_vectors,x
-	dex
-	dex
-	bpl -
-
-	ldx #15
-	lda #>(volume_tables_high+$1e00)
--	sta volume_table_vectors,x
-	dex
-	dex
-	bpl -
-
 	lda #0
 	sta seq_abort_flag
 	sta glissando_flag
@@ -41,7 +27,7 @@ start_sequencer
 	sta current_pitch_slide_flags,x
 	sta pitch_slide_up_rates,x
 	sta pitch_slide_down_rates,x
-	sta pitch_slide_to_note_rates,x
+	sta portamento_to_note_rates,x
 
 	sta seq_pitch_slide_stop_point_lows,x
 	sta seq_pitch_slide_stop_point_highs,x
@@ -384,8 +370,6 @@ run_command_vec					; run effect command if it needs tick-interval timing
 	cpy #4
 	bne next_track_this_tick
 
-	jsr set_lookahead_addrs
-
 	; resetting the countdown this way allows the mixer to run one extra loop
 	; every so often, for more accurate timing control (even if the ISR were
 	; run every 4 rasters, that's only 4 thousandths of a second variance per
@@ -543,7 +527,7 @@ start_sample
 	sta volume_slide_rates,y
 	sta pitch_slide_up_rates,y
 	sta pitch_slide_down_rates,y
-	sta pitch_slide_to_note_rates,y
+	sta portamento_to_note_rates,y
 
 	sta sample_pointers_fract,y
 	lda sample_start_addresses_lows,x
@@ -562,38 +546,16 @@ start_sample
 
 	lda sample_default_volume_levels,x
 
-	ldx sequencer_temp_x
-
 	; now just fall through into set_volume
 
-; set the sample's volume
-; enter with .A = volume level, .Y = track number
-; .Y will be preserved
+; we put this stub here so that it can be called from anywhere in the sequencer
+; without needing to maintain more than one vector (the actual code being in
+; the RAM driver).
 
 set_volume
-	sta current_sample_volume_levels,y
-	tya
-	asl
-	tay ; track number x2
-
-	sec
-	cmp #33
-	bcc +
-
-	clc
-	adc #>volume_tables_low
-	sta volume_table_vectors+1,y
-	bcc ++
-
-+	sec
-	sbc #34
-	clc
-	adc #>volume_tables_high
-	sta volume_table_vectors+1,y
-
-++	lda #0
-	sta volume_table_vectors,y
-	ldy seq_current_track
+	set_volume_addrs_vec
+		jsr $1234
+	ldx sequencer_temp_x
 rts
 
 ; convert a note period into a sample stepper value
@@ -640,6 +602,10 @@ set_pitch
 ++	sta current_steprates_lows,x
 
 	ldy seq_current_track
+
+	set_lookahead_addrs_vec
+		jsr $1234
+
 	ldx sequencer_temp_x
 rts
 

@@ -205,104 +205,82 @@ rts
 ; routine are part of the RAM driver because they have to be carefully
 ; tailored to each system's/device's quirks to maximize speed and minimize lag
 ; and delays.
+;
+; Enter with .Y = track number to work on
+
+mixer_loop_segment_length = mixer_loop_end - mixer_loop_start
 
 set_lookahead_addrs
-	!for lookahead_track, 0, 3 {
-		lda #0
-		sta sequencer_temp_a
-		sta sequencer_temp_a+1
-		clc
+	tya
+	ldx #lookahead_track_offset
+	jsr multiply_8x8
 
-		!zone lookahead_idx_set {
-			!for .idx4, 1, 15 {
+	clc
+	lda #0
+	sta sequencer_temp_a
+	lda product
+	adc #<sample_data_buffer
+	sta sequencer_temp_a+1
+	lda product+1
+	adc #>sample_data_buffer
+	sta sequencer_temp_a+2
 
-				!if lookahead_track = 0 {
-					!if .idx4 = 1  { !set .t = la_0_1  }
-					!if .idx4 = 2  { !set .t = la_0_2  }
-					!if .idx4 = 3  { !set .t = la_0_3  }
-					!if .idx4 = 4  { !set .t = la_0_4  }
-					!if .idx4 = 5  { !set .t = la_0_5  }
-					!if .idx4 = 6  { !set .t = la_0_6  }
-					!if .idx4 = 7  { !set .t = la_0_7  }
-					!if .idx4 = 8  { !set .t = la_0_8  }
-					!if .idx4 = 9  { !set .t = la_0_9  }
-					!if .idx4 = 10 { !set .t = la_0_10 }
-					!if .idx4 = 11 { !set .t = la_0_11 }
-					!if .idx4 = 12 { !set .t = la_0_12 }
-					!if .idx4 = 13 { !set .t = la_0_13 }
-					!if .idx4 = 14 { !set .t = la_0_14 }
-					!if .idx4 = 15 { !set .t = la_0_15 }
-				}
+	ldx lookahead_code_offsets_set_read_byte_addr,y
 
-				!if lookahead_track = 1 {
-					!if .idx4 = 1  { !set .t = la_1_1  }
-					!if .idx4 = 2  { !set .t = la_1_2  }
-					!if .idx4 = 3  { !set .t = la_1_3  }
-					!if .idx4 = 4  { !set .t = la_1_4  }
-					!if .idx4 = 5  { !set .t = la_1_5  }
-					!if .idx4 = 6  { !set .t = la_1_6  }
-					!if .idx4 = 7  { !set .t = la_1_7  }
-					!if .idx4 = 8  { !set .t = la_1_8  }
-					!if .idx4 = 9  { !set .t = la_1_9  }
-					!if .idx4 = 10 { !set .t = la_1_10 }
-					!if .idx4 = 11 { !set .t = la_1_11 }
-					!if .idx4 = 12 { !set .t = la_1_12 }
-					!if .idx4 = 13 { !set .t = la_1_13 }
-					!if .idx4 = 14 { !set .t = la_1_14 }
-					!if .idx4 = 15 { !set .t = la_1_15 }
-				}
-
-				!if lookahead_track = 2 {
-					!if .idx4 = 1  { !set .t = la_2_1  }
-					!if .idx4 = 2  { !set .t = la_2_2  }
-					!if .idx4 = 3  { !set .t = la_2_3  }
-					!if .idx4 = 4  { !set .t = la_2_4  }
-					!if .idx4 = 5  { !set .t = la_2_5  }
-					!if .idx4 = 6  { !set .t = la_2_6  }
-					!if .idx4 = 7  { !set .t = la_2_7  }
-					!if .idx4 = 8  { !set .t = la_2_8  }
-					!if .idx4 = 9  { !set .t = la_2_9  }
-					!if .idx4 = 10 { !set .t = la_2_10 }
-					!if .idx4 = 11 { !set .t = la_2_11 }
-					!if .idx4 = 12 { !set .t = la_2_12 }
-					!if .idx4 = 13 { !set .t = la_2_13 }
-					!if .idx4 = 14 { !set .t = la_2_14 }
-					!if .idx4 = 15 { !set .t = la_2_15 }
-				}
-
-				!if lookahead_track = 3 {
-					!if .idx4 = 1  { !set .t = la_3_1  }
-					!if .idx4 = 2  { !set .t = la_3_2  }
-					!if .idx4 = 3  { !set .t = la_3_3  }
-					!if .idx4 = 4  { !set .t = la_3_4  }
-					!if .idx4 = 5  { !set .t = la_3_5  }
-					!if .idx4 = 6  { !set .t = la_3_6  }
-					!if .idx4 = 7  { !set .t = la_3_7  }
-					!if .idx4 = 8  { !set .t = la_3_8  }
-					!if .idx4 = 9  { !set .t = la_3_9  }
-					!if .idx4 = 10 { !set .t = la_3_10 }
-					!if .idx4 = 11 { !set .t = la_3_11 }
-					!if .idx4 = 12 { !set .t = la_3_12 }
-					!if .idx4 = 13 { !set .t = la_3_13 }
-					!if .idx4 = 14 { !set .t = la_3_14 }
-					!if .idx4 = 15 { !set .t = la_3_15 }
-				}
-
-				lda sequencer_temp_a
-				adc current_steprates_fract + lookahead_track
-				sta sequencer_temp_a
-				lda sequencer_temp_a+1
-				adc current_steprates_lows + lookahead_track
-				sta sequencer_temp_a+1
-				adc #<(sample_data_buffer + lookahead_track * lookahead_track_offset)
-				sta .t + 1
-				lda #>(sample_data_buffer + lookahead_track * lookahead_track_offset)
-				adc #0
-				sta .t + 2
-			}
+	!zone lookahead_idx_set {
+		!for .idx4, 0, 15 {
+			lda sequencer_temp_a
+			adc current_steprates_fract,y
+			sta sequencer_temp_a
+			lda sequencer_temp_a+1
+			adc current_steprates_lows,y
+			sta sequencer_temp_a+1
+			sta rd_la_track_0 + mixer_loop_segment_length*.idx4 + 1,x
+			lda sequencer_temp_a+2
+			adc #0
+			sta sequencer_temp_a+2
+			sta rd_la_track_0 + mixer_loop_segment_length*.idx4 + 2,x
 		}
 	}
 rts
+
+; set the sample's volume, and set the address targets in the mixer below
+; enter with .A = volume level, .Y = track number
+; .Y will be preserved
+
+set_volume_addrs
+	sta current_sample_volume_levels,y
+
+	sec
+	cmp #33
+	bcc +
+	clc
+	adc #>volume_table_lower
+	bcs ++
+
++	adc #(>volume_table_upper)-34
+
+++	ldx lookahead_code_offsets_set_volume_addr,y
+
+	!zone lookahead_idx_set {
+		!for .idx4, 0, 15 {
+			sta vol_addr_0 + mixer_loop_segment_length*.idx4 + 2,x
+		}
+	}
+rts
+
+lookahead_code_offsets_set_read_byte_addr
+	!byte 0
+	!byte rd_la_track_1 - rd_la_track_0
+	!byte rd_la_track_2 - rd_la_track_0
+	!byte rd_la_track_3 - rd_la_track_0
+
+lookahead_code_offsets_set_volume_addr
+	!byte 0
+	!byte vol_addr_1 - vol_addr_0
+	!byte vol_addr_2 - vol_addr_0
+	!byte vol_addr_3 - vol_addr_0
+
 
 ; THE ACTUAL MIXER ROUTINE
 ; The hard work happens here 🙂
@@ -419,98 +397,51 @@ reu_start_mixer
 			}
 		}
 
-		!for .idx2, 0, 15 {
-		inx													; 2
-	-	cpx audio_out_buf_index								; 3    / wait for a free
-		beq -												; 3/2  / slot in the buffer
+	mixer_loop_start
+	  !for .idx2, 0, 15 {
+		inx												; 2
+	-	cpx audio_out_buf_index							; 3    / wait for a free
+		beq -											; 3/2  / slot in the buffer
 
-		!if .idx2 = 1  { la_0_1  = * }
-		!if .idx2 = 2  { la_0_2  = * }
-		!if .idx2 = 3  { la_0_3  = * }
-		!if .idx2 = 4  { la_0_4  = * }
-		!if .idx2 = 5  { la_0_5  = * }
-		!if .idx2 = 6  { la_0_6  = * }
-		!if .idx2 = 7  { la_0_7  = * }
-		!if .idx2 = 8  { la_0_8  = * }
-		!if .idx2 = 9  { la_0_9  = * }
-		!if .idx2 = 10 { la_0_10 = * }
-		!if .idx2 = 11 { la_0_11 = * }
-		!if .idx2 = 12 { la_0_12 = * }
-		!if .idx2 = 13 { la_0_13 = * }
-		!if .idx2 = 14 { la_0_14 = * }
-		!if .idx2 = 15 { la_0_15 = * }
+		; the various `LDY sample_data_buffer` below will have their addresses
+		; re-written by the above set_lookahead_addrs routine. Similarly, each
+		; corresponding `LDA/ADC volume_table_lower,Y` will have its high byte
+		; re-written by the set_volume_addrs routine.
 
-		; these LDY addrs are correct for lookahead pass 0, and they all get
-		; overwritten entirely by the sequencer in passes 1-15
+		!if .idx2 = 0 { rd_la_track_0 = * }
+		ldy sample_data_buffer							; 4
 
-		ldy sample_data_buffer								; 4 
-		lda (volume_table_vectors),y						; 5
+ 		!if .idx2 = 0 { vol_addr_0 = * }
+		lda volume_table_lower,y						; 4
 
-		!if .idx2 = 1  { la_3_1  = * }
-		!if .idx2 = 2  { la_3_2  = * }
-		!if .idx2 = 3  { la_3_3  = * }
-		!if .idx2 = 4  { la_3_4  = * }
-		!if .idx2 = 5  { la_3_5  = * }
-		!if .idx2 = 6  { la_3_6  = * }
-		!if .idx2 = 7  { la_3_7  = * }
-		!if .idx2 = 8  { la_3_8  = * }
-		!if .idx2 = 9  { la_3_9  = * }
-		!if .idx2 = 10 { la_3_10 = * }
-		!if .idx2 = 11 { la_3_11 = * }
-		!if .idx2 = 12 { la_3_12 = * }
-		!if .idx2 = 13 { la_3_13 = * }
-		!if .idx2 = 14 { la_3_14 = * }
-		!if .idx2 = 15 { la_3_15 = * }
+		!if .idx2 = 0 { rd_la_track_3 = *}
+		ldy sample_data_buffer							; 4
 
-		ldy sample_data_buffer + 3*lookahead_track_offset	; 4
-		adc (volume_table_vectors+3*2),y					; 5
-		sta audio_buffer_left,x								; 5
+		!if .idx2 = 0 { vol_addr_3 = *}
+		adc volume_table_lower,y						; 4
+		sta audio_buffer_left,x							; 5
 
-		!if .idx2 = 1  { la_1_1  = * }
-		!if .idx2 = 2  { la_1_2  = * }
-		!if .idx2 = 3  { la_1_3  = * }
-		!if .idx2 = 4  { la_1_4  = * }
-		!if .idx2 = 5  { la_1_5  = * }
-		!if .idx2 = 6  { la_1_6  = * }
-		!if .idx2 = 7  { la_1_7  = * }
-		!if .idx2 = 8  { la_1_8  = * }
-		!if .idx2 = 9  { la_1_9  = * }
-		!if .idx2 = 10 { la_1_10 = * }
-		!if .idx2 = 11 { la_1_11 = * }
-		!if .idx2 = 12 { la_1_12 = * }
-		!if .idx2 = 13 { la_1_13 = * }
-		!if .idx2 = 14 { la_1_14 = * }
-		!if .idx2 = 15 { la_1_15 = * }
+		!if .idx2 = 0 { rd_la_track_1 = * }
+		ldy sample_data_buffer							; 4
 
-		ldy sample_data_buffer + 1*lookahead_track_offset	; 4
-		lda (volume_table_vectors+1*2),y					; 5
+		!if .idx2 = 0 { vol_addr_1 = * }
+		lda volume_table_lower,y						; 4
 
-		!if .idx2 = 1  { la_2_1  = * }
-		!if .idx2 = 2  { la_2_2  = * }
-		!if .idx2 = 3  { la_2_3  = * }
-		!if .idx2 = 4  { la_2_4  = * }
-		!if .idx2 = 5  { la_2_5  = * }
-		!if .idx2 = 6  { la_2_6  = * }
-		!if .idx2 = 7  { la_2_7  = * }
-		!if .idx2 = 8  { la_2_8  = * }
-		!if .idx2 = 9  { la_2_9  = * }
-		!if .idx2 = 10 { la_2_10 = * }
-		!if .idx2 = 11 { la_2_11 = * }
-		!if .idx2 = 12 { la_2_12 = * }
-		!if .idx2 = 13 { la_2_13 = * }
-		!if .idx2 = 14 { la_2_14 = * }
-		!if .idx2 = 15 { la_2_15 = * }
+		!if .idx2 = 0 { rd_la_track_2 = * }
+		ldy sample_data_buffer							; 4
 
-		ldy sample_data_buffer + 2*lookahead_track_offset	; 4
-		adc (volume_table_vectors+2*2),y					; 5
-		sta audio_buffer_right,x							; 5
-	}
+		!if .idx2 = 0 { vol_addr_2 = * }
+		adc volume_table_lower,y						; 4
+		sta audio_buffer_right,x						; 5
 
-	stx audio_in_buf_index									; 3
+		!if .idx2 = 0 { !set mixer_loop_end = * }
+	  }
 
-	dec mixer_countdown										; 5
-	beq +													; 3/2
-	jmp reu_mixer_main_loop									; 6
+	stx audio_in_buf_index								; 3
+
+	dec mixer_countdown									; 5
+	beq +												; 3/2
+	jmp reu_mixer_main_loop								; 6
 
 + rts
 
@@ -518,7 +449,6 @@ reu_start_mixer
 ; ============================================================================
 ; TIMING INFO, assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo
 ; All times rounded-up.
-; C128-specific numbers given are in 1 MHz equivalents.
 ;
 ; -----------
 ;
@@ -532,20 +462,16 @@ reu_start_mixer
 ; and not at the end of sample yet:
 ;
 ; 10 + (3+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 626 cycles
-; 626 / 16 = average of ~40 cycles per set of fetched samples
 ;
 ; most likely case, all four tracks updating two bytes,
 ; and not at the end of sample yet:
 ;
 ; 10 + (3+3+3+2 +3+3+3+4+3 +3+4 +3+4)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 658
-; 658 / 16 = ~42 cycles per sample set
 ;
 ; worst case, all four tracks have to update all four bytes,
 ; and not at the end of sample yet:
 ;
 ; 10 + (3+3+3+2 +3+3+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+3+3+3+3+3+3)*4 + 98*4 = 714
-; 714 / 16 = ~45 cycles per sample set
-;
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
@@ -553,39 +479,35 @@ reu_start_mixer
 ; for their whole duration. The explicit 1/2 MHz switching above adds 13,
 ; 2 MHz cycles (5 for the shift down to 1 MHz, 8 to shift back up).
 ;
-; Since there's half as much data being fetched,
-; that machine's fetch timings are:
+; Since there's half as much data being fetched, that machine's fetch timings
+; are:
 ;
 ; 2 +4 +4+8+16 +8+8+16 +8+8+16 +8+8+16 +13 = 143 cycles per track, 572 total
-; so (626 + 572 to 714 + 572) / 2 = 599 to 643 cycles total runtime
-;
-; So we'll use 658 / 16 = ~42 cycles for the C64, and for the C128 we'll use
-; (658 + 572) / 16 / 2 = ~39 cycles
 ;
 ; ---------
 ;
 ; lookahead/mixer push-to-buffers runtime:
-; 2+3+3 +4+5 +4+5+5 +4+5 +4+5+5 = 54 cycles on C64, 27 cycles on C128
+; 2+3+3 +4+4+4+4+5 +4+4+4+4+5 = 42 cycles per pass, 816 cycles total (16 passes)
 ;
 ; mixer loop close:
 ; 3+5+2+6 = 16 cycles
-; so we'll just call it 1 cycle per sample set on both machines
 ;
-; grand totals for the whole fetch/mix/buffer run (averages per sample pair):
-; C64:  42 + 54 + 1 = 97 cycles, we'll round it up to 100
-; C128: 39 + 27 + 1 = 67 cycles, round up to 68
+; audio ISR takes 53 cycles
 ;
-; audio ISR takes 53 cycles on C64, 28 on C128
+; Grand totals (using "most likely" fetch scenario):
+;
+; C64:   (658 + 816 + 16) / 16 + 53 = ~147 cycles   --  round up to 150
+; C128:  (658 + 572 + 816) / 16 + 53 = ~181 cycles  --  round up to 185
 ;
 ; ---------
 ;
-; So the C64 should be run at almost 6.7 kHz with the screen off, SID 4-bit stereo:
-; 1022727/(100+53) = ~6684.49
+; So the C64 should be run at about 6.8 kHz with the screen off, SID 4-bit stereo:
+; 1022727/150 = ~6818.2
 ;
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
-; 1022727/(65*3) = ~5244.75
+; 1022727/(65*3) = ~5244.8
 ;
-; C128 should be able to run at 10.6 kHz:
-; 1022727/(68+28) = ~10653.41
+; C128 should be able to run at 11 kHz:
+; (1022727*2)/185 = ~11056.5
 ;
 ; ============================================================================

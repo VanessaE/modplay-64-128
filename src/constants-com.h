@@ -13,13 +13,9 @@
 	; e.g. only when player is running and no KERNAL
 	; or BASIC is needed
 
-	; these various multiples of 8 bytes are in order by track number
+	tempzpbk_g						= $02 ; 4 bytes
 
-	volume_table_vectors			= $02 ; 16 bytes
-	current_sample_volume_levels	= $12 ; 8 bytes
-	track_byte_to_mix				= $1a ; 8 bytes
-	audio_in_buf_index				= $22
-	audio_out_buf_index				= $23
+	; free: $06 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; and divide routines' zero page variables have to be in the same places
@@ -33,46 +29,45 @@
 	; dividend32/quotient32 uses $24 to $27
 	; divisor16 uses $28 and $29
 
-	; free $2a
+	; the various multiples of 8 bytes below are in order by track number
 
-	tempo_dividend_precalc			= $2b ; 2 bytes
-	stepper_dividend_precalc		= $2d ; 2 bytes
-	pattern_address					= $2f ; 3 bytes
-	pattern_break_target_row		= $32
-	seq_current_pattern_number		= $33
-	seq_current_row					= $34
-	seq_current_track				= $35
-	seq_tempo_bpm					= $36
-	seq_ticks_per_division			= $37
-	seq_ticks_counter				= $38
-	; free: $39
- 	pitch_slide_up_rates			= $3a ; 8 bytes
-	pitch_slide_down_rates			= $42 ; 8 bytes
-	pitch_slide_to_note_rates		= $4a ; 8 bytes
+	; free: $24 through $33
 
-	glissando_flag					= $52
-	vibrato_waveform				= $53
-	tremolo_waveform				= $54
-	delay_pattern_divisions			= $55
-	song_speed						= $56
-	current_song_pos				= $57
-	; free: $58
+	pattern_address					= $35 ; 3 bytes
+	pattern_break_target_row		= $38
+	seq_current_pattern_number		= $39
+	seq_current_row					= $3a
+	seq_current_track				= $3b
+	seq_tempo_bpm					= $3c
+	seq_ticks_per_division			= $3d
+	seq_ticks_counter				= $3e
+	current_song_pos				= $3f
+	glissando_flag					= $40
+	vibrato_waveform				= $41
+	tremolo_waveform				= $42
+	delay_pattern_divisions			= $43
+	audio_in_buf_index				= $44
+	audio_out_buf_index				= $45
+	mixer_loops_per_tick_fract		= $46
+	mixer_loops_per_tick			= $47
+	mixer_countdown_fract			= $48
+	mixer_countdown					= $49
+	sequencer_temp_x				= $4a
+	sequencer_temp_y				= $4b
+	sequencer_temp_a				= $4c ; 2 bytes \__ these can also be used
+	sequencer_temp_b				= $4e ; 2 bytes /   as one 4-byte temp
+	current_sample_volume_levels	= $50 ; 8 bytes
+	portamento_to_note_rates		= $58 ; 8 bytes
 
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
 
-	; free: $5e
-	; divide24_tmp uses $5f
-	; free: $60, $61
+	song_speed						= $5e
 
-	tempzpbk_g						= $62 ; 4 bytes
-	mixer_loops_per_tick_fract		= $66
-	mixer_loops_per_tick			= $67 
-	mixer_countdown_fract			= $68
-	mixer_countdown					= $69
-	sequencer_temp_x				= $6a
-	sequencer_temp_y				= $6b
-	sequencer_temp_a				= $6c ; 4 bytes
+	; divide24_tmp uses $5f
+
+	pitch_slide_up_rates			= $60 ; 8 bytes
+	pitch_slide_down_rates			= $68 ; 8 bytes
 	track_current_loop_flags		= $70 ; 8 bytes
 	fine_tune_values				= $78 ; 8 bytes
 	retrigger_rates					= $80 ; 8 bytes
