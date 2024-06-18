@@ -218,35 +218,27 @@ chkend_h_idx =        ckend_h - fetch_loop_start + 1
 fetchlen_idx =       fetchlen - fetch_loop_start + 1
 
 set_mixer_and_lookahead_addrs
+	ldx lookahead_code_offsets_set_read_byte_code_addr,y
+
 	tya
-	ldx #lookahead_track_offset
-	jsr multiply_8x8
-
 	clc
-	lda #0
-	sta sequencer_temp_a
-	lda product
-	adc #<sample_data_buffer
-	sta sequencer_temp_a+1
-	lda product+1
 	adc #>sample_data_buffer
-	sta sequencer_temp_a+2
-
-	ldx lookahead_code_offsets_set_read_byte_addr,y
+	sta rd_la_track_0 + 2,x
+	lda current_steprates_fract,y
+	sta sequencer_temp_a
 
 	!zone lookahead_idx_set {
-		!for .idx4, 0, 15 {
+		!for .idx4, 1, 15 {
+
+			!set la_rd_addr_ld = rd_la_track_0 + mixer_loop_segment_length * (.idx4 - 1)
+			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx4
+
 			lda sequencer_temp_a
 			adc current_steprates_fract,y
 			sta sequencer_temp_a
-			lda sequencer_temp_a+1
+			lda la_rd_addr_ld + 1,x
 			adc current_steprates_lows,y
-			sta sequencer_temp_a+1
-			sta rd_la_track_0 + mixer_loop_segment_length*.idx4 + 1,x
-			lda sequencer_temp_a+2
-			adc #0
-			sta sequencer_temp_a+2
-			sta rd_la_track_0 + mixer_loop_segment_length*.idx4 + 2,x
+			sta la_rd_addr_st + 1,x
 		}
 	}
 
@@ -314,7 +306,7 @@ set_volume_addrs
 
 +	adc #(>volume_table_upper)-34
 
-++	ldx lookahead_code_offsets_set_volume_addr,y
+++	ldx lookahead_code_offsets_set_volume_code_addr,y
 
 	!zone lookahead_idx_set {
 		!for .idx4, 0, 15 {
@@ -323,13 +315,13 @@ set_volume_addrs
 	}
 rts
 
-lookahead_code_offsets_set_read_byte_addr
+lookahead_code_offsets_set_read_byte_code_addr
 	!byte 0
 	!byte rd_la_track_1 - rd_la_track_0
 	!byte rd_la_track_2 - rd_la_track_0
 	!byte rd_la_track_3 - rd_la_track_0
 
-lookahead_code_offsets_set_volume_addr
+lookahead_code_offsets_set_volume_code_addr
 	!byte 0
 	!byte vol_addr_1 - vol_addr_0
 	!byte vol_addr_2 - vol_addr_0
@@ -476,26 +468,26 @@ reu_start_mixer
 		; re-written by the set_volume_addrs routine.
 
 		!if .idx2 = 0 { rd_la_track_0 = * }
-		ldy sample_data_buffer							; 4
+		ldy sample_data_buffer + 0*256					; 4 / yeah I know it's 0, shut up 😛
 
  		!if .idx2 = 0 { vol_addr_0 = * }
 		lda volume_table_lower,y						; 4
 
 		!if .idx2 = 0 { rd_la_track_3 = *}
-		ldy sample_data_buffer							; 4
+		ldy sample_data_buffer + 3*256					; 4
 
 		!if .idx2 = 0 { vol_addr_3 = *}
 		adc volume_table_lower,y						; 4
 		sta audio_buffer_left,x							; 5
 
 		!if .idx2 = 0 { rd_la_track_1 = * }
-		ldy sample_data_buffer							; 4
+		ldy sample_data_buffer + 1*256					; 4
 
 		!if .idx2 = 0 { vol_addr_1 = * }
 		lda volume_table_lower,y						; 4
 
 		!if .idx2 = 0 { rd_la_track_2 = * }
-		ldy sample_data_buffer							; 4
+		ldy sample_data_buffer + 2*256					; 4
 
 		!if .idx2 = 0 { vol_addr_2 = * }
 		adc volume_table_lower,y						; 4
