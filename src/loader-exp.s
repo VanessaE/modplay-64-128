@@ -678,7 +678,6 @@ filetype_unsure
 
 	lda load_buffer + header15_seek_to_pt - 1	; "restart" byte
 	beq +
-	sec
 	cmp #128
 	bcs +
 
@@ -706,8 +705,6 @@ filetype_unsure
 set_num_tracks
 	lda tempzp_c
 	sta current_file_type
-	sec
-	lda current_file_type
 	cmp #5
 	bcs +
 -	lda #4						; filetypes 1-4 (no tag, "M.K.", "M!K!",
@@ -772,8 +769,7 @@ count_patterns
 	lda (tempzp_d),y
 	sta number_of_song_positions
 
--	sec
-	lda pattern_table,y
+-	lda pattern_table,y
 	cmp number_of_patterns
 	beq +
 	bcc +
@@ -903,7 +899,6 @@ parse_instruments
 
 	lda tempzp_f+1						; if loop len > 1, flag this sample as loopable
 	bne +
-	sec
 	lda tempzp_f
 	cmp #2
 	bcs +

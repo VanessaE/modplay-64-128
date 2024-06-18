@@ -413,7 +413,6 @@ rts
 ; that the quotient low byte can act as a fraction.
 
 run_effect_set_speed
-	sec
 	lda seq_command_arguments,y
 	cmp #33
 	bcc +
@@ -591,7 +590,6 @@ set_pitch
 ; what, so we can just handle that here for note periods whose high byte is 3
 ; or more (e.g. 768 and above)
 
-	sec
 	lda current_note_periods_highs,x
 	cmp #3
 	bcs +

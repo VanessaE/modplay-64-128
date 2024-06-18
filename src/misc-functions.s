@@ -41,7 +41,6 @@ center_string
 
 ; converts a 0-15 value in .A into printable "0" to "F", returns it in .A
 to_hex
-	sec
 	cmp #10
 	bcs +
 	adc #$30
@@ -528,8 +527,7 @@ get_text_input
 	jsr upd_cursor
 	jmp .nxt
 
-+	sec
-	cmp #$20
++	cmp #$20
 	bcc .nxt
 	cmp #$80
 	bcc .st
@@ -592,7 +590,6 @@ chrout_ascii
 	pha
 
 	txa
-	sec
 	cmp #$20
 	bcs +
 
@@ -652,9 +649,7 @@ print_msg_ascii
 + rts
 
 print_filetype
-	sec
 	lda current_file_type
-
 	cmp #1
 	bne +
 	ldx #<tracker_name_msg_soundtracker
@@ -679,9 +674,7 @@ print_filetype
 
 !ifndef c128 {
 	print_filetype_ascii
-		sec
 		lda current_file_type
-
 		cmp #1
 		bne +
 		ldx #<tracker_name_msg_soundtracker_ascii

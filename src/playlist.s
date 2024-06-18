@@ -110,7 +110,6 @@ load_directory
 .more_files
 	ldy playlist_length
 	lda playlist_file_sizes_lows,y
-	sec
 	cmp #7					; discard any file less than 7 disk blocks long,
 	bcc .next_entry			; it's all but impossible for a MOD to be that small.
 
@@ -275,7 +274,6 @@ display_playlist
 	inc playlist_print_file_counter
 	inc screen_row_to_print_at
 
-	sec
 	lda #playlist_bottom_row
 	cmp screen_row_to_print_at
 	bcc +

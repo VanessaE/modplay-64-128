@@ -174,7 +174,6 @@ generate_pitch_table
 	ldy tempzp_f
 	sta (tempzp_d),y
 
-	sec
 	lda tempzp_f+1
 	cmp #3
 	bcs +

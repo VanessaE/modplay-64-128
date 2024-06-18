@@ -297,7 +297,6 @@ rts
 set_volume_addrs
 	sta current_sample_volume_levels,y
 
-	sec
 	cmp #33
 	bcc +
 	clc
@@ -384,7 +383,6 @@ reu_start_mixer
 				sta DMA_BANK								; 4
 
 			.reu_check_end
-				sec											; 2
 				lda sample_pointers_lows+track				; 3
 
 				!if track = 0 { !set ckend_l = * }
@@ -392,11 +390,11 @@ reu_start_mixer
 				lda sample_pointers_mids+track				; 3
 
 				!if track = 0 { !set ckend_m = * }
-				cmp #0										; 2
+				sbc #0										; 2
 				lda sample_pointers_highs+track				; 3
 
 				!if track = 0 { !set ckend_h = * }
-				cmp #0										; 2
+				sbc #0										; 2
 				bcc .reu_fetch_sample_data					; 3/2
 
 				clc											; 2
@@ -551,17 +549,17 @@ reu_start_mixer
 ; in the mixer/stuffer loop, minimum time would be if all four tracks only
 ; need to update the fract bytes, and not at the end of the sample yet:
 ;
-; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 = 218 cycles
+; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 210 cycles
 ;
 ; most likely case, all four tracks updating two bytes, not at the end of
 ; the sample yet:
 ;
-; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (2+3+2+3+2+3+2+3)*4 = 234 cycles
+; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 226 cycles
 ;
 ; worst possible case, all four tracks have to update all four bytes, not at
 ; the end of sample yet:
 ;
-; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (2+3+2+3+2+3+2+3)*4 = 290 cycles
+; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 282 cycles
 ;
 ; ---------
 ;
@@ -574,14 +572,14 @@ reu_start_mixer
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (152 + 218 + 816 + 16) / 16 =  ~76 cycles
-; likely: (232 + 234 + 816 + 16) / 16 =  ~82 cycles
-; worst:  (680 + 290 + 816 + 16) / 16 =  ~113 cycles
+; best:   (152 + 210 + 816 + 16) / 16 =  ~75 cycles
+; likely: (232 + 226 + 816 + 16) / 16 =  ~81 cycles
+; worst:  (680 + 282 + 816 + 16) / 16 =  ~113 cycles
 ;
 ; C128:
-; best:   (332 + 218 + 816 + 16) / 16 =  ~87 cycles
-; likely: (396 + 234 + 816 + 16) / 16 =  ~92 cycles
-; worst:  (604 + 290 + 816 + 16) / 16 = ~108 cycles
+; best:   (332 + 210 + 816 + 16) / 16 =  ~86 cycles
+; likely: (396 + 226 + 816 + 16) / 16 =  ~91 cycles
+; worst:  (604 + 282 + 816 + 16) / 16 = ~108 cycles
 ;
 ; ---------
 ;
@@ -590,12 +588,12 @@ reu_start_mixer
 ;
 ; the C64 should be run at about 7.4 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (82 + 2 + 53) = ~7465.2
+; 1022727 / (82 + 3 + 53) = ~7465.2
 ;
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
 ; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at about 13.7 kHz:
-; (1022727*2) / (92 + 4 + 53) = ~13727.9
+; C128 should be able to run at about 13.8 kHz:
+; (1022727*2) / (92 + 3 + 53) = ~13820.6
 ;
 ; ============================================================================

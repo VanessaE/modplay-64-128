@@ -33,7 +33,6 @@ rts
 		ldy #0
 	-	!for .page, 0, 3 {
 			lda #132
-			sec
 			ldx VIC_SCREEN + .page*256,y
 			cpx #128
 			bcs +

@@ -128,7 +128,7 @@ show_input_device
 	ldx load_device
 	ldy #0
 	jsr print_uint16
-		lda #GRN
+	lda #GRN
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
@@ -340,8 +340,7 @@ show_dac_addr
 	ldy #dacaddr_col
 	jsr PLOT
 
-	sec						; allow changing DAC address
-	ldx audio_driver
+	ldx audio_driver						; allow changing DAC address
 	cpx #5
 	beq +
 	cpx #6
@@ -391,7 +390,6 @@ show_dac_addr
 rts
 
 change_audio_addr
-	sec
 	ldx audio_driver
 	cpx #5
 	bpl .not_sid

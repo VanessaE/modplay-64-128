@@ -320,7 +320,6 @@ draw_menu_page_a
 	}
 
 	lda playlist_length ; 2 or more items required
-	sec
 	cmp #2
 	bcc +
 
@@ -429,7 +428,6 @@ draw_menu_page_a
 	jsr print_menu_line
 
 ++	lda playlist_length ;  2 or more items required
-	sec
 	cmp #2
 	bcc +
 
@@ -468,7 +466,6 @@ draw_menu_page_b
 	}
 
 	lda playlist_length ; 2 or more items required
-	sec
 	cmp #2
 	bcc +
 
@@ -588,7 +585,6 @@ draw_menu_page_c
 	jsr print_menu_line
 
 	; display either SID or DAC address, if SID addr, only if stereo is on.
-	sec
 	lda audio_driver
 	cmp #5
 	bpl .not_sid_menu
@@ -865,11 +861,10 @@ populate_info_box
 	jsr print_uint16
 
 	!ifndef c128 { ; check if the number is 4 digits i.e. 1000+
-		sec
 		lda current_file_size_in_kb
 		cmp #232
 		lda current_file_size_in_kb+1
-		cmp #3
+		sbc #3
 		bcs +
 		lda #" "
 		jsr CHROUT
