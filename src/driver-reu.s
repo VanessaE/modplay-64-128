@@ -358,7 +358,7 @@ reu_start_mixer
 				lda sample_pointers_fract+track				; 3
 
 				!if track = 0 { !set cur_steprate_f = * }
-				lda #0										; 2
+				adc #0										; 2
 				sta sample_pointers_fract+track				; 3
 				bcc .reu_fix_dma_top_three_bytes			; 3/2
 				lda sample_pointers_lows+track				; 3
