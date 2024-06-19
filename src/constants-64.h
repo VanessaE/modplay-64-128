@@ -88,10 +88,11 @@
 	; putting the end of free memory at the end of the load buffer allows
 	; the program to reclaim it when using the main memory driver.
 
-	free_memory_end					= $8300
+	free_memory_end					= $8200
 
-	load_buffer						= $7E00 ; 5 pages
-	load_buffer_end					= $8300
+	load_buffer						= $7d00 ; 5 pages
+	load_buffer_end					= $8200
+	and_f0_table					= $8200
 	divide_by_16_table				= $8300
 
 	pitch_table_fracts				= $8400 ; 7 pages

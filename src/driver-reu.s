@@ -8,9 +8,9 @@
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #84
+		lda #78
 	} else {
-		lda #96/2 ; equivalent 1 MHz cycles
+		lda #90/2 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -454,11 +454,19 @@ reu_start_mixer
 		!if track = 0 { fetch_loop_end = * }
 		}
 
+	ldx audio_in_buf_index								; 3
+
+	txa													; 2
+	adc #16												; 2
+	and #$f0											; 2
+	sta audio_in_buf_index								; 3
+
+-	ldy audio_out_buf_index								; 3
+	cmp and_f0_table,y									; 4
+	beq -												; 3/2
+
 	mixer_loop_start
 	  !for .idx2, 0, 15 {
-		inx												; 2
-	-	cpx audio_out_buf_index							; 3    / wait for a free
-		beq -											; 3/2  / slot in the buffer
 
 		; the various `LDY sample_data_buffer` below will have their addresses
 		; re-written by the above set_lookahead_addrs routine. Similarly, each
@@ -491,10 +499,10 @@ reu_start_mixer
 		adc volume_table_lower,y						; 4
 		sta audio_buffer_right,x						; 5
 
-		!if .idx2 = 0 { !set mixer_loop_end = * }
-	  }
+		inx												; 2
 
-	stx audio_in_buf_index								; 3
+	  !if .idx2 = 0 { !set mixer_loop_end = * }
+	}
 
 	dec mixer_countdown									; 5
 	beq +												; 3/2
@@ -512,6 +520,8 @@ reu_start_mixer
 ;
 ; fetch loop open:
 ; 2+4+2+2 = 10 cycles
+;
+; fetch DMA calls runtime alone:
 ;
 ; lowest possible step rate is about 0.273 on C64, so fetching just 1 byte per
 ; transfer, times 4 transfers:
@@ -549,51 +559,57 @@ reu_start_mixer
 ; in the mixer/stuffer loop, minimum time would be if all four tracks only
 ; need to update the fract bytes, and not at the end of the sample yet:
 ;
-; 10 + (2+3+3+3 +3+4 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 210 cycles
+; mixer loop open:
+; 2+4+2+2 = 10 cycles
+;
+; within the loop
+; 10 + (3+2+3+3 +3+4 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 210 cycles
 ;
 ; most likely case, all four tracks updating two bytes, not at the end of
 ; the sample yet:
 ;
-; 10 + (2+3+3+2 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 226 cycles
+; 10 + (3+2+3+2 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 226 cycles
 ;
 ; worst possible case, all four tracks have to update all four bytes, not at
 ; the end of sample yet:
 ;
-; 10 + (2+3+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 282 cycles
+; 10 + (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 282 cycles
 ;
 ; ---------
 ;
 ; lookahead/mixer push-to-buffers runtime:
-; 2+3+3 +4+4+4+4+5 +4+4+4+4+5 = 42 cycles per pass, 816 cycles total (16 passes)
+; open:  3 +2+2+2+3 +3+4+3 = 22 cycles
+
+; 4+4+4+4+5 +4+4+4+4+5 + 2 = 44 cycles per pass, times 16 passes = 704 cycles
 ;
 ; mixer loop close:
-; 3+5+2+6 = 16 cycles
+; 5+2+6 = 13 cycles
 ;
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (152 + 210 + 816 + 16) / 16 =  ~75 cycles
-; likely: (232 + 226 + 816 + 16) / 16 =  ~81 cycles
-; worst:  (680 + 282 + 816 + 16) / 16 =  ~113 cycles
+; best:   (152 + 210 + 22 + 704 + 13) / 16 =  ~69 cycles
+; likely: (232 + 226 + 22 + 704 + 16) / 16 =   75 cycles
+; worst:  (680 + 282 + 22 + 704 + 16) / 16 =  ~107 cycles
 ;
 ; C128:
-; best:   (332 + 210 + 816 + 16) / 16 =  ~86 cycles
-; likely: (396 + 226 + 816 + 16) / 16 =  ~91 cycles
-; worst:  (604 + 282 + 816 + 16) / 16 = ~108 cycles
+; best:   (332 + 210 + 22 + 704 + 16) / 16 =  ~81 cycles
+; likely: (396 + 226 + 22 + 704 + 16) / 16 =  ~86 cycles
+; worst:  (604 + 282 + 22 + 704 + 16) / 16 = ~102 cycles
 ;
 ; ---------
 ;
 ; So factoring-in the ISR runtime of 53 cycles, using the "most likely"
 ; conditions as the timing basis, and adding a few cycles of fudge...
 ;
-; the C64 should be run at about 7.4 kHz with the
+; the C64 should be run at about 7.8 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (82 + 3 + 53) = ~7465.2
+; 1022727 / (75 + 3 + 53) = ~7807.1
 ;
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
 ; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at about 13.8 kHz:
-; (1022727*2) / (92 + 3 + 53) = ~13820.6
+; C128 should be able to run at about 14.3 kHz:
+; (1022727*2) / (86 + 4 + 53) = ~14303.9
 ;
 ; ============================================================================

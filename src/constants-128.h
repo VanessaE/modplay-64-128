@@ -117,11 +117,12 @@
 	; accounting for load addr, plus one disk block for expansion sake.
 	splash_128_end_check = program_start + (254*6) - 1
 
-	free_memory_end					= $9500 ; this allows to reclaim the load buf
+	free_memory_end					= $9400 ; this allows to reclaim the load buf
 											; when using the main mem driver
 
-	load_buffer						= $8f00 ; 5*254 bytes, plus the rest of the
-	load_buffer_end					= $93f5 ; next 2 pages for overflow
+	load_buffer						= $8e00 ; 5*254 bytes, plus the rest of the
+	load_buffer_end					= $92f5 ; next 2 pages for overflow
+	and_f0_table					= $9400
 	divide_by_16_table				= $9500
 
 	pitch_table_fracts				= $9600 ; 7 pages

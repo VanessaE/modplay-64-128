@@ -116,6 +116,14 @@ init
 	inx
 	bne -
 
+	ldx #0
+-	txa
+	and #$f0
+	sta and_f0_table,x
+	inx
+	bne -
+
+
 	sec
 	lda #>free_memory_end
 	sbc #>free_memory_start
