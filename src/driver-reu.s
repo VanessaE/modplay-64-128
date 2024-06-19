@@ -465,10 +465,10 @@ reu_start_mixer
 	mixer_loop_start
 	  !for .idx2, 0, 15 {
 
-		; the various `LDY sample_data_buffer` below will have their addresses
-		; re-written by the above set_lookahead_addrs routine. Similarly, each
-		; corresponding `LDA/ADC volume_table_lower,Y` will have its high byte
-		; re-written by the set_volume_addrs routine.
+		; the various `LDY sample_data_buffer` below will have their address
+		; low bytes re-written by the above set_lookahead_addrs routine.
+		; Similarly, each corresponding `LDA/ADC volume_table_lower,Y` will
+		; have its high byte re-written by the set_volume_addrs routine.
 
 		!if .idx2 = 0 { rd_la_track_0 = * }
 		ldy sample_data_buffer + 0*256					; 4 / yeah I know it's 0, shut up 😛
@@ -518,10 +518,7 @@ rts
 ;
 ; -----------
 ;
-; fetch loop open:
-; 2+4+2+2 = 10 cycles
-;
-; fetch DMA calls runtime alone:
+; fetch DMA calls alone:
 ;
 ; lowest possible step rate is about 0.273 on C64, so fetching just 1 byte per
 ; transfer, times 4 transfers:
@@ -556,30 +553,31 @@ rts
 ;
 ; ----------
 ;
-; in the mixer/stuffer loop, minimum time would be if all four tracks only
-; need to update the fract bytes, and not at the end of the sample yet:
-;
-; mixer loop open:
+; fetch loop open:
 ; 2+4+2+2 = 10 cycles
 ;
-; within the loop
-; 10 + (3+2+3+3 +3+4 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 210 cycles
+; within the loop (not counting the above DMA calls, those are added below):
+;
+; the minimum time would be if all four tracks only need to update the fract
+; bytes, and not at the end of the sample yet:
+;
+; (3+2+3+3 +3+4 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 210 cycles
 ;
 ; most likely case, all four tracks updating two bytes, not at the end of
 ; the sample yet:
 ;
-; 10 + (3+2+3+2 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 226 cycles
+; (3+2+3+2 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 216 cycles
 ;
 ; worst possible case, all four tracks have to update all four bytes, not at
 ; the end of sample yet:
 ;
-; 10 + (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 282 cycles
+; (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 272 cycles
 ;
 ; ---------
 ;
 ; lookahead/mixer push-to-buffers runtime:
 ; open:  2+2+2 +3+4+3 = 16 cycles
-
+;
 ; 4+4+4+4+5 +4+4+4+4+5 + 2 = 44 cycles per pass, times 16 passes = 704 cycles
 ;
 ; mixer loop close:
@@ -588,14 +586,14 @@ rts
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (152 + 210 + 16 + 704 + 13) / 16 =  ~69 cycles
-; likely: (232 + 226 + 16 + 704 + 13) / 16 =   75 cycles
-; worst:  (680 + 282 + 16 + 704 + 13) / 16 =  ~106 cycles
+; best:   (10 + 200 + 152 + 16 + 704 + 13) / 16 =  ~69 cycles
+; likely: (10 + 216 + 232 + 16 + 704 + 13) / 16 =  ~75 cycles
+; worst:  (10 + 272 + 680 + 16 + 704 + 13) / 16 = ~106 cycles
 ;
 ; C128:
-; best:   (332 + 210 + 16 + 704 + 13) / 16 =  ~80 cycles
-; likely: (396 + 226 + 16 + 704 + 13) / 16 =  ~85 cycles
-; worst:  (604 + 282 + 16 + 704 + 13) / 16 = ~102 cycles
+; best:   (10 + 200 + 332 + 16 + 704 + 13) / 16 =  ~80 cycles
+; likely: (10 + 216 + 396 + 16 + 704 + 13) / 16 =  ~85 cycles
+; worst:  (10 + 272 + 604 + 16 + 704 + 13) / 16 = ~102 cycles
 ;
 ; ---------
 ;
