@@ -505,7 +505,9 @@ reu_start_mixer
 	beq +												; 3/2
 	jmp reu_mixer_main_loop								; 6
 
-+	stx audio_in_buf_index
++	txa
+	and #$f0
+	sta audio_in_buf_index
 rts
 
 
