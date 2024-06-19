@@ -10,7 +10,7 @@ reu_set_cycle_counts
 	!ifndef c128 {
 		lda #78
 	} else {
-		lda #90/2 ; equivalent 1 MHz cycles
+		lda #88/2 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -337,7 +337,7 @@ reu_start_mixer
 	sta DMA_ADH
 	ldx audio_in_buf_index
 
-	reu_mixer_main_loop										; 6 cycles to enter
+	reu_mixer_main_loop
 		lda #<sample_data_buffer							; 2
 		sta DMA_ADL											; 4
 		clc													; 2
@@ -454,12 +454,9 @@ reu_start_mixer
 		!if track = 0 { fetch_loop_end = * }
 		}
 
-	ldx audio_in_buf_index								; 3
-
 	txa													; 2
 	adc #16												; 2
 	and #$f0											; 2
-	sta audio_in_buf_index								; 3
 
 -	ldy audio_out_buf_index								; 3
 	cmp and_f0_table,y									; 4
@@ -508,7 +505,8 @@ reu_start_mixer
 	beq +												; 3/2
 	jmp reu_mixer_main_loop								; 6
 
-+ rts
++	stx audio_in_buf_index
+rts
 
 
 ; ============================================================================
@@ -578,7 +576,7 @@ reu_start_mixer
 ; ---------
 ;
 ; lookahead/mixer push-to-buffers runtime:
-; open:  3 +2+2+2+3 +3+4+3 = 22 cycles
+; open:  2+2+2 +3+4+3 = 16 cycles
 
 ; 4+4+4+4+5 +4+4+4+4+5 + 2 = 44 cycles per pass, times 16 passes = 704 cycles
 ;
@@ -588,14 +586,14 @@ reu_start_mixer
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (152 + 210 + 22 + 704 + 13) / 16 =  ~69 cycles
-; likely: (232 + 226 + 22 + 704 + 16) / 16 =   75 cycles
-; worst:  (680 + 282 + 22 + 704 + 16) / 16 =  ~107 cycles
+; best:   (152 + 210 + 16 + 704 + 13) / 16 =  ~69 cycles
+; likely: (232 + 226 + 16 + 704 + 13) / 16 =   75 cycles
+; worst:  (680 + 282 + 16 + 704 + 13) / 16 =  ~106 cycles
 ;
 ; C128:
-; best:   (332 + 210 + 22 + 704 + 16) / 16 =  ~81 cycles
-; likely: (396 + 226 + 22 + 704 + 16) / 16 =  ~86 cycles
-; worst:  (604 + 282 + 22 + 704 + 16) / 16 = ~102 cycles
+; best:   (332 + 210 + 16 + 704 + 13) / 16 =  ~80 cycles
+; likely: (396 + 226 + 16 + 704 + 13) / 16 =  ~85 cycles
+; worst:  (604 + 282 + 16 + 704 + 13) / 16 = ~102 cycles
 ;
 ; ---------
 ;
@@ -609,7 +607,7 @@ reu_start_mixer
 ; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
 ; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at about 14.3 kHz:
-; (1022727*2) / (86 + 4 + 53) = ~14303.9
+; C128 should be able to run at about 14.5 kHz:
+; (1022727*2) / (85 + 3 + 53) = ~14506.8
 ;
 ; ============================================================================
