@@ -200,7 +200,6 @@ regen_all_tables
 	bpl no_msgs1
 
 	!ifndef c128 {
-		jsr enable_kernal_only
 		bit enable_screen_on_playback ; because if it's enabled, the display will
 		bmi +						; have switched to ASCII mode by this point.
 
@@ -215,14 +214,12 @@ regen_all_tables
 		ldx #<main_player_regen_tables_msg_ascii
 		ldy #>main_player_regen_tables_msg_ascii
 		jsr print_msg_ascii
-	++	jsr disable_roms
+	 ++
 	} else {
-		jsr enable_kernal_only
 		lda #0
 		ldx #<main_player_regen_tables_msg
 		ldy #>main_player_regen_tables_msg
 		jsr print_msg
-		jsr disable_roms
 	}
 
 no_msgs1
@@ -248,19 +245,15 @@ no_msgs1
 		bit enable_screen_on_playback
 		bpl no_msgs2
 
-		jsr enable_kernal_only
 		lda #0
 		ldx #<main_player_regen_erase_tables_msg_ascii
 		ldy #>main_player_regen_erase_tables_msg_ascii
 		jsr print_msg_ascii
-		jsr disable_roms
 	} else {
-		jsr enable_kernal_only
 		lda #0
 		ldx #<main_player_regen_erase_tables_msg
 		ldy #>main_player_regen_erase_tables_msg
 		jsr print_msg
-		jsr disable_roms
 	}
 
   no_msgs2

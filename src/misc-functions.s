@@ -630,23 +630,38 @@ rts
 
 print_msg_ascii
 	sta print_msg_char_limit
+
+	!ifndef c128 {
+		lda $01
+	} else {
+		lda MMU
+	}
+	pha
+	jsr enable_kernal_only
+
 	dec print_msg_char_limit
 	stx print_msg_addr
 	sty print_msg_addr+1
 	ldy #0
 
 -	lda (print_msg_addr),y
-	bne +
-	rts
+	beq +
 
-+	jsr chrout_ascii
+	jsr chrout_ascii
 	cpy print_msg_char_limit
 	beq +
 	iny
 	bne -
 	inc print_msg_addr+1
 	bne -
-+ rts
+
++	pla
+	!ifndef c128 {
+		sta $01
+	} else {
+		sta MMU
+	}
+rts
 
 print_filetype
 	lda current_file_type

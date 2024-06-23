@@ -13,9 +13,6 @@
 * = program_start
 
 show_splash
-	php
-	sei
-	jsr enable_kernal_only
 	lda #0
 	sta VIC+$20
 	sta VIC+$21
@@ -53,10 +50,8 @@ show_splash
 		ldy #>splash_data
 		jsr print_msg_rle
 	}
-out
-	jsr enable_roms
-	plp
-	rts ; return to the autorunner, which will load the rest of the file.
+  out
+rts ; return to the autorunner, which will load the rest of the file.
 
 !source "src/misc-macros.s"
 
