@@ -82,43 +82,7 @@ start_sequencer
 	ldx number_of_song_positions
 	dex
 
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl nple
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 18
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 19
-	} else {
-		!addr {
-			vdc_target = (VDC_SCREEN + 11*80 + 38)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-	}
+	jsr print_num_song_pos
 
 	lda #0
 	beq nple
@@ -137,78 +101,7 @@ nple
 	lda pattern_table,x
 	sta seq_current_pattern_number
 
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl next_row
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 15
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 16
-
-		ldx seq_current_pattern_number
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 33
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 34
-	} else {
-		!addr {
-			vdc_target2 = (VDC_SCREEN + 11*80 + 35)
-			vdc_target3 = (VDC_SCREEN + 11*80 + 53)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target2
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target2
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
-
-		lda #18
-		sta VDC
-		lda #>vdc_target3
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target3
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_current_pattern_number
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
-	}
+	jsr print_song_pos_pat_num
 
 ; row format
 ;
@@ -225,43 +118,7 @@ nple
 next_row
 	ldx seq_current_row
 
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl fetch_row_vec
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 13
-		lda seq_current_row
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 14
-	}  else {
-		!addr {
-			vdc_target4 = (VDC_SCREEN + 12*80 + 34)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target4
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target4
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-	}
+	jsr print_row_num
 
 fetch_row_vec			; fetch the next row from expansion RAM
 	jsr $1234
@@ -428,80 +285,7 @@ set_mixer_loops_per_tick
 	lda tempo_table_lows,x
 	sta mixer_loops_per_tick
 
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl elpt
-
-		ldx seq_ticks_per_division
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 27
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 28
-
-		ldx seq_tempo_bpm
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 30
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 31
-	} else {
-		!addr {
-			vdc_target5 = (VDC_SCREEN + 12*80 + 48)
-			vdc_target6 = (VDC_SCREEN + 12*80 + 51)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target5
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target5
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_ticks_per_division
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
-
-		lda #18
-		sta VDC
-		lda #>vdc_target6
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target6
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_tempo_bpm
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-	}
+	jsr print_song_speed
 
 	elpt
 rts
@@ -645,5 +429,246 @@ run_effect_command_jump_table
 	!word unused
 	!word unused
 	!word unused
+
+; In-player UI stuff
+
+print_num_song_pos
+	ldx number_of_song_positions
+	dex
+
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 18
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 19
+	} else {
+		!addr {
+			vdc_target = (VDC_SCREEN + 11*80 + 38)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+	}
+  +
+rts
+
+print_song_pos_pat_num ; enter with .X = song position
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 15
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 16
+
+		ldx seq_current_pattern_number
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 11*40 + 33
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 11*40 + 34
+	} else {
+		!addr {
+			vdc_target2 = (VDC_SCREEN + 11*80 + 35)
+			vdc_target3 = (VDC_SCREEN + 11*80 + 53)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target2
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target2
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
+
+		lda #18
+		sta VDC
+		lda #>vdc_target3
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target3
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx seq_current_pattern_number
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
+	}
+  +
+rts
+
+print_row_num ; enter with .X = row number
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 13
+		lda seq_current_row
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 14
+	}  else {
+		!addr {
+			vdc_target4 = (VDC_SCREEN + 12*80 + 34)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target4
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target4
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+	}
+  +
+rts
+
+print_song_speed
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+
+		ldx seq_ticks_per_division
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 27
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 28
+
+		ldx seq_tempo_bpm
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta secondary_screen + 12*40 + 30
+		txa
+		and #$0f
+		jsr to_hex
+		sta secondary_screen + 12*40 + 31
+	} else {
+		!addr {
+			vdc_target5 = (VDC_SCREEN + 12*80 + 48)
+			vdc_target6 = (VDC_SCREEN + 12*80 + 51)
+		}
+
+		lda #18
+		sta VDC
+		lda #>vdc_target5
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target5
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx seq_ticks_per_division
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+
+		lda #18
+		sta VDC
+		lda #>vdc_target6
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<vdc_target6
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx seq_tempo_bpm
+		lda divide_by_16_table,x
+		jsr to_hex
+		sta VDC+1
+
+		txa
+		and #$0f
+		jsr to_hex
+		sta VDC+1
+	}
+  +
+rts
+
 
 seq_abort_flag				!byte 0

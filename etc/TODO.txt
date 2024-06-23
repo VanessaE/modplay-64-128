@@ -56,5 +56,3 @@
   table regenerator call.  Will need to accept params for the screen row, the
   how to measure "done", and perhaps the total width of the bar (number of
   chars on the line that is).
-
-* move the in-playback UI stuff into callable subroutines.
