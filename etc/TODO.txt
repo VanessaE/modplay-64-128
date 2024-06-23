@@ -55,10 +55,6 @@
 * pitch and tempo tables aren't taking new ISR values into account, this may
   be why the tempo is wrong between platforms/screen modes.
 
-* table regen needs reworked, combine the checks, "regenerating..." msg, and
-  the actual generation step into one call that can be used in both init.s and
-  player.s
-
 * split the loader into LOAD/STOP and ACPTR routines so that either machine
   can use either one.
 

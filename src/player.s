@@ -142,80 +142,29 @@ start_main_player
 	sei
 	jsr disable_roms
 
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
+	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
+	lda #$80
+	sta allow_regen_msg
+	jsr regen_all_tables
 
-	lda isr_trigger_interval
-	cmp last_isr_trigger_interval
-	beq no_regen
-	sta last_isr_trigger_interval
-
-	jsr enable_kernal_only
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
-
-		jsr draw_short_popup
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		jsr print_msg
-		jmp gentabs
-
-	+	lda #0
-		ldx #<main_player_regen_tables_msg_ascii
-		ldy #>main_player_regen_tables_msg_ascii
-		jsr print_msg_ascii
-	} else {
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		jsr print_msg
-	}
-
-gentabs
-	jsr disable_roms
-
-	+JSR_INDIRECT (audio_get_resolution_vec)
-	jsr generate_volume_tables
-	jsr generate_tempo_table
-	jsr generate_pitch_table
-
-	jsr enable_kernal_only
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl noemsg
-
-		lda #0
-		ldx #<main_player_regen_erase_tables_msg_ascii
-		ldy #>main_player_regen_erase_tables_msg_ascii
-		jsr print_msg_ascii
-	} else {
-		lda #0
-		ldx #<main_player_regen_erase_tables_msg
-		ldy #>main_player_regen_erase_tables_msg
-		jsr print_msg
-	}
-
-noemsg
-	jsr disable_roms
-
-no_regen
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bmi bkzp
 		jsr disable_screen
 	}
 
-bkzp
-	jsr backup_zero_page
++	jsr backup_zero_page
 
-	jsr isr_startup
 	+JSR_INDIRECT (audio_start_vec)
+	jsr isr_startup
 
 	jsr start_sequencer
 
-	+JSR_INDIRECT (audio_stop_vec)
 	jsr isr_shutdown
+	+JSR_INDIRECT (audio_stop_vec)
 
 	jsr restore_zero_page
 	jsr enable_kernal_only
@@ -266,4 +215,3 @@ single_sample_player
 	jsr switch_to_primary_screen
 	plp
 rts
-

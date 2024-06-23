@@ -21,7 +21,7 @@
 	; and divide routines' zero page variables have to be in the same places
 	; within the "backup-mode" as they are outside of it.
 
-	; for 16/16 or 24/4 divide:
+	; for 16/16 or 24/24 divide:
 	; dividend/quotient uses $24 to $26
 	; divisor uses $27 to $29
 
@@ -132,6 +132,7 @@
 
 	CHROUT_vec						= $0326
 	CINV_vec						= $0314
+	KERNAL_NMI_vec					= $0318
 	CHRIN_vec						= $0324
 	STOP_vec						= $0328
 

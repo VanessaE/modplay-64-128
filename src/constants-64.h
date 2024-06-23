@@ -29,7 +29,8 @@
 	pal_flag						= $0336
 	repeat_mode						= $0337
 	volume_tables_resolution		= $0338
-	; free: $0339, $033a
+	last_volume_tables_resolution	= $0339
+	allow_regen_msg					= $033a
 	playlist_length					= $033b
 	playlist_scroll_pos				= $033c
 	playlist_print_file_counter		= $033d
@@ -56,7 +57,7 @@
 
 	print_vec						= $038f ; 2 bytes
 
-	audio_get_resolution_vec		= $0391 ; 2 bytes
+	audio_set_resolution_vec		= $0391 ; 2 bytes
 	audio_init_vec					= $0393 ; 2 bytes
 	audio_start_vec					= $0395 ; 2 bytes
 	audio_stop_vec					= $0397 ; 2 bytes

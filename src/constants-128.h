@@ -16,7 +16,8 @@
 
 	repeat_mode						= $0203
 	volume_tables_resolution		= $0204
-	; free $0205, $0206
+	last_volume_tables_resolution	= $0205
+	allow_regen_msg					= $0206
 	playlist_length					= $0207
 	playlist_scroll_pos				= $0208
 	playlist_print_file_counter		= $0209
@@ -94,7 +95,7 @@
 
 	print_vec						= $1072 ; 2 bytes
 
-	audio_get_resolution_vec		= $1074 ; 2 bytes
+	audio_set_resolution_vec		= $1074 ; 2 bytes
 	audio_init_vec					= $1076 ; 2 bytes
 	audio_start_vec					= $1078 ; 2 bytes
 	audio_stop_vec					= $107a ; 2 bytes

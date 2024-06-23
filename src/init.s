@@ -233,9 +233,9 @@ init
 	sta audio_driver_set_cycle_count_vec+1
 
 	lda #<sid_get_volume_table_resolution
-	sta audio_get_resolution_vec
+	sta audio_set_resolution_vec
 	lda #>sid_get_volume_table_resolution
-	sta audio_get_resolution_vec+1
+	sta audio_set_resolution_vec+1
 
 	lda #<sid_init
 	sta audio_init_vec
@@ -259,13 +259,13 @@ init
 
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
-	+JSR_INDIRECT (audio_get_resolution_vec)
-	jsr generate_volume_tables
+	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
-	lda isr_trigger_interval
+	lda #0
+	sta allow_regen_msg
+	sta last_volume_tables_resolution
 	sta last_isr_trigger_interval
-	jsr generate_tempo_table
-	jsr generate_pitch_table
+	jsr regen_all_tables
 
 	; Codefault's count raster lines code, to know if PAL or NTSC
 

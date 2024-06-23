@@ -9,11 +9,6 @@
 !text "tables",0
 
 generate_volume_tables
-	cmp volume_tables_resolution
-	bne +
-	rts
-
-+	sta volume_tables_resolution
 	lda #<volume_table_lower
 	sta tempzp_d
 	lda #>volume_table_lower
@@ -89,10 +84,9 @@ generate_tempo_table
 	bpl -
 
 	ldx #32 ; entries 0-31 are unused.
-	stx tempzp_d
 
--	lda isr_trigger_interval
-
+-	stx tempzp_d
+	lda isr_trigger_interval
 	jsr multiply_8x8
 
 	lda #0
@@ -116,7 +110,7 @@ generate_tempo_table
 	sta tempo_table_fracts,x
 	lda quotient+1
 	sta tempo_table_lows,x
-	inc tempzp_d
+	inx
 	bne -
 rts
 
@@ -191,6 +185,85 @@ generate_pitch_table
 	lda tempzp_f+1
 	cmp #7
 	bne -
+rts
+
+regen_all_tables
+	lda isr_trigger_interval
+	cmp last_isr_trigger_interval
+	bne +
+	lda volume_tables_resolution
+	cmp last_volume_tables_resolution 
+	bne +
+	rts
+
++	bit allow_regen_msg
+	bpl no_msgs1
+
+	!ifndef c128 {
+		jsr enable_kernal_only
+		bit enable_screen_on_playback ; because if it's enabled, the display will
+		bmi +						; have switched to ASCII mode by this point.
+
+		jsr draw_short_popup
+		lda #0
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		jsr print_msg
+		jmp ++
+
+	+	lda #0
+		ldx #<main_player_regen_tables_msg_ascii
+		ldy #>main_player_regen_tables_msg_ascii
+		jsr print_msg_ascii
+	++	jsr disable_roms
+	} else {
+		jsr enable_kernal_only
+		lda #0
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		jsr print_msg
+		jsr disable_roms
+	}
+
+no_msgs1
+	lda volume_tables_resolution
+	cmp last_volume_tables_resolution
+	beq +
+	sta last_volume_tables_resolution
+
+	jsr generate_volume_tables
+
++	lda isr_trigger_interval
+	cmp last_isr_trigger_interval
+	beq +
+	sta last_isr_trigger_interval
+
+	jsr generate_tempo_table
+	jsr generate_pitch_table
+
++	bit allow_regen_msg
+	bpl no_msgs2
+
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl no_msgs2
+
+		jsr enable_kernal_only
+		lda #0
+		ldx #<main_player_regen_erase_tables_msg_ascii
+		ldy #>main_player_regen_erase_tables_msg_ascii
+		jsr print_msg_ascii
+		jsr disable_roms
+	} else {
+		jsr enable_kernal_only
+		lda #0
+		ldx #<main_player_regen_erase_tables_msg
+		ldy #>main_player_regen_erase_tables_msg
+		jsr print_msg
+		jsr disable_roms
+	}
+
+  no_msgs2
 rts
 
 

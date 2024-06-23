@@ -54,7 +54,7 @@ rts
 ;# ZERO-PAGE OPERATIONS #
 ;########################
 
- backup_zero_page
+backup_zero_page
 	ldx #2
 -	lda $00,x
 	sta zp_backup,x

@@ -43,6 +43,7 @@ rts
 
 sid_get_volume_table_resolution
 	lda #4
+	sta volume_tables_resolution
 rts
 
 sid_start
