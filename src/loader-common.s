@@ -5,9 +5,6 @@
 !text "loader-exp",0
 
 load_file_to_expansion
-	lda #0
-	sta header_loaded
-
 	!ifndef c128 {
 		size_text = 9
 		progress_bar_row		= 13
@@ -17,13 +14,12 @@ load_file_to_expansion
 		progress_bar_row		= 4
 		progress_bar_column		= 5
 
+		progbar_pos      = VDC_SCREEN     + 14*80 + 32
+		progbar_attr_pos = VDC_ATTRIBUTES + 14*80 + 32
+
 		php
 		jsr set_window_full_screen
 		plp
-		old_vec = $f66e				; original STOP vector
-
-		progbar_pos      = VDC_SCREEN     + 14*80 + 32
-		progbar_attr_pos = VDC_ATTRIBUTES + 14*80 + 32
 	}
 
 	bcc load_from_playlist
@@ -140,9 +136,6 @@ load_by_filename_entry
 	sta divisor+1
 	stx divisor+2	; divisor is now number of bytes per segment.
 
-; open the file so we can grab the first two bytes,
-; because the KERNAL will discard them
-
 	lda #0
 	sta stash_pointer
 	sta stash_pointer+1 ; start at $000000 in expansion RAM
@@ -161,196 +154,44 @@ load_by_filename_entry
 	bcc +
 	jmp .load_err
 
-+	!ifdef c128 {
+; in case the loader method (below) is STOP wedge mode, we have to use ACPTR
+; to read-in the file's header, because loading via the STOP wedge can't be
+; canceled from the calling program (unless the drive errors-out).
 
-		; On the C128, we can use the "STOP wedge" trick to cause the KERNAL
-		; LOAD routine to do more of the work, enabling BURST mode on
-		; on 1571, 1581, and newer devices.  A 1571 can do 3.6 kB/sec with a
-		; disk sector interleave of 5.  We use a load buffer of exactly 5 disk
-		; blocks (so 1270/$04f6 bytes) to ensure FAST and BURST load the same
-		; amount and that the file header can be loaded all in one go.
++	ldy #0
+-	jsr ACPTR
+	sta (EAL),y
+	iny
+	bne -
+	inc EAL+1
+	lda EAL+1
+	cmp #>(load_buffer+5*256)
+	bne -
 
-		; however, there's a caveat:  while the LOAD call can abort if the drive
-		; errors-out mid-file, there's no obvious way to force it to abort
-		; from "user space", so the parse-header part has to be done by first
-		; using ACPTR to read-in the file's header.
+	lda #>load_buffer
+	sta EAL+1
 
-		ldy #0
-	-	jsr ACPTR
-		sta (EAL),y
-		iny
-		bne -
-		inc EAL+1
-		lda EAL+1
-		cmp #>(load_buffer+5*256)
-		bne -
+	jsr decode_header
 
-		jsr close_file
+	bcs abort_load
 
-		lda #>load_buffer
-		sta EAL+1
+	; ### Okay, at this point we can go ahead and load the file.
 
-		lda #$80
-		sta header_loaded
-		jsr decode_header
+	; On the C128, we can use the "STOP wedge" trick to cause the KERNAL
+	; LOAD routine to do more of the work, 
 
-		bcc +
-		jmp abort_load
+	; On C64, some fast loaders ignore the STOP vector, making the "STOP
+	; wedge" trick unusable, so we use the ACPTR method there instead.
 
-	+	lda #<fill_load_buffer
-		sta STOP_vec
-		lda #>fill_load_buffer
-		sta STOP_vec+1
-
-		lda file_to_load_name_len
-		ldx #<string_buffer
-		ldy #>string_buffer+1
-		jsr SETNAM
-
-		lda #0
-		ldx #0
-		jsr SETBNK
-
-		lda #0
-		ldx load_device
-		ldy #0
-		jsr SETLFS
-
-		lda #0
-		ldx #2					; start loading at load_buffer + 2
-		ldy #>load_buffer
-		jsr LOAD
-
-		jsr RESTOR
-
-		+JSR_INDIRECT (stash_block_vec) ; don't forget to stash the last-loaded block
-
-		lda file_size_in_kb
-		sta current_file_size_in_kb
-		lda file_size_in_kb+1
-		sta current_file_size_in_kb+1
-
-		ldy #0
-	-	lda string_buffer,y
-		sta current_file_name,y
-		beq +
-		iny
-		cpy #16
-		bne -
-	+ jsr zero_first_exp_pages
-	rts
-
-	fill_load_buffer				; STOP vector enters here after a byte is loaded
-
-		lda EAL+1
-		cmp #>load_buffer_end		; load buffer full?
-		bne .not_full
-
-; if the load comes from a BURST-capable drive, then it won't ever be exactly
-; the size of the load buffer, but instead anything up to 6*254 bytes, so
-; derive the actual byte count from EAL, and use THAT to push the expansion
-; RAM pointer and stash size.
-
-		sec
-		lda EAL
-		sbc #<load_buffer
-		sta stash_size
-		lda EAL+1 
-		sbc #>load_buffer
-		sta stash_size+1
-
-		+JSR_INDIRECT (stash_block_vec)
-
-		clc
-		lda stash_pointer
-		adc stash_size
-		sta stash_pointer
-		lda stash_pointer+1
-		adc stash_size+1
-		sta stash_pointer+1
-		bcc +
-		inc stash_pointer+2
-
-	+	lda #0
-		sta EAL
-		lda #>load_buffer
-		sta EAL+1
-
-		jsr update_progress
-	.not_full
-		jmp old_vec
-
+	!ifndef c128 {
+		jsr load_via_acptr
 	} else {
-
-	; On C64, some fast loaders ignore the STOP vector, making the above "STOP
-	; wedge" trick unusable, so we go with the regular method, using OPEN and
-	; ACPTR and 1280-byte (5-page) buffer. A 1541 with JiffyDOS loads at
-	; around 2kB/s this way.
-
-	; the file is already open, so just use it.
-
-		lda #0
-		sta stash_size
-		lda #5
-		sta stash_size+1
-
-	.next_block
-		lda #0
-		sta load_pointer
-		lda #>load_buffer
-		sta load_pointer+1
-		ldy #0
-
-	-	lda STATUS
-		bne .done
-
-		jsr ACPTR
-		sta (load_pointer),y
-		iny
-		bne -
-		inc load_pointer+1
-		lda load_pointer+1
-		cmp #>load_buffer_end		; load buffer full?
-		bne -
-
-		+JSR_INDIRECT (stash_block_vec)
-
-		bit header_loaded
-		bmi +
-		lda #$80
-		sta header_loaded
-		jsr decode_header
-		bcs abort_load
-
-	+	clc
-		lda stash_pointer+1
-		adc stash_size+1
-		sta stash_pointer+1
-		bcc +
-		inc stash_pointer+2
-
-	+	jsr update_progress
-		jmp .next_block
-
-	.done
-		jsr close_file
-		+JSR_INDIRECT (stash_block_vec) ; last-loaded block
-
-		lda file_size_in_kb
-		sta current_file_size_in_kb
-		lda file_size_in_kb+1
-		sta current_file_size_in_kb+1
-
-		ldy #0
-	-	lda string_buffer,y
-		sta current_file_name,y
-		beq +
-		iny
-		cpy #16
-		bne -
-	+ jsr zero_first_exp_pages
-	rts
+		jsr load_via_stop_wedge
 	}
+	bcs abort_load
+
+	jsr zero_first_exp_pages
+rts
 
 abort_load
 	jsr close_file
@@ -982,6 +823,7 @@ zero_first_exp_pages
 
 	+JSR_INDIRECT (stash_block_vec)
 rts
+
 progress_bar_segments
 !ifndef c128 {
 	!byte RVSOFF," "

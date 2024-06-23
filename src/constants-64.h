@@ -66,8 +66,8 @@
 	ram_driver_set_cycle_counts_vec	= $039b ; 2 bytes
 
 	; more vectors can go here
-	; free memory through $03e4
-
+	; free memory through $03e2
+	old_STOP_vec					= $03e3
 	free_memory_start				= $03e5 ; 3 bytes
 	main_memory_free_pages			= $03e8
 	reu_highest_bank				= $03e9

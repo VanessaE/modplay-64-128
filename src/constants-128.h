@@ -51,8 +51,9 @@
 	isr_trigger_interval			= $0279
 	last_isr_trigger_interval		= $027a
 
-	; free: $027b to $027d
+	; free: $027b
 
+	old_STOP_vec					= $027c
 	free_memory_start				= $027e ; 3 bytes
 	main_memory_free_pages			= $0281 ; refers to bank 0
 	c128_highest_bank				= $0282

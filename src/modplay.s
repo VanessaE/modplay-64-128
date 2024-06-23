@@ -87,7 +87,12 @@ start
 !source "src/player.s"
 !source "src/sequencer.s"
 
-!source "src/loader-exp.s"
+!source "src/loader-common.s"
+!source "src/loader-acptr.s"
+
+!ifdef c128 {
+	!source "src/loader-stopwdg.s"
+}
 
 !source "src/screen-fx.s"
 !source "src/windowing.s"
@@ -98,7 +103,7 @@ start
 
 ; generic text/PETSCII stuff that's used by multiple functions goes here
 
-!ifndef  c128 {
+!ifndef c128 {
 	!source "src/strings-64.s"
 } else {
 	!source "src/strings-128.s"

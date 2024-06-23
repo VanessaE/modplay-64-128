@@ -52,12 +52,6 @@
   report the drive status after the command, or if the user enters either an "@"
   or nothing at all.
 
-* pitch and tempo tables aren't taking new ISR values into account, this may
-  be why the tempo is wrong between platforms/screen modes.
-
-* split the loader into LOAD/STOP and ACPTR routines so that either machine
-  can use either one.
-
 * split the progress bar out from the loader so that it can be used in the
   table regenerator call.  Will need to accept params for the screen row, the
   how to measure "done", and perhaps the total width of the bar (number of
