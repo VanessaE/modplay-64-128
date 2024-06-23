@@ -51,13 +51,13 @@
 	isr_trigger_interval			= $0279
 	last_isr_trigger_interval		= $027a
 
-	; free: $027b
+	c128_highest_bank				= $027b
+	reu_highest_bank				= $027c
+	ramlink_detect					= $027d
 
-	old_STOP_vec					= $027c
-	free_memory_start				= $027e ; 3 bytes
-	main_memory_free_pages			= $0281 ; refers to bank 0
-	c128_highest_bank				= $0282
-	reu_highest_bank				= $0283
+	old_STOP_vec					= $027e ; 2 bytes
+	free_memory_start				= $0280 ; 3 bytes
+	main_memory_free_pages			= $0283 ; refers to bank 0
 	parse_header_sample_pointer		= $0284 ; 3 bytes
 	arpeggio_counters				= $0287 ; 8 bytes
 	arpeggio_extra_note_first		= $028f ; \___ 16 bytes

@@ -192,7 +192,21 @@ init
 
 	jsr reu_get_size
 
-	lda #<reu_stash_block
+	lda #0
+	sta ramlink_detect
+	sta RAMLINK_REG_ENABLE		; try to enable RAMLink registers
+	lda #$30
+	sta RAMLINK_8255_PORT_C		; try to write to RAMLink 8255 Port C
+	lda #0						; reset REU DMA_ADL in case that write hit an I/O echo
+	sta DMA_ADL					; ($df42 -> $df02)
+	lda RAMLINK_8255_PORT_C		; if this comes back correct, that write didn't
+	cmp #$30					; hit an echo, so there's a RAMLink present.
+	bne +
+	lda #$80
+	sta ramlink_detect
+	sta RAMLINK_REG_DISABLE		; disable RAMLink registers.
+
++	lda #<reu_stash_block
 	sta stash_block_vec
 	lda #>reu_stash_block
 	sta stash_block_vec+1

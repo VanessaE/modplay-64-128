@@ -160,6 +160,10 @@
 	DMA_DAL							= $df07		; transfer length
 	DMA_DAH							= $df08
 
+	RAMLINK_REG_ENABLE				= $df7e
+	RAMLINK_REG_DISABLE				= $df7f
+	RAMLINK_8255_PORT_C				= $df42
+
 	; KERNAL
 
 	CINT							= $ff81

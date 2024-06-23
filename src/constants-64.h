@@ -67,10 +67,13 @@
 
 	; more vectors can go here
 	; free memory through $03e2
-	old_STOP_vec					= $03e3
+
+	reu_highest_bank				= $03e3
+	ramlink_detect					= $03e4
+
 	free_memory_start				= $03e5 ; 3 bytes
 	main_memory_free_pages			= $03e8
-	reu_highest_bank				= $03e9
+	old_STOP_vec					= $03e9 ; 2 bytes
 	parse_header_sample_pointer		= $03ea ; 3 bytes
 	arpeggio_extra_note_first		= $03ed ; \___ 16 bytes
 	arpeggio_extra_note_second		= $03f5 ; /
