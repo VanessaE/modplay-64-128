@@ -188,8 +188,6 @@ load_by_filename_entry
 	} else {
 		jsr load_via_stop_wedge
 	}
-	bcs abort_load
-
 	jsr zero_first_exp_pages
 rts
 
