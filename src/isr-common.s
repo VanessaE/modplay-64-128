@@ -69,12 +69,23 @@ isr_startup
 	lda #0
 	sta CIA1+$07
 
-	lda #<interrupts_lockout
-	sta CPU_NMI_vector
-	lda #>interrupts_lockout
+	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
+	lda #<lockout_nmi		; while changing this vector, this'll make sure it
+	sta CPU_NMI_vector		; is always "whole".
+	lda #>lockout_nmi
 	sta CPU_NMI_vector+1
+	jsr disable_roms
 
-	sta CIA1+$0f			; ensure that timer B is turned off
+	lda #0					; stop CIA #2 timer A
+	sta CIA2+$0e
+	sta CIA2+$04			; set Timer A to 0, after starting
+	sta CIA2+$05			; NMI will occur immediately
+	lda #$81
+	sta CIA2+$0d			; set Timer A as source for NMI
+	lda #$01
+	sta CIA2+$0e			; start Timer A -> NMI
+
+	sta CIA1+$0f			; ensure that CIA #1 timer B is turned off
 	lda #$01				; disable timer A IRQ
 	sta CIA1+$0d
 	lda #$82				; enable timer B IRQ
@@ -258,5 +269,5 @@ isr_shutdown
 	}
 rts
 
-interrupts_lockout ; exit any NMI that gets here, unacknowledged
+lockout_nmi ; exit any NMI that gets here, unacknowledged
 rti
