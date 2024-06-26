@@ -2,154 +2,27 @@
 
 !addr {
 
-	; Zero page
-
 	print_msg_char_limit			= $2c
 
-	; "low memory area"
+	low_memory_area					= $0200
+	; the first $98 bytes are used by player vars - see constants-com.h
+	; free: $0298 through $02a0
 
-	low_mem_zone					= $0200
-
-	rasters_lo						= $0200
-	raster_len						= $0201
-	pal_flag						= $0202
-
-	repeat_mode						= $0203
-	volume_tables_resolution		= $0204
-	last_volume_tables_resolution	= $0205
-	allow_regen_msg					= $0206
-	playlist_length					= $0207
-	playlist_scroll_pos				= $0208
-	playlist_print_file_counter		= $0209
-	screen_row_to_print_at			= $020a
-
-	boot_device						= $020b
-
-	current_dir_name				= $0210 ; 16 bytes plus a null
-	current_file_name				= $0221 ; 16 bytes plus a null
-	current_file_title				= $0232 ; 21 bytes (plus a bunch of nulls)
-	current_file_size				= $0250 ; 2 bytes
-	current_file_size_in_kb			= $0252 ; 2 bytes
-	current_file_type				= $0254
-	current_file_tracks				= $0255
-
-	current_menu_page				= $0256
-	clear_menu_screen_flag			= $0257
-
-	file_to_load_name_len			= $0258
-	file_to_load_size				= $0259 ; 2 bytes
-	file_size_in_kb					= $025b ; 2 bytes
-
-	; free memory through $0273
-
-	one_ten_thousandth_second		= $0274
-	number_of_song_positions		= $0275
-	number_of_patterns				= $0276
-
-	audio_driver_isr_cycle_count	= $0277
-	ram_driver_cycle_count			= $0278
-	isr_trigger_interval			= $0279
-	last_isr_trigger_interval		= $027a
-
-	c128_highest_bank				= $027b
-	reu_highest_bank				= $027c
-	ramlink_detect					= $027d
-
-	old_STOP_vec					= $027e ; 2 bytes
-	free_memory_start				= $0280 ; 3 bytes
-	main_memory_free_pages			= $0283 ; refers to bank 0
-	parse_header_sample_pointer		= $0284 ; 3 bytes
-	arpeggio_counters				= $0287 ; 8 bytes
-	arpeggio_extra_note_first		= $028f ; \___ 16 bytes
-	arpeggio_extra_note_second		= $0297 ; /
-	header_loaded					= $029f
-	rle_mode_flag					= $02a0
-	rle_byte_count					= $02a1
+	c128_highest_bank				= $02a1
 
 	; C128 KERNAL indirect routines from $02a2 to $02ff
 	; System vectors and variables from $0300 to $03ff
 
-	playlist_file_sizes_lows		= $0400 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $0500 ; /    (128 bytes unused but will be zeroed)
-
-	multablo						= $0600 ; 512 bytes
-	multabhi						= $0800 ; 512 bytes
-
-	; System variables and such from $0a00 to $0aff
-
-	multab2lo						= $0b00 ; 512 bytes
-	multab2hi						= $0d00 ; 512 bytes
-
-	playlist_file_flags				= $0f00 ; 1 byte * 192
-										; (48 bytes unused but will be zeroed)
-
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	config_space					= $1020 ; 16 bytes
+	free_memory_end					= $8a00 ; the divide-16 table starts here
 
-	string_buffer					= $1030 ; 48 bytes
-	uint16_string_buffer			= $1060 ; 7 bytes (of 8)
-	uint16_string_buf_trim			= $1068 ; 7 bytes (of 8)
-
-	stash_block_vec					= $1070 ; 2 bytes
-
-	print_vec						= $1072 ; 2 bytes
-
-	audio_set_resolution_vec		= $1074 ; 2 bytes
-	audio_init_vec					= $1076 ; 2 bytes
-	audio_start_vec					= $1078 ; 2 bytes
-	audio_stop_vec					= $107a ; 2 bytes
-
-	audio_driver_set_cycle_count_vec = $107c ; 2 bytes
-	ram_driver_set_cycle_counts_vec	= $107e ; 2 bytes
-
-	; more vectors can go here
-	; free memory through $10ff
-
-	audio_buffer_left				= $1100 ; 256 bytes
-	audio_buffer_right				= $1200 ; 256 bytes
-	; those two pages are only safe to use when KERNAL is switched-out
-
-	clear_main_memory				= $1100
-
-	program_start					= $1301
+	sample_data_buffer				= $c800 ; 8 * 256 bytes
 
 	; this is the very last byte that'll be loaded in any serial mode,
 	; accounting for load addr, plus one disk block for expansion sake.
 	splash_128_end_check = program_start + (254*6) - 1
-
-	free_memory_end					= $9400 ; this allows to reclaim the load buf
-											; when using the main mem driver
-
-	load_buffer						= $8e00 ; 5*254 bytes, plus the rest of the
-	load_buffer_end					= $92f5 ; next 2 pages for overflow
-	and_f0_table					= $9400
-	divide_by_16_table				= $9500
-
-	pitch_table_fracts				= $9600 ; 7 pages
-	pitch_table_lows				= $9d00 ; 3 pages
-
-	tempo_table_fracts				= $a000
-	tempo_table_lows				= $a100
-
-	playlist_filenames				= $a200 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $ae00
-
-	volume_table_lower				= $ae00 ; 34 pages \__ 16.25 kB, split between
-	volume_table_upper				= $e000 ; 31 pages /   two memory areas
-
-	; config file declarations - the actual file gets loaded/saved as above
-
-	load_device						= config_space+5 ; config header is first 5 bytes
-	stereo_sid_addr					= load_device+1
-	dac_addr						= stereo_sid_addr+2
-	audio_driver					= dac_addr+2
-	ram_driver						= audio_driver+1
-	stereo_enable					= ram_driver+1
-	filter_setting					= stereo_enable+1
-	resonance_setting				= filter_setting+1
-	cfg_data_end					= resonance_setting+1 ; one byte past the real end
 }
 
 ; =================================================================

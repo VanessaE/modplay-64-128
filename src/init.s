@@ -33,13 +33,18 @@ init
 	lda #0
 
 	!ifndef c128 {
-		ldy #203
+		ldy #$cc ; length of the low memory area where player vars will go
 	} else {
-		ldy #161
+		ldy #$a2
 	}
 
 -	dey
-	sta low_mem_zone,y
+	sta low_memory_area,y
+	bne -
+
+	ldy #0
+-	sta main_variables_zone,y
+	iny
 	bne -
 
 	ldy #15
@@ -275,9 +280,10 @@ init
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
+	lda #4
+	sta last_volume_tables_resolution
 	lda #0
 	sta allow_regen_msg
-	sta last_volume_tables_resolution
 	sta last_isr_trigger_interval
 	jsr regen_all_tables
 
@@ -321,13 +327,13 @@ init
 		jsr blur_table_copy
 	}
 
+	jsr semitones_table_copy
+
 	jsr final_clear_copy
 
 	!ifdef c128 {
 		jsr erase_file_list
 	}
-
-
 
 ; ############# we're dumping-out early here
 
@@ -427,6 +433,9 @@ clear_main_memory_origin
 
 	!byte 0,0,0
 
+fmemtxt
+	!text "free memory start",0
+
 charset_copy
 	!ifndef c128 {
 		jsr enable_char_rom_only
@@ -524,6 +533,35 @@ charset_copy
 	+ rts
 }
 
+semitones_table_copy
+	ldx #15
+-	lda semitones_table_fracts_origin,x
+	sta semitones_table_fracts,x
+	lda semitones_table_lows_origin,x
+	sta semitones_table_lows,x
+	dex
+	bpl -
+rts
+
+twelfth_root_2 = 1.059463
+
+semitones_table_fracts_origin
+	!byte 0
+	!for s2, 1, 15 {
+		!zone {
+			.n = twelfth_root_2 ^ s2
+			.ni = int(.n)
+			!byte (.n-.ni)*256
+		}
+	}
+
+semitones_table_lows_origin
+	!byte 1
+	!for s1, 1, 15 {
+		!byte int(twelfth_root_2 ^ s1)
+	}
+
+
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
 vol_cnt		!byte 0
@@ -597,6 +635,3 @@ reu_sig_candidate_start
 		!byte 132,132		; "▘" and "▚"
 		!byte 0
 }
-
-fmemtxt
-	!text "free memory start",0

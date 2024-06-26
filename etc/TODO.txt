@@ -44,9 +44,11 @@
   for items with "DIR" filetype, offer a list thereof along with a ".." item,
   using the audio buffers for scratch space.
 
-* Loading from CMD HD over HD/RAMLink parallel is broken in the C128 build.
-  Works fine on the C64 build, albeit not exactly blazingly-fast.  Not sure
-  where to begin looking.
+* Loading from CMD HD over HD/RAMLink parallel is broken in the C128 build -
+  RAMLink DOS ignores the system's STOP vector during a LOAD call, but only if
+  parallel is enabled, causing file loads to just overflow the load buffer and
+  stomp all over local memory without calling my loader code.  This is the
+  same issue that forced me to use the ACPTR loader in the C64 build.
 
 * the send-command dialog does nothing after the text is entered.  it should
   report the drive status after the command, or if the user enters either an "@"

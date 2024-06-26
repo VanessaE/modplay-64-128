@@ -66,7 +66,7 @@ generate_volume_tables
 		inc tempzp_d+1
 		inc vol_cnt
 		lda vol_cnt
-		cmp #34		; the first 33 pages can fit below the screens at $c800...
+		cmp #46		; the first 46 pages fit below the screens/sample buf at $c800...
 		bne +
 		lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
 		sta tempzp_d+1
@@ -258,24 +258,3 @@ no_msgs1
 
   no_msgs2
 rts
-
-
-!text "arp table",0
-
-twelfth_root_2 = 1.059463
-
-semitones_table_fracts
-	!byte 0
-	!for s2, 1, 15 {
-		!zone {
-			.n = twelfth_root_2 ^ s2
-			.ni = int(.n)
-			!byte (.n-.ni)*256
-		}
-	}
-
-semitones_table_lows
-	!byte 1
-	!for s1, 1, 15 {
-		!byte int(twelfth_root_2 ^ s1)
-	}

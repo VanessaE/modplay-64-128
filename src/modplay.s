@@ -74,25 +74,25 @@ start
 
 ; additional code goes here
 
-!source "src/main-menu.s"
-!source "src/change-show.s"
-!source "src/file-ops.s"
-!source "src/directory.s"
-!source "src/playlist.s"
-!source "src/isr-common.s"
-
-!source "src/driver-reu.s"
-!source "src/driver-sid.s"
-
-!source "src/player.s"
-!source "src/sequencer.s"
-
 !source "src/loader-common.s"
 !source "src/loader-acptr.s"
 
 !ifdef c128 {
 	!source "src/loader-stopwdg.s"
 }
+!source "src/file-ops.s"
+!source "src/directory.s"
+
+!source "src/main-menu.s"
+!source "src/change-show.s"
+!source "src/playlist.s"
+
+!source "src/isr-common.s"
+!source "src/driver-reu.s"
+!source "src/driver-sid.s"
+
+!source "src/player.s"
+!source "src/sequencer.s"
 
 !source "src/screen-fx.s"
 !source "src/windowing.s"
@@ -177,8 +177,7 @@ charset_128_alt
 
 ; mods' lengths are big-endian, but addrs and lengths here are little-endian
 
-pattern_table						= wipe_memory_start
-mod_instrument_names				= pattern_table + 128
+mod_instrument_names				= wipe_memory_start
 sample_start_addresses_lows			= mod_instrument_names + 32*31
 sample_start_addresses_mids			= sample_start_addresses_lows + 32
 sample_start_addresses_highs		= sample_start_addresses_mids + 32
@@ -193,29 +192,9 @@ sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
 sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
 sample_default_loop_flags			= sample_loop_end_addresses_highs + 32
 sample_default_fine_tunes			= sample_default_loop_flags + 32
-sample_default_volume_levels		= sample_default_fine_tunes + 32
+sample_default_volume_levels		= sample_default_fine_tunes + 32; also 32 bytes
 
-current_note_periods_lows			= sample_default_volume_levels + 32
-current_note_periods_highs			= current_note_periods_lows + 8
-current_node_period_offsets			= current_note_periods_highs + 8
-
-track_current_enable_flags			= current_node_period_offsets + 8
-
-seq_current_row_data				= track_current_enable_flags + 8
-
-seq_commands						= seq_current_row_data + 64
-seq_prev_commands					= seq_commands + 8
-seq_command_arguments				= seq_prev_commands + 8
-seq_prev_command_arguments			= seq_command_arguments + 8
-
-current_pitch_slide_flags			= seq_prev_command_arguments + 8
-seq_pitch_slide_stop_point_lows		= current_pitch_slide_flags + 8
-seq_pitch_slide_stop_point_highs	= seq_pitch_slide_stop_point_lows + 8
-
-; page-align the sample buffer
-sample_data_buffer					= (seq_pitch_slide_stop_point_highs + 8 + 256) & $ff00
-
-main_mem_free_start					= sample_data_buffer + 8*256 + 256
+main_mem_free_start					= (sample_default_volume_levels + 255) & $ff00
 
 ; anything appended after this point will be overwritten by the loaded file
 ; when using main memory driver

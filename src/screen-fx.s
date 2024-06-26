@@ -49,7 +49,7 @@ switch_to_primary_screen ; also switches to the PETSCII charset on C64
 		lda CIA2
 		and #$fc
 		sta CIA2
-		lda #$37
+		lda #$27
 		sta VIC+$18
 		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
 		sta HIBASE					; screen editor/CHROUT/etc.
@@ -83,7 +83,7 @@ rts
 		lda CIA2
 		and #$fc
 		sta CIA2
-		lda #$24
+		lda #$34
 		sta VIC+$18
 		lda #>secondary_screen ; point the KERNAL
 		sta HIBASE
