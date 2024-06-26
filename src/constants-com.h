@@ -108,7 +108,8 @@ program_start						= $1700
 	rle_mode_flag					= $24 ; safe to overwrite - math ops aren't used
 	rle_byte_count					= $25 ; at the same time as RLE printing
 
-	divide24_tmp					= $5f 
+	load_pointer					= $59 ; and $60
+	filename_addr					= $59 ; and $60
 
 	product							= $5c ; and $5d / the product from multiply routine
 
@@ -117,14 +118,12 @@ program_start						= $1700
 
 	print_msg_addr					= $5f ; and $60
 	save_addr						= $5f ; and $60
+	divide24_tmp					= $5f
 
-	tempzp_c						= $2a
-	tempzp_d						= $50 ; and $51
-	tempzp_e						= $52 ; and $53
-	tempzp_f						= $fa ; through $fd
+	tempzp_f						= $50 ; through $52
 
-	load_pointer					= $fe ; and $ff
-	filename_addr					= $fe ; and $ff
+	; free: $fa through $ff
+
 }
 
 ; =================================================================

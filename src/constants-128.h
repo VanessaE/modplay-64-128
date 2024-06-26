@@ -2,7 +2,18 @@
 
 !addr {
 
-	print_msg_char_limit			= $2c
+	; Zero Page
+
+	tempzp_c						= $2a
+	tempzp_d						= $2b ; and $2c
+	tempzp_e						= $54 ; and $55
+
+	print_msg_char_limit			= $61
+
+	; free: $62
+	; free: $c8 through $cb
+
+	; low memory area -- duh 😛
 
 	low_memory_area					= $0200
 	; the first $98 bytes are used by player vars - see constants-com.h

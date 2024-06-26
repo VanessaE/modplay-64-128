@@ -2,9 +2,20 @@
 
 !addr {
 
-	print_msg_char_limit			= $22
+	; Zero Page
+
+	tempzp_c						= $2a
+	tempzp_d						= $22 ; and $23
+	tempzp_e						= $4e ; and $4f
+
+	print_msg_char_limit			= $57
+
+	; free: $f7 through $f9
+
+	; low memory area -- duh 😛
 
 	; free: $02a7 through $02ff
+
 	; System vectors from $0300 to $0333
 
 	low_memory_area					= $0334
