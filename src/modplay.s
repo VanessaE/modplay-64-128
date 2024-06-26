@@ -120,9 +120,6 @@ start
 dirname
 		!text "$"
 
-bittable
- !byte $01, $02, $04, $08, $10, $20, $40, $80
-
 ; this area is used to temporarily store the contents of zero page when
 ; the player is running, since the player needs a lot of it and the KERNAL
 ; and BASIC will be switched-off anyway.
