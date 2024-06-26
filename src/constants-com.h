@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start						= $1700
+program_start						= $1800
 
 !addr {
 	; KERNAL zero-page variables
@@ -389,6 +389,8 @@ tempo_fine_adjust_constant = 159778
 
 	multab2lo						= $1300 ; 2 pages
 	multab2hi						= $1500 ; 2 pages
+
+	zp_backup						= $1700 ; 1 page (duh. 😛)
 
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff

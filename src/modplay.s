@@ -120,13 +120,6 @@ start
 dirname
 		!text "$"
 
-; this area is used to temporarily store the contents of zero page when
-; the player is running, since the player needs a lot of it and the KERNAL
-; and BASIC will be switched-off anyway.
-
-zp_backup
-	!fill 256,0
-
 ; Audio and RAM driver assignments
 ;
 ; RAM:
