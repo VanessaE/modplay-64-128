@@ -140,8 +140,8 @@ init
 
 
 	sec
-	lda #>free_memory_end
-	sbc #>free_memory_start
+	lda #>main_mem_free_end
+	sbc #>expansion_memory_start_pointer
 	sta main_memory_free_pages
 	dec main_memory_free_pages
 
@@ -150,9 +150,9 @@ init
 
 	!ifdef c128 {
 
-		lda #<free_memory_end
+		lda #<main_mem_free_end
 		sta indstash_addr
-		lda #>free_memory_end
+		lda #>main_mem_free_end
 		sta indstash_addr+1
 
 		ldy #0
@@ -170,13 +170,13 @@ init
 		jsr IND_STASH
 
 		lda #0
-		sta free_memory_end
+		sta main_mem_free_end
 
 	; now try to read them back
 
-		lda #<free_memory_end
+		lda #<main_mem_free_end
 		sta indfetch_addr
-		lda #>free_memory_end
+		lda #>main_mem_free_end
 		sta indfetch_addr+1
 
 		ldx #%11111110	; select bank 3
@@ -251,10 +251,10 @@ init
 	lda #>set_volume_addrs
 	sta set_volume_addrs_vec+2
 
-	lda #0						; refers to the addr in REU
-	sta free_memory_start		; main mem driver will use main_mem_free_start for this
-	sta free_memory_start+1
-	sta free_memory_start+2
+	lda #0
+	sta expansion_memory_start_pointer			; main mem driver will use 
+	sta expansion_memory_start_pointer+1		; main_mem_free_start for this
+	sta expansion_memory_start_pointer+2
 
 	lda #<sid_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec
@@ -433,7 +433,7 @@ clear_main_memory_origin
 	bne -
 	inc tempzp_d+1
 	ldx tempzp_d+1
-	cpx #>free_memory_end
+	cpx #>main_mem_free_end
 	bne -
 
 	ldy #$ff

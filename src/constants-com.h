@@ -356,7 +356,7 @@ tempo_fine_adjust_constant = 159778
 	match_header					= $09d1
 	stash_size						= $09d2 ; 2 bytes
 
-	free_memory_start				= $09d4 ; 3 bytes
+	expansion_memory_start_pointer	= $09d4 ; 3 bytes
 
 	; various program vectors
 	; more vectors can go in this space, $09d7 through $09ef

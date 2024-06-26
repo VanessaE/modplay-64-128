@@ -27,7 +27,7 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	free_memory_end					= $8a00 ; the divide-16 table starts here
+	main_mem_free_end				= $8a00 ; the divide-16 table starts here
 
 	sample_data_buffer				= $c800 ; 8 * 256 bytes
 

@@ -451,11 +451,11 @@ rts
 magic_number_location = load_buffer + header31_seek_to_pt + 128
 
 decode_header
-	lda free_memory_start
+	lda expansion_memory_start_pointer
 	sta parse_header_sample_pointer
-	lda free_memory_start+1
+	lda expansion_memory_start_pointer+1
 	sta parse_header_sample_pointer+1
-	lda free_memory_start+2
+	lda expansion_memory_start_pointer+2
 	sta parse_header_sample_pointer+2
 
 	ldx #19							; song title
@@ -622,13 +622,13 @@ count_patterns
 parse_instruments
 
 	clc
-	lda free_memory_start
+	lda expansion_memory_start_pointer
 	adc parse_header_sample_pointer
 	sta parse_header_sample_pointer
-	lda free_memory_start+1
+	lda expansion_memory_start_pointer+1
 	adc parse_header_sample_pointer+1
 	sta parse_header_sample_pointer+1
-	lda free_memory_start+2
+	lda expansion_memory_start_pointer+2
 	adc #0
 	sta parse_header_sample_pointer+2
 
