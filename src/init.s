@@ -335,9 +335,11 @@ init
 
 	!ifndef c128 {
 		jsr blur_table_copy
+		jsr window_edge_tables_copy
 	}
 
 	jsr semitones_table_copy
+	jsr control_code_flags_copy
 
 	jsr final_clear_copy
 
@@ -571,6 +573,56 @@ semitones_table_lows_origin
 		!byte int(twelfth_root_2 ^ s1)
 	}
 
+control_code_flags_copy
+	ldx #31
+-	lda control_code_flags_table_low_origin,x
+	sta control_code_flags_table_low,x
+	lda control_code_flags_table_high_origin,x
+	sta control_code_flags_table_high,x
+	dex
+	bpl -
+rts
+
+; if the byte equals its PETSCII value in that pos, it can hold a new char to
+; print in ASCII mode.  If there's a 0, it's a control code that we need to
+; pass to CHROUT, e.g. colors, cursor moves, etc.
+
+control_code_flags_table_low_origin
+	!byte 0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1
+	!byte 1,0,1,0,0,1,1,1,1,1,1,1,0,0,0,0
+
+control_code_flags_table_high_origin
+	!byte 1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+	!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+!ifndef c128 {
+	window_edge_tables_copy
+		ldx #15
+	-	lda window_edge_tables_origin,x
+		sta window_edge_tables,x
+		dex
+		bpl -
+	rts
+
+	window_edge_tables_origin
+		!byte $ac ; top-left corner
+		!byte $bb ; top-right corner
+		!byte $bc ; bottom-left corner
+		!byte $be ; bottom-right corner
+		!byte $60 ; top edge
+		!byte $60 ; bottom edge
+		!byte $7d ; left edge
+		!byte $7d ; right edge
+
+		!byte $08 ; same symbols, but using the ASCII font
+		!byte $09
+		!byte $0a
+		!byte $0b
+		!byte $02
+		!byte $02
+		!byte $01
+		!byte $01
+}
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 

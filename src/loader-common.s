@@ -469,13 +469,13 @@ decode_header
 	ldy #0
 
 --	ldx #0
-	stx match_hdr
+	stx match_header
 
 -	lda mod_magic_numbers,y
 	beq filetype_unsure				; if none of the magic numbers match, try
 	eor magic_number_location,x		; to identify the file another way
-	ora match_hdr
-	sta match_hdr
+	ora match_header
+	sta match_header
 
 	iny
 	inx
@@ -483,7 +483,7 @@ decode_header
 	bne -
 
 	inc tempzp_c
-	lda match_hdr
+	lda match_header
 	bne --
 	jmp set_num_tracks
 
@@ -832,8 +832,6 @@ progress_bar_segments
 	!byte 32, 152,153,154,155,156,157,158
 }
 
-stash_size		!byte 0,0
-
 !ct raw {
 	mod_magic_numbers ; type 1 is Soundtracker
 		!text "M.K." ; file type 2 \___ Protracker
@@ -845,5 +843,3 @@ stash_size		!byte 0,0
 		!text "8CHN" ; file type 8 _|
 		!byte 0
 }
-
-match_hdr		!byte 0

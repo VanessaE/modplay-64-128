@@ -669,6 +669,3 @@ print_song_speed
 	}
   +
 rts
-
-
-seq_abort_flag				!byte 0

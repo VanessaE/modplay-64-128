@@ -712,15 +712,3 @@ print_filetype
 		ldy #>tracker_name_msg_fasttracker_ascii
 	++ rts
 }
-
-; if the byte equals its PETSCII value in that pos, it can hold a new char to
-; print in ASCII mode.  If there's a 0, it's a control code that we need to
-; pass to CHROUT, e.g. colors, cursor moves, etc.
-
-control_code_flags_table_low
-	!byte 0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1
-	!byte 1,0,1,0,0,1,1,1,1,1,1,1,0,0,0,0
-
-control_code_flags_table_high
-	!byte 1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-	!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

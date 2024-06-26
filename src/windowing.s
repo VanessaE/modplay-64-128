@@ -165,26 +165,6 @@ rts
 ; the print calls through either the ASCII print or CHROUT, via a vector
 
 !ifndef c128 {
-	window_edge_tables
-		!byte $ac ; top-left corner
-		!byte $bb ; top-right corner
-		!byte $bc ; bottom-left corner
-		!byte $be ; bottom-right corner
-		!byte $60 ; top edge
-		!byte $60 ; bottom edge
-		!byte $7d ; left edge
-		!byte $7d ; right edge
-
-		!byte $08 ; same symbols, but using the ASCII font
-		!byte $09
-		!byte $0a
-		!byte $0b
-		!byte $02
-		!byte $02
-		!byte $01
-		!byte $01
-
-	char_table_select		!byte 0
 
 	fill_char					= " "
 	screen_width				= 40
@@ -421,10 +401,3 @@ draw_text_input_popup
 	ldy #text_input_popup_width
 	jsr draw_window
 rts
-
-top_row_pos			!byte 0
-bottom_row_pos		!byte 0
-left_column_pos		!byte 0
-right_column_pos	!byte 0
-num_rows			!byte 0
-num_columns			!byte 0

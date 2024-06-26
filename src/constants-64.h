@@ -10,7 +10,9 @@
 
 	print_msg_char_limit			= $57
 
-	; free: $f7 through $f9
+	char_table_select				= $f7
+
+	; free: $f8, $f9
 
 	; low memory area -- duh 😛
 
@@ -25,6 +27,8 @@
 	blurring_table					= $0a00 ; 128 bytes
 
 	; free: $0a80 through $0aff
+
+	window_edge_tables				= $1000
 
 	free_memory_end					= $8200
 

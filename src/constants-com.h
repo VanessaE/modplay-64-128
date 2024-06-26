@@ -344,10 +344,22 @@ tempo_fine_adjust_constant = 159778
 	last_volume_tables_resolution	= $09c8
 	allow_regen_msg					= $09c9
 
-	free_memory_start				= $09ca ; 3 bytes
+	seq_abort_flag					= $09ca
+
+	top_row_pos						= $09cb
+	bottom_row_pos					= $09cc
+	left_column_pos					= $09cd
+	right_column_pos				= $09ce
+	num_rows						= $09cf
+	num_columns						= $09d0
+
+	match_header					= $09d1
+	stash_size						= $09d2 ; 2 bytes
+
+	free_memory_start				= $09d4 ; 3 bytes
 
 	; various program vectors
-	; more vectors can go in this space, $09cb through $09ef
+	; more vectors can go in this space, $09d7 through $09ef
 
 	stash_block_vec					= $09f0 ; 2 bytes
 
@@ -369,11 +381,11 @@ tempo_fine_adjust_constant = 159778
 
 	and_f0_table					= $0f00 ; 1 page
 
-	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL,
-	; but the rest is free.
+	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
+	; C64, $1000-$101f holds a windowing.s table
 
-	; free: $1020 through $105f -- on C64, $1000-$101f is free also.
-
+	control_code_flags_table_low	= $1020
+	control_code_flags_table_high	= $1040
 	semitones_table_fracts			= $1060
 	semitones_table_lows			= $1070
 
