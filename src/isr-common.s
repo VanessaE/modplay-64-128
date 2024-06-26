@@ -2,8 +2,6 @@
 
 ; ##### Start the ISR and initialize the audio device/driver
 
-!align 255,0,0
-
 !text "isr common",0
 
 isr_set_interval
@@ -183,6 +181,7 @@ rts
 		nop
 		nop						; 63 / or as late as here if stage 1 was on-time on PAL
 		nop						; 65 / or as late as here on NTSC
+		nop
 		nop
 
 	irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle

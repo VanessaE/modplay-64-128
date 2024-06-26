@@ -151,11 +151,11 @@ dirname
 ; copied to another part of memory for runtime use, or which reserves memory
 ; via the program counter.
 
+!align 255,0
+
 wipe_memory_start
 
 !source "src/init.s"
-
-!align 255,0
 
 !ifndef c128 {
 charset_64
