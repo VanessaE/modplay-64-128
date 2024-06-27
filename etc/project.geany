@@ -28,7 +28,7 @@ long_line_behaviour=1
 long_line_column=79
 
 [files]
-current_page=25
+current_page=33
 FILE_NAME_0=2517;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2Ftrim-whitespc.sh;0;4
 FILE_NAME_1=1133;Make;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FMakefile;0;4
 FILE_NAME_2=2665;Markdown;0;EUTF-8;1;1;1;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FREADME.md;0;4
@@ -52,9 +52,9 @@ FILE_NAME_19=1483;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmod
 FILE_NAME_20=456;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Floader-acptr.s;0;4
 FILE_NAME_21=5922;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdriver-reu.s;0;4
 FILE_NAME_22=1254;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdriver-sid.s;0;4
-FILE_NAME_23=4767;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmodplay.s;0;4
+FILE_NAME_23=3609;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmodplay.s;0;4
 FILE_NAME_24=0;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fc128-boot-sect.s;0;4
-FILE_NAME_25=2117;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Finit.s;0;4
+FILE_NAME_25=2085;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Finit.s;0;4
 FILE_NAME_26=2264;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmain-menu.s;0;4
 FILE_NAME_27=1769;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fchange-show.s;0;4
 FILE_NAME_28=2024;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fplaylist.s;0;4
@@ -62,7 +62,7 @@ FILE_NAME_29=1766;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmod
 FILE_NAME_30=10361;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-64.s;0;4
 FILE_NAME_31=8921;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-128.s;0;4
 FILE_NAME_32=1542;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdirectory.s;0;4
-FILE_NAME_33=3364;None;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2FERRATA.txt;0;4
+FILE_NAME_33=2751;None;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2FERRATA.txt;0;4
 
 [VTE]
 last_dir=/home/vanessa/Commodore-related/modplay-v2.0

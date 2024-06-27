@@ -54,12 +54,38 @@
 
 * C128: file name in infobox overwrites "Current"
 
-* C128: loading from CMD HD over HD/RAMLink parallel is broken.  RAMLink DOS
-  is not jumping through the KERNAL STOP vector during a LOAD call, causing
-  the file load to just overflow the load buffer and stomp all over local
-  memory without calling my loader code, but this only happens if parallel is
-  enabled.  This is the same issue that forced me to use the ACPTR loader in
-  the C64 build.  Disabling parallel with `@P0` works around this.
+* C64: Loading over the STOP wedge is broken if JiffyDOS is present.  JD is
+  not jumping through the KERNAL STOP vector during the LOAD call, so the file
+  just loads in full, overflowing the load buffer and stomping all over local
+  memory and overwriting the program, without ever calling my loader/wedge
+  routine.
+
+* C128: STOP wedge loader fails on CMD HD over HD/RAMLink parallel.  Same prob
+  as on C64 with JiffyDOS, but here it only happens if parallel is enabled.
+  Disabling parallel with `@P0` before loading my program works around this.
+
+IDEA: at file load time, test the STOP vector before trying to load the MOD
+      (but only do it once per device in any given run -- maintain a table
+      indicating which device numbers pass the test):
+  
+  1. read the dir of the device the user's loading from, with pattern
+     "$:{ctrl-A}*" (to omit all files and get only the header and blocks free
+     message).
+  2. Check if there's at least three blocks free
+  3. fill the load buffer with some test byte, say $64
+  4. save-out the first 761-bytes of it (that's 3 disk blocks minus 1 byte).
+  5. zero the buffer
+  6. reload the saved file, pointing the STOP vector to a routine that will
+     attempt to halt the load after the first page.
+  7. Check any byte around the middle of the third page of the load buffer (in
+     case the file is being read via C128 BURST protocol).  If it's not 0,
+     then the whole file must have been loaded, so mark this drive as
+     incompatible with the STOP wedge.  Also do that if the disk was too full
+     to allow the file to be created, or if there's any kind of error on load
+     or save of the test file.
+  8. Close and/or let the load finish, and delete the file.
+  9. Load the MOD file as normal, using whichever method the above test
+     dictates.
 
 * C128: loading the program using the JiffyDOS `%*` shortcut is broken, but
   only if there's a RAMLink present/enabled, even if the load is coming from a
