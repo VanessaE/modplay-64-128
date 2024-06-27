@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start						= $1800
+program_start						= $1900
 
 !addr {
 	; KERNAL zero-page variables
@@ -376,10 +376,10 @@ tempo_fine_adjust_constant = 159778
 	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
 	; C128 has system variables and such in that space
 
-	multablo						= $0b00 ; 2 pages
-	multabhi						= $0d00 ; 2 pages
+	upper_variables_zone			= $0b00
 
-	and_f0_table					= $0f00 ; 1 page
+	multablo						= $0c00 ; 2 pages
+	multabhi						= $0e00 ; 2 pages
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
@@ -403,6 +403,8 @@ tempo_fine_adjust_constant = 159778
 	multab2hi						= $1500 ; 2 pages
 
 	zp_backup						= $1700 ; 1 page (duh. 😛)
+
+	and_f0_table					= $1800 ; 1 page
 
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff
