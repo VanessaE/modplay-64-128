@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start						= $1900
+program_start						= $1e00
 
 !addr {
 	; KERNAL zero-page variables
@@ -265,178 +265,197 @@ tempo_fine_adjust_constant = 159778
 	; these are placed in areas of memory where it's okay if they get trashed,
 	; so long as the area is stable while the player/seqencer is running.
 
-	string_buffer_backup			= low_memory_area ; 48 bytes
+	string_buffer_backup				= low_memory_area ; 48 bytes
 
-	current_note_periods_lows		= low_memory_area
-	current_note_periods_highs		= low_memory_area+$08
-	current_node_period_offsets		= low_memory_area+$10
-	track_current_enable_flags		= low_memory_area+$18
+	current_note_periods_lows			= low_memory_area
+	current_note_periods_highs			= low_memory_area+$08
+	current_node_period_offsets			= low_memory_area+$10
+	track_current_enable_flags			= low_memory_area+$18
 
-	seq_current_row_data			= low_memory_area+$20 ; this one's 64 bytes
-	seq_commands					= low_memory_area+$60
-	seq_prev_commands				= low_memory_area+$68
-	seq_command_arguments			= low_memory_area+$70
-	seq_prev_command_arguments		= low_memory_area+$78
+	seq_current_row_data				= low_memory_area+$20 ; this one's 64 bytes
+	seq_commands						= low_memory_area+$60
+	seq_prev_commands					= low_memory_area+$68
+	seq_command_arguments				= low_memory_area+$70
+	seq_prev_command_arguments			= low_memory_area+$78
 
-	current_pitch_slide_flags		= low_memory_area+$80
-	seq_pitch_slide_stop_point_lows	= low_memory_area+$88
-	seq_pitch_slide_stop_point_highs = low_memory_area+$90
+	current_pitch_slide_flags			= low_memory_area+$80
+	seq_pitch_slide_stop_point_lows		= low_memory_area+$88
+	seq_pitch_slide_stop_point_highs	= low_memory_area+$90
 
 	; the above zone must not exceed low_memory_area+$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
-	load_buffer						= $0400 ; 5*254 bytes, plus the rest of the
-	load_buffer_end					= $08f5 ; for overflow
+	load_buffer							= $0400 ; 5*254 bytes, plus the rest of the
+	load_buffer_end						= $08f5 ; for overflow
 
 	; All of the various tables, buffers, etc. that fit into 
 	; the $0400-and-up area (both C64 and C128)
 
-	main_variables_zone				= $0900
-
-	config_space					= $0900 ; 16 bytes
-
-	one_ten_thousandth_second		= $0910 ; 2 bytes
-	number_of_song_positions		= $0912
-	number_of_patterns				= $0913
-
-	audio_driver_isr_cycle_count	= $0914
-	ram_driver_cycle_count			= $0915
-	isr_trigger_interval			= $0916
-	last_isr_trigger_interval		= $0917
-	playlist_length					= $0918
-	playlist_scroll_pos				= $0919
-	playlist_print_file_counter		= $091a
-	screen_row_to_print_at			= $091b
-	rasters_lo						= $091c
-	raster_len						= $091d
-	pal_flag						= $091e
-	boot_device						= $091f
-
-	string_buffer					= $0920 ; 48 bytes
-	uint16_string_buffer			= $0950 ; 7 bytes (of 8)
-	uint16_string_buf_trim			= $0958 ; 7 bytes (of 8)
-
-	current_dir_name				= $0960 ; 16 bytes plus a null
-	current_file_name				= $0971 ; 16 bytes plus a null
-	current_file_title				= $0982 ; 21 bytes (plus a bunch of nulls)
-	current_file_size				= $09a0 ; 2 bytes
-	current_file_size_in_kb			= $09a2 ; 2 bytes
-	current_file_type				= $09a4
-	current_file_tracks				= $09a5
-
-	current_menu_page				= $09a6
-	clear_menu_screen_flag			= $09a7
-
-	file_to_load_name_len			= $09a8
-	file_to_load_size				= $09a9 ; 2 bytes
-	file_size_in_kb					= $09ab ; 2 bytes
-	header_loaded					= $09ad
-
-	reu_highest_bank				= $09ae
-	ramlink_detect					= $09af
-	main_memory_free_pages			= $09b0
-
-	old_STOP_vec					= $09b1 ; 2 bytes
-	parse_header_sample_pointer		= $09b3 ; 3 bytes
-	arpeggio_extra_note_first		= $09b6 ; \___ 16 bytes
-	arpeggio_extra_note_second		= $09be ; /
-
-	repeat_mode						= $09c6
-	volume_tables_resolution		= $09c7
-	last_volume_tables_resolution	= $09c8
-	allow_regen_msg					= $09c9
-
-	seq_abort_flag					= $09ca
-
-	top_row_pos						= $09cb
-	bottom_row_pos					= $09cc
-	left_column_pos					= $09cd
-	right_column_pos				= $09ce
-	num_rows						= $09cf
-	num_columns						= $09d0
-
-	match_header					= $09d1
-	stash_size						= $09d2 ; 2 bytes
-
-	expansion_memory_start_pointer	= $09d4 ; 3 bytes
-
-	; various program vectors
-	; more vectors can go in this space, $09d7 through $09ef
-
-	stash_block_vec					= $09f0 ; 2 bytes
-
-	print_vec						= $09f2 ; 2 bytes
-
-	audio_set_resolution_vec		= $09f4 ; 2 bytes
-	audio_init_vec					= $09f6 ; 2 bytes
-	audio_start_vec					= $09f8 ; 2 bytes
-	audio_stop_vec					= $09fa ; 2 bytes
-
-	audio_driver_set_cycle_count_vec = $09fc ; 2 bytes
-	ram_driver_set_cycle_counts_vec	= $09fe ; 2 bytes
+	and_f0_table						= $0900 ; 1 page
 
 	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
 	; C128 has system variables and such in that space
 
-	upper_variables_zone			= $0b00
+	multablo							= $0b00 ; 2 pages
+	multabhi							= $0d00 ; 2 pages
 
-	; free: $0b00 through $0be9
-
-	loader_compatibility_table		= $0bea ; 22 bytes - devices 8 through 30.
-
-	multablo						= $0c00 ; 2 pages
-	multabhi						= $0e00 ; 2 pages
+	zp_backup							= $0f00 ; 1 page (duh. 😛)
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
 
-	control_code_flags_table_low	= $1020
-	control_code_flags_table_high	= $1040
-	semitones_table_fracts			= $1060
-	semitones_table_lows			= $1070
+	control_code_flags_table_low		= $1020
+	control_code_flags_table_high		= $1040
+	semitones_table_fracts				= $1060
+	semitones_table_lows				= $1070
 
-	pattern_table					= $1080
+	pattern_table						= $1080
 
-	clear_main_memory				= pattern_table
+	clear_main_memory					= pattern_table
 
 	; on C128, these next two pages can only be used by transient stuff
 	; so that's a good place for the two audio buffers
 
-	audio_buffer_left				= $1100 ; 1 page
-	audio_buffer_right				= $1200 ; 1 page
+	audio_buffer_left					= $1100 ; 1 page
+	audio_buffer_right					= $1200 ; 1 page
 
-	multab2lo						= $1300 ; 2 pages
-	multab2hi						= $1500 ; 2 pages
+	multab2lo							= $1300 ; 2 pages
+	multab2hi							= $1500 ; 2 pages
 
-	zp_backup						= $1700 ; 1 page (duh. 😛)
+	main_variables_zone					= $1700
 
-	and_f0_table					= $1800 ; 1 page
+	config_space						= $1700 ; 16 bytes
+
+	one_ten_thousandth_second			= $1710 ; 2 bytes
+	number_of_song_positions			= $1712
+	number_of_patterns					= $1713
+
+	audio_driver_isr_cycle_count		= $1714
+	ram_driver_cycle_count				= $1715
+	isr_trigger_interval				= $1716
+	last_isr_trigger_interval			= $1717
+	playlist_length						= $1718
+	playlist_scroll_pos					= $1719
+	playlist_print_file_counter			= $171a
+	screen_row_to_print_at				= $171b
+	rasters_lo							= $171c
+	raster_len							= $171d
+	pal_flag							= $171e
+	boot_device							= $171f
+
+	string_buffer						= $1720 ; 48 bytes
+	uint16_string_buffer				= $1750 ; 7 bytes (of 8)
+	uint16_string_buf_trim				= $1758 ; 7 bytes (of 8)
+
+	current_dir_name					= $1760 ; 16 bytes plus a null
+	current_file_name					= $1771 ; 16 bytes plus a null
+	current_file_title					= $1782 ; 21 bytes (plus a bunch of nulls)
+	current_file_size					= $17a0 ; 2 bytes
+	current_file_size_in_kb				= $17a2 ; 2 bytes
+	current_file_type					= $17a4
+	current_file_tracks					= $17a5
+
+	current_menu_page					= $17a6
+	clear_menu_screen_flag				= $17a7
+
+	file_to_load_name_len				= $17a8
+	file_to_load_size					= $17a9 ; 2 bytes
+	file_size_in_kb						= $17ab ; 2 bytes
+	header_loaded						= $17ad
+
+	reu_highest_bank					= $17ae
+	ramlink_detect						= $17af
+	main_memory_free_pages				= $17b0
+
+	old_STOP_vec						= $17b1 ; 2 bytes
+	parse_header_sample_pointer			= $17b3 ; 3 bytes
+	arpeggio_extra_note_first			= $17b6 ; \___ 16 bytes
+	arpeggio_extra_note_second			= $17be ; /
+
+	repeat_mode							= $17c6
+	volume_tables_resolution			= $17c7
+	last_volume_tables_resolution		= $17c8
+	allow_regen_msg						= $17c9
+
+	seq_abort_flag						= $17ca
+
+	top_row_pos							= $17cb
+	bottom_row_pos						= $17cc
+	left_column_pos						= $17cd
+	right_column_pos					= $17ce
+	num_rows							= $17cf
+	num_columns							= $17d0
+
+	match_header						= $17d1
+	stash_size							= $17d2 ; 2 bytes
+
+	expansion_memory_start_pointer		= $17d4 ; 3 bytes
+
+	; free: $17d7 through $17ef
+
+	; various program vectors
+
+	stash_block_vec						= $17f0 ; 2 bytes
+
+	print_vec							= $17f2 ; 2 bytes
+
+	audio_set_resolution_vec			= $17f4 ; 2 bytes
+	audio_init_vec						= $17f6 ; 2 bytes
+	audio_start_vec						= $17f8 ; 2 bytes
+	audio_stop_vec						= $17fa ; 2 bytes
+
+	audio_driver_set_cycle_count_vec	= $17fc ; 2 bytes
+	ram_driver_set_cycle_counts_vec		= $17fe ; 2 bytes
+
+	loader_compatibility_table			= $17ea ; 22 bytes - devices 8 through 30.
+
+; mods' lengths are big-endian, but addrs and lengths here are little-endian
+; each of these is 32 bytes, except the first byte of each one is unused.
+
+	sample_start_addresses_lows			= $1800
+	sample_start_addresses_mids			= $1820
+	sample_start_addresses_highs		= $1840
+	sample_end_addresses_lows			= $1860
+	sample_end_addresses_mids			= $1880
+	sample_end_addresses_highs			= $18a0
+	sample_loop_start_addresses_lows	= $18c0
+	sample_loop_start_addresses_mids	= $18e0
+	sample_loop_start_addresses_highs	= $1900
+	sample_loop_end_addresses_lows		= $1920
+	sample_loop_end_addresses_mids		= $1940
+	sample_loop_end_addresses_highs		= $1960
+	sample_default_loop_flags			= $1980
+	sample_default_fine_tunes			= $19a0
+	sample_default_volume_levels		= $19c0
+	mod_instrument_names				= $19e0 ; 32 * 31 bytes, through $1dbf
+
+	; free: $1dc0 through 1dff
 
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff
 
-	divide_by_16_table				= $8a00
+	divide_by_16_table					= $8a00
 
-	playlist_file_sizes_lows		= $8b00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $8c00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $8d00 ; 1 byte * 192
-											; (48 bytes unused but will be zeroed)
+	playlist_file_sizes_lows			= $8b00 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs			= $8c00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags					= $8d00 ; 1 byte * 192
+												; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $8e00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $9a00
+	playlist_filenames					= $8e00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end				= $9a00
 
-	volume_table_lower				= $9a00 ; 46 pages \__ 65 pages/16.25 kB, split
-	volume_table_upper				= $e000 ; 19 pages /   between two memory areas
+	volume_table_lower					= $9a00 ; 46 pages \__ 65 pages/16.25 kB, split
+	volume_table_upper					= $e000 ; 19 pages /   between two memory areas
 
 	; on C64, $c800-$cfff are screens, sample data buffer on C128
 
 	; other under-KERNAL-ROM stuff
 
-	pitch_table_fracts				= $f300 ; 7 pages
-	pitch_table_lows				= $fa00 ; 3 pages
+	pitch_table_fracts					= $f300 ; 7 pages
+	pitch_table_lows					= $fa00 ; 3 pages
 
-	tempo_table_fracts				= $fd00 ; 1 page
-	tempo_table_lows				= $fe00 ; 1 page
+	tempo_table_fracts					= $fd00 ; 1 page
+	tempo_table_lows					= $fe00 ; 1 page
 }
 
 ; config file declarations - the actual file gets loaded/saved as above

@@ -151,7 +151,7 @@ dirname
 
 !align 255,0
 
-wipe_memory_start
+main_mem_free_start
 
 !source "src/init.s"
 
@@ -162,27 +162,3 @@ charset_64
 charset_128_alt
 	!binary "etc/charset-128a.bin"
 }
-
-; mods' lengths are big-endian, but addrs and lengths here are little-endian
-
-mod_instrument_names				= wipe_memory_start
-sample_start_addresses_lows			= mod_instrument_names + 32*31
-sample_start_addresses_mids			= sample_start_addresses_lows + 32
-sample_start_addresses_highs		= sample_start_addresses_mids + 32
-sample_end_addresses_lows			= sample_start_addresses_highs + 32
-sample_end_addresses_mids			= sample_end_addresses_lows + 32
-sample_end_addresses_highs			= sample_end_addresses_mids + 32
-sample_loop_start_addresses_lows	= sample_end_addresses_highs + 32
-sample_loop_start_addresses_mids	= sample_loop_start_addresses_lows + 32
-sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
-sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
-sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
-sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
-sample_default_loop_flags			= sample_loop_end_addresses_highs + 32
-sample_default_fine_tunes			= sample_default_loop_flags + 32
-sample_default_volume_levels		= sample_default_fine_tunes + 32; also 32 bytes
-
-main_mem_free_start					= (sample_default_volume_levels + 255) & $ff00
-
-; anything appended after this point will be overwritten by the loaded file
-; when using main memory driver

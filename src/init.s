@@ -54,7 +54,12 @@ init
 
 	ldy #0
 -	sta main_variables_zone,y
-	sta upper_variables_zone,y
+	sta main_variables_zone+$0100,y
+	sta main_variables_zone+$0200,y
+	sta main_variables_zone+$0300,y
+	sta main_variables_zone+$0400,y
+	sta main_variables_zone+$0500,y
+	sta main_variables_zone+$0600,y
 	iny
 	bne -
 
@@ -427,9 +432,9 @@ final_clear_copy
 rts
 
 clear_main_memory_origin
-	lda #<wipe_memory_start
+	lda #<main_mem_free_start
 	sta tempzp_d
-	lda #>wipe_memory_start
+	lda #>main_mem_free_start
 	sta tempzp_d+1
 	lda #0
 	ldy #0
