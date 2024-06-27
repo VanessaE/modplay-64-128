@@ -15,51 +15,6 @@ check_drive_presence			; enter with .A = device to check
 	pla							; a non-zero return = device not present
 rts
 
-open_file			; enter with .A = filename len, .X/.Y = filename addr
-	php
-	sta tempzp_c
-	and #$7f		; in case the len indicates need for DOS command channel
-	jsr SETNAM
-
-	!ifdef c128 {
-		lda #0
-		ldx #0
-		jsr SETBNK
-	}
-
-	ldy #2			; default SA=2
-	ldx load_device
-
-	plp
-	bcc +			; if we called this with the carry set,
-	ldy #0			; it means we need the directory, so SA=0
-	beq .setlfs
-
-+	lda tempzp_c	; retrieve filename length
-	and #$80		; if the high bit of the length was set
-	beq +
-	ldy #15			; then it's for the DOS command channel, so SA=15
-
-.setlfs
-+	lda #2			; always using file number 2
-
-	jsr SETLFS
-
-	jsr OPEN
-	bcc +
-	jmp close_file
-
-+	ldx #2
-	jsr CHKIN
-rts
-
-
-close_file
-	lda #2			; filenumber 2
-	jsr CLOSE
-	jsr CLRCH
-rts
-
 read_err_channel
 	jsr clear_string_buffer ; this also leaves .A=0, which signals "no filename"
 
@@ -147,5 +102,139 @@ request_filename
 	jsr get_text_input
 rts
 
+get_free_disk_space
+	lda #"$"
+	sta string_buffer
+	lda #":"
+	sta string_buffer+1
+	lda #1
+	sta string_buffer+2
+	lda #"*"
+	sta string_buffer+3
+	lda #0
+	sta string_buffer+4
+
+	sec
+	lda #4
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr open_file
+
+	jsr CHRIN				; get/ignore the first six bytes
+	jsr CHRIN
+	jsr CHRIN
+	jsr CHRIN
+	jsr CHRIN
+	jsr CHRIN
+
+	jsr dir_read_line		; we just throw the header away
+
+	jsr CHRIN				; throw away two more bytes
+	jsr CHRIN
+	jsr CHRIN				; blocks free LSB
+	sta tempzp_d
+	jsr CHRIN				; blocks free MSB
+	sta tempzp_d+1
+
+	jsr close_file
+rts
+
+scratch_test_file
+	ldx #0
+-	lda test_filename,x
+	sta string_buffer+3,x
+	beq +
+	inx
+	bne -
++	lda #"s"
+	sta string_buffer
+	lda #"0"
+	sta string_buffer+1
+	lda #":"
+	sta string_buffer+2
+
+	lda #14
+	ora #$80 ; tell the open function this needs to go to the command channel
+
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr open_file
+	jsr close_file
+rts
+
+save_test_file
+	lda #11
+	ldx #<test_filename
+	ldy #>test_filename
+	jsr SETNAM
+
+	!ifdef c128 {
+		lda #0
+		ldx #0
+		jsr SETBNK
+	}
+	lda #0
+	ldx load_device
+	ldy #0
+	jsr SETLFS
+
+	lda #<load_buffer
+	sta save_addr
+	lda #>load_buffer
+	sta save_addr+1
+
+	lda #save_addr
+	ldx #<(load_buffer+760)
+	ldy #>(load_buffer+760)
+	jsr SAVE
+rts
+
+open_file			; enter with .A = filename len, .X/.Y = filename addr
+	php
+	sta tempzp_c
+	and #$7f		; in case the len indicates need for DOS command channel
+	jsr SETNAM
+
+	!ifdef c128 {
+		lda #0
+		ldx #0
+		jsr SETBNK
+	}
+
+	ldy #2			; default SA=2
+	ldx load_device
+
+	plp
+	bcc +			; if we called this with the carry set,
+	ldy #0			; it means we need the directory, so SA=0
+	beq .setlfs
+
++	lda tempzp_c	; retrieve filename length
+	and #$80		; if the high bit of the length was set
+	beq +
+	ldy #15			; then it's for the DOS command channel, so SA=15
+
+.setlfs
++	lda #2			; always using file number 2
+
+	jsr SETLFS
+
+	jsr OPEN
+	bcc +
+	jmp close_file
+
++	ldx #2
+	jsr CHKIN
+rts
+
+close_file
+	lda #2			; filenumber 2
+	jsr CLOSE
+	jsr CLRCH
+rts
+
 default_error_message
-		!text 13,"Error #",0
+	!text 13,"Error #",0
+
+test_filename
+	!text "mp-test.bin",0
