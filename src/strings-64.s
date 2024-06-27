@@ -375,6 +375,17 @@ tracker_name_msg_startrekker
 tracker_name_msg_fasttracker
 	!text "FastTracker",0
 
+drive_loader_check_msg
+	!byte $81,HOME
+	!byte 11,DOWN
+	!byte 14,RIGHT
+	!byte $80+14
+		!text LGRN,"One moment,",RETURN,RETURN
+	!byte 12,RIGHT
+	!byte $80+17
+		!text "testing loader..."
+	!byte 0
+
 unknown_file_msg
 	!text DOWN,RIGHT,RIGHT,RIGHT,RED,"Unknown file",RETURN,0
 
@@ -414,6 +425,7 @@ between_songs_msg
 		!text CYAN,"Loader here",RETURN,RETURN
 	!byte 20,RIGHT
 	!byte 0
+
 
 press_key_msg
 	!text "Press any key",0

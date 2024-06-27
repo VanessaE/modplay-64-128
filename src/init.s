@@ -54,6 +54,7 @@ init
 
 	ldy #0
 -	sta main_variables_zone,y
+	sta upper_variables_zone,y
 	iny
 	bne -
 
@@ -69,75 +70,17 @@ init
 	lda #0
 	sta MSGFLG ; suppress "SEARCHING FOR..." message
 
+	jsr enable_kernal_only
+	jsr test_loader_compatibility_no_popup
+	sei
+	jsr disable_roms
+
 	lda #0
 	sta current_menu_page
 	!ifdef c128 {
 		lda #$80
 		sta clear_menu_screen_flag
 	}
-
-	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
-	; Code by Graham (reformatted for Acme and my code style)
-	; https://codebase64.org/doku.php?id=base:table_generator_routine_for_fast_8_bit_mul_table
-
-	ldx #0
-	txa
-	clc			; Sorry Graham, this is more readable than '!byte $c9' ;-)
-	bcc +
-
-	-	tya
-	+	adc #0
-	ml1
-		sta multabhi,x
-		tay
-		cmp #$40
-		txa
-		ror
-	ml9
-		adc #0
-		sta ml9+1
-		inx
-	ml0
-		sta multablo,x
-		bne -
-		inc ml0+2
-		inc ml1+2
-		clc
-		iny
-		bne -
-
-	ldx #0
-	ldy #$ff
-
-	-	lda multabhi+1,x
-		sta multab2hi+$100,x
-		lda multabhi,x
-		sta multab2hi,y
-		lda multablo+1,x
-		sta multab2lo+$100,x
-		lda multablo,x
-		sta multab2lo,y
-		dey
-		inx
-	bne -
-
-	ldx #0
--	txa
-	lsr
-	lsr
-	lsr
-	lsr
-	sta divide_by_16_table,x
-	inx
-	bne -
-
-	ldx #0
--	txa
-	and #$f0
-	sta and_f0_table,x
-	inx
-	bne -
-
 
 	sec
 	lda #>main_mem_free_end
@@ -285,6 +228,68 @@ init
 		lda #0
 		sta enable_screen_on_playback
 	}
+
+	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
+	; Code by Graham (reformatted for Acme and my code style)
+	; https://codebase64.org/doku.php?id=base:table_generator_routine_for_fast_8_bit_mul_table
+
+	ldx #0
+	txa
+	clc			; Sorry Graham, this is more readable than '!byte $c9' ;-)
+	bcc +
+
+	-	tya
+	+	adc #0
+	ml1
+		sta multabhi,x
+		tay
+		cmp #$40
+		txa
+		ror
+	ml9
+		adc #0
+		sta ml9+1
+		inx
+	ml0
+		sta multablo,x
+		bne -
+		inc ml0+2
+		inc ml1+2
+		clc
+		iny
+		bne -
+
+	ldx #0
+	ldy #$ff
+
+	-	lda multabhi+1,x
+		sta multab2hi+$100,x
+		lda multabhi,x
+		sta multab2hi,y
+		lda multablo+1,x
+		sta multab2lo+$100,x
+		lda multablo,x
+		sta multab2lo,y
+		dey
+		inx
+	bne -
+
+	ldx #0
+-	txa
+	lsr
+	lsr
+	lsr
+	lsr
+	sta divide_by_16_table,x
+	inx
+	bne -
+
+	ldx #0
+-	txa
+	and #$f0
+	sta and_f0_table,x
+	inx
+	bne -
 
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)

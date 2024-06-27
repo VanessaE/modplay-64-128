@@ -321,6 +321,16 @@ tracker_name_msg_startrekker
 tracker_name_msg_fasttracker
 	!text "FastTracker",0
 
+drive_loader_check_msg
+	!byte $81,DOWN
+	!byte 9,RIGHT
+	!byte $80+14
+		!text LGRN,"One moment,",RETURN,RETURN
+	!byte 7,RIGHT
+	!byte $80+17
+		!text "testing loader..."
+	!byte 0
+
 unknown_file_msg
 	!byte $81,DOWN
 	!byte 6,RIGHT

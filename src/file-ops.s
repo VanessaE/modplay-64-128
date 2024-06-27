@@ -194,56 +194,6 @@ get_free_disk_space
 	jsr close_file
 rts
 
-scratch_test_file
-	ldx #0
--	lda test_filename,x
-	sta string_buffer+3,x
-	beq +
-	inx
-	bne -
-+	lda #"s"
-	sta string_buffer
-	lda #"0"
-	sta string_buffer+1
-	lda #":"
-	sta string_buffer+2
-
-	clc
-	lda #14
-	ora #$80 ; tell the open function this needs to go to the command channel
-	ldx #<string_buffer
-	ldy #>string_buffer
-	jsr open_file
-	jsr close_file
-rts
-
-save_test_file
-	lda #11
-	ldx #<test_filename
-	ldy #>test_filename
-	jsr SETNAM
-
-	!ifdef c128 {
-		lda #0
-		ldx #0
-		jsr SETBNK
-	}
-	lda #0
-	ldx load_device
-	ldy #0
-	jsr SETLFS
-
-	lda #<load_buffer
-	sta save_addr
-	lda #>load_buffer
-	sta save_addr+1
-
-	lda #save_addr
-	ldx #<(load_buffer+760)
-	ldy #>(load_buffer+760)
-	jsr SAVE
-rts
-
 open_file			; enter with .A = filename len, .X/.Y = filename addr
 	php
 	sta tempzp_c
@@ -290,6 +240,3 @@ rts
 
 default_error_message
 	!text 13,"Error #",0
-
-test_filename
-	!text "mp-test.bin",0

@@ -265,6 +265,8 @@ tempo_fine_adjust_constant = 159778
 	; these are placed in areas of memory where it's okay if they get trashed,
 	; so long as the area is stable while the player/seqencer is running.
 
+	string_buffer_backup			= low_memory_area ; 48 bytes
+
 	current_note_periods_lows		= low_memory_area
 	current_note_periods_highs		= low_memory_area+$08
 	current_node_period_offsets		= low_memory_area+$10
@@ -377,6 +379,10 @@ tempo_fine_adjust_constant = 159778
 	; C128 has system variables and such in that space
 
 	upper_variables_zone			= $0b00
+
+	; free: $0b00 through $0be9
+
+	loader_compatibility_table		= $0bea ; 22 bytes - devices 8 through 30.
 
 	multablo						= $0c00 ; 2 pages
 	multabhi						= $0e00 ; 2 pages

@@ -22,9 +22,9 @@ load_file_to_expansion
 		plp
 	}
 
+	sty file_to_load_name_len
 	bcc load_from_playlist
 
-	sty file_to_load_name_len
 -	lda string_buffer,y
 	sta string_buffer+2,y
 	dey
@@ -107,6 +107,8 @@ load_by_filename_entry
 	lsr file_size_in_kb+1
 	ror file_size_in_kb
 
+	jsr test_loader_compatibility
+
 	jsr populate_mini_popup_loader
 
 ; preset the divisor to be proportional to max number of progress bar segments
@@ -177,18 +179,20 @@ load_by_filename_entry
 
 	; ### Okay, at this point we can go ahead and load the file.
 
-	; On the C128, we can use the "STOP wedge" trick to cause the KERNAL
-	; LOAD routine to do more of the work, 
+	; On some machines/drives, the STOP wedge won't work, so the loader calls
+	; a test routine to see if it's safe to use.
 
-	; On C64, some fast loaders ignore the STOP vector, making the "STOP
-	; wedge" trick unusable, so we use the ACPTR method there instead.
+	ldy load_device
+	lda loader_compatibility_table-8,y
 
-	!ifndef c128 {
-		jsr load_via_acptr
-	} else {
-		jsr load_via_stop_wedge
-	}
-	jsr zero_first_exp_pages
+	bmi + 
+	jsr load_via_acptr
+	jmp ++
+
++	jsr load_via_stop_wedge
+
+++	jsr zero_first_exp_pages
+
 rts
 
 abort_load

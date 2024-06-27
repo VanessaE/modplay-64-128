@@ -76,10 +76,8 @@ start
 
 !source "src/loader-common.s"
 !source "src/loader-acptr.s"
+!source "src/loader-stopwdg.s"
 
-!ifdef c128 {
-	!source "src/loader-stopwdg.s"
-}
 !source "src/file-ops.s"
 !source "src/directory.s"
 
