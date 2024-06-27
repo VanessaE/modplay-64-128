@@ -60,8 +60,7 @@
   memory and overwriting the program, without ever calling my loader/wedge
   routine.
 
-* C128: STOP wedge loader fails on CMD HD over HD/RAMLink parallel.  Same prob
-  as on C64 with JiffyDOS, but here it only happens if parallel is enabled.
+* C128: STOP wedge loader fails on CMD HD over HD/RAMLink parallel.  Same prob  as on C64 with JiffyDOS, but here it only happens if parallel is enabled.
   Disabling parallel with `@P0` before loading my program works around this.
 
 IDEA: at file load time, test the STOP vector before trying to load the MOD
@@ -92,9 +91,5 @@ IDEA: at file load time, test the STOP vector before trying to load the MOD
   floppy drive, yet `LOAD"*",8,1` works (by extension, disk autoboot works
   too).  UNlike the above, `@P0` doesn't help. 😛
 
-* BOTH: the send-command dialog does nothing after the text is entered.  Also,
-  it should report the drive status after the command, or if the user enters
-  either an "@" or nothing at all (but not if they abort with Run/Stop or
-  Esc)
-
 * C64: progress bar overflows its length.
+

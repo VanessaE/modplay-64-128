@@ -16,13 +16,22 @@ check_drive_presence			; enter with .A = device to check
 rts
 
 read_err_channel
-	jsr clear_string_buffer ; this also leaves .A=0, which signals "no filename"
+	jsr clear_string_buffer
 
-	lda #$80		; open_file will notice this and assume len=0, SA=15
+	lda #0
 	ldx #0
 	ldy #0
-	jsr open_file
-	bcs .close
+	jsr SETNAM
+
+	lda #2
+	ldx load_device
+	ldy #15
+	jsr SETLFS
+
+	jsr OPEN
+
+	ldx #2
+	jsr CHKIN
 
 	ldy #0
 -	lda $90			; (read status byte)
@@ -34,7 +43,9 @@ read_err_channel
 	bne -
 
 .close
-	jmp close_file
+	jsr close_file
+rts
+
 
 !ifndef c128 {
 	input_limit = 28
@@ -70,6 +81,50 @@ request_dos_command
 	jsr CHROUT
 	ldy #input_limit
 	jsr get_text_input
+	beq no_cmd
+
+	clc
+	tya
+	ora #$80
+	ldx #<string_buffer
+	ldy #>string_buffer
+
+	jsr open_file
+
+no_cmd
+	jsr read_err_channel
+
+	!ifndef c128 {
+		clc
+		jsr draw_text_input_popup
+	} else {
+		lda #CLR
+		jsr CHROUT
+	}
+
+	lda #CYAN
+	jsr CHROUT
+
+	lda #30
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr print_msg
+
++	lda #YEL
+	jsr CHROUT
+
+	!ifndef c128 {
+		clc
+		ldx #(24 - text_input_popup_height) / 2 + 2
+		ldy #text_input_popup_left_column + 1
+		jsr PLOT
+	} else {
+		lda #RETURN
+		jsr CHROUT
+		jsr CHROUT
+	}
+
+	jsr press_any_key
 rts
 
 request_filename
@@ -153,9 +208,9 @@ scratch_test_file
 	lda #":"
 	sta string_buffer+2
 
+	clc
 	lda #14
 	ora #$80 ; tell the open function this needs to go to the command channel
-
 	ldx #<string_buffer
 	ldy #>string_buffer
 	jsr open_file
