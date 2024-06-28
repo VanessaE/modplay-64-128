@@ -36,6 +36,13 @@
   how to measure "done", and perhaps the total width of the bar (number of
   chars on the line that is).
 
+* use the gray-out function in all other cases where there's a popup over the
+  main menu, as done in the player UI.  Treat it like "window dimming" as some
+  PC desktops use.
+
+* Check if the user enters a DOS command beginning with $, use the whole
+  input as a pattern for the directory function.
+
 
 ####################
 ##  KNOWN ISSUES  ##
@@ -69,3 +76,14 @@
   The automatic loader select compensates for both of these just fine, it just
   means they don't load as fast as they should otherwise be able to.
 
+* C128: "$" crashes on real hardware if the dir listing scrolls.  Also the
+  menu gets all funky on pressing DOWN after loading up a file list, like it's
+  painting the whole screen inside of just the file list pane.
+
+* C128: regular player crashes on "Skate or Die" but only on real hardware.
+  I think it's the same bug as with "$" and the file list pane, as that file
+  is the only one on the .D71 that has a title long enough to cause the popup
+  to scroll. 
+ 
+* C128: single sample player just crashes (not that it's supposed to DO
+  anything just yet).
