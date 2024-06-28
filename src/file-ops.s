@@ -121,7 +121,6 @@ no_cmd
 	} else {
 		lda #RETURN
 		jsr CHROUT
-		jsr CHROUT
 	}
 
 	jsr press_any_key
