@@ -31,15 +31,8 @@
 
 	sample_data_buffer				= $c800 ; 8 * 256 bytes
 
-	; this is the very last byte that'll be loaded in any serial mode,
-	; accounting for load addr, plus one disk block for expansion sake.
-	splash_128_end_check = program_start + (254*6) - 1
-}
-
-; =================================================================
-; From here on down are hard-coded KERNAL/system variables and such
-
-!addr {
+	; =================================================================
+	; From here on down are hard-coded KERNAL/system variables and such
 
 	; KERNAL zero-page variables
 
@@ -108,3 +101,9 @@ ESC									= $1b
 
 FLASHON								= $0f
 FLASHOFF							= $8f
+
+; this is the very last byte that'll be loaded in any serial mode,
+; accounting for load addr, plus one disk block for expansion sake.
+splash_128_end_check = program_start + (254*6) - 1
+
+screen_width						= 80

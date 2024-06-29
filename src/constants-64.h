@@ -36,12 +36,9 @@
 
 	VIC_SCREEN						= $c800
 	secondary_screen				= $cc00
-}
 
-; ========================================================================
-; From here on down are hard-coded KERNAL/system variables and such
-
-!addr {
+	; ========================================================================
+	; From here on down are hard-coded KERNAL/system variables and such
 
 	; KERNAL zero-page variables
 
@@ -76,3 +73,5 @@ NOSHIFTCOM							= $08
 ORG									= $81
 MGRY								= $98
 DGRY								= $97
+
+screen_width						= 40

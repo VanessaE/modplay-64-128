@@ -706,3 +706,123 @@ rts
 print_msg_rle
 	+PRINT_MSG_RLE
 rts
+
+
+;#######################
+;# C128 VDC OPERATIONS #
+;#######################
+
+!ifdef c128 {
+	vdc_read_reg_sw		; sw means "status wait", so only use this and its
+		stx VDC			; companion below when waiting for the VDC
+	-	bit VDC			; status reg to clear is required
+		bpl -
+		lda VDC+1
+	rts
+
+	vdc_write_reg_sw
+		stx VDC
+	-	bit VDC
+		bpl -
+		sta VDC+1
+	rts
+
+	; enter with vdc_fill_copy_src set to the source address,
+	; vdc_fill_copy_dst is the target, and .X is the copy length
+
+	vdc_block_copy
+	-	bit VDC
+		bpl -
+
+		lda #18
+		sta VDC
+		lda vdc_fill_copy_dst+1
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda vdc_fill_copy_dst
+		sta VDC+1
+
+	-	bit VDC
+		bpl -
+
+		lda #24
+		sta VDC
+		lda #$a0
+		sta VDC+1
+
+		lda #32
+		sta VDC
+		lda vdc_fill_copy_src+1
+		sta VDC+1
+
+		lda #33
+		sta VDC
+		lda vdc_fill_copy_src
+		sta VDC+1
+
+		lda #30
+		sta VDC
+		stx VDC+1
+	rts
+
+	; enter with vdc_fill_copy_dst = start address, .A = fill byte,
+	; .X = fill length
+
+	vdc_block_fill
+		sta vdc_fill_copy_temp
+	-	bit VDC
+		bpl -
+
+		lda #18
+		sta VDC
+		lda vdc_fill_copy_dst+1
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda vdc_fill_copy_dst
+		sta VDC+1
+
+		lda #31
+		sta VDC
+		lda vdc_fill_copy_temp
+		sta VDC+1
+
+		lda #24
+		sta VDC
+		lda #$20
+		sta VDC+1
+
+		lda #30
+		sta VDC
+		stx VDC+1
+
+		lda vdc_fill_copy_temp
+	rts
+
+	; this extends the previous block fill, .A = fill byte, .X = fill length
+
+	vdc_block_fill_extend
+		sta vdc_fill_copy_temp
+	-	bit VDC
+		bpl -
+
+		lda #31
+		sta VDC
+		lda vdc_fill_copy_temp
+		sta VDC+1
+
+		lda #24
+		sta VDC
+		lda #$20
+		sta VDC+1
+
+		lda #30
+		sta VDC
+		stx VDC+1
+		lda vdc_fill_copy_temp
+
+	rts
+}

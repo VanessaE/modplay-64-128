@@ -20,6 +20,13 @@
 	file_list_number_row		= 3
 	file_list_number_column		= 17
 	file_sizes_column			= 21
+
+	pl_pane_su_src_addr = VDC_SCREEN + (playlist_bottom_row + 2)*80 + playlist_left_column + 5
+	pl_pane_su_dst_addr = VDC_SCREEN + (playlist_bottom_row + 3)*80 + playlist_left_column + 5
+
+	pl_pane_sd_src_addr = VDC_SCREEN + (playlist_top_row + 4)*80 + playlist_left_column + 5
+	pl_pane_sd_dst_addr = VDC_SCREEN + (playlist_top_row + 3)*80 + playlist_left_column + 5
+
 }
 
 playlist_half_page_size = (playlist_bottom_row - playlist_top_row) / 2
@@ -291,6 +298,10 @@ display_playlist
 	jsr fill_playlist_colors
 rts
 
+; NOTE:  "up" or "down" in these subroutines refer to the playlist pane's
+; movement within the list, not the direction the text moves on the screen!
+; (that is, the text shifts up to "scroll/page down", and vice versa)
+
 playlist_scroll_up
 	ldx playlist_scroll_pos
 	dex
@@ -299,36 +310,47 @@ playlist_scroll_up
 	rts
 
 +	stx playlist_scroll_pos
+
 	!ifndef c128 {
-			ldx #15
-		-	!for .row, 18, 3 {
+		ldx #15
+	-	!for .row, 18, 3 {
 			lda VIC_SCREEN+.row*40+1,x
 			sta VIC_SCREEN+(.row+1)*40+1,x
 		}
+
 		dex
 		bpl -
 
 	} else {
 
+		lda #<pl_pane_su_src_addr
+		sta vdc_fill_copy_src
+		lda #>pl_pane_su_src_addr
+		sta vdc_fill_copy_src+1
+
+		lda #<pl_pane_su_dst_addr
+		sta vdc_fill_copy_dst
+		lda #>pl_pane_su_dst_addr
+		sta vdc_fill_copy_dst+1
+
 		ldy #17
-		+VDC_BLOCK_COPY_INIT VDC_SCREEN+20*80+5, VDC_SCREEN+21*80+5
 
 		ldx #26
 	-	jsr vdc_block_copy
 
 		sec
-		lda tempzp_d
+		lda vdc_fill_copy_src
 		sbc #80
-		sta tempzp_d
+		sta vdc_fill_copy_src
 		bcs +
-		dec tempzp_d+1
+		dec vdc_fill_copy_src+1
 
 	+	sec
-		lda tempzp_e
+		lda vdc_fill_copy_dst
 		sbc #80
-		sta tempzp_e
+		sta vdc_fill_copy_dst
 		bcs +
-		dec tempzp_e+1
+		dec vdc_fill_copy_dst+1
 
 	+	dey
 		bpl -
@@ -359,25 +381,34 @@ playlist_scroll_down
 
 	} else {
 
+		lda #<pl_pane_sd_src_addr
+		sta vdc_fill_copy_src
+		lda #>pl_pane_sd_src_addr
+		sta vdc_fill_copy_src+1
+
+		lda #<pl_pane_sd_dst_addr
+		sta vdc_fill_copy_dst
+		lda #>pl_pane_sd_dst_addr
+		sta vdc_fill_copy_dst+1
+
 		ldy #17
-		+VDC_BLOCK_COPY_INIT VDC_SCREEN+4*80+5, VDC_SCREEN+3*80+5
 
 		ldx #26
 	-	jsr vdc_block_copy
 
 		clc
-		lda tempzp_d
+		lda vdc_fill_copy_src
 		adc #80
-		sta tempzp_d
+		sta vdc_fill_copy_src
 		bcc +
-		inc tempzp_d+1
+		inc vdc_fill_copy_src+1
 
 	+	clc
-		lda tempzp_e
+		lda vdc_fill_copy_dst
 		adc #80
-		sta tempzp_e
+		sta vdc_fill_copy_dst
 		bcc +
-		inc tempzp_e+1
+		inc vdc_fill_copy_dst+1
 
 	+	dey
 		bpl -
@@ -403,7 +434,13 @@ scroll_add_row
 		dex
 		bpl -
 	} else {
-		+VDC_BLOCK_FILL VDC_SCREEN+21*80+5, 25, $20
+		lda #<(VDC_SCREEN+21*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_SCREEN+21*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #$20
+		ldx #25
+		jsr vdc_block_fill
 	}
 	clc
 	lda playlist_scroll_pos
@@ -419,7 +456,13 @@ scroll_add_row
 		dex
 		bpl -
 	} else {
-		+VDC_BLOCK_FILL VDC_SCREEN+3*80+5, 25, $20
+		lda #<(VDC_SCREEN+3*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_SCREEN+3*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #$20
+		ldx #25
+		jsr vdc_block_fill
 	}
 	sec
 	lda playlist_scroll_pos
@@ -562,25 +605,93 @@ fill_playlist_colors
 		kb_color		= $86 ; dark cyan
 		kb_fade			= $83 ; light blue
 
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES+ 3*80+5, 25, main_fade2
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES+ 4*80+5, 16, main_fade1
-		+VDC_BLOCK_FILL_CONT 5, num_fade
-		+VDC_BLOCK_FILL_CONT 2, kb_fade
+		lda #<(VDC_ATTRIBUTES+ 3*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_ATTRIBUTES+ 3*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #main_fade2
+		ldx #25
+		jsr vdc_block_fill
+
+		lda #<(VDC_ATTRIBUTES+ 4*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_ATTRIBUTES+ 4*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #main_fade1
+		ldx #16
+		jsr vdc_block_fill
+
+		ldx #5
+		lda #num_fade
+		jsr vdc_block_fill_extend
+		ldx #2
+		lda #kb_fade
+		jsr vdc_block_fill_extend
+
 		!for .row, 5, 11 {
-			+VDC_BLOCK_FILL VDC_ATTRIBUTES+.row*80+5, 16, main_color
-			+VDC_BLOCK_FILL_CONT 5, num_color
-			+VDC_BLOCK_FILL_CONT 2, kb_color
+			lda #<(VDC_ATTRIBUTES+.row*80+5)
+			sta vdc_fill_copy_dst
+			lda #>(VDC_ATTRIBUTES+.row*80+5)
+			sta vdc_fill_copy_dst+1
+			lda #main_color
+			ldx #16
+			jsr vdc_block_fill
+
+			ldx #5
+			lda #num_color
+			jsr vdc_block_fill_extend
+			ldx #2
+			lda #kb_color
+			jsr vdc_block_fill_extend
 		}
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES+12*80+5, 26, hl_color
+
+		lda #<(VDC_ATTRIBUTES+12*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_ATTRIBUTES+12*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #hl_color
+		ldx #25
+		jsr vdc_block_fill
+
 		!for .row, 13, 19 {
-			+VDC_BLOCK_FILL VDC_ATTRIBUTES+.row*80+5, 16, main_color
-			+VDC_BLOCK_FILL_CONT 5, num_color
-			+VDC_BLOCK_FILL_CONT 2, kb_color
+			lda #<(VDC_ATTRIBUTES+.row*80+5)
+			sta vdc_fill_copy_dst
+			lda #>(VDC_ATTRIBUTES+.row*80+5)
+			sta vdc_fill_copy_dst+1
+			lda #main_color
+			ldx #16
+			jsr vdc_block_fill
+
+			ldx #5
+			lda #num_color
+			jsr vdc_block_fill_extend
+			ldx #2
+			lda #kb_color
+			jsr vdc_block_fill_extend
 		}
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES+20*80+5, 16, main_fade1
-		+VDC_BLOCK_FILL_CONT 5, num_fade
-		+VDC_BLOCK_FILL_CONT 2, kb_fade
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES+21*80+5, 25, main_fade2
+
+		lda #<(VDC_ATTRIBUTES+20*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_ATTRIBUTES+20*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #main_fade1
+		ldx #16
+		jsr vdc_block_fill
+
+		ldx #5
+		lda #num_fade
+		jsr vdc_block_fill_extend
+		ldx #2
+		lda #kb_fade
+		jsr vdc_block_fill_extend
+
+		lda #<(VDC_ATTRIBUTES+21*80+5)
+		sta vdc_fill_copy_dst
+		lda #>(VDC_ATTRIBUTES+21*80+5)
+		sta vdc_fill_copy_dst+1
+		lda #main_fade2
+		ldx #25
+		jsr vdc_block_fill
 	}
 rts
 

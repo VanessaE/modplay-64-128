@@ -345,7 +345,13 @@ populate_mini_popup_loader
 	jsr CHROUT
 
 	!ifdef c128 {
-		+VDC_BLOCK_FILL progbar_attr_pos, 15, 5 ; (light green, ASCII charset)
+		lda #<progbar_attr_pos
+		sta vdc_fill_copy_dst
+		lda #>progbar_attr_pos
+		sta vdc_fill_copy_dst+1
+		ldx #15
+		lda #5					; (light green, ASCII charset)
+		jsr vdc_block_fill
 	}
 rts
 

@@ -264,8 +264,11 @@ program_start							= $1e00
 	stash_size							= $17d2 ; 2 bytes
 
 	expansion_memory_start_pointer		= $17d4 ; 3 bytes
+	vdc_fill_copy_src					= $17d7 ; 2 bytes
+	vdc_fill_copy_dst					= $17d9 ; 2 bytes
+	vdc_fill_copy_temp					= $17db
 
-	; free: $17d7 through $17ef
+	; free: $17dc through $17ef
 
 	; various program vectors
 

@@ -20,9 +20,19 @@ gray_out
 		dey
 		bne -
 	} else {
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES, 255, $81
+
+		lda #<VDC_ATTRIBUTES
+		sta vdc_fill_copy_dst
+		lda #>VDC_ATTRIBUTES
+		sta vdc_fill_copy_dst+1
+		lda #$81
+		ldx #255
+		jsr vdc_block_fill
+
 		ldy #7
-	-	+VDC_BLOCK_FILL_CONT 255, $81
+		ldx #255
+		lda #$81
+	-	jsr vdc_block_fill_extend
 		dey
 		bne -
 	}
@@ -92,68 +102,20 @@ rts
 
 !ifdef c128 {
 	reset_attributes_charset
-		+VDC_BLOCK_FILL VDC_ATTRIBUTES, 255, 1
+
+		lda #<VDC_ATTRIBUTES
+		sta vdc_fill_copy_dst
+		lda #>VDC_ATTRIBUTES
+		sta vdc_fill_copy_dst+1
+		lda #$01
+		ldx #255
+		jsr vdc_block_fill
+
 		ldy #7
-	-	+VDC_BLOCK_FILL_CONT 255, 1
+		ldx #255
+		lda #$01
+	-	jsr vdc_block_fill_extend
 		dey
 		bne -
-	rts
-}
-
-;#######################
-;# C128 VDC OPERATIONS #
-;#######################
-
-!ifdef c128 {
-	vdc_read_reg_sw		; sw means "status wait", so only use this and its
-		stx VDC			; companion below when waiting for the VDC
-	-	bit VDC			; status reg to clear is required
-		bpl -
-		lda VDC+1
-	rts
-
-	vdc_write_reg_sw
-		stx VDC
-	-	bit VDC
-		bpl -
-		sta VDC+1
-	rts
-
-	; first use the VDC_BLOCK_COPY_INIT macro, then enter with .X = length
-	vdc_block_copy
-	-	bit VDC
-		bpl -
-
-		lda #18
-		sta VDC
-		lda tempzp_e+1
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda tempzp_e
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
-
-		lda #24
-		sta VDC
-		lda #$a0
-		sta VDC+1
-
-		lda #32
-		sta VDC
-		lda tempzp_d+1
-		sta VDC+1
-
-		lda #33
-		sta VDC
-		lda tempzp_d
-		sta VDC+1
-
-		lda #30
-		sta VDC
-		stx VDC+1
 	rts
 }

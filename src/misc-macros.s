@@ -94,68 +94,6 @@
 	+
 }
 
-!macro VDC_BLOCK_COPY_INIT .src, .dst {
-	lda #<.src
-	sta tempzp_d
-	lda #>.src
-	sta tempzp_d+1
-
-	lda #<.dst
-	sta tempzp_e
-	lda #>.dst
-	sta tempzp_e+1
-}
-
-!macro VDC_BLOCK_FILL .dst, .len, .fill {
--	bit VDC
-	bpl -
-
-	lda #18
-	sta VDC
-	lda #>.dst
-	sta VDC+1
-
-	lda #19
-	sta VDC
-	lda #<.dst
-	sta VDC+1
-
-	lda #31
-	sta VDC
-	lda #.fill
-	sta VDC+1
-
-	lda #24
-	sta VDC
-	lda #$20
-	sta VDC+1
-
-	lda #30
-	sta VDC
-	lda #.len
-	sta VDC+1
-}
-
-!macro VDC_BLOCK_FILL_CONT .len2, .fill2 {
--	bit VDC
-	bpl -
-
-	lda #31
-	sta VDC
-	lda #.fill2
-	sta VDC+1
-
-	lda #24
-	sta VDC
-	lda #$20
-	sta VDC+1
-
-	lda #30
-	sta VDC
-	lda #.len2
-	sta VDC+1
-}
-
 !macro SCREEN_ONOFF {
 	disable_screen
 		lda VIC+$11
