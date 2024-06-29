@@ -119,3 +119,174 @@ rts
 		bne -
 	rts
 }
+
+scroll_area_down
+	clc
+	lda scroll_area_base_addr
+
+	!ifndef c128 {
+		sta tempzp_d
+		adc #screen_width
+		sta tempzp_e
+		lda scroll_area_base_addr+1
+		sta tempzp_d+1
+		adc #0
+		sta tempzp_e+1
+	} else {
+		sta vdc_fill_copy_src
+		adc #screen_width
+		sta vdc_fill_copy_dst
+		lda scroll_area_base_addr+1
+		sta vdc_fill_copy_src+1
+		adc #0
+		sta vdc_fill_copy_dst+1
+	}
+
+	ldx scroll_area_height
+
+	scroll_down_loop
+
+		!ifndef c128 {
+
+			ldy scroll_area_width
+			dey
+		-	lda (tempzp_d),y
+			sta (tempzp_e),y
+			dey
+			bpl -
+
+			sec
+			lda tempzp_d
+			sbc #screen_width
+			sta tempzp_d
+			lda tempzp_d+1
+			sbc #0
+			sta tempzp_d+1
+
+			lda tempzp_e
+			sbc #screen_width
+			sta tempzp_e
+			lda tempzp_e+1
+			sbc #0
+			sta tempzp_e+1
+
+		} else {
+
+			ldy scroll_area_width
+			dey
+			jsr vdc_block_copy
+
+			sec
+			lda vdc_fill_copy_src
+			sbc #screen_width
+			sta vdc_fill_copy_src
+			lda vdc_fill_copy_src+1
+			sbc #0
+			sta vdc_fill_copy_src+1
+
+			lda vdc_fill_copy_dst
+			sbc #screen_width
+			sta vdc_fill_copy_dst
+			lda vdc_fill_copy_dst+1
+			sbc #0
+			sta vdc_fill_copy_dst+1
+		}
+
+	+	dex
+		bne scroll_down_loop
+
+jmp blank_out_last_scrolled_line ; exit through that routine
+
+
+scroll_area_up
+	sec
+	lda scroll_area_base_addr
+
+	!ifndef c128 {
+		sta tempzp_d
+		sbc #screen_width
+		sta tempzp_e
+		lda scroll_area_base_addr+1
+		sta tempzp_d+1
+		sbc #0
+		sta tempzp_e+1
+	} else {
+		sta vdc_fill_copy_src
+		sbc #screen_width
+		sta vdc_fill_copy_dst
+		lda scroll_area_base_addr+1
+		sta vdc_fill_copy_src+1
+		sbc #0
+		sta vdc_fill_copy_dst+1
+	}
+
+	ldx scroll_area_height
+
+	scroll_up_loop
+
+		!ifndef c128 {
+
+			ldy scroll_area_width
+			dey
+		-	lda (tempzp_d),y
+			sta (tempzp_e),y
+			dey
+			bpl -
+
+			clc
+			lda tempzp_d
+			adc #screen_width
+			sta tempzp_d
+			lda tempzp_d+1
+			adc #0
+			sta tempzp_d+1
+
+			lda tempzp_e
+			adc #screen_width
+			sta tempzp_e
+			lda tempzp_e+1
+			adc #0
+			sta tempzp_e+1
+
+		} else {
+
+			ldy scroll_area_width
+			dey
+			jsr vdc_block_copy
+
+			clc
+			lda vdc_fill_copy_src
+			adc #screen_width
+			sta vdc_fill_copy_src
+			lda vdc_fill_copy_src+1
+			adc #0
+			sta vdc_fill_copy_src+1
+
+			lda vdc_fill_copy_dst
+			adc #screen_width
+			sta vdc_fill_copy_dst
+			lda vdc_fill_copy_dst+1
+			adc #0
+			sta vdc_fill_copy_dst+1
+		}
+
+	+	dex
+		bne scroll_up_loop
+; just fall through
+
+blank_out_last_scrolled_line
+	!ifndef c128 {
+		ldy #0
+		lda #$20
+	-	sta (tempzp_e),y
+		iny
+		cpy scroll_area_width
+		bne -
+	} else {
+		lda #$20
+		ldx scroll_area_width
+		dex
+		jsr vdc_block_fill
+	}
+
+rts

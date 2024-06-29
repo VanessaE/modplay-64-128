@@ -267,8 +267,11 @@ program_start							= $1e00
 	vdc_fill_copy_src					= $17d7 ; 2 bytes
 	vdc_fill_copy_dst					= $17d9 ; 2 bytes
 	vdc_fill_copy_temp					= $17db
+	scroll_area_base_addr				= $17dc ; 2 bytes
+	scroll_area_width					= $17de
+	scroll_area_height					= $17df
 
-	; free: $17dc through $17ef
+	; free: $17e0 through $17ef
 
 	; various program vectors
 

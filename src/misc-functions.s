@@ -728,7 +728,7 @@ rts
 	rts
 
 	; enter with vdc_fill_copy_src set to the source address,
-	; vdc_fill_copy_dst is the target, and .X is the copy length
+	; vdc_fill_copy_dst is the target, and .Y is the copy length
 
 	vdc_block_copy
 	-	bit VDC
@@ -764,7 +764,7 @@ rts
 
 		lda #30
 		sta VDC
-		stx VDC+1
+		sty VDC+1
 	rts
 
 	; enter with vdc_fill_copy_dst = start address, .A = fill byte,

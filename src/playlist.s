@@ -7,25 +7,28 @@
 	playlist_top_row			= 3
 	playlist_bottom_row			= 19
 	playlist_left_column		= 1
+	playlist_width				= 16
 	dirname_row					= 2
 	dirname_col					= 1
 	file_list_number_row		= 14
 	file_list_number_column		= 22
+
+	pl_pane_su_src_addr = VIC_SCREEN + (playlist_bottom_row - 1)*40 + playlist_left_column
+	pl_pane_sd_src_addr = VIC_SCREEN + (playlist_top_row + 1)*40 + playlist_left_column
+
 } else {
 	playlist_top_row			= 0
 	playlist_bottom_row			= 18
 	playlist_left_column		= 1
+	playlist_width				= 26
 	dirname_row					= 2
 	dirname_col					= 9
 	file_list_number_row		= 3
 	file_list_number_column		= 17
 	file_sizes_column			= 21
 
-	pl_pane_su_src_addr = VDC_SCREEN + (playlist_bottom_row + 2)*80 + playlist_left_column + 5
-	pl_pane_su_dst_addr = VDC_SCREEN + (playlist_bottom_row + 3)*80 + playlist_left_column + 5
-
-	pl_pane_sd_src_addr = VDC_SCREEN + (playlist_top_row + 4)*80 + playlist_left_column + 5
-	pl_pane_sd_dst_addr = VDC_SCREEN + (playlist_top_row + 3)*80 + playlist_left_column + 5
+	pl_pane_su_src_addr = VDC_SCREEN + (playlist_bottom_row + 2)*80 + playlist_left_column + 4
+	pl_pane_sd_src_addr = VDC_SCREEN + (playlist_top_row + 4)*80 + playlist_left_column + 4
 
 }
 
@@ -301,6 +304,9 @@ rts
 ; NOTE:  "up" or "down" in these subroutines refer to the playlist pane's
 ; movement within the list, not the direction the text moves on the screen!
 ; (that is, the text shifts up to "scroll/page down", and vice versa)
+;
+; except for the calls to scroll_area_down/up -- those refer to the direction
+; the text moves
 
 playlist_scroll_up
 	ldx playlist_scroll_pos
@@ -311,54 +317,20 @@ playlist_scroll_up
 
 +	stx playlist_scroll_pos
 
-	!ifndef c128 {
-		ldx #15
-	-	!for .row, 18, 3 {
-			lda VIC_SCREEN+.row*40+1,x
-			sta VIC_SCREEN+(.row+1)*40+1,x
-		}
+	lda #<pl_pane_su_src_addr
+	sta scroll_area_base_addr
+	lda #>pl_pane_su_src_addr
+	sta scroll_area_base_addr+1
 
-		dex
-		bpl -
+	lda #playlist_width
+	sta scroll_area_width
+	lda #(playlist_bottom_row - playlist_top_row)
+	sta scroll_area_height
 
-	} else {
-
-		lda #<pl_pane_su_src_addr
-		sta vdc_fill_copy_src
-		lda #>pl_pane_su_src_addr
-		sta vdc_fill_copy_src+1
-
-		lda #<pl_pane_su_dst_addr
-		sta vdc_fill_copy_dst
-		lda #>pl_pane_su_dst_addr
-		sta vdc_fill_copy_dst+1
-
-		ldy #17
-
-		ldx #26
-	-	jsr vdc_block_copy
-
-		sec
-		lda vdc_fill_copy_src
-		sbc #80
-		sta vdc_fill_copy_src
-		bcs +
-		dec vdc_fill_copy_src+1
-
-	+	sec
-		lda vdc_fill_copy_dst
-		sbc #80
-		sta vdc_fill_copy_dst
-		bcs +
-		dec vdc_fill_copy_dst+1
-
-	+	dey
-		bpl -
-	}
+	jsr scroll_area_down
 
 	ldx #playlist_top_row
 	jmp scroll_add_row
-
 
 playlist_scroll_down
 	clc
@@ -369,51 +341,17 @@ playlist_scroll_down
 	rts
 
 +	sta playlist_scroll_pos
+	lda #<pl_pane_sd_src_addr
+	sta scroll_area_base_addr
+	lda #>pl_pane_sd_src_addr
+	sta scroll_area_base_addr+1
 
-	!ifndef c128 {
-			ldx #15
-		-	!for .row, 3, 18 {
-			lda VIC_SCREEN+(.row+1)*40+1,x
-			sta VIC_SCREEN+.row*40+1,x
-		}
-		dex
-		bpl -
+	lda #playlist_width
+	sta scroll_area_width
+	lda #(playlist_bottom_row - playlist_top_row)
+	sta scroll_area_height
 
-	} else {
-
-		lda #<pl_pane_sd_src_addr
-		sta vdc_fill_copy_src
-		lda #>pl_pane_sd_src_addr
-		sta vdc_fill_copy_src+1
-
-		lda #<pl_pane_sd_dst_addr
-		sta vdc_fill_copy_dst
-		lda #>pl_pane_sd_dst_addr
-		sta vdc_fill_copy_dst+1
-
-		ldy #17
-
-		ldx #26
-	-	jsr vdc_block_copy
-
-		clc
-		lda vdc_fill_copy_src
-		adc #80
-		sta vdc_fill_copy_src
-		bcc +
-		inc vdc_fill_copy_src+1
-
-	+	clc
-		lda vdc_fill_copy_dst
-		adc #80
-		sta vdc_fill_copy_dst
-		bcc +
-		inc vdc_fill_copy_dst+1
-
-	+	dey
-		bpl -
-	}
-
+	jsr scroll_area_up
 	ldx #playlist_bottom_row
 
 scroll_add_row
@@ -422,55 +360,24 @@ scroll_add_row
 	clc
 	ldy #playlist_left_column
 	jsr PLOT
-	lda #$20
 	ldx screen_row_to_print_at
 	cpx #playlist_top_row
-	beq .scrolling_up
+	beq +
 
-.scrolling_down
-	!ifndef c128 {
-		ldx #15
-	-	sta VIC_SCREEN+19*40+1,x
-		dex
-		bpl -
-	} else {
-		lda #<(VDC_SCREEN+21*80+5)
-		sta vdc_fill_copy_dst
-		lda #>(VDC_SCREEN+21*80+5)
-		sta vdc_fill_copy_dst+1
-		lda #$20
-		ldx #25
-		jsr vdc_block_fill
-	}
 	clc
 	lda playlist_scroll_pos
 	adc #playlist_half_page_size
 	cmp playlist_length
-	bcc .printit
+	bcc print_it
 	rts
 
-.scrolling_up
-	!ifndef c128 {
-		ldx #15
-	-	sta VIC_SCREEN+3*40+1,x
-		dex
-		bpl -
-	} else {
-		lda #<(VDC_SCREEN+3*80+5)
-		sta vdc_fill_copy_dst
-		lda #>(VDC_SCREEN+3*80+5)
-		sta vdc_fill_copy_dst+1
-		lda #$20
-		ldx #25
-		jsr vdc_block_fill
-	}
-	sec
++	sec
 	lda playlist_scroll_pos
 	sbc #playlist_half_page_size
-	bcs .printit
+	bcs print_it
 	rts
 
-.printit
+print_it
 	sta playlist_print_file_counter
 	tay
 	lda #DGRY
