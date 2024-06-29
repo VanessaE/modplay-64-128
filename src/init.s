@@ -294,11 +294,6 @@ init
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
-	lda #4
-	sta last_volume_tables_resolution
-	lda #0
-	sta allow_regen_msg
-	sta last_isr_trigger_interval
 	jsr regen_all_tables
 
 	; Codefault's count raster lines code, to know if PAL or NTSC
