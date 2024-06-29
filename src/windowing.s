@@ -218,6 +218,12 @@ rts
 ; enter with .X/.Y = the window dimensions,
 ; and with carry set to use ASCII (only on C64 C128 doesn't need it)
 
+!ifndef c128 {
+	bl_color = MGRY
+} else {
+	bl_color = LGRY
+}
+
 draw_window
 	php
 	jsr calculate_corners
@@ -286,7 +292,7 @@ draw_window
 	dey
 	bne -
 
-	lda #DGRY			; and follow it with the right edge
+	lda #bl_color			; and follow it with the right edge
 	jsr CHROUT
 	!ifdef c128 {		; on the C128 it'll always be a reverse $a1 anyway.
 		lda #RVSON
@@ -310,7 +316,7 @@ draw_window
 	+LDA_BL_CORNER
 	+PRINT_CHAR
 
-	lda #DGRY			; print bottom edge
+	lda #bl_color			; print bottom edge
 	jsr CHROUT
 	ldy num_columns
 	+LDA_BOT_EDGE

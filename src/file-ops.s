@@ -54,6 +54,7 @@ rts
 }
 
 request_dos_command
+	jsr gray_out
 	clc
 	jsr draw_text_input_popup
 
@@ -127,6 +128,7 @@ no_cmd
 rts
 
 request_filename
+	jsr gray_out
 	clc
 	jsr draw_text_input_popup
 

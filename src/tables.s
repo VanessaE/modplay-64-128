@@ -203,6 +203,7 @@ regen_all_tables
 		bit enable_screen_on_playback ; because if it's enabled, the display will
 		bmi +						; have switched to ASCII mode by this point.
 
+		jsr gray_out
 		jsr draw_short_popup
 		lda #0
 		ldx #<main_player_regen_tables_msg

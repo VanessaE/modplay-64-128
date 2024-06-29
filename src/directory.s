@@ -4,6 +4,7 @@
 
 show_directory
 	!ifdef c128 {
+		jsr gray_out
 		clc
 		jsr draw_tall_popup
 	} else {

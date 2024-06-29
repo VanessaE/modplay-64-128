@@ -225,6 +225,7 @@ abort_load
 rts
 
 populate_mini_popup_loader
+	jsr gray_out
 	clc
 	jsr draw_mini_popup
 

@@ -37,6 +37,7 @@ load_directory
 	jsr dir_open
 	jsr .err
 
+	jsr gray_out
 	clc
 	jsr draw_mini_popup
 

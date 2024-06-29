@@ -110,7 +110,8 @@ test_loader_compatibility
 	beq +								; then we already tested it.
 	rts
 
-+	clc
++	jsr gray_out
+	clc
 	jsr draw_mini_popup
 
 	lda #0

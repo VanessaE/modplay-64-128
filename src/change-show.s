@@ -83,6 +83,7 @@ toggle_repeat
 + rts
 
 choose_audio_driver
+	jsr gray_out
 	clc
 	jsr draw_mini_popup
 	lda #0
@@ -93,6 +94,7 @@ choose_audio_driver
 rts
 
 choose_memory_driver
+	jsr gray_out
 	clc
 	jsr draw_mini_popup
 	lda #0
@@ -666,6 +668,7 @@ change_resonance_setting
 }
 
 save_config
+	jsr gray_out
 	clc
 	jsr draw_mini_popup
 
