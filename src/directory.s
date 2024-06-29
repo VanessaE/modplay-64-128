@@ -3,6 +3,10 @@
 !text "directory",0
 
 show_directory
+	jsr dir_open
+	jsr dir_err_check
+
+show_directory_cmd_prompt_entry
 	!ifdef c128 {
 		jsr gray_out
 		clc
@@ -14,9 +18,6 @@ show_directory
 
 	lda #YEL
 	jsr CHROUT
-
-	jsr dir_open
-	jsr dir_err_check
 
 	jsr CHRIN			; get/ignore the first four bytes
 	jsr CHRIN
@@ -128,11 +129,17 @@ dir_finish
 	}
 rts
 
-
 dir_open
 	lda #1
 	ldx #<dirname
 	ldy #>dirname
+	sec
+	jsr open_file
+rts						; will exit with carry set if it can't open
+
+dir_open_for_cmd_prompt
+	ldx #<string_buffer
+	ldy #>string_buffer
 	sec
 	jsr open_file
 rts						; will exit with carry set if it can't open

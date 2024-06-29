@@ -36,13 +36,6 @@
   how to measure "done", and perhaps the total width of the bar (number of
   chars on the line that is).
 
-* use the gray-out function in all other cases where there's a popup over the
-  main menu, as done in the player UI.  Treat it like "window dimming" as some
-  PC desktops use.
-
-* Check if the user enters a DOS command beginning with $, use the whole
-  input as a pattern for the directory function.
-
 
 ####################
 ##  KNOWN ISSUES  ##

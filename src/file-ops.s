@@ -84,8 +84,16 @@ request_dos_command
 	jsr get_text_input
 	beq no_cmd
 
-	clc
 	tya
+	ldy string_buffer ; is the first byte of input a "$"?
+	cpy #"$"
+	bne +
+
+	jsr dir_open_for_cmd_prompt
+	jsr dir_err_check
+	jmp show_directory_cmd_prompt_entry
+
++	clc
 	ora #$80
 	ldx #<string_buffer
 	ldy #>string_buffer
