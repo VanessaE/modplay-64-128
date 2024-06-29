@@ -37,6 +37,7 @@
 start
 	sei
 	jsr enable_kernal_only
+
 	jsr init
 
 	!ifndef c128 {
@@ -49,7 +50,6 @@ start
 	}
 
 	jmp show_main_menu ; and away we go!
-
 
 ; additional code goes here
 

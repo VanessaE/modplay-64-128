@@ -10,6 +10,9 @@ reu_banknum
 reu_sig_candidate_start
 	!text $ff,"icanhaz?"; same length as above
 
+lockout_interrupts ; any interrupt that gets here exits unacknowledged
+rti
+
 init
 	!ifdef c128 {
 		lda #1
@@ -449,6 +452,7 @@ fmemtxt
 
 charset_copy
 	!ifndef c128 {
+		sei
 		jsr enable_char_rom_only
 
 		; park the ASCII charset in RAM at $d000
@@ -488,9 +492,8 @@ charset_copy
 		lda tempzp_d+1
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
-
 		jsr enable_kernal_only
-	rts
+
 	} else {				; on the C128, upload it to the VDC
 		lda #<charset_128_alt
 		sta tempzp_d
@@ -530,8 +533,8 @@ charset_copy
 	+	lda tempzp_d+1
 		cmp #>(charset_128_alt+$0800)
 		bne .nextchar
-	rts
-}
+	}
+rts
 
 !ifndef c128 {
 	blur_table_copy

@@ -67,13 +67,7 @@ isr_startup
 	lda #0
 	sta CIA1+$07
 
-	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
-	lda #<lockout_nmi		; while changing this vector, this'll make sure it
-	sta CPU_NMI_vector		; is always "whole".
-	lda #>lockout_nmi
-	sta CPU_NMI_vector+1
-	jsr disable_roms
-
+	; force CIA2 to generate an NMI so that we can lock them out.
 	lda #0					; stop CIA #2 timer A
 	sta CIA2+$0e
 	sta CIA2+$04			; set Timer A to 0, after starting
@@ -267,6 +261,13 @@ isr_shutdown
 		sta VDC+1
 	}
 rts
+
+	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
+	lda #<lockout_nmi		; while changing this vector, this'll make sure it
+	sta CPU_NMI_vector		; is always "whole".
+	lda #>lockout_nmi
+	sta CPU_NMI_vector+1
+	jsr disable_roms
 
 lockout_nmi ; exit any NMI that gets here, unacknowledged
 rti
