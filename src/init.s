@@ -27,9 +27,6 @@ init
 	ldy #>initializing_msg
 	jsr print_msg
 
-	sei
-	jsr disable_roms
-
 	!ifdef c128 { ; reset F-keys to normal PETSCII codes
 		ldy #9
 	-	lda #1
@@ -75,10 +72,7 @@ init
 	lda #0
 	sta MSGFLG ; suppress "SEARCHING FOR..." message
 
-	jsr enable_kernal_only
 	jsr test_loader_compatibility_no_popup
-	sei
-	jsr disable_roms
 
 	lda #0
 	sta current_menu_page
@@ -160,8 +154,8 @@ init
 	sta RAMLINK_REG_ENABLE		; try to enable RAMLink registers
 	lda #$30
 	sta RAMLINK_8255_PORT_C		; try to write to RAMLink 8255 Port C
-	lda #0						; reset REU DMA_ADL in case that write hit an I/O echo
-	sta DMA_ADL					; ($df42 -> $df02)
+	lda #0						; reset REU DMA_ADL in case that write hit an
+	sta DMA_ADL					; I/O echo ($df42 -> $df02)
 	lda RAMLINK_8255_PORT_C		; if this comes back correct, that write didn't
 	cmp #$30					; hit an echo, so there's a RAMLink present.
 	bne +
@@ -500,7 +494,7 @@ charset_copy
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
 
-		jsr disable_roms
+		jsr enable_kernal_only
 	rts
 	} else {				; on the C128, upload it to the VDC
 		lda #<charset_128_alt

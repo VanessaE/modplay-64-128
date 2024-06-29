@@ -4,15 +4,6 @@
 
 !macro PRINT_MSG {
 	sta print_msg_char_limit
-
-	!ifndef c128 {
-		lda $01
-	} else {
-		lda MMU
-	}
-	pha
-	jsr enable_kernal_only
-
 	dec print_msg_char_limit
 	stx print_msg_addr
 	sty print_msg_addr+1
@@ -26,13 +17,7 @@
 	bne -
 	inc print_msg_addr+1
 	bne -
-
-+	pla
-	!ifndef c128 {
-		sta $01
-	} else {
-		sta MMU
-	}
+  +
 }
 
 	; print an RLE_encoded message
@@ -58,14 +43,6 @@
 	; "64 🮖🮖🮖🮖🮖 hello world AAAAAABBBBBBBBB yeah!"
 
 !macro PRINT_MSG_RLE {
-	!ifndef c128 {
-		lda $01
-	} else {
-		lda MMU
-	}
-	pha
-	jsr enable_kernal_only
-
 	stx print_msg_addr
 	sty print_msg_addr+1
 
@@ -99,12 +76,6 @@
 	bne .lp
 
 .done
-	pla
-	!ifndef c128 {
-		sta $01
-	} else {
-		sta MMU
-	}
 }
 
 !macro PRINT_MSG_BATCH_RLE .lines, .lows, .highs {

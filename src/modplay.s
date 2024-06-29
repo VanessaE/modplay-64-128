@@ -34,31 +34,10 @@
 
 * = program_start
 
-	jmp start
-
-; extra macro calls used as functions should be placed here
-; so that they don't end up under BASIC-LOW ROM on the C128
-
-!source "src/misc-macros.s"
-
-+ROM_SWITCHING
-+SCREEN_ONOFF
-
-print_msg
-	+PRINT_MSG
-rts
-
-print_msg_rle
-	+PRINT_MSG_RLE
-rts
-
 start
-	php
 	sei
 	jsr enable_kernal_only
 	jsr init
-	jsr enable_kernal_only
-	plp
 
 	!ifndef c128 {
 		jsr disable_screen
@@ -73,6 +52,14 @@ start
 
 
 ; additional code goes here
+
+; extra macro calls used as functions should be placed here at the start,
+; so that they don't end up under BASIC-LOW ROM on the C128
+
+!source "src/misc-macros.s"
+
++ROM_SWITCHING
++SCREEN_ONOFF
 
 !source "src/loader-common.s"
 !source "src/loader-acptr.s"

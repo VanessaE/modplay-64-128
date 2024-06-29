@@ -3,7 +3,7 @@ program_title
 	!text LGRN," 128",RED," version",LRED," 2.0",WHT," - "
 	!text LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
 
-; these are all RLE-encoded for the print_msg_rle function
+; these are all RLE-encoded for the print_msg_rle* functions
 
 line_2
 	!byte $81,WHT

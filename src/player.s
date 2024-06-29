@@ -138,11 +138,7 @@ start_main_player
 		jsr print_msg_ascii
 }
 
-++	php
-	sei
-	jsr disable_roms
-
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+++	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
@@ -156,7 +152,11 @@ start_main_player
 		jsr disable_screen
 	}
 
-+	jsr backup_zero_page
++	php
+	sei
+	jsr disable_roms
+
+	jsr backup_zero_page
 
 	+JSR_INDIRECT (audio_start_vec)
 	jsr isr_startup

@@ -632,15 +632,6 @@ rts
 
 print_msg_ascii
 	sta print_msg_char_limit
-
-	!ifndef c128 {
-		lda $01
-	} else {
-		lda MMU
-	}
-	pha
-	jsr enable_kernal_only
-
 	dec print_msg_char_limit
 	stx print_msg_addr
 	sty print_msg_addr+1
@@ -656,14 +647,7 @@ print_msg_ascii
 	bne -
 	inc print_msg_addr+1
 	bne -
-
-+	pla
-	!ifndef c128 {
-		sta $01
-	} else {
-		sta MMU
-	}
-rts
++ rts
 
 print_filetype
 	lda current_file_type
@@ -714,3 +698,11 @@ print_filetype
 		ldy #>tracker_name_msg_fasttracker_ascii
 	++ rts
 }
+
+print_msg
+	+PRINT_MSG
+rts
+
+print_msg_rle
+	+PRINT_MSG_RLE
+rts
