@@ -76,14 +76,11 @@
   The automatic loader select compensates for both of these just fine, it just
   means they don't load as fast as they should otherwise be able to.
 
-* C128: "$" crashes on real hardware if the dir listing scrolls.  Also the
-  menu gets all funky on pressing DOWN after loading up a file list, like it's
-  painting the whole screen inside of just the file list pane.
+* C128: "$" crashes on real hardware if the dir listing scrolls, but it only
+  happens on a friend's machine, not on my C128-DCR, and it's fine in VICE.
 
-* C128: regular player crashes on "Skate or Die" but only on real hardware.
-  I think it's the same bug as with "$" and the file list pane, as that file
-  is the only one on the .D71 that has a title long enough to cause the popup
-  to scroll. 
+* C128: regular player crashes on real hardware after displaying some of the
+  UI.
  
 * C128: single sample player just crashes (not that it's supposed to DO
   anything just yet).

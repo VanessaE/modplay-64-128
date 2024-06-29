@@ -134,6 +134,9 @@ rts
 		lda tempzp_e
 		sta VDC+1
 
+	-	bit VDC
+		bpl -
+
 		lda #24
 		sta VDC
 		lda #$a0
