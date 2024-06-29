@@ -2,19 +2,18 @@
 
 !text "directory",0
 
+c64_dir_popup_base_addr = VIC_SCREEN + 3*40 + 5
+c64_dir_height = 20
+c64_dir_width = 30
+
 show_directory
 	jsr dir_open
 	jsr dir_err_check
 
 show_directory_cmd_prompt_entry
-	!ifdef c128 {
-		jsr gray_out
-		clc
-		jsr draw_tall_popup
-	} else {
-		lda #CLR
-		jsr CHROUT
-	}
+	jsr gray_out
+	clc
+	jsr draw_tall_popup
 
 	lda #YEL
 	jsr CHROUT
@@ -47,8 +46,8 @@ show_directory_cmd_prompt_entry
 	ldy #>string_buffer
 	jsr print_msg
 
-	lda #$0d
-	jsr CHROUT				; print return
+	lda #RETURN
+	jsr CHROUT
 
 -	jsr CHRIN				; skip first two bytes of each dir entry
 	jsr CHRIN
@@ -58,6 +57,13 @@ show_directory_cmd_prompt_entry
 
 	lda #RIGHT
 	jsr CHROUT
+
+	!ifndef c128 {
+		lda #0
+		ldx #<dir_window_left_margin
+		ldy #>dir_window_left_margin
+		jsr print_msg
+	}
 
 	lda #0
 	ldx #<uint16_string_buf_trim
@@ -69,13 +75,17 @@ show_directory_cmd_prompt_entry
 
 	jsr dir_read_line
 
-	lda #0
+	lda #23
 	ldx #<string_buffer
 	ldy #>string_buffer
 	jsr print_msg
 
-	lda #$0d
-	jsr CHROUT				; print return
+	lda #RETURN
+	jsr CHROUT
+
+	!ifndef c128 {
+		jsr check_if_need_to_scroll
+	}
 
 	jsr check_com_key		; we just care that if pressed, it'll hold there.
 
@@ -92,6 +102,19 @@ dir_err_check
 	beq +					; in which case we just exit normally.
 
 	pha						; any other value is an error code
+
+	lda #RETURN
+	jsr CHROUT
+
+	!ifndef c128 {
+		lda #0
+		ldx #<dir_window_left_margin
+		ldy #>dir_window_left_margin
+		jsr print_msg
+
+		jsr check_if_need_to_scroll
+	}
+
 	lda #0
 	ldx #<default_error_message
 	ldy #>default_error_message
@@ -103,7 +126,7 @@ dir_err_check
 	ldy #0
 	jsr print_uint16
 
-	lda #$0d ; Return
+	lda #RETURN
 	jsr CHROUT
 
 +	pla						; pull the last return address off the stack
@@ -112,11 +135,22 @@ dir_err_check
 dir_finish
 	jsr close_file
 
-	lda #$0d
+	lda #RETURN
 	jsr CHROUT
+
+	!ifndef c128 {
+		jsr check_if_need_to_scroll
+	}
 
 	lda #RIGHT
 	jsr CHROUT
+
+	!ifndef c128 {
+		lda #0
+		ldx #<dir_window_left_margin
+		ldy #>dir_window_left_margin
+		jsr print_msg
+	}
 
 	jsr press_any_key
 
@@ -197,3 +231,28 @@ dir_file_unquote	; routine returns clear carry and a quote-less string at
 	bne -
 +	clc
 rts
+
+!ifndef c128 {
+	check_if_need_to_scroll
+		lda cursor_current_line
+		cmp #23
+		bne +
+
+		lda #<c64_dir_popup_base_addr
+		sta scroll_area_base_addr
+		lda #>c64_dir_popup_base_addr
+		sta scroll_area_base_addr+1
+
+		lda #c64_dir_width
+		sta scroll_area_width
+		lda #c64_dir_height
+		sta scroll_area_height
+
+		jsr scroll_area_up
+		lda #UP
+		jsr CHROUT
+		lda #0
+	  +
+	rts
+}
+

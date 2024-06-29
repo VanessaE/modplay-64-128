@@ -44,6 +44,7 @@
 
 	cursor_pointer_text				= $e0
 	cursor_pointer_color			= $e2
+	cursor_current_line				= $eb
 	cursor_col_on_current_line		= $ec
 
 	SCBOT							= $e4 ; bottom, top, left, right edges

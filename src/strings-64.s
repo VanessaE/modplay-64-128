@@ -426,9 +426,12 @@ between_songs_msg
 	!byte 20,RIGHT
 	!byte 0
 
-
 press_key_msg
 	!text "Press any key",0
+
+dir_window_left_margin
+	!fill 5,RIGHT
+	!byte 0
 
 !ct raw {
 	sample_player_msg_ascii

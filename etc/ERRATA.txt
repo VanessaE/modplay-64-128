@@ -4,8 +4,6 @@
 
 * add options to choose audio and RAM drivers
 
-* C64: display dir inside popup like on C128
-
 * C128 main memory driver: file has to be split across banks, maximum file
   size is ~81k on most machines, or ~199k if the banks 2+3 MMU hack is
   installed. This requires adding a check to the loader pointer and to the
@@ -77,3 +75,11 @@
  
 * C128: single sample player just crashes (not that it's supposed to DO
   anything just yet).
+
+* C64: dir popup has a minor glitch: if there's a disk error, it's printed
+  outside the window.
+
+* BOTH: add a switch/flag to scroll the color/attribute memory in addition to
+  the text.
+
+  
