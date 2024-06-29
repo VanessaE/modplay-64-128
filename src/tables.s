@@ -258,3 +258,6 @@ no_msgs1
 
   no_msgs2
 rts
+
+vol_cnt		!byte 0
+bval_cnt	!byte 0

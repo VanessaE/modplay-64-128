@@ -630,9 +630,6 @@ control_code_flags_table_high_origin
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
-vol_cnt		!byte 0
-bval_cnt	!byte 0
-
 default_config
 	!ifndef c128 {			; signature
 		!byte $ff,0,"c",6,4
