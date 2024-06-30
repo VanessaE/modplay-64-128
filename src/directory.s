@@ -76,7 +76,9 @@ show_directory_cmd_prompt_entry
 
 	jsr dir_read_line
 
-	lda #23
+	jsr strip_trailing_spaces
+
+	lda #0
 	ldx #<string_buffer
 	ldy #>string_buffer
 	jsr print_msg
@@ -269,4 +271,3 @@ rts
 	  +
 	rts
 }
-

@@ -92,6 +92,32 @@ rts
 	adc #$37
 rts
 
+
+strip_trailing_spaces
+	ldx #0
+-	lda string_buffer,x
+	beq +
+	inx
+	cpx #48
+	bne -
+	rts
+
++
+-	dex
+	lda string_buffer,x
+	cmp #$20
+	beq -
+
+	lda #0
+-	inx
+	sta string_buffer,x
+	cpx #47
+	bne -
+rts
+
+
+
+
 ;########################
 ;# ZERO-PAGE OPERATIONS #
 ;########################
