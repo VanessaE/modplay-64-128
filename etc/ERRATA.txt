@@ -81,8 +81,3 @@
 
 * C64: dir popup has a minor glitch: if there's a disk error, it's printed
   outside the window.
-
-* BOTH: add a switch/flag to scroll the color/attribute memory in addition to
-  the text.
-
-  

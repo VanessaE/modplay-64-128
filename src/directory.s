@@ -2,9 +2,10 @@
 
 !text "directory",0
 
-c64_dir_popup_base_addr = VIC_SCREEN + 3*40 + 5
-c64_dir_height = 20
-c64_dir_width = 30
+c64_dir_popup_base_addr		= VIC_SCREEN + 3*40 + 5
+c64_dir_popup_colors_addr	= VIC_COLOR_RAM + 3*40 + 5
+c64_dir_height				= 20
+c64_dir_width				= 30
 
 show_directory
 	jsr dir_open
@@ -249,6 +250,19 @@ rts
 		sta scroll_area_height
 
 		jsr scroll_area_up
+
+		lda #<c64_dir_popup_colors_addr
+		sta scroll_area_base_addr
+		lda #>c64_dir_popup_colors_addr
+		sta scroll_area_base_addr+1
+
+		lda #c64_dir_width
+		sta scroll_area_width
+		lda #c64_dir_height
+		sta scroll_area_height
+
+		jsr scroll_area_up
+
 		lda #UP
 		jsr CHROUT
 		lda #0
