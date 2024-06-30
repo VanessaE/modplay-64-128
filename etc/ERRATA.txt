@@ -34,6 +34,8 @@
   how to measure "done", and perhaps the total width of the bar (number of
   chars on the line that is).
 
+* C64: need to create a basic windowing framework comparable to what C128
+  KERNAL does, so that text can't overflow outside of a popup.
 
 ####################
 ##  KNOWN ISSUES  ##
@@ -78,6 +80,3 @@
  
 * C128: single sample player just crashes (not that it's supposed to DO
   anything just yet).
-
-* C64: dir popup has a minor glitch: if there's a disk error, it's printed
-  outside the window.

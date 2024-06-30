@@ -248,4 +248,4 @@ close_file
 rts
 
 default_error_message
-	!text 13,"Error #",0
+	!text "Error #",0

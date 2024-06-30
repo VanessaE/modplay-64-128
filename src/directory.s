@@ -108,6 +108,7 @@ dir_err_check
 
 	lda #RETURN
 	jsr CHROUT
+	jsr CHROUT
 
 	!ifndef c128 {
 		lda #0
