@@ -169,7 +169,7 @@ rts
 	fill_char					= " "
 	screen_width				= 40
 
-	!macro PRINT_CHAR		{ +JSR_INDIRECT (print_vec) }
+	!macro PRINT_CHAR		{ jsr print_char }
 
 	!macro LDA_TL_CORNER	{ ldx char_table_select
 							  lda window_edge_tables,x }
@@ -187,6 +187,9 @@ rts
 							  lda window_edge_tables+6,x }
 	!macro LDA_RIGHT_EDGE	{ ldx char_table_select
 							  lda window_edge_tables+6,x }
+
+	print_char				; let the RTS at the end of the actual print
+		jmp (print_vec)		; code return to calling routine directly
 
 } else {
 
