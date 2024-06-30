@@ -71,7 +71,6 @@ start_main_player
 		ldx #<main_player_hline
 		ldy #>main_player_hline
 		jsr print_msg_rle
-
 	} else {
 		bit enable_screen_on_playback
 		bpl ++
@@ -147,6 +146,18 @@ start_main_player
 	jsr regen_all_tables
 
 	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl ++
+		clc
+		ldx #visualizer_screen_row
+		ldy #visualizer_screen_column
+		jsr PLOT
+		jsr viz_row_data_init
+	} else {
+		jsr viz_row_data_init
+	}
+
+++	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
 		jsr disable_screen

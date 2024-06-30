@@ -13,6 +13,7 @@
 	char_table_select				= $f7
 
 	progress_bar_addr				= $f8 ; and $f9
+	visualizer_address_temp			= $f8 ; and $f9
 
 	; low memory area -- duh 😛
 
@@ -76,3 +77,11 @@ MGRY								= $98
 DGRY								= $97
 
 screen_width						= 40
+screen_base_addr					= VIC_SCREEN
+color_mem_base_addr					= VIC_COLOR_RAM
+
+visualizer_area_width				= 36
+visualizer_area_height				= 6
+
+visualizer_screen_column			= 2
+visualizer_screen_row				= 14

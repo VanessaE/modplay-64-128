@@ -9,6 +9,7 @@
 	tempzp_e						= $54 ; and $55
 
 	progress_bar_addr				= $61 ; and $62
+	visualizer_address_temp			= $61 ; and $62
 
 	print_msg_char_limit			= $c8
 
@@ -109,3 +110,11 @@ FLASHOFF							= $8f
 splash_128_end_check = program_start + (254*6) - 1
 
 screen_width						= 80
+screen_base_addr					= VDC_SCREEN
+color_mem_base_addr					= VDC_ATTRIBUTES
+
+visualizer_area_width				= 38
+visualizer_area_height				= 6
+
+visualizer_screen_column			= 21
+visualizer_screen_row				= 14

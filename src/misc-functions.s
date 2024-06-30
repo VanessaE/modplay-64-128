@@ -92,7 +92,6 @@ rts
 	adc #$37
 rts
 
-
 strip_trailing_spaces
 	ldx #0
 -	lda string_buffer,x
@@ -114,8 +113,6 @@ strip_trailing_spaces
 	cpx #47
 	bne -
 rts
-
-
 
 
 ;########################
@@ -143,6 +140,7 @@ restore_zero_page
 	inx
 	bne -
 rts
+
 
 ;######################
 ;# NUMERIC_OPERATIONS #

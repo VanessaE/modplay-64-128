@@ -364,33 +364,34 @@ between_songs_msg
 	!byte 0
 
 main_player_now_playing_msg
-	!fill 9,RIGHT
+	!fill 13,RIGHT
 	!text CYAN,"Now playing:",RETURN,RETURN
 	!byte 0
 
 main_player_file_msg
-	!fill 3,RIGHT
+	!fill 7,RIGHT
 	!text "Filename: ",LBLU
 	!byte 0
 
 main_player_title_msg
-	!fill 6,RIGHT
+	!fill 10,RIGHT
 	!text CYAN,"Title: ",LBLU
 	!byte 0
 
 main_player_hline
-	!byte 30,$60
+	!byte 38,$60
 	!byte $81,RETURN
 	!byte 0
 
 main_player_song_pos_pat_msg
+	!fill 4,RIGHT
 	!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
 	!text DCYN," -- "
 	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
 	!byte 0
 
 main_player_row
-	!fill 4,RIGHT
+	!fill 8,RIGHT
 	!text CYAN,"Row: ",LBLU,"  "
 	!text DCYN," --- "
 	!byte 0
@@ -401,10 +402,10 @@ main_player_speed_msg
 
 main_player_regen_tables_msg
 	!byte RETURN,YEL
-	!text "  A player setting changed", RETURN
-	!text "that altered the sample rate,",RETURN
-	!text "    re-generating pitch",RETURN
-	!text "    and tempo tables..."
+	!text "      A player setting changed", RETURN
+	!text "    that altered the sample rate,",RETURN
+	!text "        re-generating pitch",RETURN
+	!text "        and tempo tables..."
 	!byte 0
 
 main_player_regen_erase_tables_msg

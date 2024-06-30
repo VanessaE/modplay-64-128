@@ -155,6 +155,9 @@ scroll_area_down
 			dey
 			bpl -
 
+			dex
+			beq blank_out_last_scrolled_line
+
 			sec
 			lda tempzp_d
 			sbc #screen_width
@@ -176,6 +179,9 @@ scroll_area_down
 			dey
 			jsr vdc_block_copy
 
+			dex
+			beq blank_out_last_scrolled_line
+
 			sec
 			lda vdc_fill_copy_src
 			sbc #screen_width
@@ -192,10 +198,33 @@ scroll_area_down
 			sta vdc_fill_copy_dst+1
 		}
 
-	+	dex
-		bne scroll_down_loop
+	jmp scroll_down_loop
 
-jmp blank_out_last_scrolled_line ; exit through that routine
+; placed between the two scroll routines so that their BEQ's can both reach.
+
+blank_out_last_scrolled_line
+	bit scroll_area_blank_last_line_flag
+	bmi +
+	rts
+
++	!ifndef c128 {
+		ldy #0
+		lda #$20
+	-	sta (tempzp_d),y
+		iny
+		cpy scroll_area_width
+		bne -
+	} else {
+		lda vdc_fill_copy_src
+		sta vdc_fill_copy_dst
+		lda vdc_fill_copy_src+1
+		sta vdc_fill_copy_dst+1
+		lda #$20
+		ldx scroll_area_width
+		dex
+		jsr vdc_block_fill
+	}
+rts
 
 
 scroll_area_up
@@ -233,6 +262,9 @@ scroll_area_up
 			dey
 			bpl -
 
+			dex
+			beq blank_out_last_scrolled_line
+
 			clc
 			lda tempzp_d
 			adc #screen_width
@@ -251,8 +283,10 @@ scroll_area_up
 		} else {
 
 			ldy scroll_area_width
-			dey
 			jsr vdc_block_copy
+
+			dex
+			beq blank_out_last_scrolled_line
 
 			clc
 			lda vdc_fill_copy_src
@@ -270,25 +304,7 @@ scroll_area_up
 			sta vdc_fill_copy_dst+1
 		}
 
-	+	dex
-		bne scroll_up_loop
-; just fall through
-
-blank_out_last_scrolled_line
-	!ifndef c128 {
-		ldy #0
-		lda #$20
-	-	sta (tempzp_e),y
-		iny
-		cpy scroll_area_width
-		bne -
-	} else {
-		lda #$20
-		ldx scroll_area_width
-		dex
-		jsr vdc_block_fill
-	}
-rts
+	jmp scroll_up_loop
 
 ; enter with .X/.Y = column and row of the progress bar itself (on C128, that
 ; that means the real row/column, not the position within whatever popup
@@ -309,12 +325,6 @@ rts
 
 progbar_frame_left = $aa
 progbar_frame_right = $b4
-
-!ifndef c128 {
-	screen_base_addr = VIC_SCREEN
-} else {
-	screen_base_addr = VDC_SCREEN
-}
 
 draw_empty_progress_bar
 	sta progress_bar_max_length

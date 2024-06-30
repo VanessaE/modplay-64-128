@@ -16,6 +16,7 @@ reu_set_cycle_counts
 rts
 
 reu_fetch_row
+	stx tempzpbk_h			; preserve .X (row number)
 	lda #0
 	sta tempzpbk_g
 	sta tempzpbk_g+2
@@ -28,7 +29,7 @@ reu_fetch_row
 	rol tempzpbk_g+2
 	sta tempzpbk_g+1
 
-	lda seq_current_row		; use LSB to multiply row no. x16
+	lda tempzpbk_h			; use LSB to multiply row no. x16
 	sta tempzpbk_g
 	lda #0
 	asl tempzpbk_g
@@ -93,6 +94,7 @@ reu_fetch_row
 	!ifdef c128 {
 		sty VIC+$30
 	}
+	ldx tempzpbk_h
 rts
 
 reu_stash_block

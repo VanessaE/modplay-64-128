@@ -103,6 +103,9 @@ nple
 
 	jsr print_song_pos_pat_num
 
+	jsr viz_row_data_pattern_preload
+	jmp next_row_no_scroll
+
 ; row format
 ;
 ;   byte 0    byte 1    byte 2    byte 3
@@ -117,11 +120,20 @@ nple
 
 next_row
 	ldx seq_current_row
+	jsr viz_row_data_scroll
+
+next_row_no_scroll
+	ldx seq_current_row
+	inx
+	inx
+	inx
+	jsr viz_row_data_fetch_and_print
+
+	ldx seq_current_row
+	jsr fetch_row_data
 
 	jsr print_row_num
 
-fetch_row_vec			; fetch the next row from expansion RAM
-	jsr $1234
 	ldy #0
 	sty seq_current_track
 
@@ -294,8 +306,13 @@ rts
 ;==================
 ; auxillary routines
 
-; the actual mixer loop where the raltime stuff happens
-; every cycle matters here.
+; fetch the row indicated by .X from expansion RAM
+; into the row data buffer.  
+
+fetch_row_data
+	fetch_row_vec
+		jsr $1234
+rts
 
 ; [re-]start a new sample
 ; enter with .A = sample number, .Y = track number

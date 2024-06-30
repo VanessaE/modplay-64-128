@@ -464,8 +464,8 @@ dir_window_left_margin
 		!text "FastTracker",0
 
 	main_player_hline_ascii
-		!fill 5,RIGHT
-		!fill 30,$02
+		!fill 2,RIGHT
+		!fill 36,$02
 		!byte RETURN
 		!byte 0
 
@@ -497,14 +497,14 @@ dir_window_left_margin
 
 	main_player_regen_erase_tables_msg_ascii
 		!fill 3,UP
-		!fill 5,RIGHT
-		!fill 30," "
+		!fill 2,RIGHT
+		!fill 36," "
 		!byte RETURN
-		!fill 5,RIGHT
-		!fill 30," "
+		!fill 2,RIGHT
+		!fill 36," "
 		!byte RETURN
-		!fill 5,RIGHT
-		!fill 30," "
+		!fill 2,RIGHT
+		!fill 36," "
 		!byte 0
 }
 

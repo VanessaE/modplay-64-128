@@ -16,6 +16,9 @@ show_directory_cmd_prompt_entry
 	clc
 	jsr draw_tall_popup
 
+	lda #$80
+	sta scroll_area_blank_last_line_flag
+
 	lda #YEL
 	jsr CHROUT
 

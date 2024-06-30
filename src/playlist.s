@@ -317,6 +317,9 @@ playlist_scroll_up
 
 +	stx playlist_scroll_pos
 
+	lda #$80
+	sta scroll_area_blank_last_line_flag
+
 	lda #<pl_pane_su_src_addr
 	sta scroll_area_base_addr
 	lda #>pl_pane_su_src_addr
@@ -341,6 +344,10 @@ playlist_scroll_down
 	rts
 
 +	sta playlist_scroll_pos
+
+	lda #$80
+	sta scroll_area_blank_last_line_flag
+
 	lda #<pl_pane_sd_src_addr
 	sta scroll_area_base_addr
 	lda #>pl_pane_sd_src_addr

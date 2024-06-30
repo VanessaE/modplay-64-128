@@ -333,6 +333,9 @@ init
 	lda #>one_ten_thou_ntsc
 	sta one_ten_thousandth_second+1
 
+	lda #1
+	sta visualizer_mode
+
 ++	jsr charset_copy
 
 	!ifndef c128 {

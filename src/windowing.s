@@ -21,7 +21,7 @@
 	short_popup_height				= 5
 
 	medium_popup_left_column		= 4
-	medium_popup_width				= 30
+	medium_popup_width				= 36
 	medium_popup_height				= 13
 
 	tall_popup_left_column			= 4
@@ -41,7 +41,7 @@
 	short_popup_height				= 5
 
 	medium_popup_left_column		= 0
-	medium_popup_width				= 30
+	medium_popup_width				= 38
 	medium_popup_height				= 13
 
 	tall_popup_left_column			= 0
@@ -401,7 +401,7 @@ rts
 
 draw_tall_popup
 	ldx #tall_popup_height
-	ldy #medium_popup_width
+	ldy #tall_popup_width
 	jsr draw_window
 rts
 

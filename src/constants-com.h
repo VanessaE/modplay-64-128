@@ -18,8 +18,12 @@ program_start							= $1e00
 	; must be restored after any such use.
 
 	tempzpbk_g							= $02 ; 4 bytes
+	tempzpbk_h							= $06
+	tempzpbk_j							= $07
+	visualizer_address_tempzpbk_a		= $08 ; and $09
+	visualizer_address_tempzpbk_b		= $0a ; and $0b
 
-	; free: $06 through $23
+	; free: $0c through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; and divide routines' zero page variables have to be in the same places
@@ -35,9 +39,8 @@ program_start							= $1e00
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $24 through $33
+	; free: $24 through $37
 
-	pattern_address						= $35 ; 3 bytes
 	pattern_break_target_row			= $38
 	seq_current_pattern_number			= $39
 	seq_current_row						= $3a
@@ -270,14 +273,18 @@ program_start							= $1e00
 	scroll_area_base_addr				= $17dc ; 2 bytes
 	scroll_area_width					= $17de
 	scroll_area_height					= $17df
+	scroll_area_blank_last_line_flag	= $17e0
 
-	progress_bar_row					= $17e0
-	progress_bar_column					= $17e1
-	progress_bar_max_length				= $17e2
-	progress_bar_segments_to_draw		= $17e3
-	progress_bar_bytes_per_segment		= $17e4 ; 3 bytes
+	progress_bar_row					= $17e1
+	progress_bar_column					= $17e2
+	progress_bar_max_length				= $17e3
+	progress_bar_segments_to_draw		= $17e4
+	progress_bar_bytes_per_segment		= $17e5 ; 3 bytes
 
-	; free: $17e7 through $17ef
+	visualizer_mode						= $17e8
+	visualizer_base_address				= $17e9 ; 2 bytes
+
+	; free: $17eb through $17ef
 
 	; various program vectors
 
