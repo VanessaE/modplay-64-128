@@ -55,16 +55,9 @@ rts ; return to the autorunner, which will load the rest of the file.
 
 !source "src/misc-macros.s"
 
-print_msg
-	+PRINT_MSG
-rts
-
-print_msg_rle
-	+PRINT_MSG_RLE
-rts
-
++PRINT_MSG
++PRINT_MSG_RLE
 +SCREEN_ONOFF
-+ROM_SWITCHING
 
 !ifdef c128 {
 	wrong_screen_msg

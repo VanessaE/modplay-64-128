@@ -3,21 +3,22 @@
 ; terminated, else it must be the message length (max 255 chars either way)
 
 !macro PRINT_MSG {
-	sta print_msg_char_limit
-	dec print_msg_char_limit
-	stx print_msg_addr
-	sty print_msg_addr+1
-	ldy #0
--	lda (print_msg_addr),y
-	beq +
-	jsr CHROUT
-	cpy print_msg_char_limit
-	beq +
-	iny
-	bne -
-	inc print_msg_addr+1
-	bne -
-  +
+	print_msg
+		sta print_msg_char_limit
+		dec print_msg_char_limit
+		stx print_msg_addr
+		sty print_msg_addr+1
+		ldy #0
+	-	lda (print_msg_addr),y
+		beq +
+		jsr CHROUT
+		cpy print_msg_char_limit
+		beq +
+		iny
+		bne -
+		inc print_msg_addr+1
+		bne -
+	+	rts
 }
 
 	; print an RLE_encoded message
@@ -43,55 +44,41 @@
 	; "64 🮖🮖🮖🮖🮖 hello world AAAAAABBBBBBBBB yeah!"
 
 !macro PRINT_MSG_RLE {
-	stx print_msg_addr
-	sty print_msg_addr+1
+	print_msg_rle
+		stx print_msg_addr
+		sty print_msg_addr+1
 
-	ldy #0
-	sty rle_byte_count
-
-.lp	lda (print_msg_addr),y
-	beq .done			; a null is always the end of the msg
-
-	ldx rle_byte_count	; if count is non-zero, just print what's in .A
-	bne .pr
-
-	sta rle_mode_flag	; else .A is a command
-	and #$7f
-	sta rle_byte_count	; so set the new count
-	bne .next_byte
-
-.pr	jsr CHROUT
-
-	dec rle_byte_count
-
-	ldx rle_mode_flag	; if it's a data block, continue through stream
-	bmi .next_byte
-	ldx rle_byte_count	; if it's a run, keep looping back to reprint
-	bne .pr				; until count runs out.
-
-.next_byte
-	iny
-	bne .lp
-	inc print_msg_addr+1
-	bne .lp
-
-.done
-}
-
-!macro PRINT_MSG_BATCH_RLE .lines, .lows, .highs {
 		ldy #0
-		sty tempzp_d
-	-	ldy tempzp_d
-		cpy #.lines
-		beq +
-		ldx .lows,y
-		lda .highs,y
-		tay
-		lda #0
-		jsr print_msg_rle
-		inc tempzp_d
-		bne -
-	+
+		sty rle_byte_count
+
+	.lp	lda (print_msg_addr),y
+		beq .done			; a null is always the end of the msg
+
+		ldx rle_byte_count	; if count is non-zero, just print what's in .A
+		bne .pr
+
+		sta rle_mode_flag	; else .A is a command
+		and #$7f
+		sta rle_byte_count	; so set the new count
+		bne .next_byte
+
+	.pr	jsr CHROUT
+
+		dec rle_byte_count
+
+		ldx rle_mode_flag	; if it's a data block, continue through stream
+		bmi .next_byte
+		ldx rle_byte_count	; if it's a run, keep looping back to reprint
+		bne .pr				; until count runs out.
+
+	.next_byte
+		iny
+		bne .lp
+		inc print_msg_addr+1
+		bne .lp
+
+	.done
+rts
 }
 
 !macro SCREEN_ONOFF {
@@ -106,50 +93,6 @@
 		ora #%00010000
 		sta VIC+$11
 	rts
-}
-
-;#################
-;# ROM SWITCHING #
-;#################
-
-!macro ROM_SWITCHING {
-	!ifdef c128 {
-		disable_roms
-			lda #%00111110
-			sta MMU
-		rts
-
-		enable_kernal_only
-			lda #%00001110
-			sta MMU
-		rts
-
-		enable_roms
-			lda #0
-			sta MMU
-		rts
-
-	} else {
-		disable_roms
-			lda #$35
-			sta $01
-		rts
-
-		enable_char_rom_only ; really the only purpose is to bank-out I/O
-			lda #$31
-			sta $01
-		rts
-
-		enable_kernal_only
-			lda #$36
-			sta $01
-		rts
-
-		enable_roms
-			lda #$37
-			sta $01
-		rts
-	}
 }
 
 !macro JSR_INDIRECT .vec {

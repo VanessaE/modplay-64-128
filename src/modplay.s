@@ -37,7 +37,6 @@
 start
 	sei
 	jsr enable_kernal_only
-
 	jsr init
 
 	!ifndef c128 {
@@ -53,12 +52,14 @@ start
 
 ; additional code goes here
 
-; extra macro calls used as functions should be placed here at the start,
-; so that they don't end up under BASIC-LOW ROM on the C128
+; functions and macro calls used as functions must be placed here at the
+; start, otherwise they'll end up under BASIC-LOW ROM on the C128
 
 !source "src/misc-macros.s"
+!source "src/misc-functions.s"
 
-+ROM_SWITCHING
++PRINT_MSG
++PRINT_MSG_RLE
 +SCREEN_ONOFF
 
 !source "src/loader-common.s"
@@ -81,8 +82,6 @@ start
 
 !source "src/screen-fx.s"
 !source "src/windowing.s"
-
-!source "src/misc-functions.s"
 
 !source "src/tables.s"
 

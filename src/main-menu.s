@@ -20,9 +20,20 @@ show_main_menu
 	ldy #>program_title
 	jsr print_msg
 
-	+PRINT_MSG_BATCH_RLE 23, mm_lo, mm_hi
+	ldy #0
+	sty tempzp_d
+-	ldy tempzp_d
+	cpy #23
+	beq +
+	ldx mm_lo,y
+	lda mm_hi,y
+	tay
+	lda #0
+	jsr print_msg_rle
+	inc tempzp_d
+	bne -
 
-	!ifndef c128 { ; restore the screen line links to 40 chars apiece.
++	!ifndef c128 { ; restore the screen line links to 40 chars apiece.
 		ldx #24
 	-	lda screen_line_link_table,x
 		sta LDTB1,x

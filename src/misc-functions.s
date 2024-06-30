@@ -2,6 +2,48 @@
 
 !text "misc functions",0
 
+;#################
+;# ROM SWITCHING #
+;#################
+
+!ifdef c128 {
+	disable_roms
+		lda #%00111110
+		sta MMU
+	rts
+
+	enable_kernal_only
+		lda #%00001110
+		sta MMU
+	rts
+
+	enable_roms
+		lda #0
+		sta MMU
+	rts
+
+} else {
+	disable_roms
+		lda #$35
+		sta $01
+	rts
+
+	enable_char_rom_only ; really the only purpose is to bank-out I/O
+		lda #$31
+		sta $01
+	rts
+
+	enable_kernal_only
+		lda #$36
+		sta $01
+	rts
+
+	enable_roms
+		lda #$37
+		sta $01
+	rts
+}
+
 ;#####################
 ;# STRING OPERATIONS #
 ;#####################
@@ -698,15 +740,6 @@ print_filetype
 		ldy #>tracker_name_msg_fasttracker_ascii
 	++ rts
 }
-
-print_msg
-	+PRINT_MSG
-rts
-
-print_msg_rle
-	+PRINT_MSG_RLE
-rts
-
 
 ;#######################
 ;# C128 VDC OPERATIONS #
