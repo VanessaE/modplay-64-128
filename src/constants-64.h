@@ -12,7 +12,7 @@
 
 	char_table_select				= $f7
 
-	; free: $f8, $f9
+	progress_bar_addr				= $f8 ; and $f9
 
 	; low memory area -- duh 😛
 

@@ -144,6 +144,7 @@ main_mem_free_start
 !ifndef c128 {
 charset_64
 	!binary "etc/charset-64a.bin"
+	!binary "etc/charset-64p.bin"
 } else {
 charset_128_alt
 	!binary "etc/charset-128a.bin"

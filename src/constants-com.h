@@ -115,7 +115,7 @@ program_start							= $1e00
 
 	product								= $5c ; and $5d / the product from multiply routine
 
-	stash_pointer						= $5c ; to $5e, expansion RAM stash target addr
+	expansion_memory_stash_pointer		= $5c ; to $5e, expansion RAM stash target addr
 											; only used within the loader
 
 	print_msg_addr						= $5f ; and $60
@@ -263,7 +263,7 @@ program_start							= $1e00
 	match_header						= $17d1
 	stash_size							= $17d2 ; 2 bytes
 
-	expansion_memory_start_pointer		= $17d4 ; 3 bytes
+	expansion_memory_start_address		= $17d4 ; 3 bytes
 	vdc_fill_copy_src					= $17d7 ; 2 bytes
 	vdc_fill_copy_dst					= $17d9 ; 2 bytes
 	vdc_fill_copy_temp					= $17db
@@ -271,7 +271,13 @@ program_start							= $1e00
 	scroll_area_width					= $17de
 	scroll_area_height					= $17df
 
-	; free: $17e0 through $17ef
+	progress_bar_row					= $17e0
+	progress_bar_column					= $17e1
+	progress_bar_max_length				= $17e2
+	progress_bar_segments_to_draw		= $17e3
+	progress_bar_bytes_per_segment		= $17e4 ; 3 bytes
+
+	; free: $17e7 through $17ef
 
 	; various program vectors
 

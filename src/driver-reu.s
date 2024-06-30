@@ -101,11 +101,11 @@ reu_stash_block
 	lda #>load_buffer
 	sta DMA_ADH
 
-	lda stash_pointer
+	lda expansion_memory_stash_pointer
 	sta DMA_LO
-	lda stash_pointer+1
+	lda expansion_memory_stash_pointer+1
 	sta DMA_HI
-	lda stash_pointer+2
+	lda expansion_memory_stash_pointer+2
 	sta DMA_BANK
 
 	lda stash_size

@@ -288,5 +288,197 @@ blank_out_last_scrolled_line
 		dex
 		jsr vdc_block_fill
 	}
+rts
+
+; enter with .X/.Y = column and row of the progress bar itself (on C128, that
+; that means the real row/column, not the position within whatever popup
+; might be open), .A = length of the progress bar in "segments" (8 per char).
+
+; the frame will be drawn in the row above, the column to the left, and the
+; row below the given coordinates (and of course, to the right of it)
+
+; maximum bar length is 255 segments, one segment shy of 32 chars.
+
+!ifndef c128 {
+	progbar_frame_top = $af
+	progbar_frame_bottom = $b7
+} else {
+	progbar_frame_top = $a4
+	progbar_frame_bottom = $a3
+}
+
+progbar_frame_left = $aa
+progbar_frame_right = $b4
+
+!ifndef c128 {
+	screen_base_addr = VIC_SCREEN
+} else {
+	screen_base_addr = VDC_SCREEN
+}
+
+draw_empty_progress_bar
+	sta progress_bar_max_length
+	lsr
+	lsr
+	lsr
+	sta tempzp_c ; length in characters
+	stx progress_bar_column
+	sty progress_bar_row
+
+	ldx progress_bar_row
+	dex
+	ldy progress_bar_column
+	clc
+	jsr PLOT
+
+	lda #LGRY
+	jsr CHROUT
+
+	ldy tempzp_c
+	lda #progbar_frame_top
+-	jsr CHROUT
+	dey
+	bne -
+
+	ldx progress_bar_row
+	ldy progress_bar_column
+	dey
+	clc
+	jsr PLOT
+
+	lda #progbar_frame_left
+	jsr CHROUT
+
+	lda #LGRN
+	jsr CHROUT
+
+	!ifdef c128 {
+		lda #UPPER
+		jsr CHROUT
+	}
+
+	ldy tempzp_c
+	lda #" "
+-	jsr CHROUT
+	dey
+	bne -
+
+	!ifdef c128 {
+		lda #LOWER
+		jsr CHROUT
+	}
+
+	lda #MGRY
+	jsr CHROUT
+
+	lda #progbar_frame_right
+	jsr CHROUT
+
+	ldx progress_bar_row
+	inx
+	ldy progress_bar_column
+	clc
+	jsr PLOT
+
+	ldy tempzp_c
+	lda #progbar_frame_bottom
+-	jsr CHROUT
+	dey
+	bne -
+
+	lda progress_bar_row
+	ldx #screen_width
+	jsr multiply_8x8
+
+	clc
+	lda product
+	adc #<screen_base_addr
+	sta progress_bar_addr
+
+	lda product+1
+	adc #>screen_base_addr
+	sta progress_bar_addr+1
+
+	lda progress_bar_addr
+	adc progress_bar_column
+	sta progress_bar_addr
+	lda progress_bar_addr+1
+	adc #0
+	sta progress_bar_addr+1
 
 rts
+
+; enter this one with .A = number of segments to draw, max 255
+
+update_progress_bar
+	sta tempzp_c
+
+	!ifdef c128 {
+		lda #18
+		sta VDC
+		lda progress_bar_addr+1
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda progress_bar_addr
+		sta VDC+1
+
+	-	bit VDC
+		bpl -
+
+		lda #31
+		sta VDC
+	}
+
+	lda tempzp_c
+	lsr
+	lsr
+	lsr
+	beq nofill
+	tay
+	dey
+
+	lda #$a0
+
+-	!ifndef c128 {
+		sta (progress_bar_addr),y
+	} else {
+	-	bit VDC
+		bpl -
+
+		sta VDC+1
+	}
+
+	dey
+	cpy #255
+	bne -
+
+nofill
+	lda tempzp_c
+	and #$07
+	tax
+
+	lda progress_bar_segments,x
+
+	!ifndef c128 {
+		lsr tempzp_c
+		lsr tempzp_c
+		lsr tempzp_c
+		ldy tempzp_c
+
+		sta (progress_bar_addr),y
+	} else {
+	-	bit VDC
+		bpl -
+
+		sta VDC+1
+	}
+rts
+
+progress_bar_segments
+!ifndef c128 {
+	!byte $20, $65, $74, $75, $61, $f6, $ea, $e7
+} else {
+	!byte $20, $99, $9a, $9b, $9c, $9d, $9e, $9f
+}

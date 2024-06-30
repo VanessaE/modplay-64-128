@@ -29,11 +29,6 @@
   for items with "DIR" filetype, offer a list thereof along with a ".." item,
   using the audio buffers for scratch space.
 
-* split the progress bar out from the loader so that it can be used in the
-  table regenerator call.  Will need to accept params for the screen row, the
-  how to measure "done", and perhaps the total width of the bar (number of
-  chars on the line that is).
-
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 
@@ -61,7 +56,8 @@
 
 * BOTH: progress bar overflows its length when using the ACPTR loader.
 
-* C64: STOP wedge loader fails JiffyDOS is present.
+* C64: STOP wedge loader fails if JiffyDOS is present.
+
 * C128: STOP wedge loader fails on CMD HD if RAMLink exists and the parallel
   connection is enabled.  Disable it with `@P0` before program load and the
   STOP wedge works fine.

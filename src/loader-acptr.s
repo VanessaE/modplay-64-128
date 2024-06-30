@@ -16,7 +16,7 @@ load_via_acptr
 	+JSR_INDIRECT (stash_block_vec) ; stash the header that loader_common grabbed
 
 	lda stash_size+1
-	sta stash_pointer+1
+	sta expansion_memory_stash_pointer+1
 
 .next_block
 	lda #0
@@ -40,11 +40,11 @@ load_via_acptr
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
-	lda stash_pointer+1
+	lda expansion_memory_stash_pointer+1
 	adc stash_size+1
-	sta stash_pointer+1
+	sta expansion_memory_stash_pointer+1
 	bcc +
-	inc stash_pointer+2
+	inc expansion_memory_stash_pointer+2
 
 +	jsr update_progress
 	jmp .next_block

@@ -284,18 +284,6 @@ filename_req_msg
 	!fill 3,RIGHT
 	!text CYAN,"Enter filename/pattern:",0
 
-progress_bar_frame
-	!byte $82,LGRY," "
-	!byte 16,$af
-	!byte $81,RETURN
-	!byte 11,RIGHT
-	!byte $81,$aa
-	!byte 16,RIGHT
-	!byte $82,$b4,RETURN
-	!byte 12,RIGHT
-	!byte 16,$b7
-	!byte 0
-
 scanning_dir_msg
 	!fill 5,RIGHT
 	!text DOWN,LGRN,"Scanning",RETURN

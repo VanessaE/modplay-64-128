@@ -86,7 +86,7 @@ init
 
 	sec
 	lda #>main_mem_free_end
-	sbc #>expansion_memory_start_pointer
+	sbc #>expansion_memory_start_address
 	sta main_memory_free_pages
 	dec main_memory_free_pages
 
@@ -197,9 +197,9 @@ init
 	sta set_volume_addrs_vec+2
 
 	lda #0
-	sta expansion_memory_start_pointer			; main mem driver will use 
-	sta expansion_memory_start_pointer+1		; main_mem_free_start for this
-	sta expansion_memory_start_pointer+2
+	sta expansion_memory_start_address			; main mem driver will use 
+	sta expansion_memory_start_address+1		; main_mem_free_start for this
+	sta expansion_memory_start_address+2
 
 	lda #<sid_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec
@@ -455,7 +455,7 @@ charset_copy
 		sei
 		jsr enable_char_rom_only
 
-		; park the ASCII charset in RAM at $d000
+		; park the ASCII charset in RAM at $d000, standard at $d800
 
 		lda #<charset_64
 		sta tempzp_d
@@ -475,23 +475,9 @@ charset_copy
 		bne -
 		inc tempzp_e+1
 		lda tempzp_e+1
-		cmp #>(VIC_CHARSETS+$0800)
-		bne -
-
-		; download the standard lower/upper charset to RAM at $d800
-		lda #<(VIC_CHARSETS+$0800)
-		sta tempzp_d
-		lda #>(VIC_CHARSETS+$0800)
-		sta tempzp_d+1
-		ldy #0
-	-	lda (tempzp_d),y
-		sta (tempzp_d),y
-		iny
-		bne -
-		inc tempzp_d+1
-		lda tempzp_d+1
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
+
 		jsr enable_kernal_only
 
 	} else {				; on the C128, upload it to the VDC

@@ -7,15 +7,14 @@
 load_file_to_expansion
 	!ifndef c128 {
 		size_text = 9
-		progress_bar_row		= 13
-		progress_bar_column		= 11
+		progbar_row			= 14
+		progbar_column		= 12
+		progbar_len			= 16*8
 	} else {
 		size_text = 12
-		progress_bar_row		= 4
-		progress_bar_column		= 5
-
-		progbar_pos      = VDC_SCREEN     + 14*80 + 32
-		progbar_attr_pos = VDC_ATTRIBUTES + 14*80 + 32
+		progbar_row			= 14
+		progbar_column		= 27
+		progbar_len			= 26*8
 
 		php
 		jsr set_window_full_screen
@@ -109,7 +108,7 @@ load_by_filename_entry
 
 	jsr test_loader_compatibility
 
-	jsr populate_mini_popup_loader
+	jsr populate_loader_mini_popup
 
 ; preset the divisor to be proportional to max number of progress bar segments
 ; 16 char long bar * 4 segments per = 64 segments on C64, 16 * 8 = 128 on C128
@@ -139,9 +138,9 @@ load_by_filename_entry
 	stx divisor+2	; divisor is now number of bytes per segment.
 
 	lda #0
-	sta stash_pointer
-	sta stash_pointer+1 ; start at $000000 in expansion RAM
-	sta stash_pointer+2
+	sta expansion_memory_stash_pointer
+	sta expansion_memory_stash_pointer+1 ; start at $000000 in expansion RAM
+	sta expansion_memory_stash_pointer+2
 
 	lda #0
 	sta EAL
@@ -224,7 +223,7 @@ abort_load
 	jsr press_any_key
 rts
 
-populate_mini_popup_loader
+populate_loader_mini_popup
 	jsr gray_out
 	clc
 	jsr draw_mini_popup
@@ -332,105 +331,64 @@ populate_mini_popup_loader
 		ldy #>mini_popup_next_line
 		jsr print_msg_rle
 	} else {
-		lda #RETURN
-		jsr CHROUT
+		jsr set_window_full_screen
 	}
 
+	lda #progbar_len
+	ldx #progbar_column
+	ldy #progbar_row
+	jsr draw_empty_progress_bar
+
+	lda #0					; file size in kB -> size in bytes
+	sta dividend
+
+	lda file_size_in_kb+1
+	sta dividend+2
+
+	lda file_size_in_kb
+	asl
+	rol dividend+2
+	asl
+	rol dividend+2
+	sta dividend+1
+
+	lda #progbar_len
+	sta divisor
 	lda #0
-	ldx #<progress_bar_frame
-	ldy #>progress_bar_frame
-	jsr print_msg_rle
+	sta divisor+1
+	sta divisor+2
+	jsr divide_24by24
 
-	lda #LGRN
-	jsr CHROUT
-
-	!ifdef c128 {
-		lda #<progbar_attr_pos
-		sta vdc_fill_copy_dst
-		lda #>progbar_attr_pos
-		sta vdc_fill_copy_dst+1
-		ldx #15
-		lda #5					; (light green, ASCII charset)
-		jsr vdc_block_fill
-	}
+	lda quotient
+	sta progress_bar_bytes_per_segment
+	lda quotient+1
+	sta progress_bar_bytes_per_segment+1
+	lda quotient+2
+	sta progress_bar_bytes_per_segment+2
 rts
 
 update_progress
-	clc
-	ldx #progress_bar_row+1
-	ldy #progress_bar_column+1
-	jsr PLOT
-
-	lda #0				; divided loaded bytes by bytes per segment
+	sec
+	lda expansion_memory_stash_pointer
+	sbc expansion_memory_start_address
 	sta dividend
-	lda stash_pointer+1
+	lda expansion_memory_stash_pointer+1
+	sbc expansion_memory_start_address+1
 	sta dividend+1
-	lda stash_pointer+2
+	lda expansion_memory_stash_pointer+2
+	sbc expansion_memory_start_address+2
 	sta dividend+2
-	jsr divide_24by24	; now we have the number of segments to draw
 
-	lda quotient		; to turn that into the character count, divide by 4
-	lsr
-	lsr
-	!ifdef c128 {		; or divide by 8 on the C128
-		lsr
-	}
-	tay
-	iny				; bump up by 1 since it has to be decremented right away
+	lda progress_bar_bytes_per_segment
+	sta divisor
+	lda progress_bar_bytes_per_segment+1
+	sta divisor+1
+	lda progress_bar_bytes_per_segment+2
+	sta divisor+2
+	jsr divide_24by24
 
-	!ifndef c128 {	; on the C64,
-		lda #RVSON	; we use the regular CHROUT routine to "print" the progbar
-		jsr CHROUT
-
-		lda #" "
-	-	dey
-		beq +
-		jsr CHROUT
-		jmp -
-
-	+	lda quotient	; segment count
-
-		and #$03	; we just need the two lowest bits: which segment to draw
-		asl			; double it to get an index into the strings below
-		tay
-		lda progress_bar_segments,y
-		jsr CHROUT
-		iny
-		lda progress_bar_segments,y
-		jsr CHROUT
-		lda #RVSOFF
-		jsr CHROUT
-	} else {			; on the C128, we directly write VDC RAM to draw it
-		lda #18
-		sta VDC
-		lda #>progbar_pos
-		sta VDC+1
-		lda #19
-		sta VDC
-		lda #<progbar_pos
-		sta VDC+1
-		lda #31
-		sta VDC
-
-		dey
-		beq +		; if that ends up 0, we don't want to draw even one rvs space
-
-		lda #159 ; solid square
-	-	bit VDC
-		bpl -
-		sta VDC+1
-		dey
-		bne -
-
-	+	lda quotient
-		and #$07		; we need 3 bits since there are 8 segs per char
-		tay				; and we don't need to double it since it's a write, not print
-		lda progress_bar_segments,y
-	-	bit VDC
-		bpl -
-		sta VDC+1
-	}
-
+	lda quotient
+	jsr update_progress_bar
 rts
 
 .load_err
@@ -462,11 +420,11 @@ rts
 magic_number_location = load_buffer + header31_seek_to_pt + 128
 
 decode_header
-	lda expansion_memory_start_pointer
+	lda expansion_memory_start_address
 	sta parse_header_sample_pointer
-	lda expansion_memory_start_pointer+1
+	lda expansion_memory_start_address+1
 	sta parse_header_sample_pointer+1
-	lda expansion_memory_start_pointer+2
+	lda expansion_memory_start_address+2
 	sta parse_header_sample_pointer+2
 
 	ldx #19							; song title
@@ -633,13 +591,13 @@ count_patterns
 parse_instruments
 
 	clc
-	lda expansion_memory_start_pointer
+	lda expansion_memory_start_address
 	adc parse_header_sample_pointer
 	sta parse_header_sample_pointer
-	lda expansion_memory_start_pointer+1
+	lda expansion_memory_start_address+1
 	adc parse_header_sample_pointer+1
 	sta parse_header_sample_pointer+1
-	lda expansion_memory_start_pointer+2
+	lda expansion_memory_start_address+2
 	adc #0
 	sta parse_header_sample_pointer+2
 
@@ -822,9 +780,9 @@ zero_first_exp_pages
 	dex
 	bne -
 
-	sta stash_pointer
-	sta stash_pointer+1
-	sta stash_pointer+2
+	sta expansion_memory_stash_pointer
+	sta expansion_memory_stash_pointer+1
+	sta expansion_memory_stash_pointer+2
 
 	sta stash_size
 	lda #2
@@ -832,16 +790,6 @@ zero_first_exp_pages
 
 	+JSR_INDIRECT (stash_block_vec)
 rts
-
-progress_bar_segments
-!ifndef c128 {
-	!byte RVSOFF," "
-	!byte RVSOFF,$b4
-	!byte RVSOFF,$a1
-	!byte $aa,0
-} else {
-	!byte 32, 152,153,154,155,156,157,158
-}
 
 !ct raw {
 	mod_magic_numbers ; type 1 is Soundtracker

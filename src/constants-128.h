@@ -8,10 +8,11 @@
 	tempzp_d						= $2b ; and $2c
 	tempzp_e						= $54 ; and $55
 
-	print_msg_char_limit			= $61
+	progress_bar_addr				= $61 ; and $62
 
-	; free: $62
-	; free: $c8 through $cb
+	print_msg_char_limit			= $c8
+
+	; free: $c9 through $cb
 
 	; low memory area -- duh 😛
 
