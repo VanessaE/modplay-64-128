@@ -691,6 +691,96 @@ chrout_ascii
 	pla
 rts
 
+
+; Binary search routine written by "atolle" on 6502 forums, reformatted to fit
+; my code style.  Source: http://forum.6502.org/viewtopic.php?f=2&t=1199
+
+; Searches a sorted table of 16-bit values.  Table entries must be in
+; ascending order, and aligned to a two-byte boundary.
+
+binsearch_size     = 2				; element size (must be power of 2)
+
+binary_search
+.bns_loop
+	sec								; calculate high - low
+	lda binsearch_high
+	sbc binsearch_low
+	tax								; preserve lsb of difference in x
+	lda binsearch_high+1
+	sbc binsearch_low+1
+	bcc .bns_done					; if low > high, not found
+	lsr								; calculate (high - low) / 2
+	tay
+	txa
+	ror								; carry cleared because multiple of 2
+	and #$100 - binsearch_size		; align to element size
+	adc binsearch_low				; mid = low + ((high - low) / 2)
+	sta binsearch_mid
+	tya
+	adc binsearch_low+1
+	sta binsearch_mid+1
+	lda binsearch_value+1			; load target value msb
+	ldy #1							; load index to msb
+	cmp (binsearch_mid),y			; compare msb
+	beq .bns_chklsb
+	bcc .bns_modhigh				; a[mid] > value
+.bns_modlow								; a[mid] < value
+	lda binsearch_mid				; low = mid + element size
+	adc #binsearch_size - 1			; carry always set
+	sta binsearch_low
+	lda binsearch_mid+1
+	adc #0
+	sta binsearch_low+1
+	jmp .bns_loop
+.bns_chklsb
+	lda binsearch_value				; load target value lsb
+	dey								; set index to lsb
+	cmp (binsearch_mid),y			; compare lsb
+	beq .bns_done
+	bcs .bns_modlow					; a[mid] < value
+.bns_modhigh							; a[mid] > value
+	lda binsearch_mid				; high = mid - element size
+	sbc #binsearch_size - 1			; carry always clear
+	sta binsearch_high
+	lda binsearch_mid+1
+	sbc #0
+	sta binsearch_high+1
+	jmp .bns_loop
+.bns_done
+	rts
+
+; how to perform a binary search using that code:
+;
+; prior to entry,
+;     binsearch_low should point to first entry in the table.
+;     binsearch_high should point to last entry in the table.
+;     binsearch_value should contain the search target.
+;
+;	lda #<search_value
+;	sta binsearch_value
+;	lda #>search_value
+;	stx binsearch_value+1
+;
+;	lda #<note_period_table
+;	sta binsearch_low
+;	lda #>note_period_table
+;	sta binsearch_low+1
+;
+;	lda #<(note_period_table+118)
+;	sta binsearch_high
+;	lda #>(note_period_table+118)
+;	sta binsearch_high+1
+;
+;	jsr binary_search
+;
+; if .C = 1, the value in binsearch_mid is the address of the exact match
+; if .C = 0, the value in binsearch_low is the address of the closest entry 
+
+
+;##########
+;#  MISC  #
+;##########
+
 ; this one uses the above function to print an ASCII string, and works like
 ; print_msg: .X/.Y holds the message address, .A = max length or 0, but
 ; with a variation.  Effectively it just prints the string raw, without the

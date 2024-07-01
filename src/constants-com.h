@@ -26,8 +26,8 @@ program_start							= $1e00
 	; free: $0c through $23
 
 	; because they're needed both inside and outside of the player, multiply
-	; and divide routines' zero page variables have to be in the same places
-	; within the "backup-mode" as they are outside of it.
+	; divide, and binary search routines' zero page variables have to be in
+	; the same places within the "backup-mode" as they are outside of it.
 
 	; for 16/16 or 24/24 divide:
 	; dividend/quotient uses $24 to $26
@@ -36,6 +36,11 @@ program_start							= $1e00
 	; for 32/16 divide:
 	; dividend32/quotient32 uses $24 to $27
 	; divisor16 uses $28 and $29
+
+	; for the binary search:
+	; binsearch_low is at $24/$25
+	; binsearch_mid is at $26/27
+	; binsearch_high is at $28/$29
 
 	; the various multiples of 8 bytes below are in order by track number
 
@@ -68,6 +73,7 @@ program_start							= $1e00
 
 	; division remainder uses $59 to $5b
 	; multiply product uses $5c and $5d
+	; binary search binsearch_value is at $59/$5a
 
 	song_speed							= $5e
 
@@ -124,6 +130,11 @@ program_start							= $1e00
 	print_msg_addr						= $5f ; and $60
 	save_addr							= $5f ; and $60
 	divide24_tmp						= $5f
+
+	binsearch_low						= $24 ; and $25
+	binsearch_mid						= $26 ; and $27
+	binsearch_high						= $28 ; and $29
+	binsearch_value						= $59 ; and $5a
 
 	tempzp_f							= $50 ; through $52
 
