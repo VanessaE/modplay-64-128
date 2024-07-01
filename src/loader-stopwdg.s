@@ -83,14 +83,14 @@ fill_load_buffer				; STOP vector enters here after a byte is loaded
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
-	lda expansion_memory_stash_pointer
+	lda expansion_memory_target_pointer
 	adc stash_size
-	sta expansion_memory_stash_pointer
-	lda expansion_memory_stash_pointer+1
+	sta expansion_memory_target_pointer
+	lda expansion_memory_target_pointer+1
 	adc stash_size+1
-	sta expansion_memory_stash_pointer+1
+	sta expansion_memory_target_pointer+1
 	bcc +
-	inc expansion_memory_stash_pointer+2
+	inc expansion_memory_target_pointer+2
 
 +	lda #0
 	sta EAL

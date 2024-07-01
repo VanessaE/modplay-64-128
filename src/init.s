@@ -166,7 +166,12 @@ init
 	sta ramlink_detect
 	sta RAMLINK_REG_DISABLE		; disable RAMLink registers.
 
-+	lda #<reu_stash_block
++	lda #<reu_fetch_block
+	sta fetch_block_vec
+	lda #>reu_fetch_block
+	sta fetch_block_vec+1
+
+	lda #<reu_stash_block
 	sta stash_block_vec
 	lda #>reu_stash_block
 	sta stash_block_vec+1
@@ -592,7 +597,11 @@ note_names_table_copy
 	ldx #0
 
 -	lda note_names_table_origin,x
-	sta note_names_table,x
+	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #31
+	bne +
+	lda #31
+
++	sta note_names_table,x
 	inx
 	cpx #240
 	bne -

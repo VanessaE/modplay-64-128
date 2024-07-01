@@ -138,9 +138,9 @@ load_by_filename_entry
 	stx divisor+2	; divisor is now number of bytes per segment.
 
 	lda #0
-	sta expansion_memory_stash_pointer
-	sta expansion_memory_stash_pointer+1 ; start at $000000 in expansion RAM
-	sta expansion_memory_stash_pointer+2
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+1 ; start at $000000 in expansion RAM
+	sta expansion_memory_target_pointer+2
 
 	lda #0
 	sta EAL
@@ -192,6 +192,7 @@ load_by_filename_entry
 
 ++	jsr zero_first_exp_pages
 
+	jsr reformat_pattern_data
 rts
 
 abort_load
@@ -369,13 +370,13 @@ rts
 
 update_progress
 	sec
-	lda expansion_memory_stash_pointer
+	lda expansion_memory_target_pointer
 	sbc expansion_memory_start_address
 	sta dividend
-	lda expansion_memory_stash_pointer+1
+	lda expansion_memory_target_pointer+1
 	sbc expansion_memory_start_address+1
 	sta dividend+1
-	lda expansion_memory_stash_pointer+2
+	lda expansion_memory_target_pointer+2
 	sbc expansion_memory_start_address+2
 	sta dividend+2
 
@@ -413,11 +414,6 @@ rts
 -	jsr GETIN
 	beq -
 rts
-
-; if there's a tag at all, it'll always be here (because otherwise, it's a
-; 15 sample mod)
-
-magic_number_location = load_buffer + header31_seek_to_pt + 128
 
 decode_header
 	lda expansion_memory_start_address
@@ -484,19 +480,19 @@ filetype_unsure
 	lda load_buffer + 20 + 22 + 2 + 1			; sample #1 default volume
 	beq +
 
-	lda load_buffer + header15_seek_to_pt - 1	; "restart" byte
+	lda load_buffer + header15_seek_to_pat_tbl - 1	; "restart" byte
 	beq +
 	cmp #128
 	bcs +
 
-	ldy load_buffer + header15_seek_to_pt - 2	; number of song positions
+	ldy load_buffer + header15_seek_to_pat_tbl - 2	; number of song positions
 	beq +
 	cpy #129
 	bcs +
 
 	lda #0										; has pattern table  (duh :-P)
-	ldy load_buffer + header15_seek_to_pt - 2
--	ora load_buffer + header15_seek_to_pt,y
+	ldy load_buffer + header15_seek_to_pat_tbl - 2
+-	ora load_buffer + header15_seek_to_pat_tbl,y
 	dey
 	bpl -
 	and #$ff ; was .A is non-zero?
@@ -540,33 +536,33 @@ get_pattern_table
 	cmp #1
 	bne +
 
-	lda #<(header15_seek_to_pt + 128)
+	lda #<header15_seek_to_pat_data
 	sta parse_header_sample_pointer
-	lda #>(header15_seek_to_pt + 128)
+	lda #>header15_seek_to_pat_data
 	sta parse_header_sample_pointer+1
 
-	lda #<(load_buffer + header15_seek_to_pt - 2)
+	lda #<(load_buffer + header15_seek_to_pat_tbl - 2)
 	sta tempzp_d
-	lda #>(load_buffer + header15_seek_to_pt - 2)
+	lda #>(load_buffer + header15_seek_to_pat_tbl - 2)
 	sta tempzp_d+1
 
--	lda load_buffer + header15_seek_to_pt,y
+-	lda load_buffer + header15_seek_to_pat_tbl,y
 	sta pattern_table,y
 	dey
 	bpl -
 	bmi count_patterns
 
-+	lda #<(header31_seek_to_pt + 132)
++	lda #<header31_seek_to_pat_data
 	sta parse_header_sample_pointer
-	lda #>(header31_seek_to_pt + 132)
+	lda #>header31_seek_to_pat_data
 	sta parse_header_sample_pointer+1
 
-	lda #<(load_buffer + header31_seek_to_pt - 2)
+	lda #<(load_buffer + header31_seek_to_pat_tbl - 2)
 	sta tempzp_d
-	lda #>(load_buffer + header31_seek_to_pt - 2)
+	lda #>(load_buffer + header31_seek_to_pat_tbl - 2)
 	sta tempzp_d+1
 
--	lda load_buffer + header31_seek_to_pt,y
+-	lda load_buffer + header31_seek_to_pat_tbl,y
 	sta pattern_table,y
 	dey
 	bpl -
@@ -780,9 +776,9 @@ zero_first_exp_pages
 	dex
 	bne -
 
-	sta expansion_memory_stash_pointer
-	sta expansion_memory_stash_pointer+1
-	sta expansion_memory_stash_pointer+2
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+1
+	sta expansion_memory_target_pointer+2
 
 	sta stash_size
 	lda #2
@@ -790,6 +786,172 @@ zero_first_exp_pages
 
 	+JSR_INDIRECT (stash_block_vec)
 rts
+
+; this routine rearranges the MOD's pattern data slightly, to reduce the
+; sequencer's and visualizer's realtime workload.
+;
+; old format:
+; 7654-3210 76543210 7654-3210 76543210
+; wwww-xxxx xxxxxxxx yyyy-cccc zzzzzzzz
+;
+; new format:
+;
+; 76543210 76543210 7654-3210 76543210
+; xxxxxxxx wwwwyyyy 0000-cccc zzzzzzzz
+;
+; where:
+;      wwwwyyyy (8 bits) is the sample number
+;      xxxxxxxx (now 8 bits) is the note number, 0 - 60 (see init.s)
+; cccc-zzzzzzzz (4+8 bits) is the effect and its parameters
+
+reformat_pattern_data
+	lda #4			; fetch/stash size is 1 kB
+	sta stash_size+1
+	lda #0
+	sta stash_size
+
+	lda current_file_type
+	cmp #1
+	bne +
+
+	lda #<header15_seek_to_pat_data
+	sta expansion_memory_target_pointer
+	lda #>header15_seek_to_pat_data
+	sta expansion_memory_target_pointer+1
+	bne ++
+
++	lda #<header31_seek_to_pat_data
+	sta expansion_memory_target_pointer
+	lda #>header31_seek_to_pat_data
+	sta expansion_memory_target_pointer+1
+
+++	clc
+	lda expansion_memory_start_address
+	adc expansion_memory_target_pointer
+	sta expansion_memory_target_pointer
+
+	lda expansion_memory_start_address+1
+	adc expansion_memory_target_pointer+1
+	sta expansion_memory_target_pointer+1
+
+	lda expansion_memory_start_address+2
+	adc #0
+	sta expansion_memory_target_pointer+2
+
+	lda #0
+	sta pattern_conv_pat_counter
+	conv_pat_loop
+		+JSR_INDIRECT (fetch_block_vec)
+
+		lda #<load_buffer
+		sta utility_pointer
+		lda #>load_buffer
+		sta utility_pointer+1
+
+		lda #0
+		sta pattern_conv_row_counter
+		conv_row_loop
+
+			lda #0
+			sta pattern_conv_trk_counter
+			conv_trk_loop
+
+				lda #<note_period_table
+				sta binsearch_low
+				lda #>note_period_table
+				sta binsearch_low+1
+
+				lda #<(note_period_table+118)
+				sta binsearch_high
+				lda #>(note_period_table+118)
+				sta binsearch_high+1
+
+				ldy #1
+				lda (utility_pointer),y
+				sta binsearch_value
+
+				ldy #0
+				lda (utility_pointer),y
+				and #$0f
+				sta binsearch_value+1
+				ora binsearch_value
+				beq no_bin_search
+
+				jsr binary_search
+				bcc +
+
+				lda binsearch_mid
+				bcs ++
+
+			+	lda binsearch_low
+
+			++	sec							; it starts out as the address of the period word
+				sbc #<note_period_table		; make it into a byte offset
+				lsr
+				clc							; divide by 2 and add 1 and now it's
+				adc #1						; a note number 1-60.
+
+			no_bin_search
+				sta tempzp_c
+
+				ldy #0
+				lda (utility_pointer),y
+				and #$f0
+				sta tempzp_d
+
+				ldy #2
+				lda (utility_pointer),y
+				lsr
+				lsr
+				lsr
+				lsr
+				ora tempzp_d
+				ldy #1
+				sta (utility_pointer),y
+
+				ldy #2
+				lda (utility_pointer),y
+				and #$0f
+				sta (utility_pointer),y
+
+				ldy #0
+				lda tempzp_c
+				sta (utility_pointer),y
+
+				clc
+				lda utility_pointer
+				adc #4
+				sta utility_pointer
+				bcc +
+				inc utility_pointer+1
+
+			+	inc pattern_conv_trk_counter
+				lda pattern_conv_trk_counter
+				cmp #4
+			bne conv_trk_loop
+
+			inc pattern_conv_row_counter
+			lda pattern_conv_row_counter
+			cmp #64
+		bne conv_row_loop
+
+		+JSR_INDIRECT (stash_block_vec)
+
+		clc
+		lda expansion_memory_target_pointer+1
+		adc #4
+		sta expansion_memory_target_pointer+1
+		bcc +
+		inc expansion_memory_target_pointer+2
+
+	+	inc pattern_conv_pat_counter
+		lda pattern_conv_pat_counter
+		cmp number_of_patterns
+	beq +
+	jmp conv_pat_loop
+  +
+rts
+
 
 !ct raw {
 	mod_magic_numbers ; type 1 is Soundtracker

@@ -1,8 +1,8 @@
 ; load a file using the regular ACPTR call
 
 ; Basically, the old method of loading files, via sequential access.  This
-; uses a 1280-byte (5-page) buffer. A 1541 with JiffyDOS loads at around 2kB/s
-; this way.
+; uses all 1280 bytes (5 pages) of the load buffer. A 1541 with JiffyDOS loads
+; at around 2kB/s this way.
 
 ; loader_common leaves the file open after the header has been loaded, so
 ; just use it directly.
@@ -15,8 +15,8 @@ load_via_acptr
 
 	+JSR_INDIRECT (stash_block_vec) ; stash the header that loader_common grabbed
 
-	lda stash_size+1
-	sta expansion_memory_stash_pointer+1
+	lda #5
+	sta expansion_memory_target_pointer+1
 
 .next_block
 	lda #0
@@ -34,17 +34,17 @@ load_via_acptr
 	bne -
 	inc load_pointer+1
 	lda load_pointer+1
-	cmp #>load_buffer_end		; load buffer full?
+	cmp #>(load_buffer+$0500)		; load buffer full?
 	bne -
 
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
-	lda expansion_memory_stash_pointer+1
-	adc stash_size+1
-	sta expansion_memory_stash_pointer+1
+	lda expansion_memory_target_pointer+1
+	adc #5
+	sta expansion_memory_target_pointer+1
 	bcc +
-	inc expansion_memory_stash_pointer+2
+	inc expansion_memory_target_pointer+2
 
 +	jsr update_progress
 	jmp .next_block

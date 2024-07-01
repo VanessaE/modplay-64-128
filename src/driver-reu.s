@@ -15,21 +15,19 @@ reu_set_cycle_counts
 	sta ram_driver_cycle_count
 rts
 
+; enter with .X = row number, .Y = pattern number
 reu_fetch_row
-	stx tempzpbk_h			; preserve .X (row number)
 	lda #0
-	sta tempzpbk_g
 	sta tempzpbk_g+2
 
-	ldx current_song_pos	; pattern number -> offset:  N*1024
-	lda pattern_table,x
+	tya						; pattern number -> offset:  N*1024
 	asl
 	rol tempzpbk_g+2
 	asl
 	rol tempzpbk_g+2
 	sta tempzpbk_g+1
 
-	lda tempzpbk_h			; use LSB to multiply row no. x16
+	txa						; use LSB to multiply row no. x16
 	sta tempzpbk_g
 	lda #0
 	asl tempzpbk_g
@@ -53,18 +51,22 @@ reu_fetch_row
 
 ; add the header length and now we have the real address of the desired row
 
+	clc
 	lda tempzpbk_g
-	adc #<(header15_seek_to_pt+127)
+	adc #<header15_seek_to_pat_data
 	sta DMA_LO
+
 	lda tempzpbk_g+1
-	adc #>(header15_seek_to_pt+127)
+	adc #>header15_seek_to_pat_data
 	jmp ++
 
-+	lda tempzpbk_g
-	adc #<(header31_seek_to_pt+131)
++	clc
+	lda tempzpbk_g
+	adc #<header31_seek_to_pat_data
 	sta DMA_LO
+
 	lda tempzpbk_g+1
-	adc #>(header31_seek_to_pt+131)
+	adc #>header31_seek_to_pat_data
 
 ++	sta DMA_HI
 	lda #0
@@ -94,7 +96,37 @@ reu_fetch_row
 	!ifdef c128 {
 		sty VIC+$30
 	}
-	ldx tempzpbk_h
+rts
+
+reu_fetch_block
+	lda #<load_buffer
+	sta DMA_ADL
+	lda #>load_buffer
+	sta DMA_ADH
+
+	lda expansion_memory_target_pointer
+	sta DMA_LO
+	lda expansion_memory_target_pointer+1
+	sta DMA_HI
+	lda expansion_memory_target_pointer+2
+	sta DMA_BANK
+
+	lda stash_size
+	sta DMA_DAL
+	lda stash_size+1
+	sta DMA_DAH
+
+	!ifdef c128 {
+		lda #0
+		sta VIC+$30
+	}
+
+	lda #$91
+	sta DMA_CMD
+
+	!ifdef c128 {
+		dec VIC+$30
+	}
 rts
 
 reu_stash_block
@@ -103,11 +135,11 @@ reu_stash_block
 	lda #>load_buffer
 	sta DMA_ADH
 
-	lda expansion_memory_stash_pointer
+	lda expansion_memory_target_pointer
 	sta DMA_LO
-	lda expansion_memory_stash_pointer+1
+	lda expansion_memory_target_pointer+1
 	sta DMA_HI
-	lda expansion_memory_stash_pointer+2
+	lda expansion_memory_target_pointer+2
 	sta DMA_BANK
 
 	lda stash_size

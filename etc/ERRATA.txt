@@ -54,7 +54,7 @@
   floppy drive, yet `LOAD"*",8,1` works (by extension, disk autoboot works
   too).  UNlike the above, `@P0` doesn't help. 😛
 
-* BOTH: progress bar overflows its length when using the ACPTR loader.
+* BOTH: progress bar has a minor off-by-1 overflow glitch.
 
 * C64: STOP wedge loader fails if JiffyDOS is present.
 

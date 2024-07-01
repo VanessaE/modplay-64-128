@@ -44,32 +44,32 @@ program_start							= $2000
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $24 through $37
+	; free: $24 through $30
 
-	pattern_break_target_row			= $38
-	seq_current_pattern_number			= $39
-	seq_current_row						= $3a
-	seq_current_track					= $3b
-	seq_tempo_bpm						= $3c
-	seq_ticks_per_division				= $3d
-	seq_ticks_counter					= $3e
-	current_song_pos					= $3f
-	glissando_flag						= $40
-	vibrato_waveform					= $41
-	tremolo_waveform					= $42
-	delay_pattern_divisions				= $43
-	audio_in_buf_index					= $44
-	audio_out_buf_index					= $45
-	mixer_loops_per_tick_fract			= $46
-	mixer_loops_per_tick				= $47
-	mixer_countdown_fract				= $48
-	mixer_countdown						= $49
-	sequencer_temp_x					= $4a
-	sequencer_temp_y					= $4b
-	sequencer_temp_a					= $4c ; 2 bytes \__ these can also be used
-	sequencer_temp_b					= $4e ; 2 bytes /   as one 4-byte temp
-	current_sample_volume_levels		= $50 ; 8 bytes
-	portamento_to_note_rates			= $58 ; 8 bytes
+	pattern_break_target_row			= $31
+	seq_current_pattern_number			= $32
+	seq_current_row						= $33
+	seq_current_track					= $34
+	seq_tempo_bpm						= $35
+	seq_ticks_per_division				= $36
+	seq_ticks_counter					= $37
+	current_song_pos					= $38
+	glissando_flag						= $39
+	vibrato_waveform					= $3a
+	tremolo_waveform					= $3b
+	delay_pattern_divisions				= $3c
+	audio_in_buf_index					= $3d
+	audio_out_buf_index					= $3e
+	mixer_loops_per_tick_fract			= $3f
+	mixer_loops_per_tick				= $40
+	mixer_countdown_fract				= $41
+	mixer_countdown						= $42
+	sequencer_temp_x					= $43
+	sequencer_temp_y					= $44
+	sequencer_temp_a					= $45 ; 2 bytes \__ these can also be used
+	sequencer_temp_b					= $47 ; 2 bytes /   as one 4-byte temp
+	current_sample_volume_levels		= $49 ; 8 bytes
+	portamento_to_note_rates			= $51 ; 8 bytes
 
 	; division remainder uses $59 through $5b
 	; multiply product uses $5c/$5d
@@ -124,7 +124,7 @@ program_start							= $2000
 
 	product								= $5c ; and $5d / the product from multiply routine
 
-	expansion_memory_stash_pointer		= $5c ; to $5e, expansion RAM stash target addr
+	expansion_memory_target_pointer		= $5c ; to $5e, expansion RAM stash target addr
 											  ; only used within the loader
 
 	print_msg_addr						= $5f ; and $60
@@ -132,6 +132,7 @@ program_start							= $2000
 	divide24_tmp						= $5f
 
 	tempzp_f							= $50 ; through $52
+	utility_pointer						= $50 ; and $51
 
 	binsearch_low						= $24 ; and $25
 	binsearch_mid						= $26 ; and $27
@@ -295,23 +296,29 @@ program_start							= $2000
 	visualizer_mode						= $17e8
 	visualizer_base_address				= $17e9 ; 2 bytes
 
-	; free: $17eb through $18b1
+	pattern_conv_pat_counter			= $17eb
+	pattern_conv_row_counter			= $17ec
+	pattern_conv_trk_counter			= $17ed
+
+	; free: $17ee through $1827
 
 	; various program vectors
 
-	stash_block_vec						= $18b2 ; 2 bytes
+	fetch_block_vec						= $1828 ; 2 bytes
+	stash_block_vec						= $183a ; 2 bytes
 
-	print_vec							= $18b4 ; 2 bytes
+	print_vec							= $183c ; 2 bytes
 
-	audio_set_resolution_vec			= $18b6 ; 2 bytes
-	audio_init_vec						= $18b8 ; 2 bytes
-	audio_start_vec						= $18ba ; 2 bytes
-	audio_stop_vec						= $18bc ; 2 bytes
+	audio_set_resolution_vec			= $183e ; 2 bytes
+	audio_init_vec						= $1840 ; 2 bytes
+	audio_start_vec						= $1842 ; 2 bytes
+	audio_stop_vec						= $1844 ; 2 bytes
 
-	audio_driver_set_cycle_count_vec	= $18be ; 2 bytes
-	ram_driver_set_cycle_counts_vec		= $18c0 ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $1846 ; 2 bytes
+	ram_driver_set_cycle_counts_vec		= $1848 ; 2 bytes
 
-	note_period_table					= $18c2 ; 120 bytes
+	note_period_table					= $184a ; 120 bytes
+	steprate_table						= $18c2 ; 120 bytes
 
 	note_names_table					= $193a ; 240 bytes
 
@@ -358,8 +365,7 @@ program_start							= $2000
 
 	; other under-KERNAL-ROM stuff
 
-	pitch_table_fracts					= $f300 ; 7 pages
-	pitch_table_lows					= $fa00 ; 3 pages
+	; free: $f300through $feff
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page
@@ -472,10 +478,19 @@ RVSOFF								= $92
 X = "X" ; so that the delay routine doesn't
 Y = "Y" ; need to be called with X or Y in quotes.
 
-header15_seek_to_pt					= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
-header31_seek_to_pt					= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
-header_first_inst_meta_offset		= 20
-instrument_metadata_size			= 22+2+1+1+2+2 ; (30)
+header_first_inst_meta_offset	= 20
+instrument_metadata_size		= 22+2+1+1+2+2 ; (30)
+
+header15_seek_to_pat_tbl		= 20+15*(22+2+1+1+2+2)+1+1 ; (472)
+header31_seek_to_pat_tbl		= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
+
+header15_seek_to_pat_data = header15_seek_to_pat_tbl + 128
+header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
+
+; if there's a tag at all, it'll always be here (because otherwise, it's a
+; 15 sample mod)
+
+magic_number_location = load_buffer + header31_seek_to_pat_tbl + 128
 
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1

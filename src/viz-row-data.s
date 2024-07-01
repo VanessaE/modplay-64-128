@@ -207,6 +207,9 @@ viz_row_data_fetch_and_print
 
 +	stx sequencer_temp_x
 
+	ldx current_song_pos
+	ldy pattern_table,x
+	ldx sequencer_temp_x
 	jsr fetch_row_data
 
 	!ifdef c128 {
@@ -241,11 +244,7 @@ viz_row_data_fetch_and_print
 	}
 
 	!for .viz_tr, 0, 3 {
-		ldy #.viz_tr*4
-		lda seq_current_row_data,y
-		and #$0f
-		iny
-		ora seq_current_row_data,y
+		lda seq_current_row_data + .viz_tr*4
 		bne +
 
 		lda #$2d
@@ -254,52 +253,40 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 		bne ++
 
-	+	ldy #.viz_tr*4
-		lda seq_current_row_data,y
+	+	sec
+		sbc #1
+		asl
+		asl
+		tax
+		lda note_names_table,x
+		jsr viz_row_data_print_char
+		inx
+		lda note_names_table,x
+		jsr viz_row_data_print_char
+		inx
+		lda note_names_table,x
+		jsr viz_row_data_print_char
+
+	++	ldx seq_current_row_data + .viz_tr*4 + 1
+		lda divide_by_16_table,x
+		jsr to_hex
+		jsr viz_row_data_print_char
+
+		lda seq_current_row_data + .viz_tr*4 + 1
 		and #$0f
 		jsr to_hex
 		jsr viz_row_data_print_char
 
-		iny
-		lda seq_current_row_data,y
-		tax
+		lda seq_current_row_data + .viz_tr*4 + 2
+		jsr to_hex
+		jsr viz_row_data_print_char
+
+		ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x
 		jsr to_hex
 		jsr viz_row_data_print_char
 
-		lda seq_current_row_data,y
-		and #$0f
-		jsr to_hex
-		jsr viz_row_data_print_char
-
-	++	ldy #.viz_tr*4
-		lda seq_current_row_data,y
-		tax
-		lda divide_by_16_table,x
-		jsr to_hex
-		jsr viz_row_data_print_char
-
-		ldy #.viz_tr*4 + 2
-		lda seq_current_row_data,y
-		tax
-		lda divide_by_16_table,x
-		jsr to_hex
-		jsr viz_row_data_print_char
-
-		ldy #.viz_tr*4 + 2
-		lda seq_current_row_data,y
-		and #$0f
-		jsr to_hex
-		jsr viz_row_data_print_char
-
-		iny
-		lda seq_current_row_data,y
-		tax
-		lda divide_by_16_table,x
-		jsr to_hex
-		jsr viz_row_data_print_char
-
-		lda seq_current_row_data,y
+		lda seq_current_row_data + .viz_tr*4 + 3
 		and #$0f
 		jsr to_hex
 		jsr viz_row_data_print_char

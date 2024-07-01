@@ -129,6 +129,8 @@ next_row_no_scroll
 	inx
 	jsr viz_row_data_fetch_and_print
 
+	ldx current_song_pos
+	ldy pattern_table,x
 	ldx seq_current_row
 	jsr fetch_row_data
 
@@ -144,35 +146,20 @@ next_track_this_row
 	tax
 
 ; get sample number
-	lda seq_current_row_data,x
-	and #$f0
-	sta tempzpbk_g
-	lda seq_current_row_data+2,x
-	lsr
-	lsr
-	lsr
-	lsr
-	ora tempzpbk_g					; if sample number is 0, keep using the
-	beq get_period					; previous sample number
-	sta current_sample_numbers,y
+	lda seq_current_row_data+1,x
+	beq get_note_number					; if sample number is 0, keep using
+	sta current_sample_numbers,y		; the previous sample number
 
 	jsr start_sample
 
-get_period
-	lda seq_current_row_data,x		; if period is 0, keep using the
-	and #$0f						; previous period value
-	ora seq_current_row_data+1,x
-	beq get_command
+get_note_number
+	lda seq_current_row_data,x			; if note number is 0, keep using the
+	beq get_command						; previous note/pitch
 
-	lda seq_current_row_data,x
-	and #$0f
-	sta current_note_periods_highs,y
-	lda seq_current_row_data+1,x
-	sta current_note_periods_lows,y
-
+	; .A holds the note number 1-60
 	jsr set_pitch
 
-get_command							; and its parameters
+get_command								; ...and its parameters
 	lda seq_commands,y
 	sta seq_prev_commands,y
 	lda seq_command_arguments,y
@@ -181,7 +168,6 @@ get_command							; and its parameters
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
 	lda seq_current_row_data+2,x
-	and #$0f
 	sta seq_commands,y
 	asl
 	tax
@@ -360,47 +346,25 @@ rts
 
 ; convert a note period into a sample stepper value
 ;
-; enter with .Y set to the track number whose period needs converted
-; .Y will be preserved.
+; enter with .A = note number 1-60 to set, .Y = track number
 
 set_pitch
 	stx sequencer_temp_x
-	tya
+
+	sec
+	sbc #1	; subtract 1, then double it = 1-61 --> 0-59 --> 0-118
+	asl
 	tax
 
-	lda #0
-	sta tempzp_d
-	sta tempzp_e
-
-	clc
-	lda #>pitch_table_fracts
-	adc current_note_periods_highs,x
-	sta tempzp_d+1
-
-	lda #>pitch_table_lows
-	adc current_note_periods_highs,x
-	sta tempzp_e+1
-
-	ldy current_note_periods_lows,x
-
-	lda (tempzp_d),y
-	sta current_steprates_fract,x
-
-; the pitch table gen doesn't bother storing the highest 4 pages of the "lows"
-; section (that is, the integers), because they will always return 0 no matter
-; what, so we can just handle that here for note periods whose high byte is 3
-; or more (e.g. 768 and above)
-
-	lda current_note_periods_highs,x
-	cmp #3
-	bcs +
-	lda (tempzp_e),y
-	bcc ++
-
-+	lda #0
-++	sta current_steprates_lows,x
-
-	ldy seq_current_track
+	lda note_period_table,x
+	sta current_note_periods_lows,y
+	lda steprate_table,x
+	sta current_steprates_fract,y
+	inx
+	lda note_period_table,x
+	sta current_note_periods_highs,y
+	lda steprate_table,x
+	sta current_steprates_lows,y
 
 	set_la_mixer_addrs_vec
 		jsr $1234

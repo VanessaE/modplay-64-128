@@ -114,30 +114,13 @@ generate_tempo_table
 	bne -
 rts
 
-generate_pitch_table
-	lda #0
-	sta tempzp_d
-	sta tempzp_e
-	sta tempzp_f+1
-
-	ldy #56
--	sta pitch_table_fracts,y
-	sta pitch_table_lows,y
-	dey
-	bpl -
-
-	lda #57				; the lowest known note period is 57
-	sta tempzp_f
-
-	lda #>pitch_table_fracts
-	sta tempzp_d+1
-
-	lda #>pitch_table_lows
-	sta tempzp_e+1
+generate_steprate_table
 
 	lda isr_trigger_interval
 	ldx #pitch_fine_adjust_constant
 	jsr multiply_8x8
+
+	ldx #0
 
 -	lda #0
 	sta dividend
@@ -148,12 +131,15 @@ generate_pitch_table
 	lda product+1
 	sta dividend+2
 
-	lda tempzp_f
+	lda note_period_table,x
 	sta divisor
-	lda tempzp_f+1
+	inx
+	lda note_period_table,x
 	sta divisor+1
 
+	stx tempzp_c
 	jsr divide_24by24
+	ldx tempzp_c
 
 	lda quotient
 	lsr quotient+1
@@ -165,25 +151,14 @@ generate_pitch_table
 	lsr quotient+1
 	ror
 
-	ldy tempzp_f
-	sta (tempzp_d),y
-
-	lda tempzp_f+1
-	cmp #3
-	bcs +
-
+	dex
+	sta steprate_table,x
+	inx
 	lda quotient+1
-	sta (tempzp_e),y
+	sta steprate_table,x
 
-+	inc tempzp_f
-	bne -
-
-	inc tempzp_d+1
-	inc tempzp_e+1
-
-	inc tempzp_f+1
-	lda tempzp_f+1
-	cmp #7
++	inx
+	cpx #120
 	bne -
 rts
 
@@ -237,7 +212,7 @@ no_msgs1
 	sta last_isr_trigger_interval
 
 	jsr generate_tempo_table
-	jsr generate_pitch_table
+	jsr generate_steprate_table
 
 +	bit allow_regen_msg
 	bpl no_msgs2
