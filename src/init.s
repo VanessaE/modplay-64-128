@@ -344,6 +344,9 @@ init
 	}
 
 	jsr semitones_table_copy
+	jsr note_period_table_copy
+	jsr note_names_table_copy
+
 	jsr control_code_flags_copy
 
 	jsr final_clear_copy
@@ -574,6 +577,28 @@ control_code_flags_copy
 	bpl -
 rts
 
+note_period_table_copy
+	ldx #0
+
+-	lda note_period_table_origin,x
+	sta note_period_table,x
+	inx
+	cpx #120
+	bne -
+  +
+rts
+
+note_names_table_copy
+	ldx #0
+
+-	lda note_names_table_origin,x
+	sta note_names_table,x
+	inx
+	cpx #240
+	bne -
+  +
+rts
+
 ; if the byte equals its PETSCII value in that pos, it can hold a new char to
 ; print in ASCII mode.  If there's a 0, it's a control code that we need to
 ; pass to CHROUT, e.g. colors, cursor moves, etc.
@@ -673,4 +698,20 @@ initializing_msg
 		!byte 138			; "┛"
 		!byte 132,132		; "▘" and "▚"
 		!byte 0
+}
+
+note_period_table_origin
+	!word  57,  60,   64,   67,   71,   76,   80,   85,   90,   95,  101,  107
+	!word 113, 120,  127,  135,  143,  151,  160,  170,  180,  190,  202,  214
+	!word 226, 240,  254,  269,  285,  302,  320,  339,  360,  381,  404,  428
+	!word 453, 480,  508,  538,  570,  604,  640,  678,  720,  762,  808,  856
+	!word 907, 961, 1017, 1077, 1141, 1209, 1281, 1357, 1440, 1525, 1616, 1712
+
+!ct raw {
+	note_names_table_origin
+		!text "B-4",0,"A#4",0,"A-4",0,"G#4",0,"G-4",0,"F#4",0,"F-4",0,"E-4",0,"D#4",0,"D-4",0,"C#4",0,"C-4",0
+		!text "B-3",0,"A#3",0,"A-3",0,"G#3",0,"G-3",0,"F#3",0,"F-3",0,"E-3",0,"D#3",0,"D-3",0,"C#3",0,"C-3",0
+		!text "B-2",0,"A#2",0,"A-2",0,"G#2",0,"G-2",0,"F#2",0,"F-2",0,"E-2",0,"D#2",0,"D-2",0,"C#2",0,"C-2",0
+		!text "B-1",0,"A#1",0,"A-1",0,"G#1",0,"G-1",0,"F#1",0,"F-1",0,"E-1",0,"D#1",0,"D-1",0,"C#1",0,"C-1",0
+		!text "B-0",0,"A#0",0,"A-0",0,"G#0",0,"G-0",0,"F#0",0,"F-0",0,"E-0",0,"D#0",0,"D-0",0,"C#0",0,"C-0",0
 }

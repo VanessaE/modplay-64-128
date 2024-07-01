@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start							= $1e00
+program_start							= $2000
 
 !addr {
 	; KERNAL zero-page variables
@@ -30,12 +30,12 @@ program_start							= $1e00
 	; the same places within the "backup-mode" as they are outside of it.
 
 	; for 16/16 or 24/24 divide:
-	; dividend/quotient uses $24 to $26
-	; divisor uses $27 to $29
+	; dividend/quotient uses $24 through $26
+	; divisor uses $27 through $29
 
 	; for 32/16 divide:
-	; dividend32/quotient32 uses $24 to $27
-	; divisor16 uses $28 and $29
+	; dividend32/quotient32 uses $24 through $27
+	; divisor16 uses $28/$29
 
 	; for the binary search:
 	; binsearch_low is at $24/$25
@@ -71,8 +71,8 @@ program_start							= $1e00
 	current_sample_volume_levels		= $50 ; 8 bytes
 	portamento_to_note_rates			= $58 ; 8 bytes
 
-	; division remainder uses $59 to $5b
-	; multiply product uses $5c and $5d
+	; division remainder uses $59 through $5b
+	; multiply product uses $5c/$5d
 	; binary search binsearch_value is at $59/$5a
 
 	song_speed							= $5e
@@ -119,24 +119,24 @@ program_start							= $1e00
 	rle_mode_flag						= $24 ; safe to overwrite - math ops aren't used
 	rle_byte_count						= $25 ; at the same time as RLE printing
 
-	load_pointer						= $59 ; and $60
-	filename_addr						= $59 ; and $60
+	load_pointer						= $59 ; and $5a
+	filename_addr						= $59 ; and $5a
 
 	product								= $5c ; and $5d / the product from multiply routine
 
 	expansion_memory_stash_pointer		= $5c ; to $5e, expansion RAM stash target addr
-											; only used within the loader
+											  ; only used within the loader
 
 	print_msg_addr						= $5f ; and $60
 	save_addr							= $5f ; and $60
 	divide24_tmp						= $5f
 
+	tempzp_f							= $50 ; through $52
+
 	binsearch_low						= $24 ; and $25
 	binsearch_mid						= $26 ; and $27
 	binsearch_high						= $28 ; and $29
 	binsearch_value						= $59 ; and $5a
-
-	tempzp_f							= $50 ; through $52
 
 	; free: $fa through $ff
 
@@ -295,46 +295,48 @@ program_start							= $1e00
 	visualizer_mode						= $17e8
 	visualizer_base_address				= $17e9 ; 2 bytes
 
-	; free: $17eb through $17ef
+	; free: $17eb through $18b1
 
 	; various program vectors
 
-	stash_block_vec						= $17f0 ; 2 bytes
+	stash_block_vec						= $18b2 ; 2 bytes
 
-	print_vec							= $17f2 ; 2 bytes
+	print_vec							= $18b4 ; 2 bytes
 
-	audio_set_resolution_vec			= $17f4 ; 2 bytes
-	audio_init_vec						= $17f6 ; 2 bytes
-	audio_start_vec						= $17f8 ; 2 bytes
-	audio_stop_vec						= $17fa ; 2 bytes
+	audio_set_resolution_vec			= $18b6 ; 2 bytes
+	audio_init_vec						= $18b8 ; 2 bytes
+	audio_start_vec						= $18ba ; 2 bytes
+	audio_stop_vec						= $18bc ; 2 bytes
 
-	audio_driver_set_cycle_count_vec	= $17fc ; 2 bytes
-	ram_driver_set_cycle_counts_vec		= $17fe ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $18be ; 2 bytes
+	ram_driver_set_cycle_counts_vec		= $18c0 ; 2 bytes
 
-	loader_compatibility_table			= $17ea ; 22 bytes - devices 8 through 30.
+	note_period_table					= $18c2 ; 120 bytes
+
+	note_names_table					= $193a ; 240 bytes
+
+	loader_compatibility_table			= $1a2a ; 22 bytes - devices 8 through 30.
 
 	; mods' lengths are big-endian, but addrs and lengths here are little-
 	; endian. each of these is 32 bytes, except the first byte of each one is
 	; unused.
 
-	sample_start_addresses_lows			= $1800
-	sample_start_addresses_mids			= $1820
-	sample_start_addresses_highs		= $1840
-	sample_end_addresses_lows			= $1860
-	sample_end_addresses_mids			= $1880
-	sample_end_addresses_highs			= $18a0
-	sample_loop_start_addresses_lows	= $18c0
-	sample_loop_start_addresses_mids	= $18e0
-	sample_loop_start_addresses_highs	= $1900
-	sample_loop_end_addresses_lows		= $1920
-	sample_loop_end_addresses_mids		= $1940
-	sample_loop_end_addresses_highs		= $1960
-	sample_default_loop_flags			= $1980
-	sample_default_fine_tunes			= $19a0
-	sample_default_volume_levels		= $19c0
-	mod_instrument_names				= $19e0 ; 32 * 31 bytes, through $1dbf
-
-	; free: $1dc0 through 1dff
+	sample_start_addresses_lows			= $1a40
+	sample_start_addresses_mids			= $1a60
+	sample_start_addresses_highs		= $1a80
+	sample_end_addresses_lows			= $1aa0
+	sample_end_addresses_mids			= $1ac0
+	sample_end_addresses_highs			= $1ae0
+	sample_loop_start_addresses_lows	= $1b00
+	sample_loop_start_addresses_mids	= $1b20
+	sample_loop_start_addresses_highs	= $1b40
+	sample_loop_end_addresses_lows		= $1b60
+	sample_loop_end_addresses_mids		= $1b80
+	sample_loop_end_addresses_highs		= $1ba0
+	sample_default_loop_flags			= $1bc0
+	sample_default_fine_tunes			= $1be0
+	sample_default_volume_levels		= $1c00
+	mod_instrument_names				= $1c20 ; 32 * 31 bytes, through $1fff
 
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff
