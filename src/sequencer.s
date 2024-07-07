@@ -100,6 +100,7 @@ nple
 	tax
 	lda pattern_table,x
 	sta seq_current_pattern_number
+	tay
 
 	jsr print_song_pos_pat_num
 
@@ -126,13 +127,22 @@ next_row_no_scroll
 	ldy pattern_table,x
 
 	ldx seq_current_row
+	cpx #61
+	bcs +
+
+	lda #<viz_line_6
+	sta utility_pointer 
+	lda #>viz_line_6
+	sta utility_pointer+1
+
 	inx
 	inx
 	inx
 	jsr viz_row_data_fetch_and_print
 
 	ldx seq_current_row
-	jsr fetch_row_data
+
++	jsr fetch_row_data
 
 	jsr print_row_num
 

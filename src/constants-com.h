@@ -20,10 +20,8 @@ program_start							= $2000
 	tempzpbk_g							= $02 ; 4 bytes
 	tempzpbk_h							= $06
 	tempzpbk_j							= $07
-	visualizer_address_tempzpbk_a		= $08 ; and $09
-	visualizer_address_tempzpbk_b		= $0a ; and $0b
 
-	; free: $0d through $23
+	; free: $08 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -289,9 +287,9 @@ program_start							= $2000
 	expansion_memory_start_address		= $17d4 ; 3 bytes
 	temp_abs_a							= $17d7
 	temp_abs_b							= $17d8
-	temp_abs_c							= $17d9
-	temp_abs_x							= $17da
-	temp_abs_y							= $17db
+	temp_abs_x							= $17d9
+	temp_abs_y							= $17da
+	temp_abs_y2							= $17db
 	scroll_area_target_addr				= $17dc ; 2 bytes
 	scroll_area_width					= $17de
 	scroll_area_height					= $17df

@@ -3,172 +3,142 @@
 !text "viz-row-data",0
 
 !ifndef c128 {
-	viz_tl_corner_addr = secondary_screen + screen_width * visualizer_screen_row + visualizer_screen_column
+	vizualizer_base_addr = secondary_screen + screen_width * visualizer_screen_row + visualizer_screen_column
 } else {
-	viz_tl_corner_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
+	vizualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 }
 
-viz_line_2 = viz_tl_corner_addr + screen_width
-viz_line_3 = viz_tl_corner_addr + screen_width*2
-viz_line_4 = viz_tl_corner_addr + screen_width*3
-viz_line_5 = viz_tl_corner_addr + screen_width*4
-viz_line_6 = viz_tl_corner_addr + screen_width*5
+viz_line_2 = vizualizer_base_addr + screen_width
+viz_line_3 = vizualizer_base_addr + screen_width*2
+viz_line_4 = vizualizer_base_addr + screen_width*3
+viz_line_5 = vizualizer_base_addr + screen_width*4
+viz_line_6 = vizualizer_base_addr + screen_width*5
 
-viz_colors_tl_corner_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
+vizualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
+
+; set up base addresses, print the column dividers, and pre-fill the colors
+; The CHROUT "cursor" is positioned at the top-left corner of the visualizer
+; area just before this code is called.
+
+; This routine is called before the sequencer starts, so any Zero Page usage
+; must be stuff that's safe to use when ZP IS NOT BACKED-UP.
 
 viz_row_data_init
 	!ifndef c128 {
 		bit enable_screen_on_playback
-		bmi +
-		rts
-
-	+	lda #<viz_colors_tl_corner_addr
-		sta visualizer_address_temp
-		lda #>viz_colors_tl_corner_addr
-		sta visualizer_address_temp+1
-	} else {
-		lda #<viz_colors_tl_corner_addr
-		sta write_fill_copy_target
-		lda #>viz_colors_tl_corner_addr
-		sta write_fill_copy_target+1
+		bpl no_vrdi
 	}
 
-	lda #0
-	sta tempzp_c
+	lda #<vizualizer_base_addr
+	sta visualizer_base_address
+	lda #>vizualizer_base_addr
+	sta visualizer_base_address+1
+
+	lda #<vizualizer_colors_base_addr
+	sta utility_pointer
+	sta write_fill_copy_target
+	lda #>vizualizer_colors_base_addr
+	sta utility_pointer+1
+	sta write_fill_copy_target+1
 
 	lda #UP
 	jsr CHROUT
 
+	lda #0
+	sta temp_abs_b
+
 	vis_init_next_row
+		ldx temp_abs_b
+		lda viz_row_data_colors,x
+		ldx #visualizer_area_width
+
 		!ifndef c128 {
-			ldy #0
-			ldx tempzp_c
-			lda viz_row_data_colors,x
-		-	sta (visualizer_address_temp),y
-			iny
-			cpy #visualizer_area_width
-			bne -
+			jsr local_ram_block_fill
+		} else {
+			jsr vdc_block_fill
+		}
 
-			clc
-			lda visualizer_address_temp
-			adc #screen_width
-			sta visualizer_address_temp
-			lda visualizer_address_temp+1
-			adc #0
-			sta visualizer_address_temp+1
+		clc
+		lda utility_pointer
+		adc #screen_width
+		sta utility_pointer
+		sta write_fill_copy_target
+		lda utility_pointer+1
+		adc #0
+		sta utility_pointer+1
+		sta write_fill_copy_target+1
 
-			lda #0
-			ldx #<viz_dividers_msg
-			ldy #>viz_dividers_msg
+		lda #0
+		ldx #<viz_dividers_msg
+		ldy #>viz_dividers_msg
+
+		!ifndef c128 {
 			jsr print_msg_ascii
 		} else {
-			ldx tempzp_c
-			lda viz_row_data_colors,x
-			ldx #visualizer_area_width
-			jsr vdc_block_fill
-
-			clc
-			lda write_fill_copy_target
-			adc #screen_width
-			sta write_fill_copy_target
-			lda write_fill_copy_target+1
-			adc #0
-			sta write_fill_copy_target+1
-
-			lda #0
-			ldx #<viz_dividers_msg
-			ldy #>viz_dividers_msg
 			jsr print_msg
 		}
 
-		inc tempzp_c
-		lda tempzp_c
+		inc temp_abs_b
+		lda temp_abs_b
 		cmp #6
 	bne vis_init_next_row
 
 	lda #0
 	sta scroll_area_blank_last_line_flag
+
+  no_vrdi
 rts
+
+; everything from here on down is called from within the sequencer, so any
+; Zero Page usage must be stuff that's allowed when ZP IS BACKED-UP.
+
+; fetch and print the first four rows of song data when a new pattern is
+; selected, and clear the top two lines of the visualizer.  Expects the
+; newly-selected pattern number in .Y
 
 viz_row_data_pattern_preload
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
 		rts
-
-	+	lda #<viz_tl_corner_addr
-		sta visualizer_address_tempzpbk_a
-		lda #>viz_tl_corner_addr
-		sta visualizer_address_tempzpbk_a+1
-	} else {
-		lda #18
-		sta VDC
-		lda #>viz_tl_corner_addr
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<viz_tl_corner_addr
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
 	}
 
++	lda #<vizualizer_base_addr
+	sta utility_pointer 
+	lda #>vizualizer_base_addr
+	sta utility_pointer+1
 	jsr viz_row_data_erase_row
 
-	!ifndef c128 {
-		lda #<viz_line_2
-		sta visualizer_address_tempzpbk_a
-		lda #>viz_line_2
-		sta visualizer_address_tempzpbk_a+1
-	} else {
-		lda #18
-		sta VDC
-		lda #>viz_line_2
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<viz_line_2
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
-	}
-
+	lda #<viz_line_2
+	sta utility_pointer 
+	lda #>viz_line_2
+	sta utility_pointer+1
 	jsr viz_row_data_erase_row
 
 	lda #<viz_line_3
-	sta visualizer_address_tempzpbk_a
+	sta utility_pointer 
 	lda #>viz_line_3
-	sta visualizer_address_tempzpbk_a+1
+	sta utility_pointer+1
 
 	ldx #0
 	jsr viz_row_data_fetch_and_print
 
 	lda #<viz_line_4
-	sta visualizer_address_tempzpbk_a
+	sta utility_pointer 
 	lda #>viz_line_4
-	sta visualizer_address_tempzpbk_a+1
-
+	sta utility_pointer+1
 	inx
 	jsr viz_row_data_fetch_and_print
 
 	lda #<viz_line_5
-	sta visualizer_address_tempzpbk_a
+	sta utility_pointer 
 	lda #>viz_line_5
-	sta visualizer_address_tempzpbk_a+1
-
+	sta utility_pointer+1
 	inx
 	jsr viz_row_data_fetch_and_print
-
-	lda #<viz_line_6
-	sta visualizer_address_tempzpbk_a
-	lda #>viz_line_6
-	sta visualizer_address_tempzpbk_a+1
 rts
 
+; fetch and print one song data row, with the row number in .X
 viz_row_data_fetch_and_print
 	!ifndef c128 {
 		bit enable_screen_on_playback
@@ -177,69 +147,24 @@ viz_row_data_fetch_and_print
 	  +
 	}
 
-	sty sequencer_temp_y
 	cpx #64
 	bcc +
-
-	!ifndef c128 {
-		lda #<viz_line_6
-		sta visualizer_address_tempzpbk_a
-		lda #>viz_line_6
-		sta visualizer_address_tempzpbk_a+1
-	} else {
-		lda #18
-		sta VDC
-		lda #>viz_line_6
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<viz_line_6
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
-	}
-
-	jsr viz_row_data_erase_row
-
 	rts
 
-+	stx sequencer_temp_x
++	stx temp_abs_x
+	sty temp_abs_y2
 
-	ldx current_song_pos
-	ldy pattern_table,x
-	ldx sequencer_temp_x
 	jsr fetch_row_data
 
-	!ifdef c128 {
-		lda #18
-		sta VDC
-		lda visualizer_address_tempzpbk_a+1
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda visualizer_address_tempzpbk_a
-		sta VDC+1
-	} else {
-		lda visualizer_address_tempzpbk_a
-		sta visualizer_address_tempzpbk_b
-		lda visualizer_address_tempzpbk_a+1
-		sta visualizer_address_tempzpbk_b+1
-	}
-
-	!ifdef c128 {
-		lda divide_by_16_table,x
-		jsr to_hex
-		jsr viz_row_data_print_char
+	!ifdef c128 { ; only display the row # on C128, C64 screen is too small
+		jsr vdc_write_ram_no_reg_31_store
 
 		txa
-		jsr to_hex
-		jsr viz_row_data_print_char
+		jsr display_byte_hex_direct
 
-		lda #$5d
-		jsr viz_row_data_print_char
+	-	bit VDC		; perform a dummy read to skip ahead one byte
+		bpl -
+		bit VDC+1
 	}
 
 	!for .viz_tr, 0, 3 {
@@ -289,145 +214,138 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 
 		!if .viz_tr < 3 {
-			!ifndef c128 {
-				lda #$01
-			} else {
-				lda #$5d
-			}
+			lda #RIGHT
 			jsr viz_row_data_print_char
 		}
 	}
 
-	ldx sequencer_temp_x
-	ldy sequencer_temp_y
+	ldx temp_abs_x
+	ldy temp_abs_y2
 rts
+
+; "print" a single character by directly storing it to the screen
+; interpreting #RIGHT as a skip-byte symbol
 
 viz_row_data_print_char
-	sta tempzpbk_h
-	sty tempzpbk_j
+	sta temp_abs_b
 
 	!ifndef c128 {
-		lda tempzpbk_h
-		ldy #0
-		sta (visualizer_address_tempzpbk_b),y
-		inc visualizer_address_tempzpbk_b
-		bne +
-		inc visualizer_address_tempzpbk_b+1
-	} else {
-	-	bit VDC
-		bpl -
+		lda temp_abs_b
 
-		lda #31
-		sta VDC
-		lda tempzpbk_h
-		sta VDC+1
+		cmp #RIGHT
+		beq +
+
+		ldy #0
+		sta (utility_pointer),y
+	+	inc utility_pointer
+		bne ++
+		inc utility_pointer+1
+	} else {
+		lda temp_abs_b
+		cmp #RIGHT
+		bne +
+
+	-	bit VDC		; perform a dummy read to skip ahead one byte
+		bpl -
+		bit VDC+1
+
+		jmp ++
+
+	+	jsr vdc_continue_write_ram
 	}
 
-+	lda tempzpbk_h
-	ldy tempzpbk_j
+++	lda temp_abs_b
 rts
+
+; scroll the visualizer up one line
 
 viz_row_data_scroll
 	!ifndef c128 {
 		bit enable_screen_on_playback
-		bmi +
-		rts
-	  +
+		bpl no_vrdsc
 	}
 
-	sty sequencer_temp_y
+	stx temp_abs_x
+	sty temp_abs_y
 
-	lda #<viz_line_2
+	lda #<vizualizer_base_addr
 	sta scroll_area_target_addr
-	lda #>viz_line_2
+	lda #>vizualizer_base_addr
 	sta scroll_area_target_addr+1
 
 	lda #visualizer_area_width
 	sta scroll_area_width
-	lda #visualizer_area_height-1
+	lda #visualizer_area_height
 	sta scroll_area_height
-
-	; the scroll routine uses Zero Page addrs that aren't safe to use inside
-	; the player, so we have to preserve them, else it'll stomp on some
-	; sequencer variables
-
-	lda tempzp_d
-	sta tempzp_d_backup
-	lda tempzp_d+1
-	sta tempzp_d_backup+1
-
-	lda tempzp_e
-	sta tempzp_e_backup
-	lda tempzp_e+1
-	sta tempzp_e_backup+1
 
 	jsr scroll_area_up
 
-	lda tempzp_d_backup
-	sta tempzp_d
-	lda tempzp_d_backup+1
-	sta tempzp_d+1
-	lda tempzp_e_backup
-	sta tempzp_e
-	lda tempzp_e_backup+1
-	sta tempzp_e+1
+	lda seq_current_row
+	cmp #61
+	bne +
 
-	ldy sequencer_temp_y
+	lda #<viz_line_6
+	sta utility_pointer 
+	lda #>viz_line_6
+	sta utility_pointer+1
+	jsr viz_row_data_erase_row
+
++	ldx temp_abs_x
+	ldy temp_abs_y
+
+  no_vrdsc
 rts
 
+; blank-out a line of the visualizer display pointed to by write_fill_copy_target
+
 viz_row_data_erase_row
-	sty sequencer_temp_y
+	sty temp_abs_y2
 
 	!ifdef c128 {
-	-	bit VDC
-		bpl -
+		lda utility_pointer
+		sta write_fill_copy_target
+		lda utility_pointer+1
+		sta write_fill_copy_target+1
 
-		lda #31
-		sta VDC
+		jsr vdc_write_ram_no_reg_31_store
 	}
 
 	ldy #0
 
-.vre_loop
-	lda viz_row_erase_msg,y
-	beq .done_erase
+	vre_loop
+		lda viz_row_erase_msg,y
+		beq .done_erase
 
-	!ifndef c128 {
-		cmp #RIGHT
-		beq ++
-		sta (visualizer_address_tempzpbk_a),y
-	} else {
-		cmp #RIGHT
-		bne +
+		!ifndef c128 {
+			cmp #RIGHT
+			beq ++
+			sta (utility_pointer),y
+		} else {
+			cmp #RIGHT
+			bne +
 
-		bit VDC+1 ; do a read to skip the byte, and it's guaranteed to be non-zero
-		bne ++
+			bit VDC+1 ; do a read to skip the byte, and it's guaranteed to be non-zero
+			bne ++
 
-	+	sta VDC+1
-	}
+		+	jsr vdc_continue_write_ram
+		}
 
-++	iny
-	cpy #visualizer_area_width
-	bne .vre_loop
+	++	iny
+		cpy #visualizer_area_width
+	bne vre_loop
 
 .done_erase
-	ldy sequencer_temp_y
+	ldy temp_abs_y2
 rts
 
 viz_row_erase_msg
-	!ifndef c128 {
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,0
-	} else {
+	!ifdef c128 {
 		!byte $20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-		!byte $20,$20,$20,$20,$20,$20,$20,$20,0
 	}
-
+	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
+	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
+	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
+	!byte $20,$20,$20,$20,$20,$20,$20,$20,0
 
 viz_row_data_colors
 	!ifndef c128 {
@@ -460,8 +378,3 @@ viz_dividers_msg
 		!byte $7d
 		!byte 0
 	}
-
-tempzp_d_backup
-	!byte 0,0
-tempzp_e_backup
-	!byte 0,0

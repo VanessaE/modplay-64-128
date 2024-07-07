@@ -9,7 +9,6 @@
 	tempzp_e						= $54 ; and $55
 
 	progress_bar_addr				= $61 ; and $62
-	visualizer_address_temp			= $61 ; and $62
 
 	print_msg_char_limit			= $c8
 

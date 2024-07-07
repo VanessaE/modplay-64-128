@@ -147,23 +147,19 @@ start_main_player
 
 	!ifndef c128 {
 		bit enable_screen_on_playback
-		bpl ++
-		clc
-		ldx #visualizer_screen_row
-		ldy #visualizer_screen_column
-		jsr PLOT
-		jsr viz_row_data_init
-	} else {
-		jsr viz_row_data_init
-	}
-
-++	!ifndef c128 {
-		bit enable_screen_on_playback
 		bmi +
 		jsr disable_screen
+		jmp ++
 	}
 
-+	php
++	clc
+	ldx #visualizer_screen_row
+	ldy #visualizer_screen_column
+	jsr PLOT
+
+	jsr viz_row_data_init
+
+++	php
 	sei
 	jsr disable_roms
 

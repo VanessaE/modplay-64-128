@@ -13,7 +13,6 @@
 	char_table_select				= $f7
 
 	progress_bar_addr				= $f8 ; and $f9
-	visualizer_address_temp			= $f8 ; and $f9
 
 	; low memory area -- duh 😛
 
