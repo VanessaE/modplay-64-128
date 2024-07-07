@@ -248,7 +248,6 @@ viz_row_data_print_char
 	-	bit VDC		; perform a dummy read to skip ahead one byte
 		bpl -
 		bit VDC+1
-
 		jmp ++
 
 	+	jsr vdc_continue_write_ram
@@ -324,8 +323,10 @@ viz_row_data_erase_row
 			cmp #RIGHT
 			bne +
 
+		-	bit VDC
+			bpl -
 			bit VDC+1 ; do a read to skip the byte, and it's guaranteed to be non-zero
-			bne ++
+			jmp ++
 
 		+	jsr vdc_continue_write_ram
 		}
