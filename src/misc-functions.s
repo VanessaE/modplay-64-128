@@ -81,17 +81,6 @@ center_string
 	bne -
 + rts
 
-; converts a 0-15 value in .A into printable "0" to "F", returns it in .A
-to_hex
-	cmp #10
-	bcs +
-	adc #$30
-rts
-
-+	clc
-	adc #$37
-rts
-
 strip_trailing_spaces
 	ldx #0
 -	lda string_buffer,x
@@ -861,7 +850,7 @@ print_filetype
 
 !ifdef c128 {
 	; enter with vdc_fill_copy_src set to the source address,
-	; vdc_fill_copy_dst is the target, and .Y is the copy length
+	; vdc_write_ram_dst is the target, and .Y is the copy length
 
 	vdc_block_copy
 	-	bit VDC
@@ -869,12 +858,12 @@ print_filetype
 
 		lda #18
 		sta VDC
-		lda vdc_fill_copy_dst+1
+		lda vdc_write_ram_dst+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda vdc_fill_copy_dst
+		lda vdc_write_ram_dst
 		sta VDC+1
 
 	-	bit VDC
@@ -900,7 +889,7 @@ print_filetype
 		sty VDC+1
 	rts
 
-	; enter with vdc_fill_copy_dst = start address, .A = fill byte,
+	; enter with vdc_write_ram_dst = start address, .A = fill byte,
 	; .X = fill length
 
 	vdc_block_fill
@@ -910,12 +899,12 @@ print_filetype
 
 		lda #18
 		sta VDC
-		lda vdc_fill_copy_dst+1
+		lda vdc_write_ram_dst+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda vdc_fill_copy_dst
+		lda vdc_write_ram_dst
 		sta VDC+1
 
 		lda #31
@@ -958,4 +947,82 @@ print_filetype
 		lda vdc_fill_copy_temp
 
 	rts
+
+	; set vdc_write_ram_dst to the initial target address, .A holds the byte
+	; to write
+	vdc_write_ram
+		pha
+		lda #18
+		sta VDC
+		lda vdc_write_ram_dst+1
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda vdc_write_ram_dst
+		sta VDC+1
+
+	-	bit VDC
+		bpl -
+
+		lda #31
+		sta VDC
+		pla
+		sta VDC+1
+	rts
+
+	vdc_continue_write_ram
+	-	bit VDC
+		bpl -
+
+		sta VDC+1
+	rts
+
 }
+
+; translates a 0-15 value in .A into printable "0" to "F", returned in .A
+to_hex
+	and #$0f
+	cmp #10
+	bcs +
+	adc #$30
+rts
+
++	clc
+	adc #$37
+rts
+
+; directly stores to the screen starting at the address in utility_pointer to
+; "print" the two-digit hex value in .A
+
+display_byte_hex_direct
+	sta tempzp_g
+	sty tempzp_h
+
+	!ifndef c128 {
+		tay
+		lda divide_by_16_table,y
+		jsr to_hex
+		ldy #0
+		sta (utility_pointer),y
+		lda tempzp_g
+		jsr to_hex
+		iny
+		sta (utility_pointer),y
+	} else {
+		lda utility_pointer
+		sta vdc_write_ram_dst
+		lda utility_pointer+1
+		sta vdc_write_ram_dst+1
+		ldy tempzp_g
+		lda divide_by_16_table,y
+		jsr to_hex
+		jsr vdc_write_ram
+
+		lda tempzp_g
+		jsr to_hex
+		jsr vdc_continue_write_ram
+	}
+
+	ldy tempzp_h
+rts

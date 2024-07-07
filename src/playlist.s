@@ -520,17 +520,17 @@ fill_playlist_colors
 		kb_fade			= $83 ; light blue
 
 		lda #<(VDC_ATTRIBUTES+ 3*80+5)
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill
 
 		lda #<(VDC_ATTRIBUTES+ 4*80+5)
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>(VDC_ATTRIBUTES+ 4*80+5)
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #main_fade1
 		ldx #16
 		jsr vdc_block_fill
@@ -544,9 +544,9 @@ fill_playlist_colors
 
 		!for .row, 5, 11 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_fill_copy_dst
+			sta vdc_write_ram_dst
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst+1
 			lda #main_color
 			ldx #16
 			jsr vdc_block_fill
@@ -560,18 +560,18 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+12*80+5)
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>(VDC_ATTRIBUTES+12*80+5)
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #hl_color
 		ldx #25
 		jsr vdc_block_fill
 
 		!for .row, 13, 19 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_fill_copy_dst
+			sta vdc_write_ram_dst
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst+1
 			lda #main_color
 			ldx #16
 			jsr vdc_block_fill
@@ -585,9 +585,9 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+20*80+5)
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>(VDC_ATTRIBUTES+20*80+5)
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #main_fade1
 		ldx #16
 		jsr vdc_block_fill
@@ -600,9 +600,9 @@ fill_playlist_colors
 		jsr vdc_block_fill_extend
 
 		lda #<(VDC_ATTRIBUTES+21*80+5)
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>(VDC_ATTRIBUTES+21*80+5)
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill

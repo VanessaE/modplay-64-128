@@ -413,240 +413,106 @@ run_effect_command_jump_table
 
 ; In-player UI stuff
 
-print_num_song_pos
-	ldx number_of_song_positions
-	dex
+!ifndef c128 {
+	print_nsp_target = secondary_screen + 11*40 + 18
+} else {
+	print_nsp_target = VDC_SCREEN + 11*80 + 38
+}
 
+print_num_song_pos
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bpl +
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 18
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 19
-	} else {
-		!addr {
-			vdc_target = (VDC_SCREEN + 11*80 + 38)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
 	}
+
+	lda #<print_nsp_target
+	sta utility_pointer
+	lda #>print_nsp_target
+	sta utility_pointer+1
+	ldx number_of_song_positions
+	dex
+	txa
+	jsr display_byte_hex_direct
   +
 rts
+
+!ifndef c128 {
+	print_sp_target = secondary_screen + 11*40 + 15
+	print_pn_target = secondary_screen + 11*40 + 33
+} else {
+	print_sp_target = VDC_SCREEN + 11*80 + 35
+	print_pn_target = VDC_SCREEN + 11*80 + 53
+}
 
 print_song_pos_pat_num ; enter with .X = song position
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bpl +
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 15
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 16
-
-		ldx seq_current_pattern_number
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 11*40 + 33
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 11*40 + 34
-	} else {
-		!addr {
-			vdc_target2 = (VDC_SCREEN + 11*80 + 35)
-			vdc_target3 = (VDC_SCREEN + 11*80 + 53)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target2
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target2
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
-
-		lda #18
-		sta VDC
-		lda #>vdc_target3
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target3
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_current_pattern_number
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
 	}
+
+	lda #<print_sp_target
+	sta utility_pointer
+	lda #>print_sp_target
+	sta utility_pointer+1
+	txa
+	jsr display_byte_hex_direct
+
+	lda #<print_pn_target
+	sta utility_pointer
+	lda #>print_pn_target
+	sta utility_pointer+1
+	lda seq_current_pattern_number
+	jsr display_byte_hex_direct
   +
 rts
 
-print_row_num ; enter with .X = row number
+!ifndef c128 {
+	print_rn_target = secondary_screen + 12*40 + 13
+} else {
+	print_rn_target = VDC_SCREEN + 12*80 + 34
+}
+
+print_row_num
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bpl +
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 13
-		lda seq_current_row
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 14
-	}  else {
-		!addr {
-			vdc_target4 = (VDC_SCREEN + 12*80 + 34)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target4
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target4
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
 	}
+
+	lda #<print_rn_target
+	sta utility_pointer
+	lda #>print_rn_target
+	sta utility_pointer+1
+	lda seq_current_row
+	jsr display_byte_hex_direct
   +
 rts
+
+!ifndef c128 {
+	print_sst_target = secondary_screen + 12*40 + 27
+	print_ssb_target = secondary_screen + 12*40 + 30
+} else {
+	print_sst_target = VDC_SCREEN + 12*80 + 48
+	print_ssb_target = VDC_SCREEN + 12*80 + 51
+}
 
 print_song_speed
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bpl +
-
-		ldx seq_ticks_per_division
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 27
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 28
-
-		ldx seq_tempo_bpm
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta secondary_screen + 12*40 + 30
-		txa
-		and #$0f
-		jsr to_hex
-		sta secondary_screen + 12*40 + 31
-	} else {
-		!addr {
-			vdc_target5 = (VDC_SCREEN + 12*80 + 48)
-			vdc_target6 = (VDC_SCREEN + 12*80 + 51)
-		}
-
-		lda #18
-		sta VDC
-		lda #>vdc_target5
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target5
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_ticks_per_division
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
-
-		lda #18
-		sta VDC
-		lda #>vdc_target6
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda #<vdc_target6
-		sta VDC+1
-
-		lda #31
-		sta VDC
-
-		ldx seq_tempo_bpm
-		lda divide_by_16_table,x
-		jsr to_hex
-		sta VDC+1
-
-		txa
-		and #$0f
-		jsr to_hex
-		sta VDC+1
 	}
+
+	lda #<print_sst_target
+	sta utility_pointer
+	lda #>print_sst_target
+	sta utility_pointer+1
+	lda seq_ticks_per_division
+	jsr display_byte_hex_direct
+
+	lda #<print_ssb_target
+	sta utility_pointer
+	lda #>print_ssb_target
+	sta utility_pointer+1
+	lda seq_tempo_bpm
+	jsr display_byte_hex_direct
   +
 rts

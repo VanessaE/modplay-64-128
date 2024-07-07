@@ -22,9 +22,9 @@ gray_out
 	} else {
 
 		lda #<VDC_ATTRIBUTES
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>VDC_ATTRIBUTES
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #$81
 		ldx #255
 		jsr vdc_block_fill
@@ -104,9 +104,9 @@ rts
 	reset_attributes_charset
 
 		lda #<VDC_ATTRIBUTES
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda #>VDC_ATTRIBUTES
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #$01
 		ldx #255
 		jsr vdc_block_fill
@@ -135,11 +135,11 @@ scroll_area_down
 	} else {
 		sta vdc_fill_copy_src
 		adc #screen_width
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda scroll_area_base_addr+1
 		sta vdc_fill_copy_src+1
 		adc #0
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 	}
 
 	ldx scroll_area_height
@@ -190,12 +190,12 @@ scroll_area_down
 			sbc #0
 			sta vdc_fill_copy_src+1
 
-			lda vdc_fill_copy_dst
+			lda vdc_write_ram_dst
 			sbc #screen_width
-			sta vdc_fill_copy_dst
-			lda vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst
+			lda vdc_write_ram_dst+1
 			sbc #0
-			sta vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst+1
 		}
 
 	jmp scroll_down_loop
@@ -216,9 +216,9 @@ blank_out_last_scrolled_line
 		bne -
 	} else {
 		lda vdc_fill_copy_src
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda vdc_fill_copy_src+1
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 		lda #$20
 		ldx scroll_area_width
 		dex
@@ -242,11 +242,11 @@ scroll_area_up
 	} else {
 		sta vdc_fill_copy_src
 		sbc #screen_width
-		sta vdc_fill_copy_dst
+		sta vdc_write_ram_dst
 		lda scroll_area_base_addr+1
 		sta vdc_fill_copy_src+1
 		sbc #0
-		sta vdc_fill_copy_dst+1
+		sta vdc_write_ram_dst+1
 	}
 
 	ldx scroll_area_height
@@ -296,12 +296,12 @@ scroll_area_up
 			adc #0
 			sta vdc_fill_copy_src+1
 
-			lda vdc_fill_copy_dst
+			lda vdc_write_ram_dst
 			adc #screen_width
-			sta vdc_fill_copy_dst
-			lda vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst
+			lda vdc_write_ram_dst+1
 			adc #0
-			sta vdc_fill_copy_dst+1
+			sta vdc_write_ram_dst+1
 		}
 
 	jmp scroll_up_loop

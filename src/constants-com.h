@@ -139,6 +139,9 @@ program_start							= $2000
 	binsearch_high						= $28 ; and $29
 	binsearch_value						= $59 ; and $5a
 
+	tempzp_g							= $24 ; and $25
+	tempzp_h							= $26 ; and $27
+
 	; free: $fa through $ff
 
 	; END OF ZERO PAGE
@@ -280,7 +283,7 @@ program_start							= $2000
 
 	expansion_memory_start_address		= $17d4 ; 3 bytes
 	vdc_fill_copy_src					= $17d7 ; 2 bytes
-	vdc_fill_copy_dst					= $17d9 ; 2 bytes
+	vdc_write_ram_dst					= $17d9 ; 2 bytes
 	vdc_fill_copy_temp					= $17db
 	scroll_area_base_addr				= $17dc ; 2 bytes
 	scroll_area_width					= $17de
