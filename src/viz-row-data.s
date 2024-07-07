@@ -64,7 +64,7 @@ viz_row_data_init
 		} else {
 			ldx tempzp_c
 			lda viz_row_data_colors,x
-			ldx #visualizer_area_width-1
+			ldx #visualizer_area_width
 			jsr vdc_block_fill
 
 			clc
