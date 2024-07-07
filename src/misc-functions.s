@@ -524,8 +524,10 @@ rts
 
 ; enter with .Y = allowed string length (up to 48 chars max)
 ; returns the string in the string buffer, and its length in .Y
+
 ; the last instruction when the routine exits is a load of that value,
 ; so the caller can just immediately bne/beq after calling this.
+; returns .C set if the user hit Run/Stop or Esc, else .C will be clear.
 
 get_text_input
 	sty tempzp_d ; so _d is the limit, _d+1 is the current count
@@ -560,12 +562,14 @@ get_text_input
 
 ++	jsr clear_string_buffer
 	ldy #0
+	sec
 	rts
 
 +	pla
 	cmp #$0d ; return
 	bne +
 	ldy tempzp_d+1
+	clc
 	rts
 
 +	cmp #$14 ; delete

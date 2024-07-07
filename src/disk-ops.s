@@ -82,8 +82,10 @@ request_dos_command
 	jsr CHROUT
 	ldy #input_limit
 	jsr get_text_input
-	beq no_cmd
+	bcc +
+	rts
 
++	beq only_read_err_chan
 	tya
 	ldy string_buffer ; is the first byte of input a "$"?
 	cpy #"$"
@@ -100,7 +102,7 @@ request_dos_command
 
 	jsr open_file
 
-no_cmd
+only_read_err_chan
 	jsr read_err_channel
 
 	!ifndef c128 {

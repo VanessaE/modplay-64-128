@@ -70,6 +70,3 @@
 
 * C128: single sample player just crashes (not that it's supposed to DO
   anything just yet).
-
-* BOTH: "@" shows drive status on Esc/Run/Stop, but it should just cancel-out
-  immediately.
