@@ -469,23 +469,26 @@ charset_copy
 		; park the ASCII charset in RAM at $d000, standard at $d800
 
 		lda #<charset_64
-		sta tempzp_d
+		sta fill_copy_src
 		lda #>charset_64
-		sta tempzp_d+1
+		sta fill_copy_src+1
+
 		lda #<VIC_CHARSETS
-		sta tempzp_e
+		sta write_fill_copy_target
 		lda #>VIC_CHARSETS
-		sta tempzp_e+1
+		sta write_fill_copy_target+1
+
 		ldy #0
-	-	lda (tempzp_d),y
-		sta (tempzp_e),y
-		inc tempzp_d
+	-	lda (fill_copy_src),y
+		sta (write_fill_copy_target),y
+		inc fill_copy_src
 		bne +
-		inc tempzp_d+1
-	+	inc tempzp_e
+		inc fill_copy_src+1
+	+	inc write_fill_copy_target
 		bne -
-		inc tempzp_e+1
-		lda tempzp_e+1
+
+		inc write_fill_copy_target+1
+		lda write_fill_copy_target+1
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
 
@@ -493,41 +496,38 @@ charset_copy
 
 	} else {				; on the C128, upload it to the VDC
 		lda #<charset_128_alt
-		sta tempzp_d
+		sta fill_copy_src
 		lda #>charset_128_alt
-		sta tempzp_d+1
-		lda #18
-		sta VDC
-		lda #>VDC_CHARSETS
-		sta VDC+1
-		lda #19
-		sta VDC
+		sta fill_copy_src+1
+
 		lda #<VDC_CHARSETS
-		sta VDC+1
+		sta write_fill_copy_target
+		lda #>VDC_CHARSETS
+		sta write_fill_copy_target+1
+
+		jsr vdc_write_ram_no_reg_31_store
+
 	.nextchar
-		lda #31
-		sta VDC
 		ldy #0
-	-	bit VDC
-		bpl -
-		lda (tempzp_d),y
-		sta VDC+1
+
+	-	lda (fill_copy_src),y
+		jsr vdc_continue_write_ram
 		iny
 		cpy #8
 		bne -
+
 		lda #0
-	-	bit VDC
-		bpl -
-		sta VDC+1
+	-	jsr vdc_continue_write_ram
 		dey
 		bne -
+
 		clc
-		lda tempzp_d
+		lda fill_copy_src
 		adc #8
-		sta tempzp_d
+		sta fill_copy_src
 		bcc +
-		inc tempzp_d+1
-	+	lda tempzp_d+1
+		inc fill_copy_src+1
+	+	lda fill_copy_src+1
 		cmp #>(charset_128_alt+$0800)
 		bne .nextchar
 	}
