@@ -140,12 +140,9 @@ program_start							= $2000
 	binsearch_high						= $28 ; and $29
 	binsearch_value						= $59 ; and $5a
 
-	fill_copy_src						= $24 ; and $25
-	write_fill_copy_target				= $26 ; and $27
-
 	utility_pointer						= $fa ; and $fb
-
-	; free: $fc through $ff
+	fill_copy_src						= $fc ; and $fd
+	write_fill_copy_target				= $fe ; and $ff
 
 	; END OF ZERO PAGE
 

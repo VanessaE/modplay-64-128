@@ -329,19 +329,17 @@ draw_empty_progress_bar
 	clc
 	lda product
 	adc #<screen_base_addr
-	sta progress_bar_addr
-
+	sta write_fill_copy_target
 	lda product+1
 	adc #>screen_base_addr
-	sta progress_bar_addr+1
+	sta write_fill_copy_target+1
 
-	lda progress_bar_addr
+	lda write_fill_copy_target
 	adc progress_bar_column
-	sta progress_bar_addr
-	lda progress_bar_addr+1
+	sta write_fill_copy_target
+	lda write_fill_copy_target+1
 	adc #0
-	sta progress_bar_addr+1
-
+	sta write_fill_copy_target+1
 rts
 
 ; enter this one with .A = number of segments to draw, max 255
@@ -350,21 +348,7 @@ update_progress_bar
 	sta tempzp_c
 
 	!ifdef c128 {
-		lda #18
-		sta VDC
-		lda progress_bar_addr+1
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda progress_bar_addr
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
-
-		lda #31
-		sta VDC
+		jsr vdc_write_ram_no_reg_31_store
 	}
 
 	lda tempzp_c
@@ -378,12 +362,9 @@ update_progress_bar
 	lda #$a0
 
 -	!ifndef c128 {
-		sta (progress_bar_addr),y
+		sta (write_fill_copy_target),y
 	} else {
-	-	bit VDC
-		bpl -
-
-		sta VDC+1
+		jsr vdc_continue_write_ram
 	}
 
 	dey
@@ -403,12 +384,9 @@ nofill
 		lsr tempzp_c
 		ldy tempzp_c
 
-		sta (progress_bar_addr),y
+		sta (write_fill_copy_target),y
 	} else {
-	-	bit VDC
-		bpl -
-
-		sta VDC+1
+		jsr vdc_continue_write_ram
 	}
 rts
 

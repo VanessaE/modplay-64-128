@@ -8,7 +8,7 @@
 	tempzp_d						= $2b ; and $2c
 	tempzp_e						= $54 ; and $55
 
-	progress_bar_addr				= $61 ; and $62
+	; free: $61 and $62
 
 	print_msg_char_limit			= $c8
 

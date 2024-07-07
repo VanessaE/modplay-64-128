@@ -335,11 +335,6 @@ populate_loader_mini_popup
 		jsr set_window_full_screen
 	}
 
-	lda #progbar_len
-	ldx #progbar_column
-	ldy #progbar_row
-	jsr draw_empty_progress_bar
-
 	lda #0					; file size in kB -> size in bytes
 	sta dividend
 
@@ -366,6 +361,11 @@ populate_loader_mini_popup
 	sta progress_bar_bytes_per_segment+1
 	lda quotient+2
 	sta progress_bar_bytes_per_segment+2
+
+	lda #progbar_len
+	ldx #progbar_column
+	ldy #progbar_row
+	jsr draw_empty_progress_bar
 rts
 
 update_progress
