@@ -200,15 +200,21 @@ rts
 
 dir_read_line
 	jsr clear_string_buffer
+	lda #$20
+	sta string_buffer		; just to ensure there's *something* to print
+							; in case nothing could be read.
 
 	ldy #0
 -	jsr CHRIN
+	bcs +					; proceed as long as status doesn't indicate end/error
+
 	sta string_buffer,y
 	beq +					; continue until end of line
 	iny
 	cpy #48
 	bne -					; ...or until string buf is full
-+ rts
+  +
+rts
 
 dir_file_unquote	; routine returns clear carry and a quote-less string at
 					; string buffer + 32, .X = length, else it exits with set carry
