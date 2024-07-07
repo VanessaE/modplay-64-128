@@ -23,7 +23,7 @@ program_start							= $2000
 	visualizer_address_tempzpbk_a		= $08 ; and $09
 	visualizer_address_tempzpbk_b		= $0a ; and $0b
 
-	; free: $0c through $23
+	; free: $0d through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -44,32 +44,31 @@ program_start							= $2000
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $24 through $30
+	; free: $2a
 
-	pattern_break_target_row			= $31
-	seq_current_pattern_number			= $32
-	seq_current_row						= $33
-	seq_current_track					= $34
-	seq_tempo_bpm						= $35
-	seq_ticks_per_division				= $36
-	seq_ticks_counter					= $37
-	current_song_pos					= $38
-	glissando_flag						= $39
-	vibrato_waveform					= $3a
-	tremolo_waveform					= $3b
-	delay_pattern_divisions				= $3c
-	audio_in_buf_index					= $3d
-	audio_out_buf_index					= $3e
-	mixer_loops_per_tick_fract			= $3f
-	mixer_loops_per_tick				= $40
-	mixer_countdown_fract				= $41
-	mixer_countdown						= $42
-	sequencer_temp_x					= $43
-	sequencer_temp_y					= $44
-	sequencer_temp_a					= $45 ; 2 bytes \__ these can also be used
-	sequencer_temp_b					= $47 ; 2 bytes /   as one 4-byte temp
-	current_sample_volume_levels		= $49 ; 8 bytes
-	portamento_to_note_rates			= $51 ; 8 bytes
+	pattern_break_target_row			= $2b
+	seq_current_pattern_number			= $2c
+	seq_current_row						= $2d
+	seq_current_track					= $2e
+	seq_ticks_counter					= $2f
+	current_song_pos					= $30
+	glissando_flag						= $31
+	vibrato_waveform					= $32
+	tremolo_waveform					= $33
+	delay_pattern_divisions				= $34
+	audio_in_buf_index					= $35
+	audio_out_buf_index					= $36
+	mixer_loops_per_tick_fract			= $37
+	mixer_loops_per_tick				= $38
+	mixer_countdown_fract				= $39
+	mixer_countdown						= $3a
+	sequencer_temp_x					= $3b
+	sequencer_temp_y					= $3c
+	sequencer_temp_a					= $3d ; 2 bytes \__ these can also be used
+	sequencer_temp_b					= $3f ; 2 bytes /   as one 4-byte temp
+	current_sample_volume_levels		= $41 ; 8 bytes
+	portamento_to_note_rates			= $49 ; 8 bytes
+	pitch_slide_up_rates				= $51 ; 8 bytes
 
 	; division remainder uses $59 through $5b
 	; multiply product uses $5c/$5d
@@ -79,26 +78,31 @@ program_start							= $2000
 
 	; divide24_tmp uses $5f
 
-	pitch_slide_up_rates				= $60 ; 8 bytes
-	pitch_slide_down_rates				= $68 ; 8 bytes
-	track_current_loop_flags			= $70 ; 8 bytes
-	fine_tune_values					= $78 ; 8 bytes
-	retrigger_rates						= $80 ; 8 bytes
-	cut_sample_ticks					= $88 ; 8 bytes
-	delay_sample_ticks					= $90 ; 8 bytes
-	current_sample_numbers				= $98 ; 8 bytes
-	vibrato_rates						= $a0 ; 8 bytes
-	tremolo_rates						= $a8 ; 8 bytes
-	volume_slide_rates					= $b0 ; 8 bytes
-	current_steprates_fract				= $b8 ; \___ 16 bytes
-	current_steprates_lows				= $c0 ; /
-	sample_pointers_fract				= $c8 ; ¯|
-	sample_pointers_lows				= $d0 ;  |___32 bytes
-	sample_pointers_mids				= $d8 ;  |
-	sample_pointers_highs				= $e0 ; _|
-	current_sample_end_addr_lows		= $e8 ; ¯|
-	current_sample_end_addr_mids		= $f0 ;  |-- 24 bytes, through $ff
-	current_sample_end_addr_highs		= $f8 ; _|
+	seq_tempo_bpm						= $60
+	seq_ticks_per_division				= $61
+	pitch_slide_down_rates				= $62 ; 8 bytes
+	track_current_loop_flags			= $6a ; 8 bytes
+	fine_tune_values					= $72 ; 8 bytes
+	retrigger_rates						= $7a ; 8 bytes
+	cut_sample_ticks					= $82 ; 8 bytes
+	delay_sample_ticks					= $8a ; 8 bytes
+	current_sample_numbers				= $92 ; 8 bytes
+	vibrato_rates						= $9a ; 8 bytes
+	tremolo_rates						= $a2 ; 8 bytes
+	volume_slide_rates					= $aa ; 8 bytes
+	current_steprates_fract				= $b2 ; \___ 16 bytes
+	current_steprates_lows				= $ba ; /
+	sample_pointers_fract				= $c2 ; ¯|
+	sample_pointers_lows				= $ca ;  |___32 bytes
+	sample_pointers_mids				= $d2 ;  |
+	sample_pointers_highs				= $da ; _|
+	current_sample_end_addr_lows		= $e2 ; ¯|
+	current_sample_end_addr_mids		= $ea ;  |-- 24 bytes, through $ff
+	current_sample_end_addr_highs		= $f2 ; _|
+
+	; utility_pointer uses $fa/$fb
+	; and $fc through $ff are reserved for more dual ZP-backup/no-backup
+	; allowed vars
 
 	; ### End of Zero Page backup
 	; ####################################################
