@@ -13,8 +13,7 @@
 	file_list_number_row		= 14
 	file_list_number_column		= 22
 
-	pl_pane_su_src_addr = VIC_SCREEN + (playlist_bottom_row - 1)*40 + playlist_left_column
-	pl_pane_sd_src_addr = VIC_SCREEN + (playlist_top_row + 1)*40 + playlist_left_column
+	playlist_pane_base_addr = VIC_SCREEN + 3*40 + 1
 
 } else {
 	playlist_top_row			= 0
@@ -27,12 +26,14 @@
 	file_list_number_column		= 17
 	file_sizes_column			= 21
 
-	pl_pane_su_src_addr = VDC_SCREEN + (playlist_bottom_row + 2)*80 + playlist_left_column + 4
-	pl_pane_sd_src_addr = VDC_SCREEN + (playlist_top_row + 4)*80 + playlist_left_column + 4
+	playlist_pane_base_addr = VDC_SCREEN + 3*80 + 5
 
 }
 
-playlist_half_page_size = (playlist_bottom_row - playlist_top_row) / 2
+playlist_pane_height = playlist_bottom_row - playlist_top_row + 1
+playlist_bottom_row_addr = playlist_pane_base_addr + (playlist_pane_height - 1)*screen_width
+
+playlist_half_page_size = (playlist_pane_height - 1) / 2
 playlist_middle_row = (playlist_bottom_row + playlist_top_row) / 2
 
 load_directory
@@ -320,14 +321,14 @@ playlist_scroll_up
 	lda #$80
 	sta scroll_area_blank_last_line_flag
 
-	lda #<pl_pane_su_src_addr
-	sta scroll_area_base_addr
-	lda #>pl_pane_su_src_addr
-	sta scroll_area_base_addr+1
+	lda #<playlist_bottom_row_addr
+	sta scroll_area_target_addr
+	lda #>playlist_bottom_row_addr
+	sta scroll_area_target_addr+1
 
 	lda #playlist_width
 	sta scroll_area_width
-	lda #(playlist_bottom_row - playlist_top_row)
+	lda #playlist_pane_height
 	sta scroll_area_height
 
 	jsr scroll_area_down
@@ -348,14 +349,14 @@ playlist_scroll_down
 	lda #$80
 	sta scroll_area_blank_last_line_flag
 
-	lda #<pl_pane_sd_src_addr
-	sta scroll_area_base_addr
-	lda #>pl_pane_sd_src_addr
-	sta scroll_area_base_addr+1
+	lda #<playlist_pane_base_addr
+	sta scroll_area_target_addr
+	lda #>playlist_pane_base_addr
+	sta scroll_area_target_addr+1
 
 	lda #playlist_width
 	sta scroll_area_width
-	lda #(playlist_bottom_row - playlist_top_row)
+	lda #playlist_pane_height
 	sta scroll_area_height
 
 	jsr scroll_area_up
@@ -520,17 +521,17 @@ fill_playlist_colors
 		kb_fade			= $83 ; light blue
 
 		lda #<(VDC_ATTRIBUTES+ 3*80+5)
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill
 
 		lda #<(VDC_ATTRIBUTES+ 4*80+5)
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>(VDC_ATTRIBUTES+ 4*80+5)
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #main_fade1
 		ldx #16
 		jsr vdc_block_fill
@@ -544,9 +545,9 @@ fill_playlist_colors
 
 		!for .row, 5, 11 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_write_ram_dst
+			sta write_fill_copy_target
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_write_ram_dst+1
+			sta write_fill_copy_target+1
 			lda #main_color
 			ldx #16
 			jsr vdc_block_fill
@@ -560,18 +561,18 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+12*80+5)
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>(VDC_ATTRIBUTES+12*80+5)
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #hl_color
 		ldx #25
 		jsr vdc_block_fill
 
 		!for .row, 13, 19 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_write_ram_dst
+			sta write_fill_copy_target
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta vdc_write_ram_dst+1
+			sta write_fill_copy_target+1
 			lda #main_color
 			ldx #16
 			jsr vdc_block_fill
@@ -585,9 +586,9 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+20*80+5)
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>(VDC_ATTRIBUTES+20*80+5)
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #main_fade1
 		ldx #16
 		jsr vdc_block_fill
@@ -600,9 +601,9 @@ fill_playlist_colors
 		jsr vdc_block_fill_extend
 
 		lda #<(VDC_ATTRIBUTES+21*80+5)
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>(VDC_ATTRIBUTES+21*80+5)
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill

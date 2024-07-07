@@ -844,26 +844,85 @@ print_filetype
 	++ rts
 }
 
+; enter with write_fill_copy_target set to the start address of the block to
+; be filled, .A holds the fill byte, .X holds the block length.
+
+local_ram_block_fill
+	sta temp_abs_a
+	stx temp_abs_x
+	sty temp_abs_y
+
+	ldy #0
+-	sta (write_fill_copy_target),y
+	iny
+	dex
+	bne -
+
+	clc
+	lda write_fill_copy_target
+	adc temp_abs_x
+	sta write_fill_copy_target
+	bcc +
+	inc write_fill_copy_target+1
+
++	lda temp_abs_a
+	ldx temp_abs_x
+	ldy temp_abs_y
+rts
+
+; enter with fill_copy_src and write_fill_copy_target set to the source and
+; target addresses of the area to be copied, .X is the copy length
+
+local_ram_block_copy
+	stx temp_abs_x
+	sty temp_abs_y
+
+	ldy #0
+-	lda (fill_copy_src),y
+	sta (write_fill_copy_target),y
+	iny
+	dex
+	bne -
+
+	clc
+	lda fill_copy_src
+	adc temp_abs_x
+	sta fill_copy_src
+	bcc +
+	inc fill_copy_src+1
+	clc
+
++	lda write_fill_copy_target
+	adc temp_abs_x
+	sta write_fill_copy_target
+	bcc +
+	inc write_fill_copy_target+1
+
++	ldx temp_abs_x
+	ldy temp_abs_y
+rts
+
 ;#######################
 ;# C128 VDC OPERATIONS #
 ;#######################
 
-!ifdef c128 {
-	; enter with vdc_fill_copy_src set to the source address,
-	; vdc_write_ram_dst is the target, and .Y is the copy length
 
+; enter with fill_copy_src set to the source address,
+; write_fill_copy_target is the target, and .X is the copy length
+
+!ifdef c128 {
 	vdc_block_copy
 	-	bit VDC
 		bpl -
 
 		lda #18
 		sta VDC
-		lda vdc_write_ram_dst+1
+		lda write_fill_copy_target+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda vdc_write_ram_dst
+		lda write_fill_copy_target
 		sta VDC+1
 
 	-	bit VDC
@@ -876,40 +935,40 @@ print_filetype
 
 		lda #32
 		sta VDC
-		lda vdc_fill_copy_src+1
+		lda fill_copy_src+1
 		sta VDC+1
 
 		lda #33
 		sta VDC
-		lda vdc_fill_copy_src
+		lda fill_copy_src
 		sta VDC+1
 
 		lda #30
 		sta VDC
-		sty VDC+1
+		stx VDC+1
 	rts
 
-	; enter with vdc_write_ram_dst = start address, .A = fill byte,
+	; enter with write_fill_copy_target = start address, .A = fill byte,
 	; .X = fill length
 
 	vdc_block_fill
-		sta vdc_fill_copy_temp
+		sta temp_abs_a
 	-	bit VDC
 		bpl -
 
 		lda #18
 		sta VDC
-		lda vdc_write_ram_dst+1
+		lda write_fill_copy_target+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda vdc_write_ram_dst
+		lda write_fill_copy_target
 		sta VDC+1
 
 		lda #31
 		sta VDC
-		lda vdc_fill_copy_temp
+		lda temp_abs_a
 		sta VDC+1
 
 		lda #24
@@ -919,21 +978,22 @@ print_filetype
 
 		lda #30
 		sta VDC
+		dex
 		stx VDC+1
 
-		lda vdc_fill_copy_temp
+		lda temp_abs_a
 	rts
 
 	; this extends the previous block fill, .A = fill byte, .X = fill length
 
 	vdc_block_fill_extend
-		sta vdc_fill_copy_temp
+		sta temp_abs_a
 	-	bit VDC
 		bpl -
 
 		lda #31
 		sta VDC
-		lda vdc_fill_copy_temp
+		lda temp_abs_a
 		sta VDC+1
 
 		lda #24
@@ -944,7 +1004,7 @@ print_filetype
 		lda #30
 		sta VDC
 		stx VDC+1
-		lda vdc_fill_copy_temp
+		lda temp_abs_a
 
 	rts
 
@@ -967,12 +1027,12 @@ print_filetype
 	}
 
 	
-	; set vdc_write_ram_dst to the initial target address, .A holds the byte
+	; set write_fill_copy_target to the initial target address, .A holds the byte
 	; to write
 	vdc_write_ram
 		pha
 
-		+VDC_WRITE_SETUP vdc_write_ram_dst
+		+VDC_WRITE_SETUP write_fill_copy_target
 
 		pla
 		sta VDC+1
@@ -986,7 +1046,7 @@ print_filetype
 	rts
 
 	vdc_write_ram_setup_only
-		+VDC_WRITE_SETUP vdc_write_ram_dst
+		+VDC_WRITE_SETUP write_fill_copy_target
 	rts
 }
 
@@ -1006,8 +1066,8 @@ rts
 ; "print" the two-digit hex value in .A
 
 display_byte_hex_direct
-	sta tempzp_g
-	sty tempzp_h
+	sta temp_abs_a
+	sty temp_abs_y
 
 	!ifndef c128 {
 		tay
@@ -1015,24 +1075,24 @@ display_byte_hex_direct
 		jsr to_hex
 		ldy #0
 		sta (utility_pointer),y
-		lda tempzp_g
+		lda temp_abs_a
 		jsr to_hex
 		iny
 		sta (utility_pointer),y
 	} else {
 		lda utility_pointer
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda utility_pointer+1
-		sta vdc_write_ram_dst+1
-		ldy tempzp_g
+		sta write_fill_copy_target+1
+		ldy temp_abs_a
 		lda divide_by_16_table,y
 		jsr to_hex
 		jsr vdc_write_ram
 
-		lda tempzp_g
+		lda temp_abs_a
 		jsr to_hex
 		jsr vdc_continue_write_ram
 	}
 
-	ldy tempzp_h
+	ldy temp_abs_y
 rts

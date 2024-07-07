@@ -28,9 +28,9 @@ viz_row_data_init
 		sta visualizer_address_temp+1
 	} else {
 		lda #<viz_colors_tl_corner_addr
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>viz_colors_tl_corner_addr
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 	}
 
 	lda #0
@@ -68,12 +68,12 @@ viz_row_data_init
 			jsr vdc_block_fill
 
 			clc
-			lda vdc_write_ram_dst
+			lda write_fill_copy_target
 			adc #screen_width
-			sta vdc_write_ram_dst
-			lda vdc_write_ram_dst+1
+			sta write_fill_copy_target
+			lda write_fill_copy_target+1
 			adc #0
-			sta vdc_write_ram_dst+1
+			sta write_fill_copy_target+1
 
 			lda #0
 			ldx #<viz_dividers_msg
@@ -338,9 +338,9 @@ viz_row_data_scroll
 	sty sequencer_temp_y
 
 	lda #<viz_line_2
-	sta scroll_area_base_addr
+	sta scroll_area_target_addr
 	lda #>viz_line_2
-	sta scroll_area_base_addr+1
+	sta scroll_area_target_addr+1
 
 	lda #visualizer_area_width
 	sta scroll_area_width

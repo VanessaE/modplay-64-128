@@ -79,3 +79,6 @@
 
 * C128: somehow pressing F1 triggers a broken refresh of the file list's color
   data, on real hardware.
+
+* BOTH: "@" shows drive status on Esc/Run/Stop, but it should just cancel-out
+  immediately.

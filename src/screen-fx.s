@@ -22,9 +22,9 @@ gray_out
 	} else {
 
 		lda #<VDC_ATTRIBUTES
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>VDC_ATTRIBUTES
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #$81
 		ldx #255
 		jsr vdc_block_fill
@@ -104,9 +104,9 @@ rts
 	reset_attributes_charset
 
 		lda #<VDC_ATTRIBUTES
-		sta vdc_write_ram_dst
+		sta write_fill_copy_target
 		lda #>VDC_ATTRIBUTES
-		sta vdc_write_ram_dst+1
+		sta write_fill_copy_target+1
 		lda #$01
 		ldx #255
 		jsr vdc_block_fill
@@ -121,190 +121,116 @@ rts
 }
 
 scroll_area_down
-	clc
-	lda scroll_area_base_addr
+	sec
+	lda scroll_area_target_addr
+	sta write_fill_copy_target
+	sbc #screen_width
+	sta fill_copy_src
+	lda scroll_area_target_addr+1
+	sta write_fill_copy_target+1
+	sbc #0
+	sta fill_copy_src+1
 
-	!ifndef c128 {
-		sta tempzp_d
-		adc #screen_width
-		sta tempzp_e
-		lda scroll_area_base_addr+1
-		sta tempzp_d+1
-		adc #0
-		sta tempzp_e+1
-	} else {
-		sta vdc_fill_copy_src
-		adc #screen_width
-		sta vdc_write_ram_dst
-		lda scroll_area_base_addr+1
-		sta vdc_fill_copy_src+1
-		adc #0
-		sta vdc_write_ram_dst+1
-	}
-
-	ldx scroll_area_height
+	ldx scroll_area_width
+	ldy scroll_area_height
+	dey
 
 	scroll_down_loop
-
-		!ifndef c128 {
-
-			ldy scroll_area_width
-			dey
-		-	lda (tempzp_d),y
-			sta (tempzp_e),y
-			dey
-			bpl -
-
-			dex
-			beq blank_out_last_scrolled_line
-
-			sec
-			lda tempzp_d
-			sbc #screen_width
-			sta tempzp_d
-			lda tempzp_d+1
-			sbc #0
-			sta tempzp_d+1
-
-			lda tempzp_e
-			sbc #screen_width
-			sta tempzp_e
-			lda tempzp_e+1
-			sbc #0
-			sta tempzp_e+1
-
-		} else {
-
-			ldy scroll_area_width
-			dey
-			jsr vdc_block_copy
-
-			dex
-			beq blank_out_last_scrolled_line
-
-			sec
-			lda vdc_fill_copy_src
-			sbc #screen_width
-			sta vdc_fill_copy_src
-			lda vdc_fill_copy_src+1
-			sbc #0
-			sta vdc_fill_copy_src+1
-
-			lda vdc_write_ram_dst
-			sbc #screen_width
-			sta vdc_write_ram_dst
-			lda vdc_write_ram_dst+1
-			sbc #0
-			sta vdc_write_ram_dst+1
-		}
-
-	jmp scroll_down_loop
-
-; placed between the two scroll routines so that their BEQ's can both reach.
-
-blank_out_last_scrolled_line
-	bit scroll_area_blank_last_line_flag
-	bmi +
-	rts
-
-+	!ifndef c128 {
-		ldy #0
-		lda #$20
-	-	sta (tempzp_d),y
-		iny
-		cpy scroll_area_width
-		bne -
+	!ifndef c128 {
+		jsr local_ram_block_copy
 	} else {
-		lda vdc_fill_copy_src
-		sta vdc_write_ram_dst
-		lda vdc_fill_copy_src+1
-		sta vdc_write_ram_dst+1
-		lda #$20
-		ldx scroll_area_width
-		dex
-		jsr vdc_block_fill
+		jsr vdc_block_copy
 	}
-rts
 
-
-scroll_area_up
 	sec
-	lda scroll_area_base_addr
+	lda scroll_area_target_addr
+	sbc #screen_width
+	sta scroll_area_target_addr
+	sta write_fill_copy_target
+	lda scroll_area_target_addr+1
+	sbc #0
+	sta scroll_area_target_addr+1
+	sta write_fill_copy_target+1
+
+	sec
+	lda scroll_area_target_addr
+	sbc #screen_width
+	sta fill_copy_src
+	lda scroll_area_target_addr+1
+	sbc #0
+	sta fill_copy_src+1
+
+	dey
+	bne scroll_down_loop
+
+	bit scroll_area_blank_last_line_flag
+	bpl +
+
+	lda #$20
 
 	!ifndef c128 {
-		sta tempzp_d
-		sbc #screen_width
-		sta tempzp_e
-		lda scroll_area_base_addr+1
-		sta tempzp_d+1
-		sbc #0
-		sta tempzp_e+1
+		jsr local_ram_block_fill
 	} else {
-		sta vdc_fill_copy_src
-		sbc #screen_width
-		sta vdc_write_ram_dst
-		lda scroll_area_base_addr+1
-		sta vdc_fill_copy_src+1
-		sbc #0
-		sta vdc_write_ram_dst+1
+		jsr vdc_block_fill
 	}
+  +
+rts
 
-	ldx scroll_area_height
+scroll_area_up
+	clc
+	lda scroll_area_target_addr
+	sta write_fill_copy_target
+	adc #screen_width
+	sta fill_copy_src
+	lda scroll_area_target_addr+1
+	sta write_fill_copy_target+1
+	adc #0
+	sta fill_copy_src+1
+
+	ldx scroll_area_width
+	ldy scroll_area_height
+	dey
 
 	scroll_up_loop
+	!ifndef c128 {
+		jsr local_ram_block_copy
+	} else {
+		jsr vdc_block_copy
+	}
 
-		!ifndef c128 {
+	clc
+	lda scroll_area_target_addr
+	adc #screen_width
+	sta scroll_area_target_addr
+	sta write_fill_copy_target
+	lda scroll_area_target_addr+1
+	adc #0
+	sta scroll_area_target_addr+1
+	sta write_fill_copy_target+1
 
-			ldy scroll_area_width
-			dey
-		-	lda (tempzp_d),y
-			sta (tempzp_e),y
-			dey
-			bpl -
+	clc
+	lda scroll_area_target_addr
+	adc #screen_width
+	sta fill_copy_src
+	lda scroll_area_target_addr+1
+	adc #0
+	sta fill_copy_src+1
 
-			dex
-			beq blank_out_last_scrolled_line
+	dey
+	bne scroll_up_loop
 
-			clc
-			lda tempzp_d
-			adc #screen_width
-			sta tempzp_d
-			lda tempzp_d+1
-			adc #0
-			sta tempzp_d+1
+	bit scroll_area_blank_last_line_flag
+	bpl +
 
-			lda tempzp_e
-			adc #screen_width
-			sta tempzp_e
-			lda tempzp_e+1
-			adc #0
-			sta tempzp_e+1
+	lda #$20
 
-		} else {
-
-			ldy scroll_area_width
-			jsr vdc_block_copy
-
-			dex
-			beq blank_out_last_scrolled_line
-
-			clc
-			lda vdc_fill_copy_src
-			adc #screen_width
-			sta vdc_fill_copy_src
-			lda vdc_fill_copy_src+1
-			adc #0
-			sta vdc_fill_copy_src+1
-
-			lda vdc_write_ram_dst
-			adc #screen_width
-			sta vdc_write_ram_dst
-			lda vdc_write_ram_dst+1
-			adc #0
-			sta vdc_write_ram_dst+1
-		}
-
-	jmp scroll_up_loop
+	!ifndef c128 {
+		jsr local_ram_block_fill
+	} else {
+		jsr vdc_block_fill
+	}
+  +
+rts
 
 ; enter with .X/.Y = column and row of the progress bar itself (on C128, that
 ; that means the real row/column, not the position within whatever popup
