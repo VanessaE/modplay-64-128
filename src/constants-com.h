@@ -132,7 +132,6 @@ program_start							= $2000
 	divide24_tmp						= $5f
 
 	tempzp_f							= $50 ; through $52
-	utility_pointer						= $50 ; and $51
 
 	binsearch_low						= $24 ; and $25
 	binsearch_mid						= $26 ; and $27
@@ -140,9 +139,11 @@ program_start							= $2000
 	binsearch_value						= $59 ; and $5a
 
 	fill_copy_src						= $24 ; and $25
-	write_fill_copy_target					= $26 ; and $27
+	write_fill_copy_target				= $26 ; and $27
 
-	; free: $fa through $ff
+	utility_pointer						= $fa ; and $fb
+
+	; free: $fc through $ff
 
 	; END OF ZERO PAGE
 
