@@ -948,18 +948,15 @@ print_filetype
 
 	rts
 
-	; set vdc_write_ram_dst to the initial target address, .A holds the byte
-	; to write
-	vdc_write_ram
-		pha
+	!macro VDC_WRITE_SETUP .wrdst {
 		lda #18
 		sta VDC
-		lda vdc_write_ram_dst+1
+		lda .wrdst+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda vdc_write_ram_dst
+		lda .wrdst
 		sta VDC+1
 
 	-	bit VDC
@@ -967,6 +964,16 @@ print_filetype
 
 		lda #31
 		sta VDC
+	}
+
+	
+	; set vdc_write_ram_dst to the initial target address, .A holds the byte
+	; to write
+	vdc_write_ram
+		pha
+
+		+VDC_WRITE_SETUP vdc_write_ram_dst
+
 		pla
 		sta VDC+1
 	rts
@@ -978,6 +985,9 @@ print_filetype
 		sta VDC+1
 	rts
 
+	vdc_write_ram_setup_only
+		+VDC_WRITE_SETUP vdc_write_ram_dst
+	rts
 }
 
 ; translates a 0-15 value in .A into printable "0" to "F", returned in .A
