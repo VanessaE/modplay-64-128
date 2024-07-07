@@ -68,10 +68,6 @@
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
   happens on a friend's machine, not on my C128-DCR, and it's fine in VICE.
 
-* C128: regular player crashes on real hardware after printing the UI and
-  row data visualizer (it seems to crash when it comes time to scroll the
-  display)
-
 * C128: single sample player just crashes (not that it's supposed to DO
   anything just yet).
 

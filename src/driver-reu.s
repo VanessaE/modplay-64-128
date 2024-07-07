@@ -115,17 +115,16 @@ reu_fetch_block
 	sta DMA_DAL
 	lda stash_size+1
 	sta DMA_DAH
-
-	!ifdef c128 {
-		lda #0
-		sta VIC+$30
-	}
-
 	lda #$91
-	sta DMA_CMD
 
 	!ifdef c128 {
 		dec VIC+$30
+	}
+
+	sta DMA_CMD
+
+	!ifdef c128 {
+		sta VIC+$30
 	}
 rts
 
@@ -468,7 +467,7 @@ reu_start_mixer
 				sta DMA_DAL									; 4
 
 				!ifdef c128 {
-					sta VIC+$30								; 4
+					dec VIC+$30								; 5
 				}
 
 				sty DMA_CMD									; 4 + N*4
@@ -557,17 +556,17 @@ rts
 ; lowest possible step rate is about 0.273 on C64, so fetching just 1 byte per
 ; transfer, times 4 transfers:
 ;
-; 2 +4+4+1 +4+4+1 +4+4+1 +4+4+1 = 38 cycles per track, total 152 cycles
+; 2 +5+4+1 +4+4+1 +4+4+1 +4+4+1 = 39 cycles per track, total 156 cycles
 ;
 ; on average, the step rate will be closer to 1.7, so it'll be fetching 6 
 ; bytes per transfer, times 4:
 ;
-; 2 +4+4+6 +4+4+6 +4+4+6 +4+4+6 = 58 cycles per track, total 232 cycles
+; 2 +5+4+6 +4+4+6 +4+4+6 +4+4+6 = 59 cycles per track, total 236 cycles
 ;
 ; Worst possible case would be playing the highest note, B-4, which would have
 ; a step rate of about 8.688, so fetching 34 * 4 = 136 bytes:
 ;
-; 2 +4+4+34 +4+4+34 +4+4+34 +4+4+34 = 170 cycles per track, total 680 cycles
+; 2 +5+4+34 +4+4+34 +4+4+34 +4+4+34 = 171 cycles per track, total 684 cycles
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
@@ -581,9 +580,9 @@ rts
 ;
 ; that machine's fetch timings should be about:
 ;
-; best:           2 +4+8+2 +8+8+2 +8+8+2 +8+8+2 + 13 = 83 cycles, total 332
-; most likely:    2 +4+8+6 +8+8+6 +8+8+6 +8+8+6 + 13 = 99 cycles, total 396
-; worst possible: 2 +4+8+19 +8+8+19 +8+8+19 +8+8+19 + 13 = 151 cycles, total 604
+; best:           2 +5+8+2 +8+8+2 +8+8+2 +8+8+2 + 13 = 84 cycles, total 336
+; most likely:    2 +5+8+6 +8+8+6 +8+8+6 +8+8+6 + 13 = 100 cycles, total 400
+; worst possible: 2 +5+8+19 +8+8+19 +8+8+19 +8+8+19 + 13 = 152 cycles, total 608
 ;
 ; ----------
 ;
@@ -625,9 +624,9 @@ rts
 ; worst:  (10 + 272 + 680 + 16 + 704 + 13) / 16 = ~106 cycles
 ;
 ; C128:
-; best:   (10 + 200 + 332 + 16 + 704 + 13) / 16 =  ~80 cycles
-; likely: (10 + 216 + 396 + 16 + 704 + 13) / 16 =  ~85 cycles
-; worst:  (10 + 272 + 604 + 16 + 704 + 13) / 16 = ~102 cycles
+; best:   (10 + 200 + 336 + 16 + 704 + 13) / 16 =  ~80 cycles
+; likely: (10 + 216 + 400 + 16 + 704 + 13) / 16 =  ~85 cycles
+; worst:  (10 + 272 + 608 + 16 + 704 + 13) / 16 = ~102 cycles
 ;
 ; ---------
 ;
