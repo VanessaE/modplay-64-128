@@ -66,7 +66,7 @@ start
 !source "src/loader-acptr.s"
 !source "src/loader-stopwdg.s"
 
-!source "src/file-ops.s"
+!source "src/disk-ops.s"
 !source "src/directory.s"
 
 !source "src/main-menu.s"
