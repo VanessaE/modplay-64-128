@@ -36,6 +36,15 @@
 ##  KNOWN ISSUES  ##
 ####################
 
+* C64: STOP wedge loader fails if JiffyDOS is present.
+
+* C128: STOP wedge loader fails on CMD HD if RAMLink exists and the parallel
+  connection is enabled.  Disable it with `@P0` before program load and the
+  STOP wedge works fine.
+
+  The automatic loader select compensates for both of these just fine, it just
+  means they don't load as fast as they should otherwise be able to.
+
 * C128 (mainly): playlist repaint is too slow
 
 * C128: cursor-left in main menu triggers switch pages code
@@ -55,15 +64,6 @@
   too).  UNlike the above, `@P0` doesn't help. 😛
 
 * BOTH: progress bar has a minor off-by-1 overflow glitch.
-
-* C64: STOP wedge loader fails if JiffyDOS is present.
-
-* C128: STOP wedge loader fails on CMD HD if RAMLink exists and the parallel
-  connection is enabled.  Disable it with `@P0` before program load and the
-  STOP wedge works fine.
-
-  The automatic loader select compensates for both of these just fine, it just
-  means they don't load as fast as they should otherwise be able to.
 
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
   happens on a friend's machine, not on my C128-DCR, and it's fine in VICE.
