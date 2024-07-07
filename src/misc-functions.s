@@ -1038,15 +1038,15 @@ rts
 		sta VDC+1
 	rts
 
+	vdc_write_ram_no_reg_31_store
+		+VDC_WRITE_SETUP write_fill_copy_target
+	rts
+
 	vdc_continue_write_ram
 	-	bit VDC
 		bpl -
 
 		sta VDC+1
-	rts
-
-	vdc_write_ram_setup_only
-		+VDC_WRITE_SETUP write_fill_copy_target
 	rts
 }
 
