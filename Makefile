@@ -1,6 +1,12 @@
-OPTIONS=-Wno-label-indent -v3 --format plain 
+VERSION_MAJOR=0
+VERSION_MINOR=0
+
+OPTIONS=-Wno-label-indent -v3 --format plain \
+	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR)
 CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
 TMPDIR=/tmp/mp-trim-ws-compress-tmp
+VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
+VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
 
 all:
 
@@ -93,7 +99,7 @@ endif
 
 	export SW DISK_IMG PRG DISK_FORMAT
 
-	$(CC1541) -n 'modplay $(MACHINE) v2.0' -i 20  $(DISK_IMG)
+	$(CC1541) -n 'modplay $(MACHINE) v$(VERSION_STRING)' -i '$(VERSION_ID)'  $(DISK_IMG)
 
 ifeq ($(MACHINE),128)
 	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)

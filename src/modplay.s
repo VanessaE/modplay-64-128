@@ -1,4 +1,4 @@
-; Modplay 64/128 v2.0 -- Copright 2024 Vanessa Dannenberg
+; Modplay 64/128 -- Copright 1996-2024 Vanessa Dannenberg
 ;
 ; This code and related resources are released under Creative Commons license
 ; CC-By-NC-SA v4.0 -- see license.txt for all the legal mumbo-jumbo

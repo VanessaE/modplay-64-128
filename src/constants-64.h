@@ -75,6 +75,9 @@ ORG									= $81
 MGRY								= $98
 DGRY								= $97
 
+splash_ver_pos_col					= 23
+splash_ver_pos_row					= 8
+
 screen_width						= 40
 screen_base_addr					= VIC_SCREEN
 color_mem_base_addr					= VIC_COLOR_RAM

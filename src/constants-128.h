@@ -108,6 +108,9 @@ FLASHOFF							= $8f
 ; accounting for load addr, plus one disk block for expansion sake.
 splash_128_end_check = program_start + (254*6) - 1
 
+splash_ver_pos_col					= 48
+splash_ver_pos_row					= 9
+
 screen_width						= 80
 screen_base_addr					= VDC_SCREEN
 color_mem_base_addr					= VDC_ATTRIBUTES

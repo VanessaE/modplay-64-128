@@ -1,5 +1,6 @@
 program_title
-	!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v",LRED,"2.0"
+	!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v"
+	!text LRED,version_major+$30,".",version_minor+$30
 	!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
 
 ; these are all RLE-encoded for the print_msg_rle* function

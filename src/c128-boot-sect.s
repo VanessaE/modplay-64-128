@@ -12,7 +12,9 @@
 	!byte $00							; Bank number for additional sectors.
 	!byte $00							; Number of sectors to load.
 
-	!text "modplay 128 v2.0", 0			; Boot message: "BOOTING..."
+	!text "modplay 128 v"
+	!text version_major+$30,".",version_minor+$30
+	!byte 0				; Boot message: "BOOTING..."
 
 	!text "", 0							; Program to load on boot.
 

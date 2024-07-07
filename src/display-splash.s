@@ -50,7 +50,28 @@ show_splash
 		ldy #>splash_data
 		jsr print_msg_rle
 	}
-  out
+
+out
+	clc
+	ldy #splash_ver_pos_col
+	ldx #splash_ver_pos_row
+	jsr PLOT
+
+	lda #YEL
+	jsr CHROUT
+	lda #version_major+$30
+	jsr CHROUT
+
+	lda #LRED
+	jsr CHROUT
+	lda #"."
+	jsr CHROUT
+
+	lda #RED
+	jsr CHROUT
+	lda #version_minor+$30
+	jsr CHROUT
+
 rts ; return to the autorunner, which will load the rest of the file.
 
 !source "src/misc-macros.s"
