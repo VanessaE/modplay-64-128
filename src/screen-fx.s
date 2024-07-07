@@ -348,7 +348,7 @@ update_progress_bar
 	sta tempzp_c
 
 	!ifdef c128 {
-		jsr vdc_write_ram_no_reg_31_store
+		jsr vdc_write_ram_reg_31_select_only
 	}
 
 	lda tempzp_c

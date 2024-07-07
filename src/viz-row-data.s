@@ -157,7 +157,7 @@ viz_row_data_fetch_and_print
 	jsr fetch_row_data
 
 	!ifdef c128 { ; only display the row # on C128, C64 screen is too small
-		jsr vdc_write_ram_no_reg_31_store
+		jsr vdc_write_ram_reg_31_select_only
 
 		txa
 		jsr display_byte_hex_direct
@@ -307,7 +307,7 @@ viz_row_data_erase_row
 		lda utility_pointer+1
 		sta write_fill_copy_target+1
 
-		jsr vdc_write_ram_no_reg_31_store
+		jsr vdc_write_ram_reg_31_select_only
 	}
 
 	ldy #0

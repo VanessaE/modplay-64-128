@@ -906,12 +906,12 @@ rts
 ;# C128 VDC OPERATIONS #
 ;#######################
 
-
 ; enter with fill_copy_src set to the source address,
 ; write_fill_copy_target is the target, and .X is the copy length
 
 !ifdef c128 {
-	vdc_block_copy
+
+	!macro VDC_WRITE_SETUP {
 	-	bit VDC
 		bpl -
 
@@ -927,6 +927,10 @@ rts
 
 	-	bit VDC
 		bpl -
+	}
+
+	vdc_block_copy
+		+VDC_WRITE_SETUP
 
 		lda #24
 		sta VDC
@@ -953,23 +957,16 @@ rts
 
 	vdc_block_fill
 		sta temp_abs_a
-	-	bit VDC
-		bpl -
 
-		lda #18
-		sta VDC
-		lda write_fill_copy_target+1
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda write_fill_copy_target
-		sta VDC+1
+		+VDC_WRITE_SETUP
 
 		lda #31
 		sta VDC
 		lda temp_abs_a
 		sta VDC+1
+
+	-	bit VDC
+		bpl -
 
 		lda #24
 		sta VDC
@@ -996,6 +993,9 @@ rts
 		lda temp_abs_a
 		sta VDC+1
 
+	-	bit VDC
+		bpl -
+
 		lda #24
 		sta VDC
 		lda #$20
@@ -1008,38 +1008,24 @@ rts
 
 	rts
 
-	!macro VDC_WRITE_SETUP .wrdst {
-		lda #18
-		sta VDC
-		lda .wrdst+1
-		sta VDC+1
-
-		lda #19
-		sta VDC
-		lda .wrdst
-		sta VDC+1
-
-	-	bit VDC
-		bpl -
-
-		lda #31
-		sta VDC
-	}
-
-	
 	; set write_fill_copy_target to the initial target address, .A holds the byte
 	; to write
 	vdc_write_ram
 		pha
 
-		+VDC_WRITE_SETUP write_fill_copy_target
+		+VDC_WRITE_SETUP
 
+		lda #31
+		sta VDC
 		pla
 		sta VDC+1
 	rts
 
-	vdc_write_ram_no_reg_31_store
-		+VDC_WRITE_SETUP write_fill_copy_target
+	vdc_write_ram_reg_31_select_only
+		+VDC_WRITE_SETUP
+
+		lda #31
+		sta VDC
 	rts
 
 	vdc_continue_write_ram

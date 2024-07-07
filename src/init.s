@@ -505,7 +505,7 @@ charset_copy
 		lda #>VDC_CHARSETS
 		sta write_fill_copy_target+1
 
-		jsr vdc_write_ram_no_reg_31_store
+		jsr vdc_write_ram_reg_31_select_only
 
 	.nextchar
 		ldy #0
