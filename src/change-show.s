@@ -313,7 +313,6 @@ show_sid_addr
 	lda #"D"
 	jsr CHROUT
 	lda stereo_sid_addr+1
-	and #$0f
 	jsr to_hex
 	jsr CHROUT
 	lda stereo_sid_addr
@@ -370,7 +369,6 @@ show_dac_addr
 	lda #"D"
 	jsr CHROUT
 	lda dac_addr+1
-	and #$0f
 	jsr to_hex
 	jsr CHROUT
 	lda dac_addr
@@ -381,7 +379,6 @@ show_dac_addr
 	jsr to_hex
 	jsr CHROUT
 	lda dac_addr
-	and #$0f
 	jsr to_hex
 	jsr CHROUT
 

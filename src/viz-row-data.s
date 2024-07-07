@@ -235,7 +235,6 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 
 		txa
-		and #$0f
 		jsr to_hex
 		jsr viz_row_data_print_char
 
@@ -273,7 +272,6 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 
 		lda seq_current_row_data + .viz_tr*4 + 1
-		and #$0f
 		jsr to_hex
 		jsr viz_row_data_print_char
 
@@ -287,7 +285,6 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 
 		lda seq_current_row_data + .viz_tr*4 + 3
-		and #$0f
 		jsr to_hex
 		jsr viz_row_data_print_char
 
