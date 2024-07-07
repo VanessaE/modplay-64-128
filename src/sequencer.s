@@ -119,18 +119,18 @@ nple
 ; repeat for as many channels as the mod has
 
 next_row
-	ldx seq_current_row
 	jsr viz_row_data_scroll
 
 next_row_no_scroll
+	ldx current_song_pos
+	ldy pattern_table,x
+
 	ldx seq_current_row
 	inx
 	inx
 	inx
 	jsr viz_row_data_fetch_and_print
 
-	ldx current_song_pos
-	ldy pattern_table,x
 	ldx seq_current_row
 	jsr fetch_row_data
 
