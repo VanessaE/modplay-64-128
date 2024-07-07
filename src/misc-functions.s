@@ -860,20 +860,6 @@ print_filetype
 ;#######################
 
 !ifdef c128 {
-	vdc_read_reg_sw		; sw means "status wait", so only use this and its
-		stx VDC			; companion below when waiting for the VDC
-	-	bit VDC			; status reg to clear is required
-		bpl -
-		lda VDC+1
-	rts
-
-	vdc_write_reg_sw
-		stx VDC
-	-	bit VDC
-		bpl -
-		sta VDC+1
-	rts
-
 	; enter with vdc_fill_copy_src set to the source address,
 	; vdc_fill_copy_dst is the target, and .Y is the copy length
 
