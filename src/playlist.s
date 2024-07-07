@@ -533,10 +533,10 @@ fill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+ 4*80+5)
 		sta write_fill_copy_target+1
 		lda #main_fade1
-		ldx #16
+		ldx #17
 		jsr vdc_block_fill
 
-		ldx #5
+		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
 		ldx #2
@@ -549,10 +549,10 @@ fill_playlist_colors
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
 			sta write_fill_copy_target+1
 			lda #main_color
-			ldx #16
+			ldx #17
 			jsr vdc_block_fill
 
-			ldx #5
+			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
 			ldx #2
@@ -574,10 +574,10 @@ fill_playlist_colors
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
 			sta write_fill_copy_target+1
 			lda #main_color
-			ldx #16
+			ldx #17
 			jsr vdc_block_fill
 
-			ldx #5
+			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
 			ldx #2
@@ -590,10 +590,10 @@ fill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+20*80+5)
 		sta write_fill_copy_target+1
 		lda #main_fade1
-		ldx #16
+		ldx #17
 		jsr vdc_block_fill
 
-		ldx #5
+		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
 		ldx #2
