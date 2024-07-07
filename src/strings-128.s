@@ -369,29 +369,29 @@ main_player_now_playing_msg
 	!byte 0
 
 main_player_file_msg
-	!fill 7,RIGHT
+	!fill 8,RIGHT
 	!text "Filename: ",LBLU
 	!byte 0
 
 main_player_title_msg
-	!fill 10,RIGHT
+	!fill 11,RIGHT
 	!text CYAN,"Title: ",LBLU
 	!byte 0
 
 main_player_hline
-	!byte 38,$60
+	!byte 40,$60
 	!byte $81,RETURN
 	!byte 0
 
 main_player_song_pos_pat_msg
-	!fill 4,RIGHT
+	!fill 5,RIGHT
 	!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
 	!text DCYN," -- "
 	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
 	!byte 0
 
 main_player_row
-	!fill 8,RIGHT
+	!fill 9,RIGHT
 	!text CYAN,"Row: ",LBLU,"  "
 	!text DCYN," --- "
 	!byte 0

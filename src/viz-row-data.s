@@ -368,7 +368,7 @@ viz_dividers_msg
 		!byte 0
 	} else {
 		!byte RETURN
-		!fill 2,RIGHT
+		!fill 3,RIGHT
 		!byte LGRY,$7d
 		!fill 8,RIGHT
 		!byte $7d
