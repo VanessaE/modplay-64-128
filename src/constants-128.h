@@ -43,19 +43,12 @@
 	indstash_addr					= $ae ; same as EAL
 	indfetch_addr					= $bb
 
-	cursor_pointer_text				= $e0
-	cursor_pointer_color			= $e2
 	cursor_current_line				= $eb
-	cursor_col_on_current_line		= $ec
 
 	SCBOT							= $e4 ; bottom, top, left, right edges
 	SCTOP							= $e5 ; of screen/window
 	SCLF							= $e6
 	SCRT							= $e7
-	TBLX							= $eb ; cursor line
-	PNTR							= $ec ; cursor column
-	LINES							= $ed
-	COLUMNS							= $ee
 
 	CHAR_COLOR						= $f1 ; current char color for KERNAL prints
 
@@ -67,7 +60,6 @@
 	IND_FETCH						= $02a2
 	IND_STASH						= $02af
 
-	IOINIT_MODE						= $0a04
 	RPTFLAG							= $0a22
 
 	; I/O

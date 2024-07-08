@@ -44,10 +44,7 @@
 
 	TIME							= $a0
 
-	cursor_pointer_text				= $d1
-	cursor_col_on_current_line		= $d3
 	cursor_current_line				= $d6
-	cursor_pointer_color			= $f3
 
 	FAC								= $61 ; BASIC floating accumulator area
 	LDTB1							= $d9 ; screen line link table
