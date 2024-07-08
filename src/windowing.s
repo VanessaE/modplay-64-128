@@ -1,12 +1,5 @@
 ; Windowing functions, used only on the C128
 
-; breaking out of a window just requires printing a couple of HOMEs.
-;
-; To set a new window requires breaking out of the old one, if
-; any, storing new coordinates, printing SOMEthing first other than
-; HOME (RVSOFF is a good choice), and THEN printing a HOME after that
-; to lock-in the new coordinates.
-
 ; these dimensions are all the CONTENT of the windows, excluding their frames
 
 !text "windowing",0
@@ -69,64 +62,42 @@ text_input_popup_bottom_row			= (24 + text_input_popup_height) / 2 - 1
 ; this one is 1 char wider than normal, so it won't scroll if quote at end of line
 text_input_popup_right_column		= text_input_popup_left_column + text_input_popup_width + 2 
 
-
 !ifdef c128 {
-	set_window_full_screen
-		lda #HOME
-		jsr CHROUT
-		jsr CHROUT
-		lda #0
-		sta SCTOP
-		lda #24
-		sta SCBOT
-		lda #0
-		sta SCLF
-		lda #79
-		sta SCRT
-		jmp commit_window_dimensions
-
-	commit_window_dimensions
-		lda #UP
-		jsr CHROUT
-		lda #HOME
-		jsr CHROUT
+	set_window_playlist_pane
+		jsr FULLW
+		clc
+		lda #3
+		ldx #5
+		jsr WINDOW
+		sec
+		lda #21
+		ldx #30
+		jsr WINDOW
 	rts
 
-	set_window_playlist_pane
-		jsr set_window_full_screen
-		lda #3
-		sta SCTOP
-		lda #21
-		sta SCBOT
-		lda #5
-		sta SCLF
-		lda #30
-		sta SCRT
-		jmp commit_window_dimensions
-
 	set_window_menu_pane
-		jsr set_window_full_screen
+		jsr FULLW
+		clc
 		lda #2
-		sta SCTOP
+		ldx #34
+		jsr WINDOW
+		sec
 		lda #16
-		sta SCBOT
-		lda #34
-		sta SCLF
-		lda #74
-		sta SCRT
-		jmp commit_window_dimensions
+		ldx #74
+		jsr WINDOW
+	rts
 
 	set_window_infobox
-		jsr set_window_full_screen
+		jsr FULLW
+		clc
 		lda #20
-		sta SCTOP
+		ldx #34
+		jsr WINDOW
+		sec
 		lda #22
-		sta SCBOT
-		lda #34
-		sta SCLF
-		lda #74
-		sta SCRT
-		jmp commit_window_dimensions
+		ldx #74
+		jsr WINDOW
+	rts
 }
 
 ; enter with .X/.Y = rows/columns of the INTERIOR (analogous to the PLOT call)
@@ -219,7 +190,7 @@ rts
 !text "draw"
 ; draw a window/popup, centered on the screen
 ; enter with .X/.Y = the window dimensions,
-; and with carry set to use ASCII (only on C64 C128 doesn't need it)
+; and with carry set to use ASCII (only on C64 -- C128 doesn't need it)
 
 !ifndef c128 {
 	bl_color = MGRY
@@ -330,16 +301,19 @@ draw_window
 	+PRINT_CHAR
 
 	!ifdef c128 {
-		jsr set_window_full_screen
+		jsr FULLW
+		clc
 		lda top_row_pos
-		sta SCTOP
+		ldx left_column_pos
+		jsr WINDOW
+		sec
 		lda bottom_row_pos
-		sta SCBOT
-		lda left_column_pos
-		sta SCLF
-		lda right_column_pos
-		sta SCRT
-		jmp commit_window_dimensions
+		ldx right_column_pos
+		jsr WINDOW
+		clc
+		ldx #0
+		ldy #0
+		jsr PLOT
 	} else {
 		clc
 		ldx top_row_pos
@@ -359,25 +333,28 @@ rts
 
 !ifdef c128 {
 	erase_popup
-		jsr set_window_full_screen
+		jsr FULLW
+
 		ldx top_row_pos
 		dex
-		stx SCTOP
-		ldx bottom_row_pos
-		inx
-		stx SCBOT
+		txa
 		ldx left_column_pos
 		dex
 		dex
-		stx SCLF
+		clc
+		jsr WINDOW
+
+		ldx bottom_row_pos
+		inx
+		txa 
 		ldx right_column_pos
 		inx
 		inx
-		stx SCRT
-		jsr commit_window_dimensions
+		sec
+		jsr WINDOW
 		lda #CLR
 		jsr CHROUT
-		jsr set_window_full_screen
+		jsr FULLW
 	rts
 }
 

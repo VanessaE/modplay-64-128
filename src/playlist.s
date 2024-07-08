@@ -197,7 +197,7 @@ display_playlist
 	rts
 
 +	!ifdef c128 {
-		jsr set_window_full_screen
+		jsr FULLW
 	}
 
 	clc

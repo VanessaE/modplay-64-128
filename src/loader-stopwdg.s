@@ -207,7 +207,7 @@ test_loader_compatibility_no_popup
 	bne -
 
 +	!ifdef c128 {
-		jsr set_window_full_screen
+		jsr FULLW
 	}
 rts
 

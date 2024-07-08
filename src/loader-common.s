@@ -17,7 +17,7 @@ load_file_to_expansion
 		progbar_len			= 26*8
 
 		php
-		jsr set_window_full_screen
+		jsr FULLW
 		plp
 	}
 
@@ -332,7 +332,7 @@ populate_loader_mini_popup
 		ldy #>mini_popup_next_line
 		jsr print_msg_rle
 	} else {
-		jsr set_window_full_screen
+		jsr FULLW
 	}
 
 	lda #0					; file size in kB -> size in bytes

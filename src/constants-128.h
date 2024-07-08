@@ -45,11 +45,6 @@
 
 	cursor_current_line				= $eb
 
-	SCBOT							= $e4 ; bottom, top, left, right edges
-	SCTOP							= $e5 ; of screen/window
-	SCLF							= $e6
-	SCRT							= $e7
-
 	CHAR_COLOR						= $f1 ; current char color for KERNAL prints
 
 	bcd = FAC
@@ -73,8 +68,10 @@
 	MMU								= $d500
 	VDC								= $d600
 
-	; KERNAL routines/jump table
+	; KERNAL/editor routines and jump table
 
+	WINDOW							= $c02d
+	FULLW							= $ca24
 	DISPLY							= $cc34
 
 	SWAPPER							= $ff5f
