@@ -25,9 +25,7 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $8a00 ; the divide-16 table starts here
-
-	sample_data_buffer				= $c800 ; 8 * 256 bytes
+	; free: $c800 through $cfff
 
 	; =================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

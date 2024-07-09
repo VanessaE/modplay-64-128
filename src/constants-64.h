@@ -29,10 +29,6 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $8200
-
-	sample_data_buffer				= $8200 ; 8 * 256 bytes ending at $8a00
-
 	VIC_SCREEN						= $c800
 	secondary_screen				= $cc00
 

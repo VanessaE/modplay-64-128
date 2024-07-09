@@ -329,14 +329,18 @@ rts
 
 set_volume_addrs
 	sta current_sample_volume_levels,y
+	cmp #64
+	bne +
+	lda #63
 
-	cmp #46
++	lsr
+	cmp #16
 	bcc +
 	clc
 	adc #>volume_table_lower
 	bcs ++
 
-+	adc #(>volume_table_upper)-47
++	adc #(>volume_table_upper)-16
 
 ++	ldx lookahead_code_offsets_set_volume_code_addr,y
 

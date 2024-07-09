@@ -1060,8 +1060,10 @@ display_byte_hex_direct
 	sty temp_abs_y
 
 	!ifndef c128 {
-		tay
-		lda divide_by_16_table,y
+		lsr
+		lsr
+		lsr
+		lsr
 		jsr to_hex
 		ldy #0
 		sta (utility_pointer),y
@@ -1074,8 +1076,11 @@ display_byte_hex_direct
 		sta fill_copy_target
 		lda utility_pointer+1
 		sta fill_copy_target+1
-		ldy temp_abs_a
-		lda divide_by_16_table,y
+		lda temp_abs_a
+		lsr
+		lsr
+		lsr
+		lsr
 		jsr to_hex
 		jsr vdc_write_ram
 

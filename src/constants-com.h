@@ -185,7 +185,13 @@ program_start							= $2000
 	load_buffer							= $0400 ; 5*254 bytes, plus the rest of the
 	load_buffer_end						= $08f5 ; for overflow
 
-	and_f0_table						= $0900 ; 1 page
+	clear_main_memory					= load_buffer
+
+	pattern_table						= $0900
+	semitones_table_fracts				= $0980
+	semitones_table_lows				= $0990
+
+	; free: $09a0 through $09ff
 
 	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
 	; C128 has system variables and such in that space
@@ -193,19 +199,15 @@ program_start							= $2000
 	multablo							= $0b00 ; 2 pages
 	multabhi							= $0d00 ; 2 pages
 
-	zp_backup							= $0f00 ; 1 page (duh. 😛)
+	; free: $0f00 through $0fff
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
 
 	control_code_flags_table_low		= $1020
 	control_code_flags_table_high		= $1040
-	semitones_table_fracts				= $1060
-	semitones_table_lows				= $1070
 
-	pattern_table						= $1080
-
-	clear_main_memory					= pattern_table
+	; free: $1060 through $10ff
 
 	; on C128, these next two pages can only be used by transient stuff
 	; so that's a good place for the two audio buffers
@@ -331,10 +333,7 @@ program_start							= $2000
 	audio_driver_set_cycle_count_vec	= $1846 ; 2 bytes
 	ram_driver_set_cycle_counts_vec		= $1848 ; 2 bytes
 
-	note_period_table					= $184a ; 120 bytes
-	steprate_table						= $18c2 ; 120 bytes
-
-	note_names_table					= $193a ; 240 bytes
+	; $free: $184a through $1a29
 
 	loader_compatibility_table			= $1a2a ; 22 bytes - devices 8 through 30.
 
@@ -362,24 +361,35 @@ program_start							= $2000
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff
 
-	divide_by_16_table					= $8a00
+	main_mem_free_end					= $b300
 
-	playlist_file_sizes_lows			= $8b00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs			= $8c00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags					= $8d00 ; 1 byte * 192
+	playlist_file_sizes_lows			= $b300 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs			= $b400 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags					= $b500 ; 1 byte * 192
 												; (48 bytes unused but will be zeroed)
 
-	playlist_filenames					= $8e00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end				= $9a00
+	playlist_filenames					= $b600 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end				= $b700
 
-	volume_table_lower					= $9a00 ; 46 pages \__ 65 pages/16.25 kB, split
-	volume_table_upper					= $e000 ; 19 pages /   between two memory areas
+	volume_table_lower					= $b800 ; 16 pages \__ 32 pages/8 kB, split
+	volume_table_upper					= $e000 ; 16 pages /   between two memory areas
 
-	; on C64, $c800-$cfff are screens, sample data buffer on C128
+	; on C64, $c800-$cfff are screens, free RAM on C128
 
 	; other under-KERNAL-ROM stuff
 
-	; free: $f300 through $fcff
+	sample_data_buffer					= $f000 ; 8 * 256 bytes
+
+	note_period_table					= $f800 ; 120 bytes + waste
+	steprate_table						= $f880 ; 120 bytes + waste
+
+	note_names_table					= $f900 ; 240 bytes + waste
+
+	divide_by_16_table					= $fa00 ; 1 page
+
+	and_f0_table						= $fb00 ; 1 page
+
+	zp_backup							= $fc00 ; 1 page (duh. 😛)
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page

@@ -17,7 +17,9 @@ generate_volume_tables
 	sta bval_cnt			; byte value counter
 	sta vol_cnt				; volume counter
 
-	--	ldx vol_cnt
+	--	lda vol_cnt
+		asl
+		tax
 	-	lda bval_cnt
 		jsr multiply_8x8 	; returns 14 bit value in 'product' (top 2 bits are
 							; always 0 here) MSB is also in .A at exit.
@@ -66,12 +68,12 @@ generate_volume_tables
 		inc fill_copy_target+1
 		inc vol_cnt
 		lda vol_cnt
-		cmp #46		; the first 46 pages fit below the screens/sample buf at $c800...
+		cmp #16		; the first 16 pages fit below $c800...
 		bne +
 		lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
 		sta fill_copy_target+1
 		bne -
-	+	cmp #65
+	+	cmp #32
 		bne -
 rts
 
