@@ -60,6 +60,8 @@ init
 	sta main_variables_zone+$0400,y
 	sta main_variables_zone+$0500,y
 	sta main_variables_zone+$0600,y
+	sta main_variables_zone+$0700,y
+	sta main_variables_zone+$0800,y
 	iny
 	bne -
 

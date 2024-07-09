@@ -4,7 +4,6 @@
 
 	; Zero Page
 
-
 	; free: $22, $23
 	; free: $4e, $4f
 
@@ -20,6 +19,7 @@
 	; System vectors from $0300 to $0333
 
 	low_memory_area					= $0334
+
 	; the first $98 bytes are used by player vars - see constants-com.h
 	; free: $03cc through $03ff.
 
@@ -28,6 +28,19 @@
 	; free: $0a80 through $0aff
 
 	window_edge_tables				= $1000
+
+	main_mem_free_end				= $a900
+
+	playlist_file_sizes_lows		= $a900 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $aa00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $ab00 ; 1 byte * 192
+											; (48 bytes unused but will be zeroed)
+
+	playlist_filenames				= $ac00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $b800
+
+	volume_table_lower				= $b800 ; 16 pages \__ 32 pages/8 kB, split
+	volume_table_upper				= $e000 ; 16 pages /   between two memory areas
 
 	VIC_SCREEN						= $c800
 	secondary_screen				= $cc00

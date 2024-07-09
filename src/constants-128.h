@@ -14,6 +14,7 @@
 	; low memory area -- duh 😛
 
 	low_memory_area					= $0200
+
 	; the first $98 bytes are used by player vars - see constants-com.h
 	; free: $0298 through $02a0
 
@@ -25,7 +26,18 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	; free: $c800 through $cfff
+	main_mem_free_end				= $b100
+
+	playlist_file_sizes_lows		= $b100 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $b200 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $b300 ; 1 byte * 192
+											; (48 bytes unused but will be zeroed)
+
+	playlist_filenames				= $b400 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $c000
+
+	volume_table_lower				= $c000 ; 16 pages \__ 32 pages/8 kB, split
+	volume_table_upper				= $e000 ; 16 pages /   between two memory areas
 
 	; =================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

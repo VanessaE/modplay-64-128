@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start							= $2000
+program_start							= $1e00
 
 !addr {
 	; KERNAL zero-page variables
@@ -182,32 +182,29 @@ program_start							= $2000
 	; the above zone must not exceed low_memory_area+$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
-	load_buffer							= $0400 ; 5*254 bytes, plus the rest of the
-	load_buffer_end						= $08f5 ; for overflow
-
-	clear_main_memory					= load_buffer
-
-	pattern_table						= $0900
-	semitones_table_fracts				= $0980
-	semitones_table_lows				= $0990
-
-	; free: $09a0 through $09ff
+	multablo							= $0400 ; 2 pages
+	multabhi							= $0600 ; 2 pages
+	multab2lo							= $0800 ; 2 pages
 
 	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
 	; C128 has system variables and such in that space
 
-	multablo							= $0b00 ; 2 pages
-	multabhi							= $0d00 ; 2 pages
+	load_buffer							= $0b00 ; 5*254 bytes, plus the rest
+	load_buffer_end						= $0ff5 ; of the 5th page for overflow
 
-	; free: $0f00 through $0fff
+	clear_main_memory					= load_buffer
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
 
-	control_code_flags_table_low		= $1020
-	control_code_flags_table_high		= $1040
+	; free: $1020 through $102f
 
-	; free: $1060 through $10ff
+	semitones_table_fracts				= $1030
+	semitones_table_lows				= $1040
+
+	control_code_flags_table_low		= $1050
+	control_code_flags_table_high		= $1070
+	pattern_table						= $1080
 
 	; on C128, these next two pages can only be used by transient stuff
 	; so that's a good place for the two audio buffers
@@ -215,168 +212,153 @@ program_start							= $2000
 	audio_buffer_left					= $1100 ; 1 page
 	audio_buffer_right					= $1200 ; 1 page
 
-	multab2lo							= $1300 ; 2 pages
-	multab2hi							= $1500 ; 2 pages
+	multab2hi							= $1300 ; 2 pages
 
 	; All of the various tables, buffers (both C64 and C128)
 
-	main_variables_zone					= $1700
+	main_variables_zone					= $1500
 
-	config_space						= $1700 ; 16 bytes
+	config_space						= $1500 ; 16 bytes
 
-	one_ten_thousandth_second			= $1710 ; 2 bytes
-	number_of_song_positions			= $1712
-	number_of_patterns					= $1713
+	one_ten_thousandth_second			= $1510 ; 2 bytes
+	number_of_song_positions			= $1512
+	number_of_patterns					= $1513
 
-	audio_driver_isr_cycle_count		= $1714
-	ram_driver_cycle_count				= $1715
-	isr_trigger_interval				= $1716
-	last_isr_trigger_interval			= $1717
-	playlist_length						= $1718
-	playlist_scroll_pos					= $1719
-	playlist_print_file_counter			= $171a
-	screen_row_to_print_at				= $171b
-	rasters_lo							= $171c
-	raster_len							= $171d
-	pal_flag							= $171e
-	boot_device							= $171f
+	audio_driver_isr_cycle_count		= $1514
+	ram_driver_cycle_count				= $1515
+	isr_trigger_interval				= $1516
+	last_isr_trigger_interval			= $1517
+	playlist_length						= $1518
+	playlist_scroll_pos					= $1519
+	playlist_print_file_counter			= $151a
+	screen_row_to_print_at				= $151b
+	rasters_lo							= $151c
+	raster_len							= $151d
+	pal_flag							= $151e
+	boot_device							= $151f
 
-	string_buffer						= $1720 ; 48 bytes
-	uint16_string_buffer				= $1750 ; 7 bytes (of 8)
-	uint16_string_buf_trim				= $1758 ; 7 bytes (of 8)
+	string_buffer						= $1520 ; 48 bytes
+	uint16_string_buffer				= $1550 ; 7 bytes (of 8)
+	uint16_string_buf_trim				= $1558 ; 7 bytes (of 8)
 
-	current_dir_name					= $1760 ; 16 bytes plus a null
-	current_file_name					= $1771 ; 16 bytes plus a null
-	current_file_title					= $1782 ; 21 bytes (plus a bunch of nulls)
-	current_file_size					= $17a0 ; 2 bytes
-	current_file_size_in_kb				= $17a2 ; 2 bytes
-	current_file_type					= $17a4
-	current_file_tracks					= $17a5
+	current_dir_name					= $1560 ; 16 bytes plus a null
+	current_file_name					= $1571 ; 16 bytes plus a null
+	current_file_title					= $1582 ; 21 bytes (plus a bunch of nulls)
+	current_file_size					= $15a0 ; 2 bytes
+	current_file_size_in_kb				= $15a2 ; 2 bytes
+	current_file_type					= $15a4
+	current_file_tracks					= $15a5
 
-	current_menu_page					= $17a6
-	clear_menu_screen_flag				= $17a7
+	current_menu_page					= $15a6
+	clear_menu_screen_flag				= $15a7
 
-	file_to_load_name_len				= $17a8
-	file_to_load_size					= $17a9 ; 2 bytes
-	file_size_in_kb						= $17ab ; 2 bytes
-	header_loaded						= $17ad
+	file_to_load_name_len				= $15a8
+	file_to_load_size					= $15a9 ; 2 bytes
+	file_size_in_kb						= $15ab ; 2 bytes
+	header_loaded						= $15ad
 
-	reu_highest_bank					= $17ae
-	ramlink_detect						= $17af
-	main_memory_free_pages				= $17b0
+	reu_highest_bank					= $15ae
+	ramlink_detect						= $15af
+	main_memory_free_pages				= $15b0
 
-	old_STOP_vec						= $17b1 ; 2 bytes
-	parse_header_sample_pointer			= $17b3 ; 3 bytes
-	arpeggio_extra_note_first			= $17b6 ; \___ 16 bytes
-	arpeggio_extra_note_second			= $17be ; /
+	old_STOP_vec						= $15b1 ; 2 bytes
+	parse_header_sample_pointer			= $15b3 ; 3 bytes
+	arpeggio_extra_note_first			= $15b6 ; \___ 16 bytes
+	arpeggio_extra_note_second			= $15be ; /
 
-	repeat_mode							= $17c6
-	volume_tables_resolution			= $17c7
-	last_volume_tables_resolution		= $17c8
-	allow_regen_msg						= $17c9
+	repeat_mode							= $15c6
+	volume_tables_resolution			= $15c7
+	last_volume_tables_resolution		= $15c8
+	allow_regen_msg						= $15c9
 
-	seq_abort_flag						= $17ca
+	seq_abort_flag						= $15ca
 
-	top_row_pos							= $17cb
-	bottom_row_pos						= $17cc
-	left_column_pos						= $17cd
-	right_column_pos					= $17ce
-	num_rows							= $17cf
-	num_columns							= $17d0
+	top_row_pos							= $15cb
+	bottom_row_pos						= $15cc
+	left_column_pos						= $15cd
+	right_column_pos					= $15ce
+	num_rows							= $15cf
+	num_columns							= $15d0
 
-	stash_size							= $17d1 ; 2 bytes
+	stash_size							= $15d1 ; 2 bytes
 
-	temp_abs_a							= $17d3
-	temp_abs_b							= $17d4
-	temp_abs_c							= $17d5
-	temp_abs_x							= $17d6
-	temp_abs_y							= $17d7
-	temp_abs_y2							= $17d8
-	temp_counter						= $17d9 ; 3 bytes
-	scroll_area_target_addr				= $17dc ; 2 bytes
-	scroll_area_width					= $17de
-	scroll_area_height					= $17df
-	scroll_area_blank_last_line_flag	= $17e0
+	temp_abs_a							= $15d3
+	temp_abs_b							= $15d4
+	temp_abs_c							= $15d5
+	temp_abs_x							= $15d6
+	temp_abs_y							= $15d7
+	temp_abs_y2							= $15d8
+	temp_counter						= $15d9 ; 3 bytes
+	scroll_area_target_addr				= $15dc ; 2 bytes
+	scroll_area_width					= $15de
+	scroll_area_height					= $15df
+	scroll_area_blank_last_line_flag	= $15e0
 
-	progress_bar_row					= $17e1
-	progress_bar_column					= $17e2
-	progress_bar_max_length				= $17e3
-	progress_bar_segments_to_draw		= $17e4
-	progress_bar_bytes_per_segment		= $17e5 ; 3 bytes
+	progress_bar_row					= $15e1
+	progress_bar_column					= $15e2
+	progress_bar_max_length				= $15e3
+	progress_bar_segments_to_draw		= $15e4
+	progress_bar_bytes_per_segment		= $15e5 ; 3 bytes
 
-	visualizer_mode						= $17e8
-	visualizer_base_address				= $17e9 ; 2 bytes
+	visualizer_mode						= $15e8
+	visualizer_base_address				= $15e9 ; 2 bytes
 
-	pattern_conv_pat_counter			= $17eb
-	pattern_conv_row_counter			= $17ec
-	pattern_conv_trk_counter			= $17ed
+	pattern_conv_pat_counter			= $15eb
+	pattern_conv_row_counter			= $15ec
+	pattern_conv_trk_counter			= $15ed
 
-	expansion_memory_start_address		= $17ee ; 3 bytes
-	match_header						= $17f1
+	expansion_memory_start_address		= $15ee ; 3 bytes
+	match_header						= $15f1
 
-	disk_free_space						= $17f2 ; 2 bytes
+	disk_free_space						= $15f2 ; 2 bytes
 
-	; free: $17f4 through $1827
+	; free: $15f4 through $1627
 
 	; various program vectors
 
-	fetch_block_vec						= $1828 ; 2 bytes
-	stash_block_vec						= $183a ; 2 bytes
+	fetch_block_vec						= $1628 ; 2 bytes
+	stash_block_vec						= $163a ; 2 bytes
 
-	print_vec							= $183c ; 2 bytes
+	print_vec							= $163c ; 2 bytes
 
-	audio_set_resolution_vec			= $183e ; 2 bytes
-	audio_init_vec						= $1840 ; 2 bytes
-	audio_start_vec						= $1842 ; 2 bytes
-	audio_stop_vec						= $1844 ; 2 bytes
+	audio_set_resolution_vec			= $163e ; 2 bytes
+	audio_init_vec						= $1640 ; 2 bytes
+	audio_start_vec						= $1642 ; 2 bytes
+	audio_stop_vec						= $1644 ; 2 bytes
 
-	audio_driver_set_cycle_count_vec	= $1846 ; 2 bytes
-	ram_driver_set_cycle_counts_vec		= $1848 ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $1646 ; 2 bytes
+	ram_driver_set_cycle_counts_vec		= $1648 ; 2 bytes
 
-	; $free: $184a through $1a29
+	; $free: $164a through $16e9
 
-	loader_compatibility_table			= $1a2a ; 22 bytes - devices 8 through 30.
+	loader_compatibility_table			= $16ea ; 22 bytes - devices 8 through 30.
 
 	; mods' lengths are big-endian, but addrs and lengths here are little-
 	; endian. each of these is 32 bytes, except the first byte of each one is
 	; unused.
 
-	sample_start_addresses_lows			= $1a40
-	sample_start_addresses_mids			= $1a60
-	sample_start_addresses_highs		= $1a80
-	sample_end_addresses_lows			= $1aa0
-	sample_end_addresses_mids			= $1ac0
-	sample_end_addresses_highs			= $1ae0
-	sample_loop_start_addresses_lows	= $1b00
-	sample_loop_start_addresses_mids	= $1b20
-	sample_loop_start_addresses_highs	= $1b40
-	sample_loop_end_addresses_lows		= $1b60
-	sample_loop_end_addresses_mids		= $1b80
-	sample_loop_end_addresses_highs		= $1ba0
-	sample_default_loop_flags			= $1bc0
-	sample_default_fine_tunes			= $1be0
-	sample_default_volume_levels		= $1c00
-	mod_instrument_names				= $1c20 ; 32 * 31 bytes, through $1fff
+	sample_start_addresses_lows			= $1700
+	sample_start_addresses_mids			= $1720
+	sample_start_addresses_highs		= $1740
+	sample_end_addresses_lows			= $1760
+	sample_end_addresses_mids			= $1780
+	sample_end_addresses_highs			= $17a0
+	sample_loop_start_addresses_lows	= $17c0
+	sample_loop_start_addresses_mids	= $1800
+	sample_loop_start_addresses_highs	= $1820
+	sample_loop_end_addresses_lows		= $1840
+	sample_loop_end_addresses_mids		= $1860
+	sample_loop_end_addresses_highs		= $1880
+	sample_default_loop_flags			= $18a0
+	sample_default_fine_tunes			= $18c0
+	sample_default_volume_levels		= $1900
+	mod_instrument_names				= $1920 ; 32 * 31 bytes, through $1dff
 
 	; main program code starts here, followed by free mem
-	; then comes all the "high-memory" stuff
+	; then comes all the "high-memory" stuff, beginning at $a900 on C64 or
+	; $b100 on C128 -- see constants-64/128.h
 
-	main_mem_free_end					= $b300
-
-	playlist_file_sizes_lows			= $b300 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs			= $b400 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags					= $b500 ; 1 byte * 192
-												; (48 bytes unused but will be zeroed)
-
-	playlist_filenames					= $b600 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end				= $b700
-
-	volume_table_lower					= $b800 ; 16 pages \__ 32 pages/8 kB, split
-	volume_table_upper					= $e000 ; 16 pages /   between two memory areas
-
-	; on C64, $c800-$cfff are screens, free RAM on C128
-
-	; other under-KERNAL-ROM stuff
+	; Under-KERNAL-ROM stuff
 
 	sample_data_buffer					= $f000 ; 8 * 256 bytes
 
