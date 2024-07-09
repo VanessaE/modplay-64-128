@@ -49,10 +49,20 @@ show_splash
 		dec VIC+$30
 		jsr SWAPPER
 	} else {
-		+C64_PRIMARY_SCREEN
+		lda CIA2					; CIA: select VIC-II bank 2
+		and #$fd
+		sta CIA2
+		lda #$d4					; point VIC-II to $b400 for the screen
+		sta VIC+$18					; and use the char ROM image at $9000
+		lda #$b4					; point the KERNAL appropriately
+		sta HIBASE
+		lda #$36					; gotta disable BASIC or it'll corrupt
+		sta $01						; the splash image
 		ldx #<splash_data
 		ldy #>splash_data
 		jsr print_msg_rle
+		lda #$37
+		sta $01
 	}
 
 out

@@ -100,7 +100,7 @@ program_start							= $1e00
 
 	; utility_pointer uses $fa/$fb
 	; and $fc through $ff are reserved for more dual ZP-backup/no-backup
-	; allowed vars
+	; allowed vars, as below.
 
 	; ### End of Zero Page backup
 	; ####################################################
