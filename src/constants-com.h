@@ -312,7 +312,10 @@ program_start							= $1e00
 
 	disk_free_space						= $15f2 ; 2 bytes
 
-	; free: $15f4 through $1627
+	char_table_select					= $15f4 ; C64-only
+	print_msg_char_limit				= $15f5
+
+	; free: $15f6 through $1627
 
 	; various program vectors
 

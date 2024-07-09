@@ -6,10 +6,9 @@
 
 	; free: $22, $23
 	; free: $4e, $4f
+	; free: $57
+	; free: $f7
 
-	char_table_select				= $57
-
-	print_msg_char_limit			= $f7
 	progress_bar_char_pointer		= $f8 ; and $f9
 
 	; low memory area -- duh 😛
