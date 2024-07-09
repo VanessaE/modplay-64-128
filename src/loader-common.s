@@ -265,17 +265,17 @@ populate_loader_mini_popup
 	ldx file_to_load_size
 	ldy file_to_load_size+1
 	jsr get_num_length
-	sty tempzp_c
+	sty temp_abs_a
 
 	ldx file_size_in_kb
 	ldy file_size_in_kb+1
 	jsr get_num_length
-	sty tempzp_e
+	sty temp_abs_c
 
 	sec
 	lda #mini_popup_width
-	sbc tempzp_c			; length of the blocks figure
-	sbc tempzp_e			; length of the kB figure
+	sbc temp_abs_a			; length of the blocks figure
+	sbc temp_abs_c			; length of the kB figure
 	sbc #size_text			; length of the "blocks" and "k" parts
 	lsr
 	tay
@@ -361,7 +361,6 @@ populate_loader_mini_popup
 	sta progress_bar_bytes_per_segment+1
 	lda quotient+2
 	sta progress_bar_bytes_per_segment+2
-
 	lda #progbar_len
 	ldx #progbar_column
 	ldy #progbar_row
@@ -430,7 +429,7 @@ decode_header
 	bpl -
 
 	lda #1							; check filetype
-	sta tempzp_c
+	sta temp_abs_a
 	ldy #0
 
 --	ldx #0
@@ -447,7 +446,7 @@ decode_header
 	cpx #4
 	bne -
 
-	inc tempzp_c
+	inc temp_abs_a
 	lda match_header
 	bne --
 	jmp set_num_tracks
@@ -507,7 +506,7 @@ filetype_unsure
 	rts							; as unknown and signal the loader to abort.
 
 set_num_tracks
-	lda tempzp_c
+	lda temp_abs_a
 	sta current_file_type
 	cmp #5
 	bcs +
@@ -542,9 +541,9 @@ get_pattern_table
 	sta parse_header_sample_pointer+1
 
 	lda #<(load_buffer + header15_seek_to_pat_tbl - 2)
-	sta tempzp_d
+	sta fill_copy_source
 	lda #>(load_buffer + header15_seek_to_pat_tbl - 2)
-	sta tempzp_d+1
+	sta fill_copy_source+1
 
 -	lda load_buffer + header15_seek_to_pat_tbl,y
 	sta pattern_table,y
@@ -558,9 +557,9 @@ get_pattern_table
 	sta parse_header_sample_pointer+1
 
 	lda #<(load_buffer + header31_seek_to_pat_tbl - 2)
-	sta tempzp_d
+	sta fill_copy_source
 	lda #>(load_buffer + header31_seek_to_pat_tbl - 2)
-	sta tempzp_d+1
+	sta fill_copy_source+1
 
 -	lda load_buffer + header31_seek_to_pat_tbl,y
 	sta pattern_table,y
@@ -570,7 +569,7 @@ get_pattern_table
 count_patterns
 	ldy #0
 	sty number_of_patterns
-	lda (tempzp_d),y
+	lda (fill_copy_source),y
 	sta number_of_song_positions
 
 -	lda pattern_table,y
@@ -608,20 +607,20 @@ parse_instruments
 	sta parse_header_sample_pointer+2
 
 	lda #<mod_instrument_names
-	sta tempzp_e
+	sta fill_copy_target
 	lda #>mod_instrument_names
-	sta tempzp_e+1
+	sta fill_copy_target+1
 
 	lda #<(load_buffer + header_first_inst_meta_offset)
-	sta tempzp_d
+	sta fill_copy_source
 	lda #>(load_buffer + header_first_inst_meta_offset)
-	sta tempzp_d+1
+	sta fill_copy_source+1
 	ldx #0
 
 .next_instr
 	ldy #0								; copy instrument name
--	lda (tempzp_d),y
-	sta (tempzp_e),y
+-	lda (fill_copy_source),y
+	sta (fill_copy_target),y
 	iny
 	cpy #22
 	bne -
@@ -635,75 +634,75 @@ parse_instruments
 
 	; .Y = 22 here.
 	lda #0
-	sta tempzp_f+2
-	lda (tempzp_d),y					; read sample length, MSB first
-	sta tempzp_f+1
+	sta temp_counter+2
+	lda (fill_copy_source),y					; read sample length, MSB first
+	sta temp_counter+1
 	iny ; 23
-	lda (tempzp_d),y
+	lda (fill_copy_source),y
 
 	asl
-	sta tempzp_f						; double it:  # words to # bytes
-	rol tempzp_f+1
-	rol tempzp_f+2
+	sta temp_counter						; double it:  # words to # bytes
+	rol temp_counter+1
+	rol temp_counter+2
 
 	clc
-	lda tempzp_f
+	lda temp_counter
 	adc parse_header_sample_pointer		; preset for next sample address
 	sta parse_header_sample_pointer
 	sta sample_end_addresses_lows,x		; <--- this eliminates having to look
-	lda tempzp_f+1						;      "forward" in the header to find
+	lda temp_counter+1						;      "forward" in the header to find
 	adc parse_header_sample_pointer+1	;      next sample start address to use
 	sta parse_header_sample_pointer+1	;      as this sample's end.
 	sta sample_end_addresses_mids,x
-	lda tempzp_f+2
+	lda temp_counter+2
 	adc parse_header_sample_pointer+2
 	sta parse_header_sample_pointer+2
 	sta sample_end_addresses_highs,x
 
 	iny ; 24
-	lda (tempzp_d),y
+	lda (fill_copy_source),y
 	sta sample_default_fine_tunes,x
 
 	iny ; 25
-	lda (tempzp_d),y
+	lda (fill_copy_source),y
 	sta sample_default_volume_levels,x
 
 	iny ; 26
 	lda #0
-	sta tempzp_f+2
-	lda (tempzp_d),y					; read loop start offset, MSB first
-	sta tempzp_f+1
+	sta temp_counter+2
+	lda (fill_copy_source),y					; read loop start offset, MSB first
+	sta temp_counter+1
 	iny ; 27
-	lda (tempzp_d),y
+	lda (fill_copy_source),y
 
 	asl
-	sta tempzp_f						; double it:  # words to # bytes
-	rol tempzp_f+1
-	rol tempzp_f+2
+	sta temp_counter						; double it:  # words to # bytes
+	rol temp_counter+1
+	rol temp_counter+2
 
 	clc									; convert to address
-	lda tempzp_f
+	lda temp_counter
 	adc sample_start_addresses_lows,x
 	sta sample_loop_start_addresses_lows,x
-	lda tempzp_f+1
+	lda temp_counter+1
 	adc sample_start_addresses_mids,x
 	sta sample_loop_start_addresses_mids,x
-	lda tempzp_f+2
+	lda temp_counter+2
 	adc sample_start_addresses_highs,x
 	sta sample_loop_start_addresses_highs,x
 
 	iny ; 28
 	lda #0
-	sta tempzp_f+2
-	lda (tempzp_d),y					; read loop length, MSB first
-	sta tempzp_f+1
+	sta temp_counter+2
+	lda (fill_copy_source),y					; read loop length, MSB first
+	sta temp_counter+1
 	iny ; 29
-	lda (tempzp_d),y
-	sta tempzp_f
+	lda (fill_copy_source),y
+	sta temp_counter
 
-	lda tempzp_f+1						; if loop len > 1, flag this sample as loopable
+	lda temp_counter+1						; if loop len > 1, flag this sample as loopable
 	bne +
-	lda tempzp_f
+	lda temp_counter
 	cmp #2
 	bcs +
 
@@ -720,34 +719,34 @@ parse_instruments
 
 +	lda #$80
 	sta sample_default_loop_flags,x
-	asl tempzp_f						; double the len:  # words to # bytes
-	rol tempzp_f+1
-	rol tempzp_f+2
+	asl temp_counter						; double the len:  # words to # bytes
+	rol temp_counter+1
+	rol temp_counter+2
 
 	clc									; convert to address
-	lda tempzp_f
+	lda temp_counter
 	adc sample_loop_start_addresses_lows,x
 	sta sample_loop_end_addresses_lows,x
-	lda tempzp_f+1
+	lda temp_counter+1
 	adc sample_loop_start_addresses_mids,x
 	sta sample_loop_end_addresses_mids,x
-	lda tempzp_f+2
+	lda temp_counter+2
 	adc sample_loop_start_addresses_highs,x
 	sta sample_loop_end_addresses_highs,x
 
 ++	clc
-	lda tempzp_d
+	lda fill_copy_source
 	adc #instrument_metadata_size
-	sta tempzp_d
+	sta fill_copy_source
 	bcc +
-	inc tempzp_d+1
+	inc fill_copy_source+1
 
 	clc
-+	lda tempzp_e
++	lda fill_copy_target
 	adc #22
-	sta tempzp_e
+	sta fill_copy_target
 	bcc +
-	inc tempzp_e+1
+	inc fill_copy_target+1
 
 +	inx
 
@@ -892,12 +891,12 @@ reformat_pattern_data
 				adc #1						; a note number 1-60.
 
 			no_bin_search
-				sta tempzp_c
+				sta temp_abs_a
 
 				ldy #0
 				lda (utility_pointer),y
 				and #$f0
-				sta tempzp_d
+				sta temp_abs_b
 
 				ldy #2
 				lda (utility_pointer),y
@@ -905,7 +904,7 @@ reformat_pattern_data
 				lsr
 				lsr
 				lsr
-				ora tempzp_d
+				ora temp_abs_b
 				ldy #1
 				sta (utility_pointer),y
 
@@ -915,7 +914,7 @@ reformat_pattern_data
 				sta (utility_pointer),y
 
 				ldy #0
-				lda tempzp_c
+				lda temp_abs_a
 				sta (utility_pointer),y
 
 				clc
@@ -933,9 +932,10 @@ reformat_pattern_data
 			inc pattern_conv_row_counter
 			lda pattern_conv_row_counter
 			cmp #64
-		bne conv_row_loop
+		beq +
+		jmp conv_row_loop
 
-		+JSR_INDIRECT (stash_block_vec)
+	+	+JSR_INDIRECT (stash_block_vec)
 
 		clc
 		lda expansion_memory_target_pointer+1

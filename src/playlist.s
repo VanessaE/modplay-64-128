@@ -433,21 +433,21 @@ erase_file_list
 	sta playlist_scroll_pos
 
 	lda #<playlist_filenames
-	sta tempzp_d
+	sta fill_copy_target
 	lda #>playlist_filenames
-	sta tempzp_d+1
+	sta fill_copy_target+1
 
 	ldy #0
 -	lda #0
-	sta (tempzp_d),y
-	inc tempzp_d
+	sta (fill_copy_target),y
+	inc fill_copy_target
 	bne +
-	inc tempzp_d+1
+	inc fill_copy_target+1
 
-+	lda tempzp_d
++	lda fill_copy_target
 	cmp #<playlist_filenames_end
 	bne -
-	lda tempzp_d+1
+	lda fill_copy_target+1
 	cmp #>playlist_filenames_end
 	bne -
 rts
@@ -521,17 +521,17 @@ fill_playlist_colors
 		kb_fade			= $83 ; light blue
 
 		lda #<(VDC_ATTRIBUTES+ 3*80+5)
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill
 
 		lda #<(VDC_ATTRIBUTES+ 4*80+5)
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+ 4*80+5)
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #main_fade1
 		ldx #17
 		jsr vdc_block_fill
@@ -545,9 +545,9 @@ fill_playlist_colors
 
 		!for .row, 5, 11 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta write_fill_copy_target
+			sta fill_copy_target
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta write_fill_copy_target+1
+			sta fill_copy_target+1
 			lda #main_color
 			ldx #17
 			jsr vdc_block_fill
@@ -561,18 +561,18 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+12*80+5)
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+12*80+5)
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #hl_color
 		ldx #25
 		jsr vdc_block_fill
 
 		!for .row, 13, 19 {
 			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta write_fill_copy_target
+			sta fill_copy_target
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta write_fill_copy_target+1
+			sta fill_copy_target+1
 			lda #main_color
 			ldx #17
 			jsr vdc_block_fill
@@ -586,9 +586,9 @@ fill_playlist_colors
 		}
 
 		lda #<(VDC_ATTRIBUTES+20*80+5)
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+20*80+5)
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #main_fade1
 		ldx #17
 		jsr vdc_block_fill
@@ -601,9 +601,9 @@ fill_playlist_colors
 		jsr vdc_block_fill_extend
 
 		lda #<(VDC_ATTRIBUTES+21*80+5)
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+21*80+5)
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #main_fade2
 		ldx #25
 		jsr vdc_block_fill
@@ -704,10 +704,10 @@ rts
 		clc
 		tya
 		adc #8
-		sta tempzp_c
+		sta temp_abs_a
 		sec
 		lda #15
-		sbc tempzp_c
+		sbc temp_abs_a
 		lsr
 		tay
 		lda #RIGHT
@@ -742,7 +742,7 @@ rts
 } else {
 
 	append_file_size
-		sty tempzp_d
+		sty temp_abs_a
 		lda playlist_file_sizes_highs,x
 		sta file_size_in_kb+1
 		lda playlist_file_sizes_lows,x
@@ -757,14 +757,14 @@ rts
 		tax
 		ldy file_size_in_kb+1
 		jsr get_num_length
-		sty tempzp_c
+		sty temp_abs_b
 
 		sec
 		lda #file_sizes_column
-		sbc tempzp_c
+		sbc temp_abs_b
 		tay
 
-		ldx tempzp_d
+		ldx temp_abs_a
 		clc
 		jsr PLOT
 

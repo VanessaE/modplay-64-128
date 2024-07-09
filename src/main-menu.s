@@ -21,8 +21,8 @@ show_main_menu
 	jsr print_msg
 
 	ldy #0
-	sty tempzp_d
--	ldy tempzp_d
+	sty temp_abs_y
+-	ldy temp_abs_y
 	cpy #23
 	beq +
 	ldx mm_lo,y
@@ -30,7 +30,7 @@ show_main_menu
 	tay
 	lda #0
 	jsr print_msg_rle
-	inc tempzp_d
+	inc temp_abs_y
 	bne -
 
 +	!ifndef c128 { ; restore the screen line links to 40 chars apiece.
@@ -684,14 +684,14 @@ rts
 
 print_menu_line
 	!ifndef c128 {
-		stx tempzp_d
-		sty tempzp_d+1
+		stx temp_abs_x
+		sty temp_abs_y
 		lda #0
 		ldx #<prepend_right_margin
 		ldy #>prepend_right_margin
 		jsr print_msg_rle
-		ldx tempzp_d
-		ldy tempzp_d+1
+		ldx temp_abs_x
+		ldy temp_abs_y
 	}
 	lda #0
 	jsr print_msg
@@ -818,10 +818,10 @@ populate_info_box
 		tya
 		clc
 		adc #33
-		sta tempzp_c
+		sta temp_abs_a
 		sec
 		lda #41
-		sbc tempzp_c
+		sbc temp_abs_a
 		lsr
 		tay
 		ldx #ibrow+2

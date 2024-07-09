@@ -10,9 +10,9 @@
 
 generate_volume_tables
 	lda #<volume_table_lower
-	sta tempzp_d
+	sta fill_copy_target
 	lda #>volume_table_lower
-	sta tempzp_d+1
+	sta fill_copy_target+1
 	lda #0
 	sta bval_cnt			; byte value counter
 	sta vol_cnt				; volume counter
@@ -60,16 +60,16 @@ generate_volume_tables
 		lsr
 
 	.nd	lsr
-		sta (tempzp_d),y
+		sta (fill_copy_target),y
 		inc bval_cnt
 		bne --
-		inc tempzp_d+1
+		inc fill_copy_target+1
 		inc vol_cnt
 		lda vol_cnt
 		cmp #46		; the first 46 pages fit below the screens/sample buf at $c800...
 		bne +
 		lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
-		sta tempzp_d+1
+		sta fill_copy_target+1
 		bne -
 	+	cmp #65
 		bne -
@@ -85,7 +85,7 @@ generate_tempo_table
 
 	ldx #32 ; entries 0-31 are unused.
 
--	stx tempzp_d
+-	stx temp_abs_x
 	lda isr_trigger_interval
 	jsr multiply_8x8
 
@@ -105,7 +105,7 @@ generate_tempo_table
 
 	jsr divide_32by16
 
-	ldx tempzp_d
+	ldx temp_abs_x
 	lda quotient
 	sta tempo_table_fracts,x
 	lda quotient+1
@@ -137,9 +137,9 @@ generate_steprate_table
 	lda note_period_table,x
 	sta divisor+1
 
-	stx tempzp_c
+	stx temp_abs_x
 	jsr divide_24by24
-	ldx tempzp_c
+	ldx temp_abs_x
 
 	lda quotient
 	lsr quotient+1

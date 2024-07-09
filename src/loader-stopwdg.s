@@ -136,8 +136,8 @@ test_loader_compatibility_no_popup
 
 	jsr get_free_disk_space
 
-	lda tempzp_d						; Is there at least one block free?
-	ora tempzp_d+1						; If not, assume the drive is not
+	lda disk_free_space					; Is there at least one block free?
+	ora disk_free_space+1				; If not, assume the drive is not
 	bne +								; compatible, since we can't test it.
 	rts
 

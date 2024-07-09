@@ -198,16 +198,16 @@ get_free_disk_space
 	jsr CHRIN				; throw away two more bytes
 	jsr CHRIN
 	jsr CHRIN				; blocks free LSB
-	sta tempzp_d
+	sta disk_free_space
 	jsr CHRIN				; blocks free MSB
-	sta tempzp_d+1
+	sta disk_free_space+1
 
 	jsr close_file
 rts
 
 open_file			; enter with .A = filename len, .X/.Y = filename addr
 	php
-	sta tempzp_c
+	sta temp_abs_a
 	and #$7f		; in case the len indicates need for DOS command channel
 	jsr SETNAM
 
@@ -225,7 +225,7 @@ open_file			; enter with .A = filename len, .X/.Y = filename addr
 	ldy #0			; it means we need the directory, so SA=0
 	beq .setlfs
 
-+	lda tempzp_c	; retrieve filename length
++	lda temp_abs_a	; retrieve filename length
 	and #$80		; if the high bit of the length was set
 	beq +
 	ldy #15			; then it's for the DOS command channel, so SA=15

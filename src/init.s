@@ -396,19 +396,19 @@ init
 
 zero_count	!byte 0
 
-copy_code				; call this with tempzp_d = source,
-	ldy #0				; tempzp_e = target, data will be copied
+copy_code				; call this with fill_copy_source = source,
+	ldy #0				; fill_copy_target = target, data will be copied
 --	lda #3				; until three 0's are found.
 	sta zero_count
--	lda (tempzp_d),y
-	sta (tempzp_e),y
-	inc tempzp_d
+-	lda (fill_copy_source),y
+	sta (fill_copy_target),y
+	inc fill_copy_source
 	bne +
-	inc tempzp_d+1
+	inc fill_copy_source+1
 
-+	inc tempzp_e
++	inc fill_copy_target
 	bne +
-	inc tempzp_e+1
+	inc fill_copy_target+1
 
 +	and #$ff
 	bne --
@@ -418,13 +418,13 @@ rts
 
 final_clear_copy
 	lda #<clear_main_memory_origin
-	sta tempzp_d
+	sta fill_copy_source
 	lda #>clear_main_memory_origin
-	sta tempzp_d+1
+	sta fill_copy_source+1
 	lda #<clear_main_memory
-	sta tempzp_e
+	sta fill_copy_target
 	lda #>clear_main_memory
-	sta tempzp_e+1
+	sta fill_copy_target+1
 	jsr copy_code
 
 	ldy #$ff
@@ -436,16 +436,16 @@ rts
 
 clear_main_memory_origin
 	lda #<main_mem_free_start
-	sta tempzp_d
+	sta fill_copy_target
 	lda #>main_mem_free_start
-	sta tempzp_d+1
+	sta fill_copy_target+1
 	lda #0
 	ldy #0
--	sta (tempzp_d),y
-	inc tempzp_d
+-	sta (fill_copy_target),y
+	inc fill_copy_target
 	bne -
-	inc tempzp_d+1
-	ldx tempzp_d+1
+	inc fill_copy_target+1
+	ldx fill_copy_target+1
 	cpx #>main_mem_free_end
 	bne -
 
@@ -469,26 +469,26 @@ charset_copy
 		; park the ASCII charset in RAM at $d000, standard at $d800
 
 		lda #<charset_64
-		sta fill_copy_src
+		sta fill_copy_source
 		lda #>charset_64
-		sta fill_copy_src+1
+		sta fill_copy_source+1
 
 		lda #<VIC_CHARSETS
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>VIC_CHARSETS
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 
 		ldy #0
-	-	lda (fill_copy_src),y
-		sta (write_fill_copy_target),y
-		inc fill_copy_src
+	-	lda (fill_copy_source),y
+		sta (fill_copy_target),y
+		inc fill_copy_source
 		bne +
-		inc fill_copy_src+1
-	+	inc write_fill_copy_target
+		inc fill_copy_source+1
+	+	inc fill_copy_target
 		bne -
 
-		inc write_fill_copy_target+1
-		lda write_fill_copy_target+1
+		inc fill_copy_target+1
+		lda fill_copy_target+1
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
 
@@ -496,21 +496,21 @@ charset_copy
 
 	} else {				; on the C128, upload it to the VDC
 		lda #<charset_128_alt
-		sta fill_copy_src
+		sta fill_copy_source
 		lda #>charset_128_alt
-		sta fill_copy_src+1
+		sta fill_copy_source+1
 
 		lda #<VDC_CHARSETS
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>VDC_CHARSETS
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 
 		jsr vdc_write_ram_reg_31_select_only
 
 	.nextchar
 		ldy #0
 
-	-	lda (fill_copy_src),y
+	-	lda (fill_copy_source),y
 		jsr vdc_continue_write_ram
 		iny
 		cpy #8
@@ -522,12 +522,12 @@ charset_copy
 		bne -
 
 		clc
-		lda fill_copy_src
+		lda fill_copy_source
 		adc #8
-		sta fill_copy_src
+		sta fill_copy_source
 		bcc +
-		inc fill_copy_src+1
-	+	lda fill_copy_src+1
+		inc fill_copy_source+1
+	+	lda fill_copy_source+1
 		cmp #>(charset_128_alt+$0800)
 		bne .nextchar
 	}

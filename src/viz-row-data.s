@@ -36,10 +36,10 @@ viz_row_data_init
 
 	lda #<vizualizer_colors_base_addr
 	sta utility_pointer
-	sta write_fill_copy_target
+	sta fill_copy_target
 	lda #>vizualizer_colors_base_addr
 	sta utility_pointer+1
-	sta write_fill_copy_target+1
+	sta fill_copy_target+1
 
 	lda #UP
 	jsr CHROUT
@@ -62,11 +62,11 @@ viz_row_data_init
 		lda utility_pointer
 		adc #screen_width
 		sta utility_pointer
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda utility_pointer+1
 		adc #0
 		sta utility_pointer+1
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 
 		lda #0
 		ldx #<viz_dividers_msg
@@ -295,16 +295,16 @@ viz_row_data_scroll
   no_vrdsc
 rts
 
-; blank-out a line of the visualizer display pointed to by write_fill_copy_target
+; blank-out a line of the visualizer display pointed to by fill_copy_target
 
 viz_row_data_erase_row
 	sty temp_abs_y2
 
 	!ifdef c128 {
 		lda utility_pointer
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda utility_pointer+1
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 
 		jsr vdc_write_ram_reg_31_select_only
 	}

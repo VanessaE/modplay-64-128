@@ -49,10 +49,10 @@
 ;#####################
 
 get_string_length
-	stx tempzp_e
-	sty tempzp_e+1
+	stx utility_pointer_b
+	sty utility_pointer_b+1
 	ldy #0
--	lda (tempzp_e),y
+-	lda (utility_pointer_b),y
 	beq +
 	iny
 	bne -
@@ -66,10 +66,10 @@ center_string
 	pha
 	jsr get_string_length
 	tya
-	sta tempzp_c
+	sta temp_abs_a
 	pla
 	sec
-	sbc tempzp_c
+	sbc temp_abs_a
 	lsr
 	beq +
 	tay
@@ -457,22 +457,22 @@ rts
 
 calc_filename_address ; expects .X to be a list scroll position
 	lda #0
-	sta tempzp_c
+	sta temp_abs_a
 
 	txa
 	asl
-	rol tempzp_c
+	rol temp_abs_a
 	asl
-	rol tempzp_c
+	rol temp_abs_a
 	asl
-	rol tempzp_c
+	rol temp_abs_a
 	asl
-	rol tempzp_c
+	rol temp_abs_a
 
 	clc
 	adc #<playlist_filenames
 	tax
-	lda tempzp_c
+	lda temp_abs_a
 	adc #>playlist_filenames
 	tay
 rts
@@ -530,20 +530,20 @@ rts
 ; returns .C set if the user hit Run/Stop or Esc, else .C will be clear.
 
 get_text_input
-	sty tempzp_d ; so _d is the limit, _d+1 is the current count
+	sty temp_abs_a ; temp_abs_a is the limit, temp_abs_b is the current count
 
 	jsr clear_string_buffer
 	ldy #0
-	sty tempzp_d+1
+	sty temp_abs_b
 	jsr upd_cursor
 
 .nxt
 	!ifndef c128 {
 		lda TIME+2		; low byte
 		and #$20		; toggle every 32 jiffies, roughly half a second
-		cmp tempzp_c
+		cmp temp_abs_c
 		beq +
-		sta tempzp_c
+		sta temp_abs_c
 		jsr upd_cursor
 	}
 +	jsr GETIN
@@ -568,18 +568,18 @@ get_text_input
 +	pla
 	cmp #$0d ; return
 	bne +
-	ldy tempzp_d+1
+	ldy temp_abs_b
 	clc
 	rts
 
 +	cmp #$14 ; delete
 	bne +
-	ldy tempzp_d+1
+	ldy temp_abs_b
 	beq .nxt
 	lda #0
 	dey
 	sta string_buffer,y
-	sty tempzp_d+1
+	sty temp_abs_b
 	lda #" "
 	jsr CHROUT
 	lda #LEFT
@@ -596,12 +596,12 @@ get_text_input
 	bcc .nxt
 
 .st
-	ldy tempzp_d+1
-	cpy tempzp_d
+	ldy temp_abs_b
+	cpy temp_abs_a
 	beq .nxt
 	sta string_buffer,y
 	iny
-	sty tempzp_d+1
+	sty temp_abs_b
 	cmp #$22 ; quote
 	bne +
 	jsr CHROUT
@@ -613,7 +613,7 @@ get_text_input
 
 upd_cursor
 	!ifndef c128 {
-		lda tempzp_c
+		lda temp_abs_c
 		and #$20
 		beq +
 		lda #RVSON
@@ -848,7 +848,7 @@ print_filetype
 	++ rts
 }
 
-; enter with write_fill_copy_target set to the start address of the block to
+; enter with fill_copy_target set to the start address of the block to
 ; be filled, .A holds the fill byte, .X holds the block length.
 
 local_ram_block_fill
@@ -857,24 +857,24 @@ local_ram_block_fill
 	sty temp_abs_y
 
 	ldy #0
--	sta (write_fill_copy_target),y
+-	sta (fill_copy_target),y
 	iny
 	dex
 	bne -
 
 	clc
-	lda write_fill_copy_target
+	lda fill_copy_target
 	adc temp_abs_x
-	sta write_fill_copy_target
+	sta fill_copy_target
 	bcc +
-	inc write_fill_copy_target+1
+	inc fill_copy_target+1
 
 +	lda temp_abs_a
 	ldx temp_abs_x
 	ldy temp_abs_y
 rts
 
-; enter with fill_copy_src and write_fill_copy_target set to the source and
+; enter with fill_copy_source and fill_copy_target set to the source and
 ; target addresses of the area to be copied, .X is the copy length
 
 local_ram_block_copy
@@ -882,25 +882,25 @@ local_ram_block_copy
 	sty temp_abs_y
 
 	ldy #0
--	lda (fill_copy_src),y
-	sta (write_fill_copy_target),y
+-	lda (fill_copy_source),y
+	sta (fill_copy_target),y
 	iny
 	dex
 	bne -
 
 	clc
-	lda fill_copy_src
+	lda fill_copy_source
 	adc temp_abs_x
-	sta fill_copy_src
+	sta fill_copy_source
 	bcc +
-	inc fill_copy_src+1
+	inc fill_copy_source+1
 	clc
 
-+	lda write_fill_copy_target
++	lda fill_copy_target
 	adc temp_abs_x
-	sta write_fill_copy_target
+	sta fill_copy_target
 	bcc +
-	inc write_fill_copy_target+1
+	inc fill_copy_target+1
 
 +	ldx temp_abs_x
 	ldy temp_abs_y
@@ -910,8 +910,8 @@ rts
 ;# C128 VDC OPERATIONS #
 ;#######################
 
-; enter with fill_copy_src set to the source address,
-; write_fill_copy_target is the target, and .X is the copy length
+; enter with fill_copy_source set to the source address,
+; fill_copy_target is the target, and .X is the copy length
 
 !ifdef c128 {
 
@@ -921,12 +921,12 @@ rts
 
 		lda #18
 		sta VDC
-		lda write_fill_copy_target+1
+		lda fill_copy_target+1
 		sta VDC+1
 
 		lda #19
 		sta VDC
-		lda write_fill_copy_target
+		lda fill_copy_target
 		sta VDC+1
 
 	-	bit VDC
@@ -943,12 +943,12 @@ rts
 
 		lda #32
 		sta VDC
-		lda fill_copy_src+1
+		lda fill_copy_source+1
 		sta VDC+1
 
 		lda #33
 		sta VDC
-		lda fill_copy_src
+		lda fill_copy_source
 		sta VDC+1
 
 		lda #30
@@ -956,7 +956,7 @@ rts
 		stx VDC+1
 	rts
 
-	; enter with write_fill_copy_target = start address, .A = fill byte,
+	; enter with fill_copy_target = start address, .A = fill byte,
 	; .X = fill length
 
 	vdc_block_fill
@@ -1012,7 +1012,7 @@ rts
 
 	rts
 
-	; set write_fill_copy_target to the initial target address, .A holds the byte
+	; set fill_copy_target to the initial target address, .A holds the byte
 	; to write
 	vdc_write_ram
 		pha
@@ -1071,9 +1071,9 @@ display_byte_hex_direct
 		sta (utility_pointer),y
 	} else {
 		lda utility_pointer
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda utility_pointer+1
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		ldy temp_abs_a
 		lda divide_by_16_table,y
 		jsr to_hex

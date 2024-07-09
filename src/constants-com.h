@@ -17,11 +17,12 @@ program_start							= $2000
 	; or at least, when no KERNAL or BASIC is needed
 	; must be restored after any such use.
 
-	tempzpbk_g							= $02 ; 4 bytes
-	tempzpbk_h							= $06
-	tempzpbk_j							= $07
+	; free: $02 through $1f
 
-	; free: $08 through $23
+	pattern_break_target_row			= $20
+	seq_current_pattern_number			= $21
+	seq_current_row						= $22
+	seq_current_track					= $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -42,31 +43,30 @@ program_start							= $2000
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $2a
+	; free: $2a, $2b -- $2a is available as an in/out-of-ZP-backup common addr
 
-	pattern_break_target_row			= $2b
-	seq_current_pattern_number			= $2c
-	seq_current_row						= $2d
-	seq_current_track					= $2e
-	seq_ticks_counter					= $2f
-	current_song_pos					= $30
-	glissando_flag						= $31
-	vibrato_waveform					= $32
-	tremolo_waveform					= $33
-	delay_pattern_divisions				= $34
-	audio_in_buf_index					= $35
-	audio_out_buf_index					= $36
-	mixer_loops_per_tick_fract			= $37
-	mixer_loops_per_tick				= $38
-	mixer_countdown_fract				= $39
-	mixer_countdown						= $3a
-	sequencer_temp_x					= $3b
-	sequencer_temp_y					= $3c
-	sequencer_temp_a					= $3d ; 2 bytes \__ these can also be used
-	sequencer_temp_b					= $3f ; 2 bytes /   as one 4-byte temp
-	current_sample_volume_levels		= $41 ; 8 bytes
-	portamento_to_note_rates			= $49 ; 8 bytes
-	pitch_slide_up_rates				= $51 ; 8 bytes
+	seq_ticks_counter					= $2c
+	current_song_pos					= $2d
+	glissando_flag						= $2e
+	vibrato_waveform					= $2f
+	tremolo_waveform					= $30
+	delay_pattern_divisions				= $31
+	audio_in_buf_index					= $32
+	audio_out_buf_index					= $33
+	mixer_loops_per_tick_fract			= $34
+	mixer_loops_per_tick				= $35
+	mixer_countdown_fract				= $36
+	mixer_countdown						= $37
+	current_sample_volume_levels		= $38 ; 8 bytes
+	portamento_to_note_rates			= $40 ; 8 bytes
+	pitch_slide_up_rates				= $48 ; 8 bytes
+
+	; utility_pointer_b uses $50 through $52
+
+	sequencer_temp_x					= $53
+	sequencer_temp_y					= $54
+	sequencer_temp_a					= $55 ; 2 bytes \__ these can also be used
+	sequencer_temp_b					= $57 ; 2 bytes /   as one 4-byte temp
 
 	; division remainder uses $59 through $5b
 	; multiply product uses $5c/$5d
@@ -133,16 +133,20 @@ program_start							= $2000
 	save_addr							= $5f ; and $60
 	divide24_tmp						= $5f
 
-	tempzp_f							= $50 ; through $52
-
 	binsearch_low						= $24 ; and $25
 	binsearch_mid						= $26 ; and $27
 	binsearch_high						= $28 ; and $29
 	binsearch_value						= $59 ; and $5a
 
+	; these Zero Page variables have the same addresses both inside of and
+	; outside of the ZP-backup space, so they can be used in either mode, but
+	; when used inside of the backup, thier values can't be carried back out.
+
+	utility_pointer_b					= $50 ; through $52
+
 	utility_pointer						= $fa ; and $fb
-	fill_copy_src						= $fc ; and $fd
-	write_fill_copy_target				= $fe ; and $ff
+	fill_copy_source					= $fc ; and $fd
+	fill_copy_target					= $fe ; and $ff
 
 	; END OF ZERO PAGE
 
@@ -278,15 +282,15 @@ program_start							= $2000
 	num_rows							= $17cf
 	num_columns							= $17d0
 
-	match_header						= $17d1
-	stash_size							= $17d2 ; 2 bytes
+	stash_size							= $17d1 ; 2 bytes
 
-	expansion_memory_start_address		= $17d4 ; 3 bytes
-	temp_abs_a							= $17d7
-	temp_abs_b							= $17d8
-	temp_abs_x							= $17d9
-	temp_abs_y							= $17da
-	temp_abs_y2							= $17db
+	temp_abs_a							= $17d3
+	temp_abs_b							= $17d4
+	temp_abs_c							= $17d5
+	temp_abs_x							= $17d6
+	temp_abs_y							= $17d7
+	temp_abs_y2							= $17d8
+	temp_counter						= $17d9 ; 3 bytes
 	scroll_area_target_addr				= $17dc ; 2 bytes
 	scroll_area_width					= $17de
 	scroll_area_height					= $17df
@@ -305,7 +309,12 @@ program_start							= $2000
 	pattern_conv_row_counter			= $17ec
 	pattern_conv_trk_counter			= $17ed
 
-	; free: $17ee through $1827
+	expansion_memory_start_address		= $17ee ; 3 bytes
+	match_header						= $17f1
+
+	disk_free_space						= $17f2 ; 2 bytes
+
+	; free: $17f4 through $1827
 
 	; various program vectors
 
@@ -370,7 +379,7 @@ program_start							= $2000
 
 	; other under-KERNAL-ROM stuff
 
-	; free: $f300through $feff
+	; free: $f300 through $fcff
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page

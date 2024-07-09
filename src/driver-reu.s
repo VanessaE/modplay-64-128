@@ -18,32 +18,32 @@ rts
 ; enter with .X = row number, .Y = pattern number
 reu_fetch_row
 	lda #0
-	sta tempzpbk_g+2
+	sta utility_pointer_b+2
 
 	tya						; pattern number -> offset:  N*1024
 	asl
-	rol tempzpbk_g+2
+	rol utility_pointer_b+2
 	asl
-	rol tempzpbk_g+2
-	sta tempzpbk_g+1
+	rol utility_pointer_b+2
+	sta utility_pointer_b+1
 
 	txa						; use LSB to multiply row no. x16
-	sta tempzpbk_g
+	sta utility_pointer_b
 	lda #0
-	asl tempzpbk_g
+	asl utility_pointer_b
 	rol
-	asl tempzpbk_g
+	asl utility_pointer_b
 	rol
-	asl tempzpbk_g
+	asl utility_pointer_b
 	rol
-	asl tempzpbk_g
+	asl utility_pointer_b
 	rol
 
-	adc tempzpbk_g+1		; finish the addition, now we have an offset into
-	sta tempzpbk_g+1		; the pattern data
-	lda tempzpbk_g+2
+	adc utility_pointer_b+1		; finish the addition, now we have an offset into
+	sta utility_pointer_b+1		; the pattern data
+	lda utility_pointer_b+2
 	adc #0
-	sta tempzpbk_g+2
+	sta utility_pointer_b+2
 
 	lda current_file_type
 	cmp #1
@@ -52,20 +52,20 @@ reu_fetch_row
 ; add the header length and now we have the real address of the desired row
 
 	clc
-	lda tempzpbk_g
+	lda utility_pointer_b
 	adc #<header15_seek_to_pat_data
 	sta DMA_LO
 
-	lda tempzpbk_g+1
+	lda utility_pointer_b+1
 	adc #>header15_seek_to_pat_data
 	jmp ++
 
 +	clc
-	lda tempzpbk_g
+	lda utility_pointer_b
 	adc #<header31_seek_to_pat_data
 	sta DMA_LO
 
-	lda tempzpbk_g+1
+	lda utility_pointer_b+1
 	adc #>header31_seek_to_pat_data
 
 ++	sta DMA_HI

@@ -22,9 +22,9 @@ gray_out
 	} else {
 
 		lda #<VDC_ATTRIBUTES
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>VDC_ATTRIBUTES
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #$81
 		ldx #255
 		jsr vdc_block_fill
@@ -104,9 +104,9 @@ rts
 	reset_attributes_charset
 
 		lda #<VDC_ATTRIBUTES
-		sta write_fill_copy_target
+		sta fill_copy_target
 		lda #>VDC_ATTRIBUTES
-		sta write_fill_copy_target+1
+		sta fill_copy_target+1
 		lda #$01
 		ldx #255
 		jsr vdc_block_fill
@@ -123,13 +123,13 @@ rts
 scroll_area_down
 	sec
 	lda scroll_area_target_addr
-	sta write_fill_copy_target
+	sta fill_copy_target
 	sbc #screen_width
-	sta fill_copy_src
+	sta fill_copy_source
 	lda scroll_area_target_addr+1
-	sta write_fill_copy_target+1
+	sta fill_copy_target+1
 	sbc #0
-	sta fill_copy_src+1
+	sta fill_copy_source+1
 
 	ldx scroll_area_width
 	ldy scroll_area_height
@@ -146,19 +146,19 @@ scroll_area_down
 	lda scroll_area_target_addr
 	sbc #screen_width
 	sta scroll_area_target_addr
-	sta write_fill_copy_target
+	sta fill_copy_target
 	lda scroll_area_target_addr+1
 	sbc #0
 	sta scroll_area_target_addr+1
-	sta write_fill_copy_target+1
+	sta fill_copy_target+1
 
 	sec
 	lda scroll_area_target_addr
 	sbc #screen_width
-	sta fill_copy_src
+	sta fill_copy_source
 	lda scroll_area_target_addr+1
 	sbc #0
-	sta fill_copy_src+1
+	sta fill_copy_source+1
 
 	dey
 	bne scroll_down_loop
@@ -179,13 +179,13 @@ rts
 scroll_area_up
 	clc
 	lda scroll_area_target_addr
-	sta write_fill_copy_target
+	sta fill_copy_target
 	adc #screen_width
-	sta fill_copy_src
+	sta fill_copy_source
 	lda scroll_area_target_addr+1
-	sta write_fill_copy_target+1
+	sta fill_copy_target+1
 	adc #0
-	sta fill_copy_src+1
+	sta fill_copy_source+1
 
 	ldx scroll_area_width
 	ldy scroll_area_height
@@ -202,19 +202,19 @@ scroll_area_up
 	lda scroll_area_target_addr
 	adc #screen_width
 	sta scroll_area_target_addr
-	sta write_fill_copy_target
+	sta fill_copy_target
 	lda scroll_area_target_addr+1
 	adc #0
 	sta scroll_area_target_addr+1
-	sta write_fill_copy_target+1
+	sta fill_copy_target+1
 
 	clc
 	lda scroll_area_target_addr
 	adc #screen_width
-	sta fill_copy_src
+	sta fill_copy_source
 	lda scroll_area_target_addr+1
 	adc #0
-	sta fill_copy_src+1
+	sta fill_copy_source+1
 
 	dey
 	bne scroll_up_loop
@@ -257,7 +257,7 @@ draw_empty_progress_bar
 	lsr
 	lsr
 	lsr
-	sta tempzp_c ; length in characters
+	sta temp_abs_a ; length in characters
 	stx progress_bar_column
 	sty progress_bar_row
 
@@ -270,7 +270,7 @@ draw_empty_progress_bar
 	lda #LGRY
 	jsr CHROUT
 
-	ldy tempzp_c
+	ldy temp_abs_a
 	lda #progbar_frame_top
 -	jsr CHROUT
 	dey
@@ -293,7 +293,7 @@ draw_empty_progress_bar
 		jsr CHROUT
 	}
 
-	ldy tempzp_c
+	ldy temp_abs_a
 	lda #" "
 -	jsr CHROUT
 	dey
@@ -316,7 +316,7 @@ draw_empty_progress_bar
 	clc
 	jsr PLOT
 
-	ldy tempzp_c
+	ldy temp_abs_a
 	lda #progbar_frame_bottom
 -	jsr CHROUT
 	dey
@@ -329,29 +329,35 @@ draw_empty_progress_bar
 	clc
 	lda product
 	adc #<screen_base_addr
-	sta write_fill_copy_target
+	sta progress_bar_char_pointer
 	lda product+1
 	adc #>screen_base_addr
-	sta write_fill_copy_target+1
+	sta progress_bar_char_pointer+1
 
-	lda write_fill_copy_target
+	lda progress_bar_char_pointer
 	adc progress_bar_column
-	sta write_fill_copy_target
-	lda write_fill_copy_target+1
+	sta progress_bar_char_pointer
+	lda progress_bar_char_pointer+1
 	adc #0
-	sta write_fill_copy_target+1
+	sta progress_bar_char_pointer+1
 rts
 
 ; enter this one with .A = number of segments to draw, max 255
 
 update_progress_bar
-	sta tempzp_c
+	sta temp_abs_a
 
 	!ifdef c128 {
+
+		lda progress_bar_char_pointer
+		sta fill_copy_target
+		lda progress_bar_char_pointer+1
+		sta fill_copy_target+1
+
 		jsr vdc_write_ram_reg_31_select_only
 	}
 
-	lda tempzp_c
+	lda temp_abs_a
 	lsr
 	lsr
 	lsr
@@ -362,7 +368,7 @@ update_progress_bar
 	lda #$a0
 
 -	!ifndef c128 {
-		sta (write_fill_copy_target),y
+		sta (progress_bar_char_pointer),y
 	} else {
 		jsr vdc_continue_write_ram
 	}
@@ -372,19 +378,19 @@ update_progress_bar
 	bne -
 
 nofill
-	lda tempzp_c
+	lda temp_abs_a
 	and #$07
 	tax
 
 	lda progress_bar_segments,x
 
 	!ifndef c128 {
-		lsr tempzp_c
-		lsr tempzp_c
-		lsr tempzp_c
-		ldy tempzp_c
+		lsr temp_abs_a
+		lsr temp_abs_a
+		lsr temp_abs_a
+		ldy temp_abs_a
+		sta (progress_bar_char_pointer),y
 
-		sta (write_fill_copy_target),y
 	} else {
 		jsr vdc_continue_write_ram
 	}

@@ -4,15 +4,12 @@
 
 	; Zero Page
 
-	tempzp_c						= $2a
-	tempzp_d						= $2b ; and $2c
-	tempzp_e						= $54 ; and $55
+	; free: $2b, $2c
+	; free: $54, $55
+	; free: $61, $62
 
-	; free: $61 and $62
-
-	print_msg_char_limit			= $c8
-
-	; free: $c9 through $cb
+	print_msg_char_limit			= $c9
+	progress_bar_char_pointer		= $ca ; and $cb
 
 	; low memory area -- duh 😛
 

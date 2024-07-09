@@ -223,7 +223,7 @@ draw_window
 	}
 
 ++	lda num_rows
-	sta tempzp_c
+	sta temp_abs_a
 
 	!ifdef c128 {
 		jsr erase_popup
@@ -279,7 +279,7 @@ draw_window
 		jsr CHROUT
 	}
 
-	dec tempzp_c		; continue down the height
+	dec temp_abs_a		; continue down the height
 	bpl .nl
 
 	lda #RETURN			; position and print bottom-left corner
