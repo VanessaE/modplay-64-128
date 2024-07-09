@@ -95,6 +95,18 @@ rts
 	rts
 }
 
+!ifndef c128 {
+	!macro C64_PRIMARY_SCREEN {
+		lda CIA2
+		and #$fc
+		sta CIA2
+		lda #$27
+		sta VIC+$18
+		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
+		sta HIBASE					; screen editor/CHROUT/etc.
+	}
+}
+
 !macro JSR_INDIRECT .vec {
 	sta .reload_a+1
 	lda #>.ra

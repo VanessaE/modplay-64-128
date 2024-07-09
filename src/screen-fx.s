@@ -56,13 +56,7 @@ rts
 
 switch_to_primary_screen ; also switches to the PETSCII charset on C64
 	!ifndef c128 {
-		lda CIA2
-		and #$fc
-		sta CIA2
-		lda #$27
-		sta VIC+$18
-		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
-		sta HIBASE					; screen editor/CHROUT/etc.
+		+C64_PRIMARY_SCREEN
 	} else {
 		lda #12
 		sta VDC

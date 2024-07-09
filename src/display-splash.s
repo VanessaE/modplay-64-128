@@ -1,6 +1,7 @@
 ; display the splash screen
 
 !source "src/constants-com.h"
+!source "src/misc-macros.s"
 
 !ifndef c128 {
 	!source "src/constants-64.h"
@@ -46,6 +47,7 @@ show_splash
 		dec VIC+$30
 		jsr SWAPPER
 	} else {
+		+C64_PRIMARY_SCREEN
 		ldx #<splash_data
 		ldy #>splash_data
 		jsr print_msg_rle
@@ -73,8 +75,6 @@ out
 	jsr CHROUT
 
 rts ; return to the autorunner, which will load the rest of the file.
-
-!source "src/misc-macros.s"
 
 +PRINT_MSG
 +PRINT_MSG_RLE
