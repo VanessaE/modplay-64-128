@@ -44,6 +44,8 @@ show_splash
 		ldy #>wrong_screen_msg
 		jsr print_msg
 		jsr enable_screen
+		lda #$17
+		sta VIC+$18 ;  printing a #LOWER doesn't work... why?! 😕 
 		dec VIC+$30
 		jsr SWAPPER
 	} else {
@@ -82,9 +84,9 @@ rts ; return to the autorunner, which will load the rest of the file.
 
 !ifdef c128 {
 	wrong_screen_msg
-		!byte LGRY,CLR,LOWER
+		!byte LGRY,CLR
 		!fill 12, DOWN
-		!text "please switch to the 80-column display."
+		!text "Please switch to the 80-column display."
 		!byte 0
 }
 
