@@ -17,10 +17,9 @@ program_start							= $1e00
 	; or at least, when no KERNAL or BASIC is needed
 	; must be restored after any such use.
 
-	isr_min_time_to_allow_fetch			= $02
-	isr_minimum_times_before_fetch		= $03 ; through $0a
+	isr_minimum_times_before_fetch		= $02 ; through $09
 
-	; free: $03 through $1f
+	; free: $0a through $1f
 
 	pattern_break_target_row			= $20
 	seq_current_pattern_number			= $21
