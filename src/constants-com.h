@@ -17,14 +17,7 @@ program_start							= $1e00
 	; or at least, when no KERNAL or BASIC is needed
 	; must be restored after any such use.
 
-	isr_minimum_times_before_fetch		= $02 ; through $09
-
-	; free: $0a through $1f
-
-	pattern_break_target_row			= $20
-	seq_current_pattern_number			= $21
-	seq_current_row						= $22
-	seq_current_track					= $23
+	; free: $02 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -45,23 +38,27 @@ program_start							= $1e00
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $2a, $2b -- $2a is available as an in/out-of-ZP-backup common addr
+	; free: $2a through $2f
+	; $2a is available as an in/out-of-ZP-backup common addr
 
-	seq_ticks_counter					= $2c
-	current_song_pos					= $2d
-	glissando_flag						= $2e
-	vibrato_waveform					= $2f
-	tremolo_waveform					= $30
-	delay_pattern_divisions				= $31
-	audio_in_buf_index					= $32
-	audio_out_buf_index					= $33
-	mixer_loops_per_tick_fract			= $34
-	mixer_loops_per_tick				= $35
-	mixer_countdown_fract				= $36
-	mixer_countdown						= $37
-	current_sample_volume_levels		= $38 ; 8 bytes
-	portamento_to_note_rates			= $40 ; 8 bytes
-	pitch_slide_up_rates				= $48 ; 8 bytes
+	pattern_break_target_row			= $30
+	seq_current_pattern_number			= $31
+	seq_current_row						= $32
+	seq_current_track					= $33
+	seq_ticks_counter					= $34
+	current_song_pos					= $35
+	glissando_flag						= $36
+	vibrato_waveform					= $37
+	tremolo_waveform					= $38
+	delay_pattern_divisions				= $39
+	audio_in_buf_index					= $3a
+	audio_out_buf_index					= $3b
+	mixer_loops_per_tick_fract			= $3c
+	mixer_loops_per_tick				= $3d
+	mixer_countdown_fract				= $3e
+	mixer_countdown						= $3f
+	isr_minimum_times_before_fetch		= $40 ; 8 bytes
+	current_sample_volume_levels		= $48 ; 8 bytes
 
 	; utility_pointer_b uses $50 through $52
 
@@ -80,7 +77,7 @@ program_start							= $1e00
 
 	seq_tempo_bpm						= $60
 	seq_ticks_per_division				= $61
-	pitch_slide_down_rates				= $62 ; 8 bytes
+	pitch_slide_rates					= $62 ; 8 bytes
 	track_current_loop_flags			= $6a ; 8 bytes
 	fine_tune_values					= $72 ; 8 bytes
 	retrigger_rates						= $7a ; 8 bytes
@@ -100,9 +97,8 @@ program_start							= $1e00
 	current_sample_end_addr_mids		= $ea ;  |-- 24 bytes, through $ff
 	current_sample_end_addr_highs		= $f2 ; _|
 
-	; utility_pointer uses $fa/$fb
-	; and $fc through $ff are reserved for more dual ZP-backup/no-backup
-	; allowed vars, as below.
+	; in-/out-of-Zero-Page-backup dual-mode variables in $fa through $ff,
+	; see below.
 
 	; ### End of Zero Page backup
 	; ####################################################
@@ -171,17 +167,18 @@ program_start							= $1e00
 	current_node_period_offsets			= low_memory_area+$10
 	track_current_enable_flags			= low_memory_area+$18
 
-	seq_current_row_data				= low_memory_area+$20 ; this one's 64 bytes
-	seq_commands						= low_memory_area+$60
-	seq_prev_commands					= low_memory_area+$68
-	seq_command_arguments				= low_memory_area+$70
-	seq_prev_command_arguments			= low_memory_area+$78
+	seq_current_row_data				= low_memory_area+$20 ; this one's 32 bytes
+	seq_commands						= low_memory_area+$40
+	seq_prev_commands					= low_memory_area+$48
+	seq_command_arguments				= low_memory_area+$50
+	seq_prev_command_arguments			= low_memory_area+$58
 
-	current_pitch_slide_flags			= low_memory_area+$80
-	seq_pitch_slide_stop_point_lows		= low_memory_area+$88
-	seq_pitch_slide_stop_point_highs	= low_memory_area+$90
+	current_pitch_slide_flags			= low_memory_area+$60
+	seq_pitch_slide_stop_point_lows		= low_memory_area+$68
+	seq_pitch_slide_stop_point_highs	= low_memory_area+$70
 
-	; the above zone must not exceed low_memory_area+$a1
+	; free: low_memory_area+$78 through low_memory_area+$a1
+	; the above zone must not exceed +$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
 	multablo							= $0400 ; 2 pages

@@ -25,9 +25,7 @@ start_sequencer
 	sta track_current_enable_flags,x
 
 	sta current_pitch_slide_flags,x
-	sta pitch_slide_up_rates,x
-	sta pitch_slide_down_rates,x
-	sta portamento_to_note_rates,x
+	sta pitch_slide_rates,x
 
 	sta seq_pitch_slide_stop_point_lows,x
 	sta seq_pitch_slide_stop_point_highs,x
@@ -206,6 +204,7 @@ start_command_vec					; start or initialize an effect command
 +	lda seq_ticks_per_division
 	sta seq_ticks_counter
 
+next_tick
 	; check for spacebar
 	lda #$7f		; column 7 low
 	sta CIA1
@@ -320,9 +319,7 @@ start_sample
 	sta vibrato_rates,y
 	sta tremolo_rates,y
 	sta volume_slide_rates,y
-	sta pitch_slide_up_rates,y
-	sta pitch_slide_down_rates,y
-	sta portamento_to_note_rates,y
+	sta pitch_slide_rates,y
 
 	sta sample_pointers_fract,y
 	lda sample_start_addresses_lows,x
