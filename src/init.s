@@ -300,12 +300,6 @@ init
 	inx
 	bne -
 
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
-	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
-	+JSR_INDIRECT (audio_set_resolution_vec)
-	jsr isr_set_interval
-	jsr regen_all_tables
-
 	; Codefault's count raster lines code, to know if PAL or NTSC
 
 --	ldx #$aa
@@ -355,6 +349,12 @@ init
 	jsr note_names_table_copy
 
 	jsr control_code_flags_copy
+
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
+	+JSR_INDIRECT (audio_set_resolution_vec)
+	jsr isr_set_interval
+	jsr regen_all_tables
 
 	jsr final_clear_copy
 

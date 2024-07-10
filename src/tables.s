@@ -117,6 +117,8 @@ generate_tempo_table
 rts
 
 generate_steprate_table
+	sei
+	jsr disable_roms
 
 	lda isr_trigger_interval
 	ldx #pitch_fine_adjust_constant
@@ -162,6 +164,9 @@ generate_steprate_table
 +	inx
 	cpx #120
 	bne -
+
+	jsr enable_kernal_only
+	cli
 rts
 
 regen_all_tables
