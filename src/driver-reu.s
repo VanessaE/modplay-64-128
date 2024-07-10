@@ -8,9 +8,9 @@
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #78
+		lda #72
 	} else {
-		lda #88/2 ; equivalent 1 MHz cycles
+		lda #76/2 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -82,19 +82,17 @@ reu_fetch_row
 	sta DMA_DAH
 
 	ldy #$91
-	lda #8
-	sta DMA_DAL		; run it twice to get 16 bytes, so that the ISR won't
-
-	!ifdef c128 {
-		sta VIC+$30
-	}
-
-	sty DMA_CMD		; get more than an 8-cycle delay
+	lda #16
 	sta DMA_DAL
-	sty DMA_CMD
 
-	!ifdef c128 {
+	!ifndef c128 {
+		sty DMA_CMD
+	} else {			; on C128 we need to disable interrupts, lest the ISR
+		sei				; fire while the clock is at 1 MHz
+		sta VIC+$30
+		sty DMA_CMD
 		sty VIC+$30
+		cli
 	}
 rts
 
@@ -311,15 +309,30 @@ set_mixer_and_lookahead_addrs
 	sta (sequencer_temp_a),y
 
 	lda current_steprates_lows,x
-	asl sequencer_temp_b
-	rol
-	asl sequencer_temp_b
-	rol
 	bne +
-	lda #1 ; minimum fetch length of 1 even if the track needs "half" a byte 😛
+	lda #4 ; minimum fetch length of 4 even if the track needs "one-bit" steps 😛
 
 +	ldy #fetchlen_idx
 	sta (sequencer_temp_a),y
+
+	; it takes 4, 1 MHz cycles (the final STY $abs) to start a fetch.
+	; on C128, add 13, 1 MHz cycles to that for clock switching
+	; (SEI:DEC $D030 + STY $D030:CLI)
+
+	; we'll allow up to 20 cycles' ISR delay before postponing the mixer
+	; too much more and it'll be audible.
+
+	sec
+
+	!ifndef c128 {
+		sbc #16		; that is, add 4 cycles and subtract 20
+	} else {
+		sbc #3		; that is, add 17 and subtract 20
+	}
+
+	bcs +
+	lda #1	; if the time is short enough, limit the timer check to one loop
++	sta isr_minimum_times_before_fetch,x
 	ldy seq_current_track
 rts
 
@@ -470,22 +483,25 @@ reu_start_mixer
 				lda #1										; 2
 				sta DMA_DAL									; 4
 
+				; if the ISR would fire too soon after a fetch starts, just
+				; wait-out the timer and postpone the fetch.
+
+				lda isr_minimum_times_before_fetch+track	; 3
+			-	cmp CIA1+$06								; 4
+				bcs -										; 3/2
+
 				!ifdef c128 {
-					dec VIC+$30								; 5
+					sei										; 2
+					dec VIC+$30								; 7
 				}
 
-				sty DMA_CMD									; 4 + N*4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N*4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N*4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N*4
+				sty DMA_CMD									; 4 + N
 
-				; N will vary by pitch, on average it'll be around 2 on C64
+				; N will vary by pitch, on average it'll be around 32 (2*16) on C64
 
 				!ifdef c128 {
 					sty VIC+$30								; 4
+					cli										; 2
 				}
 			}
 		!if track = 0 { fetch_loop_end = * }
@@ -557,36 +573,40 @@ rts
 ;
 ; fetch DMA calls alone:
 ;
-; lowest possible step rate is about 0.273 on C64, so fetching just 1 byte per
-; transfer, times 4 transfers:
+; lowest possible step rate is about 0.273 on C64, so fetching
+; 16 * 0.273 = ~4 bytes per transfer.
 ;
-; 2 +5+4+1 +4+4+1 +4+4+1 +4+4+1 = 39 cycles per track, total 156 cycles
+; 2 +4+4+4 = 14 cycles per track, total 56 cycles
 ;
-; on average, the step rate will be closer to 1.7, so it'll be fetching 6 
-; bytes per transfer, times 4:
+; on average, the step rate will be closer to 1.7, so it'll be fetching
+; 16 * 1.7 = ~27 bytes per transfer:
 ;
-; 2 +5+4+6 +4+4+6 +4+4+6 +4+4+6 = 59 cycles per track, total 236 cycles
+; 2 +4+4+27 = 37 cycles per track, total 148 cycles
 ;
 ; Worst possible case would be playing the highest note, B-4, which would have
-; a step rate of about 8.688, so fetching 34 * 4 = 136 bytes:
+; a step rate of about 8.688, so fetching 16 * 8.333 = ~139 bytes:
 ;
-; 2 +5+4+34 +4+4+34 +4+4+34 +4+4+34 = 171 cycles per track, total 684 cycles
+; 2 +4+4+139 = 149 cycles per track, total 596 cycles
+;
+; plus it takes at least 3+4+3 = 10 cycles to check the CIA timer in case the
+; mixer has to be postponed for the sake of the ISR
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
 ; the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
-; for their whole duration. The explicit 1/2 MHz switching above adds 13,
-; 2 MHz cycles (5 for the shift down to 1 MHz, 8 to shift back up).
+; for their whole duration. The explicit 1/2 MHz switching above adds 18,
+; 2 MHz cycles (9 for the shift down to 1 MHz, 9 to shift back up).
 ;
-; being almost twice as fast, it'll have half the step rates, so best will be
-; about 0.81, typical will be around 1, worst around 6, fetching 1, 3, and 19
-; bytes, respectively.
+; being almost twice as fast, it'll have half the step rates, so best step rate
+; will be about 0.137, typical will be around 0.9, worst around 4.2, so it'll
+; be fetching ~2, ~13, and ~66 bytes, respectively.
 ;
 ; that machine's fetch timings should be about:
 ;
-; best:           2 +5+8+2 +8+8+2 +8+8+2 +8+8+2 + 13 = 84 cycles, total 336
-; most likely:    2 +5+8+6 +8+8+6 +8+8+6 +8+8+6 + 13 = 100 cycles, total 400
-; worst possible: 2 +5+8+19 +8+8+19 +8+8+19 +8+8+19 + 13 = 152 cycles, total 608
+; best:           2 +4+8+2 + 18 = 34 cycles, total 136
+; most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
+; worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
+; CIA timer check: 3+5+3 = 11 cycles
 ;
 ; ----------
 ;
@@ -623,28 +643,32 @@ rts
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (10 + 200 + 152 + 16 + 704 + 13) / 16 =  ~69 cycles
-; likely: (10 + 216 + 232 + 16 + 704 + 13) / 16 =  ~75 cycles
-; worst:  (10 + 272 + 680 + 16 + 704 + 13) / 16 = ~106 cycles
+; best:   (10 + 210 +  56 + 10 + 16 + 704 + 13) / 16 =  ~64 cycles
+; likely: (10 + 216 + 148 + 10 + 16 + 704 + 13) / 16 =  ~70 cycles
+; worst:  (10 + 272 + 596 + 10 + 16 + 704 + 13) / 16 = ~102 cycles
 ;
 ; C128:
-; best:   (10 + 200 + 336 + 16 + 704 + 13) / 16 =  ~80 cycles
-; likely: (10 + 216 + 400 + 16 + 704 + 13) / 16 =  ~85 cycles
-; worst:  (10 + 272 + 608 + 16 + 704 + 13) / 16 = ~102 cycles
+; best:   (10 + 210 + 136 + 11 + 16 + 704 + 13) / 16 = ~69 cycles
+; likely: (10 + 216 + 180 + 11 + 16 + 704 + 13) / 16 = ~72 cycles
+; worst:  (10 + 272 + 372 + 11 + 16 + 704 + 13) / 16 = ~88 cycles
 ;
 ; ---------
 ;
 ; So factoring-in the ISR runtime of 53 cycles, using the "most likely"
 ; conditions as the timing basis, and adding a few cycles of fudge...
 ;
-; the C64 should be run at about 7.8 kHz with the
+; the C64 should be run at almost 8.2 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (75 + 3 + 53) = ~7807.1
+; 1022727 / (70 + 2 + 53) = ~8181.8
 ;
-; or 5.2 KHz with the screen on (so ISR is always 3 rasters):
-; 1022727 / (65*3) = ~5244.8
+; or almost 7.9 KHz with the screen on (so ISR is always 2 rasters):
+; 1022727 / (65*2) = ~7867.1
 ;
-; C128 should be able to run at about 14.5 kHz:
-; (1022727*2) / (85 + 3 + 53) = ~14506.8
+; C128 should be able to run at almost 15.9 kHz:
+; (1022727*2) / (72 + 4 + 53) = ~15856.2
+;
+; These timings do not take into account convergeance.  As the sample rate
+; rises, the step rates drop, which decreases the lookahead fetch length,
+; which in turn further reduces the cycle counts.
 ;
 ; ============================================================================
