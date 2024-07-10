@@ -145,17 +145,8 @@ generate_steprate_table
 	jsr divide_24by24
 	ldx temp_abs_x
 
-	lda quotient
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-	lsr quotient+1
-	ror
-
 	dex
+	lda quotient
 	sta steprate_table,x
 	inx
 	lda quotient+1

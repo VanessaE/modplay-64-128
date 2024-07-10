@@ -17,7 +17,10 @@ program_start							= $1e00
 	; or at least, when no KERNAL or BASIC is needed
 	; must be restored after any such use.
 
-	; free: $02 through $23
+	utility_zpbk_counter				= $02 ; 3 bytes
+	temp_zpbk_a							= $05
+
+	; free: $06 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -503,7 +506,10 @@ magic_number_location = load_buffer + header31_seek_to_pat_tbl + 128
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
+; the pitch value sets the step rate table values that the mixer code adds to
+; update its fetch pointers. the lookaheads will be based on 1/16 those rates.
 pitch_fine_adjust_constant = 57
+
 tempo_fine_adjust_constant = 159778
 
 ; config file declarations - the actual file gets loaded/saved as above

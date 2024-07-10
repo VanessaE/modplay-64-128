@@ -255,8 +255,24 @@ set_mixer_and_lookahead_addrs
 	clc
 	adc #>sample_data_buffer
 	sta rd_la_track_0 + 2,x
+
+	lda current_steprates_lows,y
+	sta utility_zpbk_counter+1
+
 	lda current_steprates_fract,y
-	sta sequencer_temp_a
+	sta temp_zpbk_a
+	lsr utility_zpbk_counter+1
+	ror
+	lsr utility_zpbk_counter+1
+	ror
+	lsr utility_zpbk_counter+1
+	ror
+	lsr utility_zpbk_counter+1
+	ror
+	sta utility_zpbk_counter
+
+; so utility_zpbk_counter is equal to 1/16 the step rate, and temp_zpbk_a will
+; track the fraction part as the indexes are calculated below.
 
 	!zone lookahead_idx_set {
 		!for .idx4, 1, 15 {
@@ -264,11 +280,11 @@ set_mixer_and_lookahead_addrs
 			!set la_rd_addr_ld = rd_la_track_0 + mixer_loop_segment_length * (.idx4 - 1)
 			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx4
 
-			lda sequencer_temp_a
-			adc current_steprates_fract,y
-			sta sequencer_temp_a
+			lda temp_zpbk_a
+			adc utility_zpbk_counter
+			sta temp_zpbk_a
 			lda la_rd_addr_ld + 1,x
-			adc current_steprates_lows,y
+			adc utility_zpbk_counter+1
 			sta la_rd_addr_st + 1,x
 		}
 	}
@@ -280,53 +296,39 @@ set_mixer_and_lookahead_addrs
 	clc
 	lda #<fetch_loop_start
 	adc product
-	sta sequencer_temp_a
+	sta fill_copy_target
 	lda #>fetch_loop_start
 	adc product+1
-	sta sequencer_temp_a+1
+	sta fill_copy_target+1
 
 	ldx seq_current_track
 
 	lda current_steprates_fract,x
-	sta sequencer_temp_b
 	ldy #csr_f_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	lda current_steprates_lows,x
 	ldy #csr_l_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	lda current_sample_end_addr_lows,x
 	ldy #chkend_l_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	lda current_sample_end_addr_mids,x
 	ldy #chkend_m_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	lda current_sample_end_addr_highs,x
 	ldy #chkend_h_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	lda current_steprates_lows,x
-
-	; whatever the step rate is, multiply it by 16 to get the the total fetch
-	; length for the lookahead buffer
-
-	asl sequencer_temp_b
-	rol
-	asl sequencer_temp_b
-	rol
-	asl sequencer_temp_b
-	rol
-	asl sequencer_temp_b
-	rol
-
 	bne +
 	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
 
 +	ldy #fetchlen_idx
-	sta (sequencer_temp_a),y
+	sta (fill_copy_target),y
 
 	; it takes 4, 1 MHz cycles (the final STY $abs) to start a fetch.
 	; on C128, add 13, 1 MHz cycles to that for clock switching
@@ -361,12 +363,13 @@ set_volume_addrs
 
 +	lsr
 	cmp #16
-	bcc +
-	clc
-	adc #>volume_table_lower
-	bcs ++
+	bcs +
 
-+	adc #(>volume_table_upper)-16
+	adc #>volume_table_lower
+	bcc ++
+
++	clc
+	adc #(>volume_table_upper)-16
 
 ++	ldx lookahead_code_offsets_set_volume_code_addr,y
 
@@ -396,12 +399,10 @@ lookahead_code_offsets_set_volume_code_addr
 reu_start_mixer
 	lda #0
 	sta DMA_DAH
-	lda #>sample_data_buffer
-	sta DMA_ADH
 	ldx audio_in_buf_index
 
 	reu_mixer_main_loop
-		lda #<sample_data_buffer							; 2
+		lda #0												; 2
 		sta DMA_ADL											; 4
 		clc													; 2
 		ldy #$91											; 2
@@ -409,14 +410,16 @@ reu_start_mixer
 		fetch_loop_start
 		  !for track, 0, 3 {
 			!zone fetchloop {
-				lda sample_pointers_fract+track				; 3
+				lda #(>sample_data_buffer)+track			; 2
+				sta DMA_ADH									; 4
 
+				lda sample_pointers_fract+track				; 3
 				!if track = 0 { !set cur_steprate_f = * }
 				adc #0										; 2
 				sta sample_pointers_fract+track				; 3
 				bcc .reu_fix_dma_top_three_bytes			; 3/2
-				lda sample_pointers_lows+track				; 3
 
+				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set cur_steprate_l = * }
 				adc #0										; 2
 				sta sample_pointers_lows+track				; 3
@@ -446,18 +449,19 @@ reu_start_mixer
 				sta DMA_BANK								; 4
 
 			.reu_check_end
-				lda sample_pointers_lows+track				; 3
 
+				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set ckend_l = * }
 				cmp #0										; 2
-				lda sample_pointers_mids+track				; 3
 
+				lda sample_pointers_mids+track				; 3
 				!if track = 0 { !set ckend_m = * }
 				sbc #0										; 2
-				lda sample_pointers_highs+track				; 3
 
+				lda sample_pointers_highs+track				; 3
 				!if track = 0 { !set ckend_h = * }
 				sbc #0										; 2
+
 				bcc .reu_fetch_sample_data					; 3/2
 
 				clc											; 2
@@ -571,9 +575,7 @@ reu_start_mixer
 	beq +												; 3/2
 	jmp reu_mixer_main_loop								; 6
 
-+	txa
-	and #$f0
-	sta audio_in_buf_index
++	stx audio_in_buf_index
 rts
 
 

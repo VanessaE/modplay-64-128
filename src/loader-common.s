@@ -615,7 +615,8 @@ parse_instruments
 	sta fill_copy_source
 	lda #>(load_buffer + header_first_inst_meta_offset)
 	sta fill_copy_source+1
-	ldx #0
+
+	ldx #1 ; the sample numbers in the pattern data start at 1, not 0.
 
 .next_instr
 	ldy #0								; copy instrument name
@@ -754,11 +755,11 @@ parse_instruments
 	cmp #1
 	bne +
 
-	cpx #15
+	cpx #16
 	beq .ldex
 	jmp .next_instr
 
-+	cpx #31
++	cpx #32
 	beq .ldex
 	jmp .next_instr
 
