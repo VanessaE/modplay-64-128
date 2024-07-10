@@ -309,8 +309,21 @@ set_mixer_and_lookahead_addrs
 	sta (sequencer_temp_a),y
 
 	lda current_steprates_lows,x
+
+	; whatever the step rate is, multiply it by 16 to get the the total fetch
+	; length for the lookahead buffer
+
+	asl sequencer_temp_b
+	rol
+	asl sequencer_temp_b
+	rol
+	asl sequencer_temp_b
+	rol
+	asl sequencer_temp_b
+	rol
+
 	bne +
-	lda #4 ; minimum fetch length of 4 even if the track needs "one-bit" steps 😛
+	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
 
 +	ldy #fetchlen_idx
 	sta (sequencer_temp_a),y
