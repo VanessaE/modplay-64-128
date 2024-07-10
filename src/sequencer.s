@@ -206,7 +206,6 @@ start_command_vec					; start or initialize an effect command
 +	lda seq_ticks_per_division
 	sta seq_ticks_counter
 
-next_tick
 	; check for spacebar
 	lda #$7f		; column 7 low
 	sta CIA1

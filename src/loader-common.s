@@ -804,6 +804,9 @@ rts
 ; cccc-zzzzzzzz (4+8 bits) is the effect and its parameters
 
 reformat_pattern_data
+	sei
+	jsr disable_roms ; the note period table is buried under the KERNAL
+
 	lda #4			; fetch/stash size is 1 kB
 	sta stash_size+1
 	lda #0
@@ -950,6 +953,9 @@ reformat_pattern_data
 	beq +
 	jmp conv_pat_loop
   +
+
+	jsr enable_kernal_only
+	cli
 rts
 
 
