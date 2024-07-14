@@ -434,7 +434,7 @@ reu_start_mixer
 				inc sample_pointers_highs+track				; 5
 				lda sample_pointers_highs+track				; 3
 				sta DMA_BANK								; 4
-				bne .reu_check_end							; 3
+				jmp .reu_check_end							; 3
 
 			.reu_fix_dma_top_three_bytes
 				lda sample_pointers_lows+track				; 3
@@ -449,7 +449,6 @@ reu_start_mixer
 				sta DMA_BANK								; 4
 
 			.reu_check_end
-
 				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set ckend_l = * }
 				cmp #0										; 2
@@ -471,7 +470,7 @@ reu_start_mixer
 				sta sample_pointers_highs+track				; 3
 				sta current_steprates_fract+track			; 3
 				sta current_steprates_lows+track			; 3
-				bcc .reu_fetch_sample_data					; 3
+				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop
 				lda #0										; 2
@@ -573,7 +572,7 @@ reu_start_mixer
 
 	dec mixer_countdown									; 5
 	beq +												; 3/2
-	jmp reu_mixer_main_loop								; 6
+	jmp reu_mixer_main_loop								; 3
 
 +	stx audio_in_buf_index
 rts
