@@ -8,9 +8,9 @@
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #72
+		lda #80
 	} else {
-		lda #76/2 ; equivalent 1 MHz cycles
+		lda #80/2 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_cycle_count
 rts
@@ -542,8 +542,10 @@ reu_start_mixer
 		!if .idx2 = 0 { rd_la_track_3 = *}
 		ldy sample_data_buffer + 3*256					; 4
 
+		clc												; 2
 		!if .idx2 = 0 { vol_addr_3 = *}
 		adc volume_table_lower,y						; 4
+		ror												; 2
 		sta audio_buffer_left,x							; 5
 
 		!if .idx2 = 0 { rd_la_track_1 = * }
@@ -555,8 +557,10 @@ reu_start_mixer
 		!if .idx2 = 0 { rd_la_track_2 = * }
 		ldy sample_data_buffer + 2*256					; 4
 
+		clc												; 2
 		!if .idx2 = 0 { vol_addr_2 = * }
 		adc volume_table_lower,y						; 4
+		ror												; 2
 		sta audio_buffer_right,x						; 5
 
 		inx												; 2
@@ -633,7 +637,7 @@ rts
 ; lookahead/mixer push-to-buffers runtime:
 ; open:  2+2+2 +3+4+3 = 16 cycles
 ;
-; 4+4+4+4+5 +4+4+4+4+5 + 2 = 44 cycles per pass, times 16 passes = 704 cycles
+; 4+4+4+2+4+2+5 +4+4+4+2+4+2+5 + 2 = 52 cycles per pass, times 16 passes = 832 cycles
 ;
 ; mixer loop close:
 ; 5+2+6 = 13 cycles
@@ -641,29 +645,29 @@ rts
 ; Grand totals (average time per final pair of output samples):
 ;
 ; C64:
-; best:   (10 + 208 +  56 + 10 + 16 + 704 + 13) / 16 =  ~64 cycles
-; likely: (10 + 208 + 148 + 10 + 16 + 704 + 13) / 16 =  ~70 cycles
-; worst:  (10 + 272 + 596 + 10 + 16 + 704 + 13) / 16 = ~102 cycles
+; best:   (10 + 208 +  56 + 10 + 16 + 832 + 13) / 16 =  ~72 cycles
+; likely: (10 + 208 + 148 + 10 + 16 + 832 + 13) / 16 =  ~78 cycles
+; worst:  (10 + 272 + 596 + 10 + 16 + 832 + 13) / 16 = ~110 cycles
 ;
 ; C128:
-; best:   (10 + 208 + 136 + 11 + 16 + 704 + 13) / 16 = ~69 cycles
-; likely: (10 + 208 + 180 + 11 + 16 + 704 + 13) / 16 = ~72 cycles
-; worst:  (10 + 272 + 372 + 11 + 16 + 704 + 13) / 16 = ~88 cycles
+; best:   (10 + 208 + 136 + 11 + 16 + 832 + 13) / 16 = ~77 cycles
+; likely: (10 + 208 + 180 + 11 + 16 + 832 + 13) / 16 = ~80 cycles
+; worst:  (10 + 272 + 372 + 11 + 16 + 832 + 13) / 16 = ~96 cycles
 ;
 ; ---------
 ;
 ; So factoring-in the ISR runtime of 53 cycles, using the "most likely"
 ; conditions as the timing basis, and adding a few cycles of fudge...
 ;
-; the C64 should be run at almost 8.2 kHz with the
+; the C64 should be run at almost 7.7 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (70 + 2 + 53) = ~8181.8
+; 1022727 / (78 + 2 + 53) = ~7689.7
 ;
-; or almost 7.9 KHz with the screen on (so ISR is always 2 rasters):
-; 1022727 / (65*2) = ~7867.1
+; or about 5.2 KHz with the screen on since ISR is always 3 rasters:
+; 1022727 / (65*3) = ~5244.8
 ;
-; C128 should be able to run at almost 15.9 kHz:
-; (1022727*2) / (72 + 4 + 53) = ~15856.2
+; C128 should be able to run at about 15.5 kHz:
+; (1022727*2) / (80 + 2 + 53) = ~15151.5
 ;
 ; These timings do not take into account convergeance.  As the sample rate
 ; rises, the step rates drop, which decreases the lookahead fetch length,
