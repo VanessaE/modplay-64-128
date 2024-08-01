@@ -348,12 +348,10 @@ set_mixer_and_lookahead_addrs
 	bcs +
 	lda #1	; if the time is short enough, limit the timer check to one loop
 +	sta isr_minimum_times_before_fetch,x
-	ldy seq_current_track
 rts
 
 ; set the sample's volume, and set the address targets in the mixer below
 ; enter with .A = volume level, .Y = track number
-; .Y will be preserved
 
 set_volume_addrs
 	sta current_sample_volume_levels,y

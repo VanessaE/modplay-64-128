@@ -337,6 +337,7 @@ start_sample
 	sta current_sample_end_addr_highs,y
 
 	lda sample_default_volume_levels,x
+	ldx sequencer_temp_x
 
 	; now just fall through into set_volume
 
@@ -345,6 +346,7 @@ start_sample
 ; the RAM driver).
 
 set_volume
+	stx sequencer_temp_x
 	set_volume_addrs_vec
 		jsr $1234
 	ldx sequencer_temp_x
@@ -376,6 +378,7 @@ set_pitch
 		jsr $1234
 
 	ldx sequencer_temp_x
+	ldy seq_current_track
 rts
 
 unused
