@@ -18,34 +18,41 @@ generate_volume_tables
 	sta vol_cnt				; volume counter
 
 	--	lda vol_cnt
-		asl
 		tax
+		inx
 	-	lda bval_cnt
-		jsr multiply_8x8 	; returns 14 bit value in 'product' (top 2 bits are
+		jsr multiply_8x8 	; returns 13 bit value in 'product' (top 3 bits are
 							; always 0 here) MSB is also in .A at exit.
 
-		asl product			; multiply by 4 then displace downward by one byte
-		rol					; is identical to dividing by 64 (14 --> 8 bit),
-		asl product			; but is considerably faster.
+		asl product			; divide by 32 since that's our volume range
 		rol
-		sta product
+		asl product
+		rol
+		asl product
+		rol
+		asl product
+		rol
+		asl product
+		; skip the final ROL since we don't need the remainder
 
-; MOD samples are 2's-compliment signed, this will offset where the data
-; is stored in the page, so that the output from the table is unsigned.
+; MOD samples are 2's-compliment signed
+; this will translate the value to unsigned.
 
 		lda bval_cnt
+		tay
 		clc
 		adc #$80
-		tay
+		sta temp_abs_a
 
 ; re-center the amplitude range to keep the middle sample value at $7f/80.
 
 		sec
-		lda #64
+		lda #31
 		sbc vol_cnt
 		asl
+		asl
 		clc
-		adc product
+		adc temp_abs_a
 
 ; divide the final value down to the resolution the audio driver needs
 ; only 4 or 8 bits allowed -- note that we actually shift one extra step

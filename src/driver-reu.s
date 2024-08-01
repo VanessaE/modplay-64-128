@@ -606,6 +606,7 @@ rts
 ;
 ; that machine's fetch timings should be about:
 ;
+; best:           2 +4+8+2  + 18 = 34 cycles, total 136
 ; most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
 ; worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
 ; CIA timer check: 3+5+3 = 11 cycles
@@ -617,8 +618,8 @@ rts
 ;
 ; within the loop (not counting the above DMA calls, those are added below):
 ;
-; most likely case (also the minimum time), all four tracks updating two bytes, not at the end of
-; the sample yet:
+; minimum time (also the most likely case), all four tracks updating two
+; bytes of the 4-byte address, and not at the end of the sample yet:
 ;
 ; (3+2+3 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 208 cycles
 ;
