@@ -32,6 +32,9 @@
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 
+* BOTH: need to adjust height of player popup to give room for key assignments
+  (pause, skip song, abort to main menu, 1-4 to toggle tracks on/off)
+
 ####################
 ##  KNOWN ISSUES  ##
 ####################
@@ -44,6 +47,9 @@
 
   The automatic loader select compensates for both of these just fine, it just
   means they don't load as fast as they should otherwise be able to.
+
+* BOTH: The REU driver's stash and fetch block calls need 512k-wraparound
+  mitigation.  Wouldn't hurt to look into that for the player also.
 
 * C128 (mainly): playlist repaint is too slow
 
