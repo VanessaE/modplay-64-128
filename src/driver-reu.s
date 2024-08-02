@@ -469,13 +469,13 @@ reu_start_mixer
 				sta sample_pointers_fract+track				; 3
 				ldy current_sample_numbers+track			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
-				sta sample_pointers_lows+track				; 4
+				sta sample_pointers_lows+track				; 3
 				sta DMA_LO									; 4
 				lda sample_loop_start_addresses_mids,y		; 5
-				sta sample_pointers_mids+track				; 4
+				sta sample_pointers_mids+track				; 3
 				sta DMA_HI									; 4
 				lda sample_loop_start_addresses_highs,y		; 5
-				sta sample_pointers_highs+track				; 4
+				sta sample_pointers_highs+track				; 3
 				sta DMA_BANK								; 4
 				lda sample_loop_end_addresses_lows,y		; 5
 				sta current_sample_end_addr_lows+track		; 3

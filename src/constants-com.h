@@ -97,7 +97,7 @@ program_start							= $1e00
 	sample_pointers_mids				= $d2 ;  |
 	sample_pointers_highs				= $da ; _|
 	current_sample_end_addr_lows		= $e2 ; ¯|
-	current_sample_end_addr_mids		= $ea ;  |-- 24 bytes, through $ff
+	current_sample_end_addr_mids		= $ea ;  |-- 24 bytes, through $f9
 	current_sample_end_addr_highs		= $f2 ; _|
 
 	; in-/out-of-Zero-Page-backup dual-mode variables in $fa through $ff,
