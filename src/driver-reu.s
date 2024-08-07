@@ -402,7 +402,9 @@ lookahead_code_offsets_set_volume_code_addr
 reu_start_mixer
 	lda #0
 	sta DMA_DAH
-	ldx audio_in_buf_index
+	lda audio_in_buf_index
+	and #$f0
+	tax
 
 	reu_mixer_main_loop
 		lda #0												; 2
@@ -523,7 +525,6 @@ reu_start_mixer
 
 		txa													; 2
 		adc #16												; 2
-		and #$f0											; 2
 
 	-	ldy audio_out_buf_index								; 3
 		cmp and_f0_table,y									; 4
