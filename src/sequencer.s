@@ -40,9 +40,9 @@ start_sequencer
 	sta current_note_periods_lows,x
 	sta current_note_periods_highs,x
 	sta current_node_period_offsets,x
-	sta current_steprates_fract,x
-	sta current_steprates_lows,x
-	sta sample_pointers_fract,x
+	sta current_steprates_fracts,x
+	sta current_steprates_ints,x
+	sta sample_pointers_fracts,x
 	sta sample_pointers_lows,x
 	sta sample_pointers_mids,x
 	sta sample_pointers_highs,x
@@ -315,7 +315,7 @@ start_sample
 	sta volume_slide_rates,y
 	sta pitch_slide_rates,y
 
-	sta sample_pointers_fract,y
+	sta sample_pointers_fracts,y
 	lda sample_start_addresses_lows,x
 	sta sample_pointers_lows,y
 	lda sample_start_addresses_mids,x
@@ -366,12 +366,12 @@ set_pitch
 	lda note_period_table,x
 	sta current_note_periods_lows,y
 	lda steprate_table,x
-	sta current_steprates_fract,y
+	sta current_steprates_fracts,y
 	inx
 	lda note_period_table,x
 	sta current_note_periods_highs,y
 	lda steprate_table,x
-	sta current_steprates_lows,y
+	sta current_steprates_ints,y
 
 	set_la_mixer_addrs_vec
 		jsr $1234

@@ -256,10 +256,10 @@ set_mixer_and_lookahead_addrs
 	adc #>sample_data_buffer
 	sta rd_la_track_0 + 2,x
 
-	lda current_steprates_lows,y
+	lda current_steprates_ints,y
 	sta utility_zpbk_counter+1
 
-	lda current_steprates_fract,y
+	lda current_steprates_fracts,y
 	sta temp_zpbk_a
 	lsr utility_zpbk_counter+1
 	ror
@@ -304,11 +304,11 @@ set_mixer_and_lookahead_addrs
 
 	ldx seq_current_track
 
-	lda current_steprates_fract,x
+	lda current_steprates_fracts,x
 	ldy #csr_f_idx
 	sta (fill_copy_target),y
 
-	lda current_steprates_lows,x
+	lda current_steprates_ints,x
 	ldy #csr_l_idx
 	sta (fill_copy_target),y
 
@@ -324,7 +324,7 @@ set_mixer_and_lookahead_addrs
 	ldy #chkend_h_idx
 	sta (fill_copy_target),y
 
-	lda current_steprates_lows,x
+	lda current_steprates_ints,x
 	bne +
 	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
 
@@ -418,10 +418,10 @@ reu_start_mixer
 				lda #(>sample_data_buffer)+track			; 2
 				sta DMA_ADH									; 4
 
-				lda sample_pointers_fract+track				; 3
+				lda sample_pointers_fracts+track				; 3
 				!if track = 0 { !set cur_steprate_f = * }
 				adc #0										; 2
-				sta sample_pointers_fract+track				; 3
+				sta sample_pointers_fracts+track				; 3
 				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set cur_steprate_l = * }
 				adc #0										; 2
@@ -467,13 +467,13 @@ reu_start_mixer
 				bne .reu_sample_has_loop					; 3/2
 				sta sample_pointers_mids+track				; 3
 				sta sample_pointers_highs+track				; 3
-				sta current_steprates_fract+track			; 3
-				sta current_steprates_lows+track			; 3
+				sta current_steprates_fracts+track			; 3
+				sta current_steprates_ints+track			; 3
 				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop
 				lda #0										; 2
-				sta sample_pointers_fract+track				; 3
+				sta sample_pointers_fracts+track				; 3
 				ldy current_sample_numbers+track			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
 				sta sample_pointers_lows+track				; 3
