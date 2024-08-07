@@ -238,15 +238,15 @@ rts
 ;
 ; Enter with .Y = track number to work on
 
-mixer_loop_segment_length = mixer_loop_end - mixer_loop_start
-fetch_loop_segment_length = fetch_loop_end - fetch_loop_start
+mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
+fetch_loop_segment_length = fetch_loop_close - fetch_loop_open
 
-csr_f_idx    = cur_steprate_f - fetch_loop_start + 1
-csr_l_idx    = cur_steprate_l - fetch_loop_start + 1
-chkend_l_idx =        ckend_l - fetch_loop_start + 1
-chkend_m_idx =        ckend_m - fetch_loop_start + 1
-chkend_h_idx =        ckend_h - fetch_loop_start + 1
-fetchlen_idx =       fetchlen - fetch_loop_start + 1
+csr_f_idx    = cur_steprate_f - fetch_loop_open + 1
+csr_l_idx    = cur_steprate_l - fetch_loop_open + 1
+chkend_l_idx =        ckend_l - fetch_loop_open + 1
+chkend_m_idx =        ckend_m - fetch_loop_open + 1
+chkend_h_idx =        ckend_h - fetch_loop_open + 1
+fetchlen_idx =       fetchlen - fetch_loop_open + 1
 
 set_mixer_and_lookahead_addrs
 	ldx lookahead_code_offsets_set_read_byte_code_addr,y
@@ -273,6 +273,7 @@ set_mixer_and_lookahead_addrs
 
 ; so utility_zpbk_counter is equal to 1/16 the step rate, and temp_zpbk_a will
 ; track the fraction part as the indexes are calculated below.
+	clc
 
 	!zone lookahead_idx_set {
 		!for .idx4, 1, 15 {
@@ -294,10 +295,10 @@ set_mixer_and_lookahead_addrs
 	jsr multiply_8x8
 
 	clc
-	lda #<fetch_loop_start
+	lda #<fetch_loop_open
 	adc product
 	sta fill_copy_target
-	lda #>fetch_loop_start
+	lda #>fetch_loop_open
 	adc product+1
 	sta fill_copy_target+1
 
@@ -409,7 +410,7 @@ reu_start_mixer
 		clc													; 2
 		ldy #$91											; 2
 
-		fetch_loop_start
+		fetch_loop_open
 		  !for track, 0, 3 {
 			!zone fetchloop {
 				lda #(>sample_data_buffer)+track			; 2
@@ -516,7 +517,8 @@ reu_start_mixer
 					cli										; 2
 				}
 			}
-		!if track = 0 { fetch_loop_end = * }
+
+		!if track = 0 { fetch_loop_close = * }
 		}
 
 		txa													; 2
@@ -527,7 +529,7 @@ reu_start_mixer
 		cmp and_f0_table,y									; 4
 		beq -												; 3/2
 
-		mixer_loop_start
+		mixer_loop_open
 		  !for .idx2, 0, 15 {
 
 			; the various `LDY sample_data_buffer` below will have their address
@@ -567,7 +569,7 @@ reu_start_mixer
 
 			inx												; 2
 
-		  !if .idx2 = 0 { !set mixer_loop_end = * }
+		!if .idx2 = 0 { !set mixer_loop_close = * }
 		}
 
 		dec mixer_countdown									; 5
