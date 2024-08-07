@@ -199,13 +199,11 @@ program_start							= $1e00
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
 
-	; free: $1020 through $102f
+	semitones_table_fracts				= $1020
+	semitones_table_lows				= $1030
 
-	semitones_table_fracts				= $1030
-	semitones_table_lows				= $1040
-
-	control_code_flags_table_low		= $1050
-	control_code_flags_table_high		= $1070
+	control_code_flags_table_low		= $1040
+	control_code_flags_table_high		= $1060
 	pattern_table						= $1080
 
 	; on C128, these next two pages can only be used by transient stuff
