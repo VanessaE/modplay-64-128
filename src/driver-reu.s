@@ -354,22 +354,26 @@ rts
 ; enter with .A = volume level, .Y = track number
 
 set_volume_addrs
+	bcc +
 	sta current_sample_volume_levels,y
-	cmp #64
++	lda current_sample_volume_levels,y
+	ldx track_current_enable_flags,y
 	bne +
-	lda #63
+	lda #>volume_table_lower
+	jmp set_vol_direct
 
 +	lsr
 	cmp #16
 	bcs +
 
 	adc #>volume_table_lower
-	bcc ++
+	jmp set_vol_direct
 
 +	clc
 	adc #(>volume_table_upper)-16
 
-++	ldx lookahead_code_offsets_set_volume_code_addr,y
+set_vol_direct
+	ldx lookahead_code_offsets_set_volume_code_addr,y
 
 	!zone lookahead_idx_set {
 		!for .idx4, 0, 15 {

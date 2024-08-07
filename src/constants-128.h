@@ -36,8 +36,8 @@
 	playlist_filenames				= $b400 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $c000
 
-	volume_table_lower				= $c000 ; 16 pages \__ 32 pages/8 kB, split
-	volume_table_upper				= $e000 ; 16 pages /   between two memory areas
+	volume_table_lower				= $c000 ; 16 pages \__ 33 pages/8 kB, split
+	volume_table_upper				= $e000 ; 17 pages /   between two memory areas
 
 	; =================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

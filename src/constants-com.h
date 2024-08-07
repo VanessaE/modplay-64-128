@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start							= $1e00
+program_start							= $1f00
 
 !addr {
 	; KERNAL zero-page variables
@@ -20,7 +20,9 @@ program_start							= $1e00
 	utility_zpbk_counter				= $02 ; 3 bytes
 	temp_zpbk_a							= $05
 
-	; free: $06 through $23
+	track_current_enable_flags			= $06 ; 8 bytes, through $0d
+
+	; free: $0e through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -41,9 +43,11 @@ program_start							= $1e00
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $2a through $2f
+	; free: $2a through $2e
+
 	; $2a is available as an in/out-of-ZP-backup common addr
 
+	seq_key_debounce					= $2f
 	pattern_break_target_row			= $30
 	seq_current_pattern_number			= $31
 	seq_current_row						= $32
@@ -168,19 +172,16 @@ program_start							= $1e00
 	current_note_periods_lows			= low_memory_area
 	current_note_periods_highs			= low_memory_area+$08
 	current_node_period_offsets			= low_memory_area+$10
-	track_current_enable_flags			= low_memory_area+$18
+	seq_current_row_data				= low_memory_area+$18 ; this one's 32 bytes
+	seq_commands						= low_memory_area+$38
+	seq_prev_commands					= low_memory_area+$40
+	seq_command_arguments				= low_memory_area+$48
+	seq_prev_command_arguments			= low_memory_area+$50
+	current_pitch_slide_flags			= low_memory_area+$58
+	seq_pitch_slide_stop_point_lows		= low_memory_area+$60
+	seq_pitch_slide_stop_point_highs	= low_memory_area+$68
 
-	seq_current_row_data				= low_memory_area+$20 ; this one's 32 bytes
-	seq_commands						= low_memory_area+$40
-	seq_prev_commands					= low_memory_area+$48
-	seq_command_arguments				= low_memory_area+$50
-	seq_prev_command_arguments			= low_memory_area+$58
-
-	current_pitch_slide_flags			= low_memory_area+$60
-	seq_pitch_slide_stop_point_lows		= low_memory_area+$68
-	seq_pitch_slide_stop_point_highs	= low_memory_area+$70
-
-	; free: low_memory_area+$78 through low_memory_area+$a1
+	; free: low_memory_area+$70 through low_memory_area+$a1
 	; the above zone must not exceed +$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
@@ -357,24 +358,24 @@ program_start							= $1e00
 	sample_default_volume_levels		= $1900
 	mod_instrument_names				= $1920 ; 32 * 31 bytes, through $1dff
 
+	zp_backup							= $1e00 ; 1 page (duh. 😛)
+	
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff, beginning at $a900 on C64 or
 	; $b100 on C128 -- see constants-64/128.h
 
 	; Under-KERNAL-ROM stuff
 
-	sample_data_buffer					= $f000 ; 8 * 256 bytes
+	sample_data_buffer					= $f100 ; 8 * 256 bytes
 
-	note_period_table					= $f800 ; 120 bytes + waste
-	steprate_table						= $f880 ; 120 bytes + waste
+	note_period_table					= $f900 ; 120 bytes + waste
+	steprate_table						= $f980 ; 120 bytes + waste
 
-	note_names_table					= $f900 ; 240 bytes + waste
+	note_names_table					= $fa00 ; 240 bytes + waste
 
-	divide_by_16_table					= $fa00 ; 1 page
+	divide_by_16_table					= $fb00 ; 1 page
 
-	and_f0_table						= $fb00 ; 1 page
-
-	zp_backup							= $fc00 ; 1 page (duh. 😛)
+	and_f0_table						= $fc00 ; 1 page
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page

@@ -9,50 +9,56 @@
 !text "tables",0
 
 generate_volume_tables
-	lda #<volume_table_lower
-	sta fill_copy_target
-	lda #>volume_table_lower
-	sta fill_copy_target+1
 	lda #0
-	sta bval_cnt			; byte value counter
-	sta vol_cnt				; volume counter
+	sta fill_copy_target
+	sta vol_cnt							; volume counter
 
-	--	lda vol_cnt
-		tax
-		inx
-	-	lda bval_cnt
-		jsr multiply_8x8 	; returns 13 bit value in 'product' (top 3 bits are
-							; always 0 here) MSB is also in .A at exit.
+	next_vol_val
+		lda vol_cnt
+		cmp #16
+		bcs +
+		adc #>volume_table_lower		; the first 16 pages fit below $c800...
+		jmp ++
 
-		asl product			; divide by 32 since that's our volume range
-		rol
-		asl product
-		rol
-		asl product
-		rol
-		asl product
-		rol
-		asl product
-		; skip the final ROL since we don't need the remainder
+	+	clc
+		adc #(>volume_table_upper)-16	; ...while the rest goes under the KERNAL.
 
-; MOD samples are 2's-compliment signed
-; this will translate the value to unsigned.
+	++	sta fill_copy_target+1
 
+		lda #0
+		sta bval_cnt					; byte value counter
+
+	next_byte_val
 		lda bval_cnt
-		tay
+
+		; MOD samples are 2's-compliment signed
+		; this will translate the value to unsigned.
 		clc
 		adc #$80
-		sta temp_abs_a
+
+		ldx vol_cnt
+		jsr multiply_8x8				; on exit, product MSB is in .A
+
+		lsr								; divide by 32 since that's our max volume
+		ror product
+		lsr
+		ror product
+		lsr
+		ror product
+		lsr
+		ror product
+		lsr
+		ror product
 
 ; re-center the amplitude range to keep the middle sample value at $7f/80.
 
 		sec
-		lda #31
+		lda #32
 		sbc vol_cnt
 		asl
 		asl
 		clc
-		adc temp_abs_a
+		adc product
 
 ; divide the final value down to the resolution the audio driver needs
 ; only 4 or 8 bits allowed
@@ -66,19 +72,15 @@ generate_volume_tables
 		lsr
 		lsr
 
-	.nd	sta (fill_copy_target),y
+	.nd	ldy bval_cnt
+		sta (fill_copy_target),y
 		inc bval_cnt
-		bne --
-		inc fill_copy_target+1
+		bne next_byte_val
+
 		inc vol_cnt
 		lda vol_cnt
-		cmp #16		; the first 16 pages fit below $c800...
-		bne +
-		lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
-		sta fill_copy_target+1
-		bne -
-	+	cmp #32
-		bne -
+		cmp #33
+		bne next_vol_val
 rts
 
 generate_tempo_table

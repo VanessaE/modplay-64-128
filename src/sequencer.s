@@ -18,11 +18,10 @@ start_sequencer
 	sta tremolo_waveform
 	sta delay_pattern_divisions
 	sta pattern_break_target_row
+	sta seq_key_debounce
 
 	ldx #7
 -	sta current_sample_numbers,x
-
-	sta track_current_enable_flags,x
 
 	sta current_pitch_slide_flags,x
 	sta pitch_slide_rates,x
@@ -205,13 +204,8 @@ start_command_vec					; start or initialize an effect command
 	sta seq_ticks_counter
 
 next_tick
-	; check for spacebar
-	lda #$7f		; column 7 low
-	sta CIA1
-
-	lda #$ef		; look for row 4
-	cmp CIA1+$01
-	bne +
+	jsr seq_check_keyboard
+	beq +
 	jmp stop_song
 
 +	ldy #0
@@ -226,7 +220,7 @@ next_track_this_tick
 	lda run_effect_command_jump_table+1,x
 	sta run_command_vec+2
 
-run_command_vec					; run effect command if it needs tick-interval timing
+run_command_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
 	inc seq_current_track
 	ldy seq_current_track
@@ -338,12 +332,17 @@ start_sample
 
 	lda sample_default_volume_levels,x
 	ldx sequencer_temp_x
+	sec
 
 	; now just fall through into set_volume
 
 ; we put this stub here so that it can be called from anywhere in the sequencer
 ; without needing to maintain more than one vector (the actual code being in
 ; the RAM driver).
+;
+; enter with .A = volume, .Y = track, and carry set to store that setting as
+; the "current" volume level, or carry clear just to set the volume table
+; addresses e.g. if coming from the keyboard's 1-4 keys.
 
 set_volume
 	stx sequencer_temp_x
@@ -524,4 +523,65 @@ print_song_speed
 	lda seq_tempo_bpm
 	jsr display_byte_hex_direct
   +
+rts
+
+seq_check_keyboard
+	lda #0					; drive all columns low
+	sta CIA1
+	lda CIA1+$01
+	cmp #$ff				; is any row low?
+	bne key_pressed			; if so, a key was pressed
+
+	lda #0
+	sta seq_key_debounce
+	rts
+
+key_pressed
+	lda seq_key_debounce
+	beq +
+	lda #0
+	rts
+
++	dec seq_key_debounce
+
+	lda #%01111111			; column 7 low
+	sta CIA1
+	lda CIA1+$01
+	cmp #%11101111			; look for row 4, spacebar
+	bne +
+	lda #1
+	rts
+
++	cmp #%11111110			; row 0, the "1" key
+	bne +
+	ldy #0
+	jmp toggle_enable
+
++	cmp #%11110111			; row 3, the "2" key
+	bne +
+	ldy #1
+	jmp toggle_enable
+
++	lda #%11111101			; column 1 low
+	sta CIA1
+	lda CIA1+$01
+
+	cmp #%11111110			; row 0, the "3" key
+	bne +
+	ldy #2
+	jmp toggle_enable
+
++	cmp #%11110111			; row 3, the "4" key
+	bne no_valid_key
+	ldy #3
+
+toggle_enable
+	lda track_current_enable_flags,y
+	eor #$80
+	sta track_current_enable_flags,y
+	clc
+	jsr set_volume
+
+no_valid_key
+	lda #0
 rts

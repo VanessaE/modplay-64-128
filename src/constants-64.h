@@ -38,8 +38,8 @@
 	playlist_filenames				= $ac00 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $b800
 
-	volume_table_lower				= $b800 ; 16 pages \__ 32 pages/8 kB, split
-	volume_table_upper				= $e000 ; 16 pages /   between two memory areas
+	volume_table_lower				= $b800 ; 16 pages \__ 33 pages/8 kB, split
+	volume_table_upper				= $e000 ; 17 pages /   between two memory areas
 
 	VIC_SCREEN						= $c800
 	secondary_screen				= $cc00
