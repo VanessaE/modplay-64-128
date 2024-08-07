@@ -519,59 +519,59 @@ reu_start_mixer
 		!if track = 0 { fetch_loop_end = * }
 		}
 
-	txa													; 2
-	adc #16												; 2
-	and #$f0											; 2
+		txa													; 2
+		adc #16												; 2
+		and #$f0											; 2
 
--	ldy audio_out_buf_index								; 3
-	cmp and_f0_table,y									; 4
-	beq -												; 3/2
+	-	ldy audio_out_buf_index								; 3
+		cmp and_f0_table,y									; 4
+		beq -												; 3/2
 
-	mixer_loop_start
-	  !for .idx2, 0, 15 {
+		mixer_loop_start
+		  !for .idx2, 0, 15 {
 
-		; the various `LDY sample_data_buffer` below will have their address
-		; low bytes re-written by the above set_lookahead_addrs routine.
-		; Similarly, each corresponding `LDA/ADC volume_table_lower,Y` will
-		; have its high byte re-written by the set_volume_addrs routine.
+			; the various `LDY sample_data_buffer` below will have their address
+			; low bytes re-written by the above set_lookahead_addrs routine.
+			; Similarly, each corresponding `LDA/ADC volume_table_lower,Y` will
+			; have its high byte re-written by the set_volume_addrs routine.
 
-		!if .idx2 = 0 { rd_la_track_0 = * }
-		ldy sample_data_buffer + 0*256					; 4 / yeah I know it's 0, shut up 😛
+			!if .idx2 = 0 { rd_la_track_0 = * }
+			ldy sample_data_buffer + 0*256					; 4 / yeah I know it's 0, shut up 😛
 
- 		!if .idx2 = 0 { vol_addr_0 = * }
-		lda volume_table_lower,y						; 4
+			!if .idx2 = 0 { vol_addr_0 = * }
+			lda volume_table_lower,y						; 4
 
-		!if .idx2 = 0 { rd_la_track_3 = *}
-		ldy sample_data_buffer + 3*256					; 4
+			!if .idx2 = 0 { rd_la_track_3 = *}
+			ldy sample_data_buffer + 3*256					; 4
 
-		clc												; 2
-		!if .idx2 = 0 { vol_addr_3 = *}
-		adc volume_table_lower,y						; 4
-		ror												; 2
-		sta audio_buffer_left,x							; 5
+			clc												; 2
+			!if .idx2 = 0 { vol_addr_3 = *}
+			adc volume_table_lower,y						; 4
+			ror												; 2
+			sta audio_buffer_left,x							; 5
 
-		!if .idx2 = 0 { rd_la_track_1 = * }
-		ldy sample_data_buffer + 1*256					; 4
+			!if .idx2 = 0 { rd_la_track_1 = * }
+			ldy sample_data_buffer + 1*256					; 4
 
-		!if .idx2 = 0 { vol_addr_1 = * }
-		lda volume_table_lower,y						; 4
+			!if .idx2 = 0 { vol_addr_1 = * }
+			lda volume_table_lower,y						; 4
 
-		!if .idx2 = 0 { rd_la_track_2 = * }
-		ldy sample_data_buffer + 2*256					; 4
+			!if .idx2 = 0 { rd_la_track_2 = * }
+			ldy sample_data_buffer + 2*256					; 4
 
-		clc												; 2
-		!if .idx2 = 0 { vol_addr_2 = * }
-		adc volume_table_lower,y						; 4
-		ror												; 2
-		sta audio_buffer_right,x						; 5
+			clc												; 2
+			!if .idx2 = 0 { vol_addr_2 = * }
+			adc volume_table_lower,y						; 4
+			ror												; 2
+			sta audio_buffer_right,x						; 5
 
-		inx												; 2
+			inx												; 2
 
-	  !if .idx2 = 0 { !set mixer_loop_end = * }
-	}
+		  !if .idx2 = 0 { !set mixer_loop_end = * }
+		}
 
-	dec mixer_countdown									; 5
-	beq +												; 3/2
+		dec mixer_countdown									; 5
+		beq +												; 3/2
 	jmp reu_mixer_main_loop								; 3
 
 +	stx audio_in_buf_index
