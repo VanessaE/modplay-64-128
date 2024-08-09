@@ -18,11 +18,11 @@ program_start							= $1f00
 	; must be restored after any such use.
 
 	utility_zpbk_counter				= $02 ; 3 bytes
-	temp_zpbk_a							= $05
+	temp_zpbk_a							= $05 ; 3 bytes
 
-	track_current_enable_flags			= $06 ; 8 bytes, through $0d
+	track_current_enable_flags			= $08 ; 8 bytes, through $0f
 
-	; free: $0e through $23
+	; free: $10 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in

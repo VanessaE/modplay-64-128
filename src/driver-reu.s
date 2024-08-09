@@ -249,48 +249,7 @@ chkend_h_idx =        ckend_h - fetch_loop_open + 1
 fetchlen_idx =       fetchlen - fetch_loop_open + 1
 
 set_mixer_and_lookahead_addrs
-	ldx lookahead_code_offsets_set_read_byte_code_addr,y
-
-	tya
-	clc
-	adc #>sample_data_buffer
-	sta rd_la_track_0 + 2,x
-
-	lda current_steprates_ints,y
-	sta utility_zpbk_counter+1
-
-	lda current_steprates_fracts,y
-	sta temp_zpbk_a
-	lsr utility_zpbk_counter+1
-	ror
-	lsr utility_zpbk_counter+1
-	ror
-	lsr utility_zpbk_counter+1
-	ror
-	lsr utility_zpbk_counter+1
-	ror
-	sta utility_zpbk_counter
-
-; so utility_zpbk_counter is equal to 1/16 the step rate, and temp_zpbk_a will
-; track the fraction part as the indexes are calculated below.
-	clc
-
-	!zone lookahead_idx_set {
-		!for .idx4, 1, 15 {
-
-			!set la_rd_addr_ld = rd_la_track_0 + mixer_loop_segment_length * (.idx4 - 1)
-			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx4
-
-			lda temp_zpbk_a
-			adc utility_zpbk_counter
-			sta temp_zpbk_a
-			lda la_rd_addr_ld + 1,x
-			adc utility_zpbk_counter+1
-			sta la_rd_addr_st + 1,x
-		}
-	}
-
-	tya
+	tya ; track number
 	ldx #fetch_loop_segment_length
 	jsr multiply_8x8
 
@@ -324,7 +283,65 @@ set_mixer_and_lookahead_addrs
 	ldy #chkend_h_idx
 	sta (fill_copy_target),y
 
-	lda current_steprates_ints,x
+	!zone lookahead_idx_set {
+		ldy seq_current_track
+
+		lda #0
+		sta utility_zpbk_counter
+		sta utility_zpbk_counter+1
+		sta utility_zpbk_counter+2
+
+		sta temp_zpbk_a
+		lda current_steprates_fracts,y
+		sta temp_zpbk_a+1
+
+		lda current_steprates_ints,y
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		sta temp_zpbk_a+2
+
+		ldx lookahead_code_offsets_set_read_byte_code_addr,y
+
+		clc
+		lda seq_current_track
+		adc #>sample_data_buffer
+
+		!for .idx4, 0, 15 {
+			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx4
+			sta la_rd_addr_st + 2,x
+		}
+
+		!for .idx5, 0, 15 {
+
+			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx5
+
+			lda utility_zpbk_counter+2
+			sta la_rd_addr_st + 1,x
+
+			lda utility_zpbk_counter
+			adc temp_zpbk_a
+			sta utility_zpbk_counter
+
+			lda utility_zpbk_counter+1
+			adc temp_zpbk_a+1
+			sta utility_zpbk_counter+1
+
+			lda utility_zpbk_counter+2
+			adc temp_zpbk_a+2
+			sta utility_zpbk_counter+2
+		}
+	}
+
 	bne +
 	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
 
@@ -418,10 +435,10 @@ reu_start_mixer
 				lda #(>sample_data_buffer)+track			; 2
 				sta DMA_ADH									; 4
 
-				lda sample_pointers_fracts+track				; 3
+				lda sample_pointers_fracts+track			; 3
 				!if track = 0 { !set cur_steprate_f = * }
 				adc #0										; 2
-				sta sample_pointers_fracts+track				; 3
+				sta sample_pointers_fracts+track			; 3
 				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set cur_steprate_l = * }
 				adc #0										; 2
@@ -473,7 +490,7 @@ reu_start_mixer
 
 			.reu_sample_has_loop
 				lda #0										; 2
-				sta sample_pointers_fracts+track				; 3
+				sta sample_pointers_fracts+track			; 3
 				ldy current_sample_numbers+track			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
 				sta sample_pointers_lows+track				; 3
@@ -575,7 +592,7 @@ reu_start_mixer
 
 		dec mixer_countdown									; 5
 		beq +												; 3/2
-	jmp reu_mixer_main_loop								; 3
+	jmp reu_mixer_main_loop									; 3
 
 +	stx audio_in_buf_index
 rts
