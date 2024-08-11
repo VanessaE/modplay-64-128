@@ -114,17 +114,16 @@ nple
 	jsr viz_row_data_pattern_preload
 	jmp next_row_no_scroll
 
-; row format
+; row format (after processing by the loader)
 ;
-;   byte 0    byte 1    byte 2    byte 3
-; 7654-3210 7654-3210 7654-3210 7654-3210
-; aaaa pppp pppp pppp bbbb eeee xxxx yyyy
+;   byte 0   byte 1    byte 2    byte 3
+; 76543210 76543210 7654-3210 76543210
+; xxxxxxxx wwwwyyyy 0000-cccc zzzzzzzz
 ;
-;     aaaabbbb (8 bits) is the sample for this channel/division
-; pppppppppppp (12 bits) is the sample's period
-; eeeexxxxyyyy (12 bits) e is the effect number, x/y are the parameters (or one param)
-;
-; repeat for as many channels as the mod has
+; where:
+;      xxxxxxxx (now 8 bits) is the note number, 0 - 60 (see init.s)
+;      wwwwyyyy     (8 bits) is the sample number
+; cccc-zzzzzzzz   (4+8 bits) is the effect and its parameters
 
 next_row
 	jsr viz_row_data_scroll

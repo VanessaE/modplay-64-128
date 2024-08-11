@@ -875,9 +875,9 @@ rts
 ; xxxxxxxx wwwwyyyy 0000-cccc zzzzzzzz
 ;
 ; where:
-;      wwwwyyyy (8 bits) is the sample number
 ;      xxxxxxxx (now 8 bits) is the note number, 0 - 60 (see init.s)
-; cccc-zzzzzzzz (4+8 bits) is the effect and its parameters
+;      wwwwyyyy     (8 bits) is the sample number
+; cccc-zzzzzzzz   (4+8 bits) is the effect and its parameters
 
 reformat_pattern_data
 	sei
