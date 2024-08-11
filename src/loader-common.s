@@ -711,7 +711,19 @@ parse_instruments
 	sta parse_header_sample_pointer+2
 	sta sample_end_addresses_highs,x
 
-	iny ; 24
+	lda temp_counter+1						; if this sample's len < 2 words,
+	bne +									; zero-out its start addrs and 
+	lda temp_counter						; skip setting any attribs, now
+	cmp #2									; that there's a valid addr to use
+	bcs +									; for the next sample's start addr
+
+	lda #0
+	sta sample_start_addresses_lows,x
+	sta sample_start_addresses_mids,x
+	sta sample_start_addresses_highs,x
+	jmp skip_sample
+
++	iny ; 24
 	lda (fill_copy_source),y
 	sta sample_default_fine_tunes,x
 
@@ -735,7 +747,7 @@ parse_instruments
 	bne +									; sample as loopable
 	lda temp_counter
 	cmp #2
-	bcc ++
+	bcc skip_sample
 
 +	lda #$80
 	sta sample_default_loop_flags,x
@@ -779,7 +791,8 @@ parse_instruments
 	adc temp_counter+2
 	sta sample_loop_end_addresses_highs,x
 
-++	clc
+skip_sample
+	clc
 	lda fill_copy_source
 	adc #instrument_metadata_size
 	sta fill_copy_source
@@ -800,14 +813,32 @@ parse_instruments
 	bne +
 
 	cpx #16
-	beq .ldex
+	beq ++
 	jmp .next_instr
 
 +	cpx #32
-	beq .ldex
+	beq ++
 	jmp .next_instr
 
-.ldex
+++	ldx #31
+
+	; if a sample had a start addr of $0, then it's been declared as "empty",
+	; so reset its end to $000100, the middle of the silence block.
+
+-	lda sample_start_addresses_lows,x
+	ora sample_start_addresses_mids,x
+	ora sample_start_addresses_highs,x
+	bne +
+
+	lda #0
+	sta sample_end_addresses_lows,x
+	sta sample_end_addresses_highs,x
+	lda #1
+	sta sample_end_addresses_mids,x
+
++	dex
+	bpl -
+
 	clc ; exit with carry clear to indicate successful parse, okay to load
 rts
 

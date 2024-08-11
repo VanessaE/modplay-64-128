@@ -1,6 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start							= $1f00
+program_start							= $1e00
 
 !addr {
 	; KERNAL zero-page variables
@@ -349,17 +349,17 @@ program_start							= $1f00
 	sample_end_addresses_mids			= $1780
 	sample_end_addresses_highs			= $17a0
 	sample_loop_start_addresses_lows	= $17c0
-	sample_loop_start_addresses_mids	= $1800
-	sample_loop_start_addresses_highs	= $1820
-	sample_loop_end_addresses_lows		= $1840
-	sample_loop_end_addresses_mids		= $1860
-	sample_loop_end_addresses_highs		= $1880
-	sample_default_loop_flags			= $18a0
-	sample_default_fine_tunes			= $18c0
-	sample_default_volume_levels		= $1900
-	mod_instrument_names				= $1920 ; 32 * 31 bytes, through $1dff
+	sample_loop_start_addresses_mids	= $17e0
+	sample_loop_start_addresses_highs	= $1800
+	sample_loop_end_addresses_lows		= $1820
+	sample_loop_end_addresses_mids		= $1840
+	sample_loop_end_addresses_highs		= $1860
+	sample_default_loop_flags			= $1880
+	sample_default_fine_tunes			= $18a0
+	sample_default_volume_levels		= $18c0
+	mod_instrument_names				= $18e0 ; 32 * 31 bytes, through $1cbf
 
-	zp_backup							= $1e00 ; 1 page (duh. 😛)
+	zp_backup							= $1d00 ; 1 page (duh. 😛)
 	
 	; main program code starts here, followed by free mem
 	; then comes all the "high-memory" stuff, beginning at $a900 on C64 or
