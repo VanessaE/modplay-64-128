@@ -636,7 +636,7 @@ parse_instruments
 	; .Y = 22 here.
 	lda #0
 	sta temp_counter+2
-	lda (fill_copy_source),y					; read sample length, MSB first
+	lda (fill_copy_source),y				; read sample length, MSB first
 	sta temp_counter+1
 	iny ; 23
 	lda (fill_copy_source),y
@@ -648,12 +648,12 @@ parse_instruments
 
 	clc
 	lda temp_counter
-	adc parse_header_sample_pointer		; preset for next sample address
+	adc parse_header_sample_pointer			; preset for next sample address
 	sta parse_header_sample_pointer
-	sta sample_end_addresses_lows,x		; <--- this eliminates having to look
+	sta sample_end_addresses_lows,x			; <--- this eliminates having to look
 	lda temp_counter+1						;      "forward" in the header to find
-	adc parse_header_sample_pointer+1	;      next sample start address to use
-	sta parse_header_sample_pointer+1	;      as this sample's end.
+	adc parse_header_sample_pointer+1		;      next sample start address to use
+	sta parse_header_sample_pointer+1		;      as this sample's end.
 	sta sample_end_addresses_mids,x
 	lda temp_counter+2
 	adc parse_header_sample_pointer+2
@@ -671,7 +671,7 @@ parse_instruments
 	iny ; 26
 	lda #0
 	sta temp_counter+2
-	lda (fill_copy_source),y					; read loop start offset, MSB first
+	lda (fill_copy_source),y				; read loop start offset, MSB first
 	sta temp_counter+1
 	iny ; 27
 	lda (fill_copy_source),y
@@ -681,28 +681,28 @@ parse_instruments
 	rol temp_counter+1
 	rol temp_counter+2
 
-	clc									; convert to address
-	lda temp_counter
-	adc sample_start_addresses_lows,x
+	clc										; convert to address
+	lda sample_start_addresses_lows,x
+	adc temp_counter
 	sta sample_loop_start_addresses_lows,x
-	lda temp_counter+1
-	adc sample_start_addresses_mids,x
+	lda sample_start_addresses_mids,x
+	adc temp_counter+1
 	sta sample_loop_start_addresses_mids,x
-	lda temp_counter+2
-	adc sample_start_addresses_highs,x
+	lda sample_start_addresses_highs,x
+	adc temp_counter+2
 	sta sample_loop_start_addresses_highs,x
 
 	iny ; 28
 	lda #0
 	sta temp_counter+2
-	lda (fill_copy_source),y					; read loop length, MSB first
+	lda (fill_copy_source),y				; read loop length, MSB first
 	sta temp_counter+1
 	iny ; 29
 	lda (fill_copy_source),y
 	sta temp_counter
 
-	lda temp_counter+1						; if loop len > 1, flag this sample as loopable
-	bne +
+	lda temp_counter+1						; if loop len > 1 word, flag this
+	bne +									; sample as loopable
 	lda temp_counter
 	cmp #2
 	bcs +
@@ -724,15 +724,15 @@ parse_instruments
 	rol temp_counter+1
 	rol temp_counter+2
 
-	clc									; convert to address
-	lda temp_counter
-	adc sample_loop_start_addresses_lows,x
+	clc										; convert to address
+	lda sample_loop_start_addresses_lows,x
+	adc temp_counter
 	sta sample_loop_end_addresses_lows,x
-	lda temp_counter+1
-	adc sample_loop_start_addresses_mids,x
+	lda sample_loop_start_addresses_mids,x
+	adc temp_counter+1
 	sta sample_loop_end_addresses_mids,x
-	lda temp_counter+2
-	adc sample_loop_start_addresses_highs,x
+	lda sample_loop_start_addresses_highs,x
+	adc temp_counter+2
 	sta sample_loop_end_addresses_highs,x
 
 ++	clc
