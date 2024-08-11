@@ -584,8 +584,59 @@ count_patterns
 	inc number_of_patterns
 
 parse_instruments
+	ldx #31
+	lda #0
+-	sta sample_start_addresses_lows,x
+	sta sample_start_addresses_mids,x
+	sta sample_start_addresses_highs,x
+	sta sample_end_addresses_lows,x
+	sta sample_end_addresses_mids,x
+	sta sample_end_addresses_highs,x
+	sta sample_loop_start_addresses_lows,x
+	sta sample_loop_start_addresses_mids,x
+	sta sample_loop_start_addresses_highs,x
+	sta sample_loop_end_addresses_lows,x
+	sta sample_loop_end_addresses_mids,x
+	sta sample_loop_end_addresses_highs,x
+	sta sample_default_loop_flags,x
+	sta sample_default_fine_tunes,x
+	sta sample_default_volume_levels,x
+	sta mod_instrument_names,x
+	sta mod_instrument_names+32,x
+	sta mod_instrument_names+32*2,x
+	sta mod_instrument_names+32*3,x
+	sta mod_instrument_names+32*4,x
+	sta mod_instrument_names+32*5,x
+	sta mod_instrument_names+32*6,x
+	sta mod_instrument_names+32*7,x
+	sta mod_instrument_names+32*8,x
+	sta mod_instrument_names+32*9,x
+	sta mod_instrument_names+32*10,x
+	sta mod_instrument_names+32*11,x
+	sta mod_instrument_names+32*12,x
+	sta mod_instrument_names+32*13,x
+	sta mod_instrument_names+32*14,x
+	sta mod_instrument_names+32*15,x
+	sta mod_instrument_names+32*16,x
+	sta mod_instrument_names+32*17,x
+	sta mod_instrument_names+32*18,x
+	sta mod_instrument_names+32*19,x
+	sta mod_instrument_names+32*20,x
+	sta mod_instrument_names+32*21,x
+	sta mod_instrument_names+32*22,x
+	sta mod_instrument_names+32*23,x
+	sta mod_instrument_names+32*24,x
+	sta mod_instrument_names+32*25,x
+	sta mod_instrument_names+32*26,x
+	sta mod_instrument_names+32*27,x
+	sta mod_instrument_names+32*28,x
+	sta mod_instrument_names+32*29,x
+	sta mod_instrument_names+32*30,x
+	dex
+	bmi +
+	jmp -
 
-	clc
++	clc
 	lda expansion_memory_start_address
 	adc parse_header_sample_pointer
 	sta parse_header_sample_pointer
