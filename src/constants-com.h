@@ -43,10 +43,11 @@ program_start							= $1f00
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $2a through $2e
+	; free: $2a through $2c
 
 	; $2a is available as an in/out-of-ZP-backup common addr
 
+	ram_drv_fetch_addr_table_pointer	= $2d
 	seq_key_debounce					= $2f
 	pattern_break_target_row			= $30
 	seq_current_pattern_number			= $31
@@ -226,7 +227,7 @@ program_start							= $1f00
 	number_of_patterns					= $1513
 
 	audio_driver_isr_cycle_count		= $1514
-	ram_driver_cycle_count				= $1515
+	ram_driver_fetch_cycle_count		= $1515
 	isr_trigger_interval				= $1516
 	last_isr_trigger_interval			= $1517
 	playlist_length						= $1518

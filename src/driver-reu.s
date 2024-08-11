@@ -2,73 +2,37 @@
 
 !text "reu driver",0,0,0
 
-; this is the average cycles per output sample pair
-; for faster CPUs, divide the raw count by the CPU MHz and round up.
+; the sequencer will look here (via a vector) to find the address and offsets
+; into the fetch routine that it must use to do the self-mod stuff.
+
+reu_fetch_routine_index_table
+	!word reu_fetch_unroll_open
+	!byte reu_cur_steprate_f - reu_fetch_unroll_open + 1
+	!byte reu_cur_steprate_i - reu_fetch_unroll_open + 1
+	!byte reu_ckend_l - reu_fetch_unroll_open + 1
+	!byte reu_ckend_m - reu_fetch_unroll_open + 1
+	!byte reu_ckend_h - reu_fetch_unroll_open + 1
+	!byte reu_fetchlen - reu_fetch_unroll_open + 1
+	!byte reu_fetch_unroll_close - reu_fetch_unroll_open ; fetch loop segment length
+
+; this is the average cycles per sample pair for any one track.
 ; see full details below.
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #80
+		lda #24+2
 	} else {
-		lda #80/2 ; equivalent 1 MHz cycles
+		lda #(26 + 2)/2 ; equivalent 1 MHz cycles
 	}
-	sta ram_driver_cycle_count
+	sta ram_driver_fetch_cycle_count
 rts
 
 ; enter with .X = row number, .Y = pattern number
 reu_fetch_row
-	lda #0
-	sta utility_pointer_b+2
-
-	tya						; pattern number -> offset:  N*1024
-	asl
-	rol utility_pointer_b+2
-	asl
-	rol utility_pointer_b+2
-	sta utility_pointer_b+1
-
-	txa						; use LSB to multiply row no. x16
-	sta utility_pointer_b
-	lda #0
-	asl utility_pointer_b
-	rol
-	asl utility_pointer_b
-	rol
-	asl utility_pointer_b
-	rol
-	asl utility_pointer_b
-	rol
-
-	adc utility_pointer_b+1		; finish the addition, now we have an offset into
-	sta utility_pointer_b+1		; the pattern data
-	lda utility_pointer_b+2
-	adc #0
-	sta utility_pointer_b+2
-
-	lda current_file_type
-	cmp #1
-	bne +
-
-; add the header length and now we have the real address of the desired row
-
-	clc
 	lda utility_pointer_b
-	adc #<header15_seek_to_pat_data
 	sta DMA_LO
-
 	lda utility_pointer_b+1
-	adc #>header15_seek_to_pat_data
-	jmp ++
-
-+	clc
-	lda utility_pointer_b
-	adc #<header31_seek_to_pat_data
-	sta DMA_LO
-
-	lda utility_pointer_b+1
-	adc #>header31_seek_to_pat_data
-
-++	sta DMA_HI
+	sta DMA_HI
 	lda #0
 	rol
 	sta DMA_BANK
@@ -229,218 +193,34 @@ set_registers_AXY ; setup REU registers (used for both reading and writing in si
 	sty DMA_CMD
 rts
 
-; SET-UP LOOKAHEAD INDEXES/ADDRESSES
-; This plugs in the necessary adjustments to the mixer routine down below
-; so that it knows where to look for lookahead data.  This and the mixer
-; routine are part of the RAM driver because they have to be carefully
-; tailored to each system's/device's quirks to maximize speed and minimize lag
-; and delays.
-;
-; Enter with .Y = track number to work on
-
-mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
-fetch_loop_segment_length = fetch_loop_close - fetch_loop_open
-
-csr_f_idx    = cur_steprate_f - fetch_loop_open + 1
-csr_l_idx    = cur_steprate_l - fetch_loop_open + 1
-chkend_l_idx =        ckend_l - fetch_loop_open + 1
-chkend_m_idx =        ckend_m - fetch_loop_open + 1
-chkend_h_idx =        ckend_h - fetch_loop_open + 1
-fetchlen_idx =       fetchlen - fetch_loop_open + 1
-
-set_mixer_and_lookahead_addrs
-	tya ; track number
-	ldx #fetch_loop_segment_length
-	jsr multiply_8x8
-
-	clc
-	lda #<fetch_loop_open
-	adc product
-	sta fill_copy_target
-	lda #>fetch_loop_open
-	adc product+1
-	sta fill_copy_target+1
-
-	ldx seq_current_track
-
-	lda current_steprates_fracts,x
-	ldy #csr_f_idx
-	sta (fill_copy_target),y
-
-	lda current_steprates_ints,x
-	ldy #csr_l_idx
-	sta (fill_copy_target),y
-
-	lda current_sample_end_addr_lows,x
-	ldy #chkend_l_idx
-	sta (fill_copy_target),y
-
-	lda current_sample_end_addr_mids,x
-	ldy #chkend_m_idx
-	sta (fill_copy_target),y
-
-	lda current_sample_end_addr_highs,x
-	ldy #chkend_h_idx
-	sta (fill_copy_target),y
-
-	!zone lookahead_idx_set {
-		ldy seq_current_track
-
-		lda #0
-		sta utility_zpbk_counter
-		sta utility_zpbk_counter+1
-		sta utility_zpbk_counter+2
-
-		sta temp_zpbk_a
-		lda current_steprates_fracts,y
-		sta temp_zpbk_a+1
-
-		lda current_steprates_ints,y
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		sta temp_zpbk_a+2
-
-		ldx lookahead_code_offsets_set_read_byte_code_addr,y
-
-		clc
-		lda seq_current_track
-		adc #>sample_data_buffer
-
-		!for .idx4, 0, 15 {
-			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx4
-			sta la_rd_addr_st + 2,x
-		}
-
-		!for .idx5, 0, 15 {
-
-			!set la_rd_addr_st = rd_la_track_0 + mixer_loop_segment_length * .idx5
-
-			lda utility_zpbk_counter+2
-			sta la_rd_addr_st + 1,x
-
-			lda utility_zpbk_counter
-			adc temp_zpbk_a
-			sta utility_zpbk_counter
-
-			lda utility_zpbk_counter+1
-			adc temp_zpbk_a+1
-			sta utility_zpbk_counter+1
-
-			lda utility_zpbk_counter+2
-			adc temp_zpbk_a+2
-			sta utility_zpbk_counter+2
-		}
-	}
-
-	bne +
-	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
-
-+	ldy #fetchlen_idx
-	sta (fill_copy_target),y
-
-	; it takes 4, 1 MHz cycles (the final STY $abs) to start a fetch.
-	; on C128, add 13, 1 MHz cycles to that for clock switching
-	; (SEI:DEC $D030 + STY $D030:CLI)
-
-	; we'll allow up to 20 cycles' ISR delay before postponing the mixer
-	; too much more and it'll be audible.
-
-	sec
-
-	!ifndef c128 {
-		sbc #16		; that is, add 4 cycles and subtract 20
-	} else {
-		sbc #3		; that is, add 17 and subtract 20
-	}
-
-	bcs +
-	lda #1	; if the time is short enough, limit the timer check to one loop
-+	sta isr_minimum_times_before_fetch,x
-rts
-
-; set the sample's volume, and set the address targets in the mixer below
-; enter with .A = volume level, .Y = track number
-
-set_volume_addrs
-	bcc +
-	sta current_sample_volume_levels,y
-+	lda current_sample_volume_levels,y
-	ldx track_current_enable_flags,y
-	bne +
-	lda #>volume_table_lower
-	jmp set_vol_direct
-
-+	lsr
-	cmp #16
-	bcs +
-
-	adc #>volume_table_lower
-	jmp set_vol_direct
-
-+	clc
-	adc #(>volume_table_upper)-16
-
-set_vol_direct
-	ldx lookahead_code_offsets_set_volume_code_addr,y
-
-	!zone lookahead_idx_set {
-		!for .idx4, 0, 15 {
-			sta vol_addr_0 + mixer_loop_segment_length*.idx4 + 2,x
-		}
-	}
-rts
-
-lookahead_code_offsets_set_read_byte_code_addr
-	!byte 0
-	!byte rd_la_track_1 - rd_la_track_0
-	!byte rd_la_track_2 - rd_la_track_0
-	!byte rd_la_track_3 - rd_la_track_0
-
-lookahead_code_offsets_set_volume_code_addr
-	!byte 0
-	!byte vol_addr_1 - vol_addr_0
-	!byte vol_addr_2 - vol_addr_0
-	!byte vol_addr_3 - vol_addr_0
-
-
-; THE ACTUAL MIXER ROUTINE
+; THE ACTUAL FETCH AND MIX ROUTINE
 ; The hard work happens here 🙂
 
-reu_start_mixer
+reu_run_fetch_and_mixer
 	lda #0
 	sta DMA_DAH
 	lda audio_in_buf_index
 	and #$f0
 	tax
 
-	reu_mixer_main_loop
+	reu_fetch_main_loop
 		lda #0												; 2
 		sta DMA_ADL											; 4
 		clc													; 2
 		ldy #$91											; 2
 
-		fetch_loop_open
+		reu_fetch_unroll_open
 		  !for track, 0, 3 {
 			!zone fetchloop {
 				lda #(>sample_data_buffer)+track			; 2
 				sta DMA_ADH									; 4
 
 				lda sample_pointers_fracts+track			; 3
-				!if track = 0 { !set cur_steprate_f = * }
+				!if track = 0 { !set reu_cur_steprate_f = * }
 				adc #0										; 2
 				sta sample_pointers_fracts+track			; 3
 				lda sample_pointers_lows+track				; 3
-				!if track = 0 { !set cur_steprate_l = * }
+				!if track = 0 { !set reu_cur_steprate_i = * }
 				adc #0										; 2
 				sta sample_pointers_lows+track				; 3
 				sta DMA_LO									; 4
@@ -466,15 +246,15 @@ reu_start_mixer
 
 			.reu_check_end
 				lda sample_pointers_lows+track				; 3
-				!if track = 0 { !set ckend_l = * }
+				!if track = 0 { !set reu_ckend_l = * }
 				cmp #0										; 2
 
 				lda sample_pointers_mids+track				; 3
-				!if track = 0 { !set ckend_m = * }
+				!if track = 0 { !set reu_ckend_m = * }
 				sbc #0										; 2
 
 				lda sample_pointers_highs+track				; 3
-				!if track = 0 { !set ckend_h = * }
+				!if track = 0 { !set reu_ckend_h = * }
 				sbc #0										; 2
 
 				bcc .reu_fetch_sample_data					; 3/2
@@ -511,7 +291,7 @@ reu_start_mixer
 
 			.reu_fetch_sample_data
 
-				!if track = 0 { !set fetchlen = * }
+				!if track = 0 { !set reu_fetchlen = * }
 				lda #1										; 2
 				sta DMA_DAL									; 4
 
@@ -537,62 +317,14 @@ reu_start_mixer
 				}
 			}
 
-		!if track = 0 { fetch_loop_close = * }
+		!if track = 0 { reu_fetch_unroll_close = * }
 		}
 
-		txa													; 2
-		adc #16												; 2
-
-	-	ldy audio_out_buf_index								; 3
-		cmp and_f0_table,y									; 4
-		beq -												; 3/2
-
-		mixer_loop_open
-		  !for .idx2, 0, 15 {
-
-			; the various `LDY sample_data_buffer` below will have their address
-			; low bytes re-written by the above set_lookahead_addrs routine.
-			; Similarly, each corresponding `LDA/ADC volume_table_lower,Y` will
-			; have its high byte re-written by the set_volume_addrs routine.
-
-			!if .idx2 = 0 { rd_la_track_0 = * }
-			ldy sample_data_buffer + 0*256					; 4 / yeah I know it's 0, shut up 😛
-
-			!if .idx2 = 0 { vol_addr_0 = * }
-			lda volume_table_lower,y						; 4
-
-			!if .idx2 = 0 { rd_la_track_3 = *}
-			ldy sample_data_buffer + 3*256					; 4
-
-			clc												; 2
-			!if .idx2 = 0 { vol_addr_3 = *}
-			adc volume_table_lower,y						; 4
-			ror												; 2
-			sta audio_buffer_left,x							; 5
-
-			!if .idx2 = 0 { rd_la_track_1 = * }
-			ldy sample_data_buffer + 1*256					; 4
-
-			!if .idx2 = 0 { vol_addr_1 = * }
-			lda volume_table_lower,y						; 4
-
-			!if .idx2 = 0 { rd_la_track_2 = * }
-			ldy sample_data_buffer + 2*256					; 4
-
-			clc												; 2
-			!if .idx2 = 0 { vol_addr_2 = * }
-			adc volume_table_lower,y						; 4
-			ror												; 2
-			sta audio_buffer_right,x						; 5
-
-			inx												; 2
-
-		!if .idx2 = 0 { !set mixer_loop_close = * }
-		}
+		jsr run_lookahead_and_mixer ; that's over in sequencer.s
 
 		dec mixer_countdown									; 5
 		beq +												; 3/2
-	jmp reu_mixer_main_loop									; 3
+	jmp reu_fetch_main_loop									; 3
 
 +	stx audio_in_buf_index
 rts
@@ -601,7 +333,8 @@ rts
 ; ============================================================================
 ; REU DRIVER TIMING INFO
 ; assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo, C64 screen
-; turned on unless otherwise noted.  All times rounded-up.
+; turned on unless otherwise noted.  All times rounded-up to the next whole
+; cycle.
 ;
 ; -----------
 ;
@@ -618,7 +351,7 @@ rts
 ; 2 +4+4+139 = 149 cycles per track, total 596 cycles
 ;
 ; plus it takes at least 3+4+3 = 10 cycles to check the CIA timer in case the
-; mixer has to be postponed for the sake of the ISR
+; fetch has to be postponed for the sake of the ISR
 ;
 ; For the C128, the hardware does clock stretching on I/O accesses, but only
 ; for the one cycle when the actual read/write is being committed.  Most of
@@ -632,7 +365,6 @@ rts
 ;
 ; that machine's fetch timings should be about:
 ;
-; best:           2 +4+8+2  + 18 = 34 cycles, total 136
 ; most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
 ; worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
 ; CIA timer check: 3+5+3 = 11 cycles
@@ -655,41 +387,42 @@ rts
 ; (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 272 cycles
 ;
 ; ---------
-;
-; lookahead/mixer push-to-buffers runtime:
-; open:  2+2+2 +3+4+3 = 16 cycles
-;
-; 4+4+4+2+4+2+5 +4+4+4+2+4+2+5 + 2 = 52 cycles per pass, times 16 passes = 832 cycles
-;
-; mixer loop close:
+; fetch routine main loop close:
 ; 5+2+6 = 13 cycles
 ;
-; Grand totals (average time per final pair of output samples):
+; Total fetch runtime for all four tracks,
+; amortized across 16 output samples:
 ;
 ; C64:
-; best:   (10 + 208 +  56 + 10 + 16 + 832 + 13) / 16 =  ~72 cycles
-; likely: (10 + 208 + 148 + 10 + 16 + 832 + 13) / 16 =  ~78 cycles
-; worst:  (10 + 272 + 596 + 10 + 16 + 832 + 13) / 16 = ~110 cycles
+; likely: (10 + 208 + 148 + 13) / 16 = ~24 cycles
+; worst:  (10 + 272 + 596 + 13) / 16 = ~56 cycles
 ;
 ; C128:
-; best:   (10 + 208 + 136 + 11 + 16 + 832 + 13) / 16 = ~77 cycles
-; likely: (10 + 208 + 180 + 11 + 16 + 832 + 13) / 16 = ~80 cycles
-; worst:  (10 + 272 + 372 + 11 + 16 + 832 + 13) / 16 = ~96 cycles
+; likely: (10 + 208 + 180 + 11) / 16 = ~26 cycles
+; worst:  (10 + 272 + 372 + 11) / 16 = ~42 cycles
 ;
 ; ---------
+; lookahead/mixer/push-to-buffer routine runtime per output sample
+; (see sequencer.s):
 ;
-; So factoring-in the ISR runtime of 53 cycles, using the "most likely"
-; conditions as the timing basis, and adding a few cycles of fudge...
+; (52 * 16 + 26) / 16 = ~54 cycles
+;
+; ------------
+; GRAND TOTALS
+;
+; Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53
+; 53 cycles per byte for the ISR, plus the "likely" code path in the fetch
+; routine, plus some fudge:
 ;
 ; the C64 should be run at almost 7.7 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (78 + 2 + 53) = ~7689.7
+; 1022727 / (24 + 54 + 53 + 2) = ~7689.7
 ;
 ; or about 5.2 KHz with the screen on since ISR is always 3 rasters:
-; 1022727 / (65*3) = ~5244.8
+; 1022727 / (65 * 3) = ~5244.8
 ;
 ; C128 should be able to run at about 15.5 kHz:
-; (1022727*2) / (80 + 2 + 53) = ~15151.5
+; (1022727 * 2) / (26 + 54 + 53 + 2) = ~15151.5
 ;
 ; These timings do not take into account convergeance.  As the sample rate
 ; rises, the step rates drop, which decreases the lookahead fetch length,

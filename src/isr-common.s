@@ -21,8 +21,9 @@ isr_set_interval
 	; if an accelerator is in use).
 
 	clc
-	lda audio_driver_isr_cycle_count
-	adc ram_driver_cycle_count
+	lda #mixer_cycle_count
+	adc audio_driver_isr_cycle_count
+	adc ram_driver_fetch_cycle_count
 
 	!ifndef c128 {
 		bit enable_screen_on_playback

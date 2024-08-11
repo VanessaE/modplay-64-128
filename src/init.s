@@ -154,6 +154,36 @@ init
 
 	jsr reu_get_size
 
+	lda #<reu_fetch_block
+	sta fetch_block_vec
+	lda #>reu_fetch_block
+	sta fetch_block_vec+1
+
+	lda #<reu_stash_block
+	sta stash_block_vec
+	lda #>reu_stash_block
+	sta stash_block_vec+1
+
+	lda #<reu_fetch_row
+	sta fetch_row_expansion_vec+1
+	lda #>reu_fetch_row
+	sta fetch_row_expansion_vec+2
+
+	lda #<reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec
+	lda #>reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec+1
+
+	lda #<reu_run_fetch_and_mixer
+	sta run_fetch_and_mixer_vec+1
+	lda #>reu_run_fetch_and_mixer
+	sta run_fetch_and_mixer_vec+2
+
+	lda #<reu_fetch_routine_index_table
+	sta fetch_routine_table_lsb+1
+	lda #>reu_fetch_routine_index_table
+	sta fetch_routine_table_msb+1
+
 	lda #0
 	sta ramlink_detect
 	sta RAMLINK_REG_ENABLE		; try to enable RAMLink registers
@@ -168,42 +198,7 @@ init
 	sta ramlink_detect
 	sta RAMLINK_REG_DISABLE		; disable RAMLink registers.
 
-+	lda #<reu_fetch_block
-	sta fetch_block_vec
-	lda #>reu_fetch_block
-	sta fetch_block_vec+1
-
-	lda #<reu_stash_block
-	sta stash_block_vec
-	lda #>reu_stash_block
-	sta stash_block_vec+1
-
-	lda #<reu_fetch_row
-	sta fetch_row_vec+1
-	lda #>reu_fetch_row
-	sta fetch_row_vec+2
-
-	lda #<reu_set_cycle_counts
-	sta ram_driver_set_cycle_counts_vec
-	lda #>reu_set_cycle_counts
-	sta ram_driver_set_cycle_counts_vec+1
-
-	lda #<reu_start_mixer
-	sta start_mixer_vec+1
-	lda #>reu_start_mixer
-	sta start_mixer_vec+2
-
-	lda #<set_mixer_and_lookahead_addrs
-	sta set_la_mixer_addrs_vec+1
-	lda #>set_mixer_and_lookahead_addrs
-	sta set_la_mixer_addrs_vec+2
-
-	lda #<set_volume_addrs
-	sta set_volume_addrs_vec+1
-	lda #>set_volume_addrs
-	sta set_volume_addrs_vec+2
-
-	lda #0
++	lda #0
 	sta expansion_memory_start_address			; main mem driver will use 
 	sta expansion_memory_start_address+1		; main_mem_free_start for this
 	sta expansion_memory_start_address+2

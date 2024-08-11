@@ -5,12 +5,6 @@
 !text "sequencer",0
 
 start_sequencer
-	lda #64
-	ldx #7
--	sta current_sample_volume_levels,x
-	dex
-	bpl -
-
 	lda #0
 	sta seq_abort_flag
 	sta glissando_flag
@@ -62,6 +56,22 @@ start_sequencer
 	ldx #7
 -	sta track_current_enable_flags,x
 	dex
+	bpl -
+
+; Relay the RAM driver's index table address from outside of the ZP backup
+
+fetch_routine_table_lsb
+	lda #0
+	sta ram_drv_fetch_addr_table_pointer
+fetch_routine_table_msb
+	lda #0
+	sta ram_drv_fetch_addr_table_pointer+1
+
+	ldy #3		; caution:  do not allow more than 4 tracks until the mixer
+-	sec			; has been expanded to handle it, will cause mem corruption
+	lda #64
+	jsr set_volume
+	dey
 	bpl -
 
 	lda #125
@@ -241,8 +251,9 @@ run_command_vec			; run effect command if it needs tick-interval timing
 	sta mixer_countdown
 
 	; ----------------------------------
-	; run the mixer!
-	start_mixer_vec
+	; run the sample data fetch and mix routines
+
+	run_fetch_and_mixer_vec
 		jsr $1234
 	ldy seq_current_track
 	; ----------------------------------
@@ -294,13 +305,64 @@ rts
 ;==================
 ; auxillary routines
 
-; fetch the row indicated by .X from expansion RAM
-; into the row data buffer.  
+; fetch the row indicated by .X, from pattern indicated by .Y, from expansion
+; RAM into the row data buffer.  
 
 fetch_row_data
-	fetch_row_vec
-		jsr $1234
-rts
+	lda #0
+	sta utility_pointer_b+2
+
+	tya						; pattern number -> offset:  N*1024
+	asl
+	rol utility_pointer_b+2
+	asl
+	rol utility_pointer_b+2
+	sta utility_pointer_b+1
+
+	txa						; use LSB to multiply row no. x16
+	sta utility_pointer_b
+	lda #0
+	asl utility_pointer_b
+	rol
+	asl utility_pointer_b
+	rol
+	asl utility_pointer_b
+	rol
+	asl utility_pointer_b
+	rol
+
+	adc utility_pointer_b+1		; finish the addition, now we have an offset into
+	sta utility_pointer_b+1		; the pattern data
+	lda utility_pointer_b+2
+	adc #0
+	sta utility_pointer_b+2
+
+	lda current_file_type
+	cmp #1
+	bne +
+
+; add the header length and now we have the real address of the desired row
+
+	clc
+	lda utility_pointer_b
+	adc #<header15_seek_to_pat_data
+	sta utility_pointer_b
+
+	lda utility_pointer_b+1
+	adc #>header15_seek_to_pat_data
+	jmp ++
+
++	clc
+	lda utility_pointer_b
+	adc #<header31_seek_to_pat_data
+	sta utility_pointer_b
+
+	lda utility_pointer_b+1
+	adc #>header31_seek_to_pat_data
+++	sta utility_pointer_b+1
+
+	fetch_row_expansion_vec
+		jmp $1234 ; just exit back to the caller via the fetch routine
 
 ; [re-]start a new sample
 ; enter with .A = sample number, .Y = track number
@@ -334,22 +396,7 @@ start_sample
 	ldx sequencer_temp_x
 	sec
 
-	; now just fall through into set_volume
-
-; we put this stub here so that it can be called from anywhere in the sequencer
-; without needing to maintain more than one vector (the actual code being in
-; the RAM driver).
-;
-; enter with .A = volume, .Y = track, and carry set to store that setting as
-; the "current" volume level, or carry clear just to set the volume table
-; addresses e.g. if coming from the keyboard's 1-4 keys.
-
-set_volume
-	stx sequencer_temp_x
-	set_volume_addrs_vec
-		jsr $1234
-	ldx sequencer_temp_x
-rts
+	jmp set_volume ; just exit through there
 
 ; convert a note period into a sample stepper value
 ;
@@ -373,11 +420,47 @@ set_pitch
 	lda steprate_table,x
 	sta current_steprates_ints,y
 
-	set_la_mixer_addrs_vec
-		jsr $1234
+	jsr set_mixer_lookahead_addrs
 
 	ldx sequencer_temp_x
 	ldy seq_current_track
+rts
+
+; set the sample's volume, and set the address targets in the mixer
+
+; enter with .A = volume, .Y = track, and carry set to store that setting as
+; the "current" volume level, or carry clear just to set the volume table
+; addresses e.g. if coming from the keyboard's 1-4 keys.
+
+set_volume
+	bcc +
+	sta current_sample_volume_levels,y
++	lda current_sample_volume_levels,y
+	ldx track_current_enable_flags,y
+	bne +
+	lda #>volume_table_lower
+	jmp set_vol_direct
+
++	lsr
+	cmp #16
+	bcs +
+
+	adc #>volume_table_lower
+	jmp set_vol_direct
+
++	clc
+	adc #(>volume_table_upper)-16
+
+set_vol_direct
+	ldx lookahead_code_volume_addr_idx,y
+
+	!zone lookahead_idx_set {
+		!for .idx4, 0, 15 {
+			sta vol_addr_1 + mixer_loop_segment_length*.idx4 + 2,x
+		}
+	}
+
+	ldx sequencer_temp_x
 rts
 
 unused
@@ -423,8 +506,7 @@ run_effect_command_jump_table
 
 !ifndef c128 {
 	print_nsp_target = secondary_screen + 11*40 + 18
-} else {
-	print_nsp_target = VDC_SCREEN + 11*80 + 38
+} else {	print_nsp_target = VDC_SCREEN + 11*80 + 38
 }
 
 print_num_song_pos
@@ -585,3 +667,233 @@ toggle_enable
 no_valid_key
 	lda #0
 rts
+
+; fetch loop and mixer loop self-mod setup routines
+
+mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
+
+; SET-UP LOOKAHEAD INDEXES/ADDRESSES
+; This plugs in the necessary adjustments to the mixer routine in the RAM
+; driver so that it knows where to look for lookahead data.
+;
+; Always operates on the track number specified by seq_current_track
+
+set_mixer_lookahead_addrs
+	ldy #8
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop code segment length
+	ldx seq_current_track
+	jsr multiply_8x8
+
+	ldy #0
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop open code address LSB
+	clc
+	adc product
+	sta fill_copy_target
+
+	iny
+	lda (ram_drv_fetch_addr_table_pointer),y ; MSB
+	adc product+1
+	sta fill_copy_target+1
+
+	ldx seq_current_track
+
+	ldy #2
+	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
+	tay
+	lda current_steprates_fracts,x
+	sta (fill_copy_target),y
+
+	ldy #3
+	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
+	tay
+	lda current_steprates_ints,x
+	sta (fill_copy_target),y
+
+	ldy #4
+	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
+	tay
+	lda current_sample_end_addr_lows,x
+	sta (fill_copy_target),y
+
+	ldy #5
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
+	tay
+	lda current_sample_end_addr_mids,x
+	sta (fill_copy_target),y
+
+	ldy #6
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
+	tay
+	lda current_sample_end_addr_highs,x
+	sta (fill_copy_target),y
+
+	!zone lookahead_idx_set {
+		ldy seq_current_track
+
+		lda #0
+		sta utility_zpbk_counter
+		sta utility_zpbk_counter+1
+		sta utility_zpbk_counter+2
+
+		sta temp_zpbk_a
+		lda current_steprates_fracts,y
+		sta temp_zpbk_a+1
+
+		lda current_steprates_ints,y
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		sta temp_zpbk_a+2
+
+		ldx lookahead_code_read_byte_addr_idx,y
+
+		clc
+		lda seq_current_track
+		adc #>sample_data_buffer
+
+		!for .idx4, 0, 15 {
+			!set la_rd_addr_st = rd_la_track_1 + mixer_loop_segment_length * .idx4
+			sta la_rd_addr_st + 2,x
+		}
+
+		!for .idx5, 0, 15 {
+
+			!set la_rd_addr_st = rd_la_track_1 + mixer_loop_segment_length * .idx5
+
+			lda utility_zpbk_counter+2
+			sta la_rd_addr_st + 1,x
+
+			lda utility_zpbk_counter
+			adc temp_zpbk_a
+			sta utility_zpbk_counter
+
+			lda utility_zpbk_counter+1
+			adc temp_zpbk_a+1
+			sta utility_zpbk_counter+1
+
+			lda utility_zpbk_counter+2
+			adc temp_zpbk_a+2
+			sta utility_zpbk_counter+2
+		}
+	}
+
+	bne +
+	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
+
++	pha
+	ldy #7
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
+	tay
+	pla
+	sta (fill_copy_target),y
+
+	; it takes 4, 1 MHz cycles to start a fetch.
+	; on C128, add 13, 1 MHz cycles to that for clock switching
+	; (SEI:DEC $D030 + STY $D030:CLI)
+
+	; we'll allow up to 20 cycles' ISR delay before the mixer has to stop
+	; and wait.  too much more and it'll be audible.
+
+	sec
+
+	!ifndef c128 {
+		sbc #16		; that is, add 4 cycles and subtract 20
+	} else {
+		sbc #3		; that is, add 17 and subtract 20
+	}
+
+	bcs +
+	lda #1	; if the time is short enough, limit the timer check to one loop
++	sta isr_minimum_times_before_fetch,x
+rts
+
+; the actual mixer and lookahead routine
+; this is run just after each pass through the RAM driver's fetch routine
+
+run_lookahead_and_mixer
+	txa													; 2
+	adc #16												; 2
+
+-	ldy audio_out_buf_index								; 3
+	cmp and_f0_table,y									; 4
+	beq -												; 3/2
+
+	mixer_loop_open
+	  !for .idx2, 0, 15 {
+
+		; the various `LDY $nnnn` below will have their addresses
+		; re-written by the above set_lookahead_addrs routine.
+		; Similarly, each corresponding `LDA/ADC $nnnn,Y` will
+		; have its high byte re-written by the set_volume routine.
+		;
+		; the addresses below are arbitrary, chosen only so that they're
+		; definitely in absolute mode when assembled, and so that failure
+		; to alter one of them is easy to spot in the ML monitor at runtime.
+
+		clc												; 2
+
+		!if .idx2 = 0 { rd_la_track_1 = * }
+		ldy $6100										; 4
+		!if .idx2 = 0 { vol_addr_1 = * }
+		lda $8100,y										; 4
+
+		!if .idx2 = 0 { rd_la_track_4 = *}
+		ldy $6400										; 4
+		!if .idx2 = 0 { vol_addr_4 = *}
+		adc $8400,y										; 4
+
+		ror												; 2
+		sta audio_buffer_left,x							; 5
+
+		clc												; 2
+
+		!if .idx2 = 0 { rd_la_track_2 = * }
+		ldy $6200										; 4
+		!if .idx2 = 0 { vol_addr_2 = * }
+		lda $8200,y										; 4
+
+		!if .idx2 = 0 { rd_la_track_3 = * }
+		ldy $6300										; 4
+		!if .idx2 = 0 { vol_addr_3 = * }
+		adc $8300,y										; 4
+
+		ror												; 2
+		sta audio_buffer_right,x						; 5
+
+		inx												; 2
+
+	!if .idx2 = 0 { !set mixer_loop_close = * }
+	}
+rts
+
+mixer_cycle_count = 54
+
+; mixer/lookahead timings
+; entry + exit:  6 +2+2 +3+4+3 +6 = 26 cycles
+;
+; each loop:
+; 2+4+4+4+4+2+5 +2+4+4+4+4+2+5 +2 = 52 cycles per pass
+;
+; so per-sample, the mixer runtime is:
+; (52 * 16 + 26) / 16 = ~54 cycles
+
+lookahead_code_read_byte_addr_idx
+	!byte 0
+	!byte rd_la_track_2 - rd_la_track_1
+	!byte rd_la_track_3 - rd_la_track_1
+	!byte rd_la_track_4 - rd_la_track_1
+
+lookahead_code_volume_addr_idx
+	!byte 0
+	!byte vol_addr_2 - vol_addr_1
+	!byte vol_addr_3 - vol_addr_1
+	!byte vol_addr_4 - vol_addr_1
