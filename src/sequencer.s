@@ -175,12 +175,7 @@ get_note_number
 	; .A holds the note number 1-60
 	jsr set_pitch
 
-get_command								; ...and its parameters
-	lda seq_commands,y
-	sta seq_prev_commands,y
-	lda seq_command_arguments,y
-	sta seq_prev_command_arguments,y
-
+get_command								; ...and its parameters.
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
 	lda seq_current_row_data+2,x
@@ -189,10 +184,6 @@ get_command								; ...and its parameters
 	tax
 
 	; initialize/start the appropriate effect for this track
-
-	lda seq_command_arguments,y		; if both the command and its args are 0
-	ora seq_commands,y				; then there's no command
-	beq +							; (command #0 + nonzero args = arpeggio)
 
 	lda start_effect_command_jump_table,x
 	sta start_command_vec+1
@@ -221,6 +212,10 @@ next_tick
 	sty seq_current_track
 
 next_track_this_tick
+	lda seq_commands,y				; if command and its params are both 0,
+	ora seq_command_arguments,y		; then there's no command at all (whereas
+	beq no_cmd_this_tick			; command #0 + nonzero args = arpeggio)
+
 	lda seq_commands,y
 	asl
 	tax
@@ -231,6 +226,8 @@ next_track_this_tick
 
 run_command_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
+
+no_cmd_this_tick
 	inc seq_current_track
 	ldy seq_current_track
 	cpy #4
