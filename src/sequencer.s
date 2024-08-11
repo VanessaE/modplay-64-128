@@ -31,24 +31,32 @@ start_sequencer
 	sta vibrato_rates,x
 	sta tremolo_rates,x
 	sta volume_slide_rates,x
-	sta current_note_periods_lows,x
-	sta current_note_periods_highs,x
-	sta current_node_period_offsets,x
-	sta current_steprates_fracts,x
-	sta current_steprates_ints,x
-	sta sample_pointers_fracts,x
-	sta sample_pointers_lows,x
-	sta sample_pointers_mids,x
-	sta sample_pointers_highs,x
-	sta current_sample_end_addr_lows,x
-	sta current_sample_end_addr_mids,x
-	sta current_sample_end_addr_highs,x
-
 	sta seq_commands,x
 	sta seq_prev_commands,x
 	sta seq_command_arguments,x
 	sta seq_prev_command_arguments,x
 
+	sta current_note_periods_lows,x
+	sta current_note_periods_highs,x
+	sta current_node_period_offsets,x
+
+	sta current_steprates_fracts,x
+	sta current_steprates_ints,x
+
+	sta sample_pointers_fracts,x
+	sta sample_pointers_lows,x
+	sta sample_pointers_mids,x
+	sta sample_pointers_highs,x
+
+	sta current_sample_end_addr_lows,x
+	sta current_sample_end_addr_highs,x
+
+	dex
+	bpl -
+
+	ldx #7
+	lda #1
+-	sta current_sample_end_addr_mids,x
 	dex
 	bpl -
 
@@ -162,9 +170,9 @@ next_track_this_row
 	tax
 
 ; get sample number
-	lda seq_current_row_data+1,x
-	beq get_note_number					; if sample number is 0, keep using
-	sta current_sample_numbers,y		; the previous sample number
+	lda seq_current_row_data+1,x		; if sample number is 0, keep using
+	beq get_note_number					; the previous sample number
+	sta current_sample_numbers,y
 
 	jsr start_sample
 
