@@ -668,7 +668,28 @@ parse_instruments
 	lda (fill_copy_source),y
 	sta sample_default_volume_levels,x
 
-	iny ; 26
+	ldy #28
+	lda #0
+	sta temp_counter+2
+	lda (fill_copy_source),y				; read loop length, MSB first
+	sta temp_counter+1
+	iny ; 29
+	lda (fill_copy_source),y
+	sta temp_counter
+
+	lda #0
+	sta sample_default_loop_flags,x
+
+	lda temp_counter+1						; if loop len > 1 word, flag this
+	bne +									; sample as loopable
+	lda temp_counter
+	cmp #2
+	bcc ++
+
++	lda #$80
+	sta sample_default_loop_flags,x
+
+	ldy #26
 	lda #0
 	sta temp_counter+2
 	lda (fill_copy_source),y				; read loop start offset, MSB first
@@ -692,34 +713,6 @@ parse_instruments
 	adc temp_counter+2
 	sta sample_loop_start_addresses_highs,x
 
-	iny ; 28
-	lda #0
-	sta temp_counter+2
-	lda (fill_copy_source),y				; read loop length, MSB first
-	sta temp_counter+1
-	iny ; 29
-	lda (fill_copy_source),y
-	sta temp_counter
-
-	lda temp_counter+1						; if loop len > 1 word, flag this
-	bne +									; sample as loopable
-	lda temp_counter
-	cmp #2
-	bcs +
-
-	lda sample_end_addresses_lows,x			; otherwise, we just set the "loop
-	sta sample_loop_end_addresses_lows,x	; end" equal to the sample end to
-	lda sample_end_addresses_mids,x			; reduce the mixer's workload.
-	sta sample_loop_end_addresses_mids,x
-	lda sample_end_addresses_highs,x
-	sta sample_loop_end_addresses_highs,x
-
-	lda #0
-	sta sample_default_loop_flags,x
-	beq ++
-
-+	lda #$80
-	sta sample_default_loop_flags,x
 	asl temp_counter						; double the len:  # words to # bytes
 	rol temp_counter+1
 	rol temp_counter+2
