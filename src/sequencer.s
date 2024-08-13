@@ -425,6 +425,9 @@ start_sample
 	lda sample_end_addresses_highs,x
 	sta current_sample_end_addr_highs,y
 
+	lda sample_default_loop_flags,x
+	sta track_current_loop_flags,y
+
 	jsr do_realtime_selfmods_for_instrument_change
 
 	ldy seq_current_track

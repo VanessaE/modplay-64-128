@@ -776,7 +776,16 @@ parse_instruments
 	adc temp_counter+2
 	sta sample_loop_start_addresses_highs,x
 
-	asl temp_counter						; double the len:  # words to # bytes
+	ldy #28									; read loop length again
+	lda #0
+	sta temp_counter+2
+	lda (fill_copy_source),y
+	sta temp_counter+1
+	iny ; 29
+	lda (fill_copy_source),y
+	sta temp_counter
+
+	asl temp_counter						; double it:  # words to # bytes
 	rol temp_counter+1
 	rol temp_counter+2
 

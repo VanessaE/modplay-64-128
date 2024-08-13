@@ -196,6 +196,8 @@ rts
 ; THE ACTUAL FETCH AND MIX ROUTINE
 ; The hard work happens here 🙂
 
+fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
+
 reu_run_fetch_and_mixer
 	lda #0
 	sta DMA_DAH
@@ -219,6 +221,7 @@ reu_run_fetch_and_mixer
 				!if track = 0 { !set reu_cur_steprate_f = * }
 				adc #0										; 2
 				sta sample_pointers_fracts+track			; 3
+
 				lda sample_pointers_lows+track				; 3
 				!if track = 0 { !set reu_cur_steprate_i = * }
 				adc #0										; 2
@@ -262,10 +265,24 @@ reu_run_fetch_and_mixer
 				clc											; 2
 				lda track_current_loop_flags+track			; 3
 				bne .reu_sample_has_loop					; 3/2
+				sta sample_pointers_lows+track				; 3
 				sta sample_pointers_mids+track				; 3
 				sta sample_pointers_highs+track				; 3
-				sta current_steprates_fracts+track			; 3
-				sta current_steprates_ints+track			; 3
+
+				!set steprate_fract_addr	= reu_cur_steprate_f + fetch_loop_segment_length * track + 1
+				!set steprate_int_addr		= reu_cur_steprate_i + fetch_loop_segment_length * track + 1
+				!set samp_end_low_addr		= reu_ckend_l + fetch_loop_segment_length * track + 1
+				!set samp_end_mid_addr		= reu_ckend_m + fetch_loop_segment_length * track + 1
+				!set samp_end_high_addr		= reu_ckend_h + fetch_loop_segment_length * track + 1
+
+				sta steprate_fract_addr						; 4
+				sta steprate_int_addr						; 4
+
+				sta samp_end_low_addr						; 4
+				sta samp_end_high_addr						; 4
+				lda #1										; 2
+				sta samp_end_mid_addr						; 4
+
 				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop
@@ -282,11 +299,11 @@ reu_run_fetch_and_mixer
 				sta sample_pointers_highs+track				; 3
 				sta DMA_BANK								; 4
 				lda sample_loop_end_addresses_lows,y		; 5
-				sta current_sample_end_addr_lows+track		; 3
+				sta samp_end_low_addr						; 4
 				lda sample_loop_end_addresses_mids,y		; 5
-				sta current_sample_end_addr_mids+track		; 3
+				sta samp_end_mid_addr						; 4
 				lda sample_loop_end_addresses_highs,y		; 5
-				sta current_sample_end_addr_highs+track		; 3
+				sta samp_end_high_addr						; 4
 				ldy #$91									; 2
 
 			.reu_fetch_sample_data
