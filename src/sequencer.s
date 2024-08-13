@@ -189,14 +189,20 @@ next_track_this_row
 	beq get_note_number					; the previous sample number
 	sta current_sample_numbers,y
 
+	stx sequencer_temp_x
 	jsr start_sample
+	ldx sequencer_temp_x
+	ldy seq_current_track
 
 get_note_number
 	lda seq_current_row_data,x			; if note number is 0, keep using the
 	beq get_command						; previous note/pitch
 
 	; .A holds the note number 1-60
+	stx sequencer_temp_x
 	jsr set_pitch
+	ldx sequencer_temp_x
+	ldy seq_current_track
 
 get_command								; ...and its parameters.
 	lda seq_current_row_data+3,x
@@ -395,10 +401,8 @@ fetch_row_data
 
 ; [re-]start a new sample
 ; enter with .A = sample number, .Y = track number
-; .X/.Y-safe
 
 start_sample
-	stx sequencer_temp_x
 	tax
 	lda #0
 	sta vibrato_rates,y
@@ -421,11 +425,13 @@ start_sample
 	lda sample_end_addresses_highs,x
 	sta current_sample_end_addr_highs,y
 
-	lda sample_default_volume_levels,x
-	ldx sequencer_temp_x
-	sec
+	jsr do_realtime_selfmods_for_instrument_change
 
-	jmp set_volume ; just exit through there
+	ldy seq_current_track
+	ldx current_sample_numbers,y
+	lda sample_default_volume_levels,x
+	sec
+	jmp set_volume  ; just exit from there
 
 ; convert a note period into a sample stepper value
 ;
@@ -449,10 +455,7 @@ set_pitch
 	lda steprate_table,x
 	sta current_steprates_ints,y
 
-	jsr set_mixer_lookahead_addrs
-
-	ldx sequencer_temp_x
-	ldy seq_current_track
+	jsr do_realtime_selfmods_for_pitch_change
 rts
 
 ; set the sample's volume, and set the address targets in the mixer
@@ -488,8 +491,6 @@ set_vol_direct
 			sta vol_addr_1 + mixer_loop_segment_length*.idx4 + 2,x
 		}
 	}
-
-	ldx sequencer_temp_x
 rts
 
 unused
@@ -779,59 +780,50 @@ rts
 mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
 
 ; SET-UP LOOKAHEAD INDEXES/ADDRESSES
-; This plugs in the necessary adjustments to the mixer routine in the RAM
-; driver so that it knows where to look for lookahead data.
-;
-; Always operates on the track number specified by seq_current_track
 
-set_mixer_lookahead_addrs
+; This routine just sets up where in the fetch loop the changes will be made
+
+fetch_selfmods_init
+	ldx seq_current_track
+
 	ldy #8
 	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop code segment length
-	ldx seq_current_track
 	jsr multiply_8x8
 
 	ldy #0
 	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop open code address LSB
 	clc
 	adc product
-	sta fill_copy_target
+	sta utility_pointer
 
 	iny
 	lda (ram_drv_fetch_addr_table_pointer),y ; MSB
 	adc product+1
-	sta fill_copy_target+1
+	sta utility_pointer+1
+rts
+
+
+; This sets the self-mod steprate adds in the fetch routine, which control
+; each track's frequency, and sets the associated self-mods in the mixer so
+; that the lookahead finds the right data.
+;
+; Always operates on the track number specified by seq_current_track
+
+do_realtime_selfmods_for_pitch_change
+	jsr fetch_selfmods_init
 
 	ldx seq_current_track
-
 	ldy #2
 	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
 	tay
 	lda current_steprates_fracts,x
-	sta (fill_copy_target),y
+	sta (utility_pointer),y
 
 	ldy #3
 	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
 	tay
 	lda current_steprates_ints,x
-	sta (fill_copy_target),y
-
-	ldy #4
-	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
-	tay
-	lda current_sample_end_addr_lows,x
-	sta (fill_copy_target),y
-
-	ldy #5
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
-	tay
-	lda current_sample_end_addr_mids,x
-	sta (fill_copy_target),y
-
-	ldy #6
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
-	tay
-	lda current_sample_end_addr_highs,x
-	sta (fill_copy_target),y
+	sta (utility_pointer),y
 
 	!zone lookahead_idx_set {
 		ldy seq_current_track
@@ -900,7 +892,7 @@ set_mixer_lookahead_addrs
 	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
 	tay
 	pla
-	sta (fill_copy_target),y
+	sta (utility_pointer),y
 
 	; it takes 4, 1 MHz cycles to start a fetch.
 	; on C128, add 13, 1 MHz cycles to that for clock switching
@@ -920,6 +912,35 @@ set_mixer_lookahead_addrs
 	bcs +
 	lda #1	; if the time is short enough, limit the timer check to one loop
 +	sta isr_minimum_times_before_fetch,x
+rts
+
+
+; This simply sets the three self-mod immediate compares that look for the
+; end of the sample, in the fetch routine.
+;
+; Always operates on the track number specified by seq_current_track
+
+do_realtime_selfmods_for_instrument_change
+	jsr fetch_selfmods_init
+
+	ldx seq_current_track
+	ldy #4
+	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
+	tay
+	lda current_sample_end_addr_lows,x
+	sta (utility_pointer),y
+
+	ldy #5
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
+	tay
+	lda current_sample_end_addr_mids,x
+	sta (utility_pointer),y
+
+	ldy #6
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
+	tay
+	lda current_sample_end_addr_highs,x
+	sta (utility_pointer),y
 rts
 
 ; the actual mixer and lookahead routine
