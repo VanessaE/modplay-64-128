@@ -896,8 +896,7 @@ do_realtime_selfmods_for_pitch_change
 		}
 	}
 
-	bne +
-	lda #1 ; minimum lookahead length 1 even if the track needs "one-bit" steps 😛
+	adc #1
 
 +	pha
 	ldy #7
