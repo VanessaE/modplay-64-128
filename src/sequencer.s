@@ -94,13 +94,20 @@ fetch_routine_table_msb
 	sta current_song_pos
 	sta seq_current_row
 
+	lda CIA1+$0e	; ensure that the TOD clock counts 50 or 60 ticks/sec
+	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64
+	ora pal_flag
+	sta CIA1+$0e
+
 	; the last write to register $0f before this point already sets the TOD
 	; flag such that writes to $08-0b set the time, not the alarm
 
+	lda #0
 	sta CIA1+$0b
 	sta CIA1+$0a
 	sta CIA1+$09
 	sta CIA1+$08
+
 
 	ldx number_of_song_positions
 	dex
