@@ -75,8 +75,18 @@ fetch_routine_table_msb
 	lda #0
 	sta ram_drv_fetch_addr_table_pointer+1
 
-	ldy #3		; caution:  do not allow more than 4 tracks until the mixer
--	sec			; has been expanded to handle it, will cause mem corruption
+; caution:  do not init more than 4 tracks here until the fetch and mixer
+; loops have been expanded to handle it, will cause mem corruption
+
+	lda #3
+	sta seq_current_track
+-	jsr do_realtime_selfmods_for_pitch_change
+	jsr do_realtime_selfmods_for_instrument_change
+	dec seq_current_track
+	bpl -
+
+	ldy #3
+-	sec
 	lda #64
 	jsr set_volume
 	dey
@@ -107,7 +117,6 @@ fetch_routine_table_msb
 	sta CIA1+$0a
 	sta CIA1+$09
 	sta CIA1+$08
-
 
 	ldx number_of_song_positions
 	dex
