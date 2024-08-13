@@ -244,8 +244,6 @@ rts
 isr_shutdown
 	sei
 
-	lda #1
-	sta CIA1+$0e
 	lda #0
 	sta CIA1+$0f
 

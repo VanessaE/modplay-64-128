@@ -21,8 +21,9 @@ program_start							= $1e00
 	temp_zpbk_a							= $05 ; 3 bytes
 
 	track_current_enable_flags			= $08 ; 8 bytes, through $0f
+	last_seconds						= $10
 
-	; free: $10 through $23
+	; free: $11 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in

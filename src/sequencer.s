@@ -94,6 +94,14 @@ fetch_routine_table_msb
 	sta current_song_pos
 	sta seq_current_row
 
+	; the last write to register $0f before this point already sets the TOD
+	; flag such that writes to $08-0b set the time, not the alarm
+
+	sta CIA1+$0b
+	sta CIA1+$0a
+	sta CIA1+$09
+	sta CIA1+$08
+
 	ldx number_of_song_positions
 	dex
 
@@ -212,7 +220,17 @@ start_command_vec					; start or initialize an effect command
 	sta seq_ticks_counter
 
 next_tick
-	jsr seq_check_keyboard
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+	}
+	lda CIA1+$09
+	cmp last_seconds
+	beq +
+	sta last_seconds
+	jsr print_elapsed_time
+
++	jsr seq_check_keyboard
 	beq +
 	jmp stop_song
 
@@ -506,11 +524,15 @@ run_effect_command_jump_table
 	!word unused
 	!word unused
 
-; In-player UI stuff
+
+; ===========================
+; === In-player UI stuff  ===
+; ===========================
 
 !ifndef c128 {
 	print_nsp_target = secondary_screen + 11*40 + 18
-} else {	print_nsp_target = VDC_SCREEN + 11*80 + 38
+} else {
+	print_nsp_target = VDC_SCREEN + 11*80 + 38
 }
 
 print_num_song_pos
@@ -561,9 +583,9 @@ print_song_pos_pat_num ; enter with .X = song position
 rts
 
 !ifndef c128 {
-	print_rn_target = secondary_screen + 12*40 + 13
+	print_rn_target = secondary_screen + 12*40 + 7
 } else {
-	print_rn_target = VDC_SCREEN + 12*80 + 34
+	print_rn_target = VDC_SCREEN + 12*80 + 27
 }
 
 print_row_num
@@ -582,11 +604,11 @@ print_row_num
 rts
 
 !ifndef c128 {
-	print_sst_target = secondary_screen + 12*40 + 27
-	print_ssb_target = secondary_screen + 12*40 + 30
+	print_sst_target = secondary_screen + 12*40 + 19
+	print_ssb_target = secondary_screen + 12*40 + 22
 } else {
-	print_sst_target = VDC_SCREEN + 12*80 + 48
-	print_ssb_target = VDC_SCREEN + 12*80 + 51
+	print_sst_target = VDC_SCREEN + 12*80 + 39
+	print_ssb_target = VDC_SCREEN + 12*80 + 42
 }
 
 print_song_speed
@@ -609,6 +631,76 @@ print_song_speed
 	lda seq_tempo_bpm
 	jsr display_byte_hex_direct
   +
+rts
+
+print_elapsed_time
+	bit CIA1+$0b; read hours to latch the time
+
+	!ifndef c128 {
+
+		print_et_target = secondary_screen + 12*40 + 33
+
+		ldx CIA1+$0a ; minutes
+		lda divide_by_16_table,x
+		ora #$30
+		sta print_et_target
+		txa
+		and #$0f
+		ora #$30
+		sta print_et_target+1
+
+		ldx CIA1+$09 ; seconds
+		lda divide_by_16_table,x
+		ora #$30
+		sta print_et_target+3
+		txa
+		and #$0f
+		ora #$30
+		sta print_et_target+4
+	} else {
+		print_et_target = VDC_SCREEN + 12*80 + 53
+
+	-	bit VDC
+		bpl -
+
+		lda #18
+		sta VDC
+		lda #>print_et_target
+		sta VDC+1
+
+		lda #19
+		sta VDC
+		lda #<print_et_target
+		sta VDC+1
+
+		lda #31
+		sta VDC
+
+		ldx CIA1+$0a
+		lda divide_by_16_table,x
+		ora #$30
+		jsr vdc_continue_write_ram
+
+		txa
+		and #$0f
+		ora #$30
+		jsr vdc_continue_write_ram
+
+		lda #":"
+		jsr vdc_continue_write_ram
+
+		ldx CIA1+$09
+		lda divide_by_16_table,x
+		ora #$30
+		jsr vdc_continue_write_ram
+
+		txa
+		and #$0f
+		ora #$30
+		jsr vdc_continue_write_ram
+	}
+
+	bit CIA1+$08; read tenths to un-latch the time
 rts
 
 seq_check_keyboard
@@ -672,7 +764,10 @@ no_valid_key
 	lda #0
 rts
 
-; fetch loop and mixer loop self-mod setup routines
+
+; =========================================================
+; === fetch loop and mixer loop self-mod setup routines ===
+; =========================================================
 
 mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
 

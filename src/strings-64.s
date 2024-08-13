@@ -477,14 +477,11 @@ dir_window_left_margin
 		!text CYAN,"Pattern: ",LBLU,"  ",RETURN
 		!byte 0
 
-	main_player_row_ascii
-		!fill 8,RIGHT
-		!text CYAN,"Row: ",LBLU,"  "
-		!text BLUE," --- "
-		!byte 0
-
-	main_player_speed_msg_ascii
-		!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"  ",RETURN
+	main_player_row_speed_time_ascii
+		!fill 2,RIGHT
+		!text CYAN,"Row: ",LBLU,"   ",BLUE,"- "
+		!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",BLUE,"- "
+		!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
 		!byte 0
 
 	main_player_regen_tables_msg_ascii

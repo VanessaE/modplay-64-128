@@ -391,14 +391,10 @@ main_player_song_pos_pat_msg
 	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
 	!byte 0
 
-main_player_row
-	!fill 9,RIGHT
-	!text CYAN,"Row: ",LBLU,"  "
-	!text DCYN," --- "
-	!byte 0
-
-main_player_speed_msg
-	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"  ",RETURN
+main_player_row_speed_time
+	!text CYAN,"  Row: ",LBLU,"   ",DCYN,"- "
+	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",DCYN,"- "
+	!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
 	!byte 0
 
 main_player_regen_tables_msg

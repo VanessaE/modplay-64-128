@@ -58,13 +58,8 @@ start_main_player
 		jsr print_msg
 
 		lda #0
-		ldx #<main_player_row
-		ldy #>main_player_row
-		jsr print_msg
-
-		lda #0
-		ldx #<main_player_speed_msg
-		ldy #>main_player_speed_msg
+		ldx #<main_player_row_speed_time
+		ldy #>main_player_row_speed_time
 		jsr print_msg
 
 		lda #0
@@ -122,13 +117,8 @@ start_main_player
 		jsr print_msg_ascii
 
 		lda #0
-		ldx #<main_player_row_ascii
-		ldy #>main_player_row_ascii
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_speed_msg_ascii
-		ldy #>main_player_speed_msg_ascii
+		ldx #<main_player_row_speed_time_ascii
+		ldy #>main_player_row_speed_time_ascii
 		jsr print_msg_ascii
 
 		lda #0
