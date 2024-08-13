@@ -1,7 +1,7 @@
 VERSION_MAJOR=0
 VERSION_MINOR=0
 
-OPTIONS=-Wno-label-indent -v3 --format plain \
+OPTIONS=-Wno-label-indent -v3 --format cbm \
 	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR)
 CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
 TMPDIR=/tmp/mp-trim-ws-compress-tmp
@@ -47,14 +47,8 @@ c64:
 	etc/trim-whitespc.sh 40 etc/splash-64.seq          $(TMPDIR)/splash-64-t.seq
 	etc/compress-rle.sh  40 $(TMPDIR)/splash-64-t.seq  etc/splash-64.rle   etc/splash-64.seq
 
-	acme $(OPTIONS) -o src/autorun-64.o src/autorun-64.s
-	acme $(OPTIONS) -o src/display-splash.o src/display-splash.s
-	acme $(OPTIONS) -l etc/mp64-sym.txt -o src/mp64.o src/modplay.s
-
-	cat src/autorun-64.o \
-		src/display-splash.o \
-		src/mp64.o \
-		> bin/mp64.prg
+	acme $(OPTIONS) -o bin/mp64 src/booter.s
+	acme $(OPTIONS) -l etc/mp64-sym.txt -o bin/mp64.main src/modplay.s
 
 c64_disk: c64
 	$(MAKE) gen_release_disk_img MACHINE=64
@@ -65,15 +59,10 @@ c128:
 	etc/trim-whitespc.sh 80 etc/splash-128.seq   $(TMPDIR)/splash-128-t.seq
 	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
 
-	acme $(OPTIONS) -Dc128=1 -o src/autorun-128.o src/autorun-128.s
-	acme $(OPTIONS) -Dc128=1 -o src/display-splash-128.o src/display-splash.s
-	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o src/mp128.o src/modplay.s
-	acme $(OPTIONS) -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
+	acme $(OPTIONS) -Dc128=1 -o bin/mp128 src/booter.s
+	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o bin/mp128.main src/modplay.s
 
-	cat src/autorun-128.o \
-		src/display-splash-128.o \
-		src/mp128.o \
-		> bin/mp128.prg
+	acme $(OPTIONS) --format plain -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
 
 c128_disk: c128
 	$(MAKE) gen_release_disk_img MACHINE=128
@@ -106,10 +95,9 @@ ifeq ($(MACHINE),128)
 endif
 
 	$(CC1541)	\
-		$(INTLV)	-f $(PRG)				-w bin/$(PRG).prg			\
+		$(INTLV)	-f $(PRG)				-w bin/$(PRG)				\
+					-f $(PRG).main			-w bin/$(PRG).main			\
 					-f '----------------'	-L							\
-					-f ' load with ,x,1 '	-L							\
-					-f '---- ------ ----'	-L							\
 					-f 'a few mod files:'	-L							\
 					-f '                '	-L							\
 		$(INTLV)	-f 'Acidbat II'			-w 'mods/Acidbat II.mod'	\

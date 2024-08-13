@@ -2,6 +2,8 @@
 
 !addr {
 
+	default_start							= $1c01
+
 	; Zero Page
 
 	; free: $2b, $2c
@@ -99,10 +101,6 @@ ESC									= $1b
 
 FLASHON								= $0f
 FLASHOFF							= $8f
-
-; this is the very last byte that'll be loaded in any serial mode,
-; accounting for load addr, plus one disk block for expansion sake.
-splash_128_end_check = program_start + (254*6) - 1
 
 splash_ver_pos_col					= 48
 splash_ver_pos_row					= 9

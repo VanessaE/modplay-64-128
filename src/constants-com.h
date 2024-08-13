@@ -1,8 +1,9 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
-program_start							= $1e00
-
 !addr {
+
+	program_start							= $1e00
+
 	; KERNAL zero-page variables
 
 	STATUS								= $90

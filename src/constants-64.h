@@ -2,6 +2,8 @@
 
 !addr {
 
+	default_start							= $0801
+
 	; Zero Page
 
 	; free: $22, $23

@@ -24,5 +24,5 @@ start
 	jmp $afa5							; Execute BASIC command.
 
 cmd
-	!text "load ", $22, "mp128", $22, ",8,1"
+	!text "run ", $22, "mp128", $22, ",u8"
 	!align 255,0,0						; Fill remaining bytes with 0
