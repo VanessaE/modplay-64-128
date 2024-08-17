@@ -70,11 +70,14 @@ c128_disk: c128
 gen_release_disk_img:
 	$(eval SW := -D4)
 	$(eval DISK_FORMAT := d64)
+	$(eval INTLV := -s 9)
+	$(eval PROGINTLV := -s 6)
 
 ifeq ($(MACHINE),128)
 	$(eval SW := -D7)
 	$(eval DISK_FORMAT := d71)
-	$(eval INTLV := -s 5)
+	$(eval INTLV := -s 7)
+	$(eval PROGINTLV := -s 4)
 endif
 
 ifeq ($(MACHINE),64)
@@ -95,8 +98,8 @@ ifeq ($(MACHINE),128)
 endif
 
 	$(CC1541)	\
-		$(INTLV)	-f $(PRG)				-w bin/$(PRG)				\
-					-f $(PRG).main			-w bin/$(PRG).main			\
+		$(PROGINTLV) -f $(PRG)				-w bin/$(PRG)				\
+		$(PROGINTLV) -f $(PRG).main			-w bin/$(PRG).main			\
 					-f '----------------'	-L							\
 					-f 'a few mod files:'	-L							\
 					-f '                '	-L							\
