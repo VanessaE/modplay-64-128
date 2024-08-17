@@ -72,6 +72,8 @@
 
 	; KERNAL routines/jump table
 
+	RESET							= $fce2
+
 	DISPLY							= $ea1c
 }
 

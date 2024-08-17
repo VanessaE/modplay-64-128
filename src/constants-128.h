@@ -83,6 +83,8 @@
 	FULLW							= $ca24
 	DISPLY							= $cc34
 
+	RESET							= $e000
+
 	SWAPPER							= $ff5f
 	SETBNK							= $ff68
 

@@ -117,11 +117,21 @@ chk_key_p
 
 chk_key_return
 	cmp #$0d
+	bne chk_key_f1
+	lda playlist_length
+	beq chk_key_f1
+	jsr enqueue_file
+	jmp main_loop
+
+chk_key_f1
+	cmp #$85
 	bne chk_key_f4
 	lda playlist_length
 	beq chk_key_f4
-	jsr enqueue_file
-	jmp main_loop
+	clc
+	jsr load_file_to_expansion
+	jsr start_main_player
+	jmp show_main_menu
 
 chk_key_f4
 	cmp #$8a
@@ -136,9 +146,26 @@ chk_key_f4
 
 chk_key_f5
 	cmp #$87
-	bne chk_key_home
+	bne chk_key_f6
 	jsr load_directory
 	jmp show_main_menu
+
+chk_key_f6
+	cmp #$8b
+	bne chk_key_f8
+	lda #0
+	ldx #0
+-	sta playlist_file_flags,x
+	inx
+	cpx #192
+	bne -
+	jsr display_playlist
+	jmp main_loop
+
+chk_key_f8
+	cmp #$8c
+	bne chk_key_home
+	jmp RESET
 
 ; keys for page B start here
 
