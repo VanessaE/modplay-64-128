@@ -16,6 +16,8 @@ viz_line_6 = vizualizer_base_addr + screen_width*5
 
 vizualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 
+vizualizer_colors_row_3 = vizualizer_colors_base_addr + screen_width*2
+
 ; set up base addresses, print the column dividers, and pre-fill the colors
 ;
 ; This routine is called before the sequencer starts, so any Zero Page usage
@@ -339,6 +341,59 @@ viz_row_data_erase_row
 .done_erase
 	ldy temp_abs_y2
 rts
+
+
+; if the user toggles mute on a track, this switches the color on the highlight
+; row between red and white.  ENter with .Y = track number, mute status set in
+; track_current_enable_flags + .Y
+
+viz_show_track_mute
+	!ifndef c128 {
+		clc
+		lda #<vizualizer_colors_row_3
+		adc viz_mute_color_cols,y
+		sta utility_pointer
+		lda #>vizualizer_colors_row_3
+		adc #0
+		sta utility_pointer+1
+		lda track_current_enable_flags,y
+		eor #$80
+		clc
+		rol
+		rol
+		adc #1
+		ldy #viz_mute_colors_width
+	-	sta (utility_pointer),y
+		dey
+		bpl -
+	} else {
+		clc
+		lda #<vizualizer_colors_row_3
+		adc viz_mute_color_cols,y
+		sta fill_copy_target
+		lda #>vizualizer_colors_row_3
+		adc #0
+		sta fill_copy_target+1
+		clc
+		lda track_current_enable_flags,y
+		bpl +
+		lda #7
+	+	adc #8
+		ldx #viz_mute_colors_width
+		jsr vdc_block_fill
+	}
+rts
+
+
+!ifndef c128 {
+	viz_mute_color_cols
+		!byte 0,9,18,27
+	viz_mute_colors_width = 7
+} else {
+	viz_mute_color_cols
+		!byte 3,12,21,30
+	viz_mute_colors_width = 8
+}
 
 viz_row_erase_msg
 	!ifdef c128 {

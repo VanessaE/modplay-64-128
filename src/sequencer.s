@@ -785,6 +785,15 @@ toggle_enable
 	lda track_current_enable_flags,y
 	eor #$80
 	sta track_current_enable_flags,y
+
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl no_mute_ui
+	}
+
+	jsr viz_show_track_mute
+
+no_mute_ui
 	clc
 	jsr set_volume
 
@@ -1043,3 +1052,4 @@ lookahead_code_volume_addr_idx
 	!byte vol_addr_2 - vol_addr_1
 	!byte vol_addr_3 - vol_addr_1
 	!byte vol_addr_4 - vol_addr_1
+
