@@ -492,9 +492,9 @@ start_effect_command_jump_table
 	!word unused
 	!word unused
 	!word unused ; run_effect_set_sample_offset
-	!word unused ; start_effect_volume_slide
+	!word start_effect_volume_slide
 	!word unused ; run_effect_position_jump
-	!word unused ; run_effect_set_volume
+	!word run_effect_set_volume
 	!word unused ; run_effect_pattern_break
 	!word unused
 	!word run_effect_set_speed
@@ -510,7 +510,7 @@ run_effect_command_jump_table
 	!word unused
 	!word unused
 	!word unused
-	!word unused ; run_effect_volume_slide
+	!word run_effect_volume_slide
 	!word unused
 	!word unused
 	!word unused
@@ -523,6 +523,9 @@ run_effect_command_jump_table
 ; note that since note numbers are in reverse order (60 = lowest pitch),
 ; commands which change a note have to decrease the note number if they're
 ; supposed to increase the pitch.
+
+
+; ### ARPEGGIO
 
 start_effect_arpeggio
 	lda seq_command_arguments,y
@@ -563,6 +566,55 @@ run_effect_arpeggio
 	jmp set_pitch
 + rts
 
+
+; #### VOLUME SLIDE
+
+start_effect_volume_slide
+	lda seq_command_arguments,y
+	sta volume_slide_rates,y
+rts
+
+run_effect_volume_slide
+	lda volume_slide_rates,y
+	and #$f0
+	beq vsdown
+	lsr
+	lsr
+	lsr
+	lsr
+	clc
+	adc current_sample_volume_levels,y
+	cmp #65
+	bne +
+	lda #64
++	sta current_sample_volume_levels,y
+	jmp set_volume
+
+
+vsdown
+	lda volume_slide_rates,y
+	and #$0f
+	bne +
+	rts
+
++	sta temp_zpbk_a
+	sec
+	lda current_sample_volume_levels,y
+	sbc temp_zpbk_a
+	bcs +
+	lda #0
++	sta current_sample_volume_levels,y
+	jmp set_volume
+
+
+; #### SET VOLUME
+
+run_effect_set_volume
+	lda seq_command_arguments,y
+	jmp set_volume
+
+
+; #### SET SPEED
 
 ; Note we're setting the values to 256x the actual amounts temporarily, so
 ; that the quotient low byte can act as a fraction.
