@@ -38,7 +38,7 @@ start_sequencer
 
 	sta current_note_periods_lows,x
 	sta current_note_periods_highs,x
-	sta current_node_period_offsets,x
+	sta current_note_numbers,x
 
 	sta current_steprates_fracts,x
 	sta current_steprates_ints,x
@@ -209,6 +209,7 @@ get_note_number
 
 	; .A holds the note number 1-60
 	stx sequencer_temp_x
+	sta current_note_numbers,y
 	jsr set_pitch
 	ldx sequencer_temp_x
 	ldy seq_current_track
@@ -317,34 +318,6 @@ no_cmd_this_tick
 
 stop_song
 rts
-
-; effect command decoders -- start-of-row/init routines
-; enter each one with .Y = track number
-
-; Note we're setting the values to 256x the actual amounts temporarily, so
-; that the quotient low byte can act as a fraction.
-
-run_effect_set_speed
-	lda seq_command_arguments,y
-	cmp #33
-	bcc +
-	sta seq_tempo_bpm
-	bcs set_mixer_loops_per_tick
-
-+	sta seq_ticks_per_division
-
-set_mixer_loops_per_tick
-	ldx seq_tempo_bpm
-	lda tempo_table_fracts,x
-	sta mixer_loops_per_tick_fract
-	lda tempo_table_lows,x
-	sta mixer_loops_per_tick
-
-	jsr print_song_speed
-
-	elpt
-rts
-
 
 ;==================
 ; auxillary routines
@@ -509,7 +482,7 @@ unused
 rts
 
 start_effect_command_jump_table
-	!word unused ; start_effect_arpeggio
+	!word start_effect_arpeggio
 	!word unused ; start_effect_pitch_slide_up
 	!word unused ; start_effect_pitch_slide_down
 	!word unused ; start_effect_pitch_slide_to_note
@@ -527,7 +500,7 @@ start_effect_command_jump_table
 	!word run_effect_set_speed
 
 run_effect_command_jump_table
-	!word unused ; run_effect_arpeggio
+	!word run_effect_arpeggio
 	!word unused ; run_effect_pitch_slide_up
 	!word unused ; run_effect_pitch_slide_down
 	!word unused ; run_effect_pitch_slide_to_note
@@ -543,6 +516,77 @@ run_effect_command_jump_table
 	!word unused
 	!word unused
 	!word unused
+
+; effect command decoders -- start-of-row/init routines
+; enter each one with .Y = track number
+;
+; note that since note numbers are in reverse order (60 = lowest pitch),
+; commands which change a note have to decrease the note number if they're
+; supposed to increase the pitch.
+
+start_effect_arpeggio
+	lda seq_command_arguments,y
+	lsr
+	lsr
+	lsr
+	lsr
+	sta arpeggio_extra_note_first,y
+
+	lda seq_command_arguments,y
+	and #$0f
+	sta arpeggio_extra_note_second,y
+rts
+
+run_effect_arpeggio
+	clc
+	lda arpeggio_counters,y
+	adc #1
+	cmp #3
+	bne +
+	lda #0
+	sta arpeggio_counters,y
+	jmp set_pitch
+
++	sta arpeggio_counters,y
+	cmp #1
+	bne +
+	lda current_note_numbers,y
+	sec
+	sbc arpeggio_extra_note_first,y
+	jmp set_pitch
+
++	cmp #2
+	bne +
+	lda current_note_numbers,y
+	sec
+	sbc arpeggio_extra_note_second,y
+	jmp set_pitch
++ rts
+
+
+; Note we're setting the values to 256x the actual amounts temporarily, so
+; that the quotient low byte can act as a fraction.
+
+run_effect_set_speed
+	lda seq_command_arguments,y
+	cmp #33
+	bcc +
+	sta seq_tempo_bpm
+	bcs set_mixer_loops_per_tick
+
++	sta seq_ticks_per_division
+
+set_mixer_loops_per_tick
+	ldx seq_tempo_bpm
+	lda tempo_table_fracts,x
+	sta mixer_loops_per_tick_fract
+	lda tempo_table_lows,x
+	sta mixer_loops_per_tick
+
+	jsr print_song_speed
+
+	elpt
+rts
 
 
 ; ===========================

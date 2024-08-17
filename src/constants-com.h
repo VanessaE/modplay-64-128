@@ -174,7 +174,7 @@
 
 	current_note_periods_lows			= low_memory_area
 	current_note_periods_highs			= low_memory_area+$08
-	current_node_period_offsets			= low_memory_area+$10
+	current_note_numbers				= low_memory_area+$10
 	seq_current_row_data				= low_memory_area+$18 ; this one's 32 bytes
 	seq_commands						= low_memory_area+$38
 	seq_prev_commands					= low_memory_area+$40
@@ -267,22 +267,12 @@
 
 	old_STOP_vec						= $15b1 ; 2 bytes
 	parse_header_sample_pointer			= $15b3 ; 3 bytes
+
 	arpeggio_extra_note_first			= $15b6 ; \___ 16 bytes
 	arpeggio_extra_note_second			= $15be ; /
+	arpeggio_counters					= $15c6 ; 8 bytes
 
-	repeat_mode							= $15c6
-	volume_tables_resolution			= $15c7
-	last_volume_tables_resolution		= $15c8
-	allow_regen_msg						= $15c9
-
-	seq_abort_flag						= $15ca
-
-	top_row_pos							= $15cb
-	bottom_row_pos						= $15cc
-	left_column_pos						= $15cd
-	right_column_pos					= $15ce
-	num_rows							= $15cf
-	num_columns							= $15d0
+	; free: $15ce through $15d0
 
 	stash_size							= $15d1 ; 2 bytes
 
@@ -319,7 +309,22 @@
 	char_table_select					= $15f4 ; C64-only
 	print_msg_char_limit				= $15f5
 
-	; free: $15f6 through $1627
+	repeat_mode							= $15f6
+	volume_tables_resolution			= $15f7
+	last_volume_tables_resolution		= $15f8
+	allow_regen_msg						= $15f9
+
+	seq_abort_flag						= $15fa
+
+	top_row_pos							= $15fb
+	bottom_row_pos						= $15fc
+	left_column_pos						= $15fd
+
+	right_column_pos					= $15fe
+	num_rows							= $15ff
+	num_columns							= $1600
+
+	; free: $1601 through $1627
 
 	; various program vectors
 
