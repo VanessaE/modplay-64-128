@@ -15,7 +15,7 @@
 
 	medium_popup_left_column		= 4
 	medium_popup_width				= 36
-	medium_popup_height				= 13
+	medium_popup_height				= 15
 
 	tall_popup_left_column			= 4
 	tall_popup_width				= 30
@@ -35,7 +35,7 @@
 
 	medium_popup_left_column		= 0
 	medium_popup_width				= 40
-	medium_popup_height				= 13
+	medium_popup_height				= 15
 
 	tall_popup_left_column			= 0
 	tall_popup_width				= 30

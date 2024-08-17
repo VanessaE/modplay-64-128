@@ -94,4 +94,4 @@ visualizer_area_width				= 36
 visualizer_area_height				= 6
 
 visualizer_screen_column			= 2
-visualizer_screen_row				= 14
+visualizer_screen_row				= 13

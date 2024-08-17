@@ -398,12 +398,21 @@ main_player_row_speed_time
 	!byte 0
 
 main_player_regen_tables_msg
-	!byte RETURN,YEL
+	!byte UP,HOME
+	!fill 9,DOWN
+	!byte YEL
 	!text "      A player setting changed", RETURN
 	!text "    that altered the sample rate,",RETURN
 	!text "        re-generating pitch",RETURN
 	!text "        and tempo tables..."
 	!byte 0
+
+	main_player_keys_msg
+		!fill 3,RIGHT
+		!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
+		!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
+		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
+		!byte 0
 
 main_player_regen_erase_tables_msg
 	!fill 4,UP

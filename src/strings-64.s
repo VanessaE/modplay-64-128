@@ -485,7 +485,8 @@ dir_window_left_margin
 		!byte 0
 
 	main_player_regen_tables_msg_ascii
-		!byte RETURN
+		!byte HOME
+		!fill 14,DOWN
 		!fill 8,RIGHT
 		!text YEL,"A player setting altered",RETURN
 		!fill 5,RIGHT
@@ -503,6 +504,13 @@ dir_window_left_margin
 		!byte RETURN
 		!fill 2,RIGHT
 		!fill 36," "
+		!byte 0
+
+	main_player_keys_msg_ascii
+		!fill 3,RIGHT
+		!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
+		!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
+		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
 		!byte 0
 }
 

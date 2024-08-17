@@ -17,11 +17,10 @@ viz_line_6 = vizualizer_base_addr + screen_width*5
 vizualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 
 ; set up base addresses, print the column dividers, and pre-fill the colors
-; The CHROUT "cursor" is positioned at the top-left corner of the visualizer
-; area just before this code is called.
-
+;
 ; This routine is called before the sequencer starts, so any Zero Page usage
-; must be stuff that's safe to use when ZP IS NOT BACKED-UP.
+; must be stuff that's safe to use when ZP IS NOT BACKED-UP, and the KERNAL is
+; banked-in at this point, so the usual PLOT, CHROUT, etc. calls are available.
 
 viz_row_data_init
 	!ifndef c128 {
@@ -41,11 +40,13 @@ viz_row_data_init
 	sta utility_pointer+1
 	sta fill_copy_target+1
 
-	lda #UP
-	jsr CHROUT
-
 	lda #0
 	sta temp_abs_b
+
+	lda #0
+	ldx #<viz_row_position
+	ldy #>viz_row_position
+	jsr print_msg
 
 	vis_init_next_row
 		ldx temp_abs_b
@@ -359,16 +360,14 @@ viz_row_data_colors
 
 viz_dividers_msg
 	!ifndef c128 {
-		!byte RETURN
 		!fill 10,RIGHT
 		!byte LGRY,$01
 		!fill 8,RIGHT
 		!byte $01
 		!fill 8,RIGHT
-		!byte $01
+		!byte $01,RETURN
 		!byte 0
 	} else {
-		!byte RETURN
 		!fill 3,RIGHT
 		!byte LGRY,$7d
 		!fill 8,RIGHT
@@ -376,6 +375,15 @@ viz_dividers_msg
 		!fill 8,RIGHT
 		!byte $7d
 		!fill 8,RIGHT
-		!byte $7d
+		!byte $7d,RETURN
+		!byte 0
+	}
+
+viz_row_position
+	!ifndef c128 {
+		!byte UP,RETURN,0
+	} else {
+		!fill 6,UP
+		!byte RETURN
 		!byte 0
 	}

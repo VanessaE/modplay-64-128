@@ -66,11 +66,31 @@ start_main_player
 		ldx #<main_player_hline
 		ldy #>main_player_hline
 		jsr print_msg_rle
+
+		lda #DOWN
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+
+		lda #0
+		ldx #<main_player_hline
+		ldy #>main_player_hline
+		jsr print_msg_rle
+
+		lda #0
+		ldx #<main_player_keys_msg
+		ldy #>main_player_keys_msg
+		jsr print_msg
+
 	} else {
 		bit enable_screen_on_playback
-		bpl ++
+		bmi +
+		jmp no_player_ui
 
-		jsr gray_out_blur_out
+	+	jsr gray_out_blur_out
 		sec
 		jsr draw_medium_popup
 		lda #0
@@ -125,9 +145,28 @@ start_main_player
 		ldx #<main_player_hline_ascii
 		ldy #>main_player_hline_ascii
 		jsr print_msg_ascii
-}
 
-++	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+		lda #DOWN
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+
+		lda #0
+		ldx #<main_player_hline_ascii
+		ldy #>main_player_hline_ascii
+		jsr print_msg_ascii
+
+		lda #0
+		ldx #<main_player_keys_msg_ascii
+		ldy #>main_player_keys_msg_ascii
+		jsr print_msg_ascii
+	}
+
+no_player_ui
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
