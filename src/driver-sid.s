@@ -23,10 +23,22 @@ sid_init
 
 	clc
 	lda stereo_sid_addr
+	sta utility_pointer
 	adc #$18
 	sta .s2a+1
 	lda stereo_sid_addr+1
+	sta utility_pointer+1
 	sta .s2a+2
+
+	lda #$ff
+	sta SID+6
+	sta SID+13
+	sta SID+20
+
+	lda #$49
+	sta SID+4
+	sta SID+11
+	sta SID+18
 
 	bit stereo_enable
 	bmi +
@@ -35,7 +47,23 @@ sid_init
 	ldy #>sid_isr_4b_mono
 	rts
 
-+	ldx #<sid_isr_4b_stereo
++	lda #$ff
+	ldy #6
+	sta (utility_pointer),y
+	ldy #13
+	sta (utility_pointer),y
+	ldy #20
+	sta (utility_pointer),y
+
+	lda #$49
+	ldy #4
+	sta (utility_pointer),y
+	ldy #11
+	sta (utility_pointer),y
+	ldy #18
+	sta (utility_pointer),y
+
+	ldx #<sid_isr_4b_stereo
 	ldy #>sid_isr_4b_stereo
 rts
 
@@ -57,7 +85,6 @@ sid_mute
 	dex
 	bpl -
 rts
-
 
 sid_isr_4b_mono					; 7 cycles coming in
 	sta .iam + 1				; 4
