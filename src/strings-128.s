@@ -421,6 +421,35 @@ main_player_regen_erase_tables_msg
 press_key_msg
 	!text "Press any key",0
 
+using_loader_msg
+	!fill 5,RIGHT
+	!text LGRN,"Using loader: ",GRN,0
+
+loader_stop_wedge_msg
+	!text "STOP wedge",0
+
+loader_acptr_msg
+	!text "ACPTR",0
+
+loader_kbs_position
+	!byte UP,RETURN
+	!fill 65,RIGHT
+	!Byte GRN
+	!byte 0
+
+loader_kbs_msg
+	!text LGRN," kB/sec",0
+
+loader_erase_kbs_msg
+	!fill 12," "
+	!fill 12,LEFT
+	!byte 0
+
+status_line_pos
+	!text HOME,HOME
+	!fill 24,DOWN
+	!byte 0
+
 mm_lo
 	!byte <line_2
 	!byte <line_3

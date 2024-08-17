@@ -329,10 +329,15 @@ init
 	lda #>one_ten_thou_ntsc
 	sta one_ten_thousandth_second+1
 
-	lda #1
+++	lda #1
 	sta visualizer_mode
 
-++	jsr charset_copy
+	lda CIA1+$0e	; ensure that the TOD clock counts 50 or 60 ticks/sec
+	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64
+	ora pal_flag
+	sta CIA1+$0e
+
+	jsr charset_copy
 
 	!ifndef c128 {
 		jsr blur_table_copy

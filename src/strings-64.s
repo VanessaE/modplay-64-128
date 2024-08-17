@@ -418,8 +418,36 @@ between_songs_msg
 press_key_msg
 	!text "Press any key",0
 
+using_loader_msg
+	!text LGRN, "Using loader: ",GRN,0
+
+loader_stop_wedge_msg
+	!text "STOP wedge",0
+
+loader_acptr_msg
+	!text "ACPTR",0
+
+loader_kbs_position
+	!byte UP,RETURN
+	!fill 28,RIGHT
+	!byte GRN
+	!byte 0
+
+loader_kbs_msg
+	!text LGRN," kB/sec",0
+
+loader_erase_kbs_msg
+	!fill 11," "
+	!fill 11,LEFT
+	!byte 0
+
 dir_window_left_margin
 	!fill 5,RIGHT
+	!byte 0
+
+status_line_pos
+	!text HOME
+	!fill 24,DOWN
 	!byte 0
 
 !ct raw {

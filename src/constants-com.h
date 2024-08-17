@@ -78,7 +78,7 @@
 	sequencer_temp_b					= $57 ; 2 bytes /   as one 4-byte temp
 
 	; division remainder uses $59 through $5b
-	; multiply product uses $5c/$5d
+	; expansion_memory_target_pointer uses $5c/$5d
 	; binary search binsearch_value is at $59/$5a
 
 	song_speed							= $5e
@@ -132,10 +132,7 @@
 	load_pointer						= $59 ; and $5a
 	filename_addr						= $59 ; and $5a
 
-	product								= $5c ; and $5d / the product from multiply routine
-
 	expansion_memory_target_pointer		= $5c ; to $5e, expansion RAM stash target addr
-											  ; only used within the loader
 
 	print_msg_addr						= $5f ; and $60
 	save_addr							= $5f ; and $60
@@ -272,7 +269,7 @@
 	arpeggio_extra_note_second			= $15be ; /
 	arpeggio_counters					= $15c6 ; 8 bytes
 
-	; free: $15ce through $15d0
+	utility_counter						= $15ce ; 3 bytes
 
 	stash_size							= $15d1 ; 2 bytes
 
@@ -341,7 +338,9 @@
 	audio_driver_set_cycle_count_vec	= $1646 ; 2 bytes
 	ram_driver_set_cycle_counts_vec		= $1648 ; 2 bytes
 
-	; $free: $164a through $16e9
+	product								= $164a ; and $164b / the product from multiply routine
+
+	; $free: $164c through $16e9
 
 	loader_compatibility_table			= $16ea ; 22 bytes - devices 8 through 30.
 

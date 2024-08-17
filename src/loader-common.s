@@ -181,6 +181,18 @@ load_by_filename_entry
 	; On some machines/drives, the STOP wedge won't work, so the loader calls
 	; a test routine to see if it's safe to use.
 
+	jsr print_loader_type
+
+	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
+	and #$7f
+	sta CIA1+$0f
+
+	lda #0
+	sta CIA1+$0b
+	sta CIA1+$0a
+	sta CIA1+$09
+	sta CIA1+$08
+
 	ldy load_device
 	lda loader_compatibility_table-8,y
 
@@ -368,6 +380,8 @@ populate_loader_mini_popup
 rts
 
 update_progress
+	jsr print_loading_speed
+
 	sec
 	lda expansion_memory_target_pointer
 	sbc expansion_memory_start_address
@@ -390,6 +404,137 @@ update_progress
 	lda quotient
 	jsr update_progress_bar
 rts
+
+print_loader_type
+	lda #0
+	ldx #<status_line_pos
+	ldy #>status_line_pos
+	jsr print_msg
+
+	lda #0
+	ldx #<using_loader_msg
+	ldy #>using_loader_msg
+	jsr print_msg
+
+	ldy load_device
+	lda loader_compatibility_table-8,y
+	bmi + 
+
+	ldx #<loader_acptr_msg
+	ldy #>loader_acptr_msg
+	jmp ++
+
++	ldx #<loader_stop_wedge_msg
+	ldy #>loader_stop_wedge_msg
+
+++	lda #0
+	jsr print_msg
+rts
+
+print_loading_speed
+	bit CIA1+$0b; read hours to latch the time
+
+	lda CIA1+$0a ; minutes
+	lsr
+	lsr
+	lsr
+	lsr
+	tax
+	lda nybble_x10,x ; CIA's TOD clock is expressed in BCD.
+	sta temp_abs_a
+	lda CIA1+$0a
+	and #$0f
+	clc
+	adc temp_abs_a
+	ldx #60
+	jsr multiply_8x8
+
+	lda CIA1+$09 ; seconds
+	lsr
+	lsr
+	lsr
+	lsr
+	tax
+	lda nybble_x10,x
+	sta temp_abs_a
+	lda CIA1+$09
+	and #$0f
+	clc
+	adc temp_abs_a
+
+	ldx CIA1+$08; read tenths to un-latch the time
+
+	adc product
+	sta divisor
+	lda #0
+	sta divisor+2
+	adc product+1
+	sta divisor+1
+
+	bne +			; don't print the speed for the first couple of seconds
+	lda divisor
+	cmp #2
+	bcs ++
+	rts
+
++	sec
+++	lda expansion_memory_target_pointer
+	sbc expansion_memory_start_address
+	sta dividend
+	lda expansion_memory_target_pointer+1
+	sbc expansion_memory_start_address+1
+	sta dividend+1
+	lda expansion_memory_target_pointer+2
+	sbc expansion_memory_start_address+2
+	sta dividend+2
+
+	jsr divide_24by24
+
+	lsr quotient+2
+	ror quotient+1
+	ror quotient
+	lsr quotient+2
+	ror quotient+1
+	ror quotient
+
+	lda #0
+	ldx #<loader_kbs_position
+	ldy #>loader_kbs_position
+	jsr print_msg
+
+	lda #0
+	ldx #<loader_erase_kbs_msg
+	ldy #>loader_erase_kbs_msg
+	jsr print_msg
+
+	ldx quotient+1
+	ldy quotient+2
+	sec
+	jsr print_uint16
+
+	lda #"."
+	jsr CHROUT
+
+	sec
+	lda quotient
+	lsr
+	lsr
+	lsr
+	lsr
+	tay
+	ldx kbs_fract_approx,y
+	ldy #0
+	sec
+	jsr print_uint16
+
+	lda #0
+	ldx #<loader_kbs_msg
+	ldy #>loader_kbs_msg
+	jsr print_msg
+rts
+
+kbs_fract_approx
+	!byte 0,0,1,1,2,3,3,4,5,5,6,6,7,8,8,9
 
 .load_err
 	lda #"E"
