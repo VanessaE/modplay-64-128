@@ -127,7 +127,6 @@ fetch_routine_table_msb
 	beq nple
 
 next_pattern
-
 	inc current_song_pos
 	lda current_song_pos
 	cmp number_of_song_positions
@@ -164,7 +163,14 @@ next_row_no_scroll
 	ldx current_song_pos
 	ldy pattern_table,x
 
-	ldx seq_current_row
+	lda pattern_break_target_row
+	beq +
+	and #$7f
+	sta seq_current_row
+	lda #0
+	sta pattern_break_target_row
+
++	ldx seq_current_row
 	cpx #61
 	bcs +
 
@@ -306,7 +312,11 @@ no_cmd_this_tick
 	dec seq_ticks_counter
 	bne next_tick
 
-	inc seq_current_row
+	lda pattern_break_target_row
+	beq +
+	jmp next_pattern 
+
++	inc seq_current_row
 	lda seq_current_row
 	cmp #64
 	beq +
@@ -495,7 +505,7 @@ start_effect_command_jump_table
 	!word start_effect_volume_slide
 	!word unused ; run_effect_position_jump
 	!word run_effect_set_volume
-	!word unused ; run_effect_pattern_break
+	!word run_effect_pattern_break
 	!word unused
 	!word run_effect_set_speed
 
@@ -525,7 +535,7 @@ run_effect_command_jump_table
 ; supposed to increase the pitch.
 
 
-; ### ARPEGGIO
+; #### ARPEGGIO
 
 start_effect_arpeggio
 	lda seq_command_arguments,y
@@ -612,6 +622,33 @@ vsdown
 run_effect_set_volume
 	lda seq_command_arguments,y
 	jmp set_volume
+
+
+; #### PATTERN BREAK
+
+run_effect_pattern_break
+	stx temp_zpbk_a+1
+
+	lda seq_command_arguments,y
+	and #$0f
+	sta temp_zpbk_a
+	lda seq_command_arguments,y
+	lsr
+	lsr
+	lsr
+	lsr
+	clc
+	tax
+	lda nybble_x10,x
+	adc temp_zpbk_a
+	ora #$80
+	sta pattern_break_target_row
+
+	ldx temp_zpbk_a+1
+rts
+
+nybble_x10
+	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
 
 
 ; #### SET SPEED
