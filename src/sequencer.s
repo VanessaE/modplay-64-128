@@ -742,7 +742,15 @@ key_pressed
 
 +	dec seq_key_debounce
 
-	lda #%01111111			; column 7 low
+	lda #%11111110			; column 0 low
+	sta CIA1
+	lda CIA1+$01
+	cmp #%11110111			; look for row 3, F7 key
+	bne +
+	lda #1
+	rts
+
++	lda #%01111111			; column 7 low
 	sta CIA1
 	lda CIA1+$01
 	cmp #%11101111			; look for row 4, spacebar
