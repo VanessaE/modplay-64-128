@@ -590,7 +590,7 @@ run_effect_volume_slide
 	clc
 	adc current_sample_volume_levels,y
 	cmp #65
-	bne +
+	bcc +
 	lda #64
 +	sta current_sample_volume_levels,y
 	jmp set_volume
