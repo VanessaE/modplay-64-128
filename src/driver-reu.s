@@ -20,7 +20,7 @@ reu_fetch_routine_index_table
 
 reu_set_cycle_counts
 	!ifndef c128 {
-		lda #24+2
+		lda #24 + 2
 	} else {
 		lda #(26 + 2)/2 ; equivalent 1 MHz cycles
 	}
@@ -427,19 +427,19 @@ rts
 ; ------------
 ; GRAND TOTALS
 ;
-; Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53
-; 53 cycles per byte for the ISR, plus the "likely" code path in the fetch
-; routine, plus some fudge:
+; Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53 or
+; 54 cycles per byte for the ISR, plus the "likely" code path in the fetch
+; routine taking 24 or 26 cycles, plus some fudge:
 ;
 ; the C64 should be run at almost 7.7 kHz with the
 ; screen off, SID 4-bit stereo:
-; 1022727 / (24 + 54 + 53 + 2) = ~7689.7
+; 1022727 / (54 + 53 + 24 + 2) = ~7689.7
 ;
 ; or about 5.2 KHz with the screen on since ISR is always 3 rasters:
 ; 1022727 / (65 * 3) = ~5244.8
 ;
-; C128 should be able to run at about 15.5 kHz:
-; (1022727 * 2) / (26 + 54 + 53 + 2) = ~15151.5
+; C128 should be able to run at about 15 kHz:
+; (1022727 * 2) / (54 + 54 + 26 + 2) = ~15040.1
 ;
 ; These timings do not take into account convergeance.  As the sample rate
 ; rises, the step rates drop, which decreases the lookahead fetch length,
