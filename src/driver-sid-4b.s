@@ -1,6 +1,57 @@
 ; Audio driver for SID chip, 4-bit mode
+;
+; This is audio driver #1
 
-!text "sid driver",0
+!zone sid_4bit_driver {
+
+!text "sid 4 bit driver",0
+
+; ISR-common will call this function to set up the various vectors to the
+; routines below.
+
+sid_driver_init
+	lda #<sid_set_volume_table_resolution
+	sta audio_set_resolution_vec
+	lda #>sid_set_volume_table_resolution
+	sta audio_set_resolution_vec+1
+
+	lda #<sid_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec
+	lda #>sid_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec+1
+
+	lda #<sid_start
+	sta audio_start_vec
+	lda #>sid_start
+	sta audio_start_vec+1
+
+	lda #<sid_mute
+	sta audio_stop_vec
+	lda #>sid_mute
+	sta audio_stop_vec+1
+
+	bit stereo_enable
+	bmi +
+
+	lda #<sid_isr_4b_mono
+	sta audio_isr_vec
+	lda #>sid_isr_4b_mono
+	sta audio_isr_vec+1
+	rts
+
++	clc
+	lda stereo_sid_addr
+	adc #$18
+	sta .s2a+1
+	lda stereo_sid_addr+1
+	adc #0
+	sta .s2a+2
+
+	lda #<sid_isr_4b_stereo
+	sta audio_isr_vec
+	lda #>sid_isr_4b_stereo
+	sta audio_isr_vec+1
+rts
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
 ; for faster CPUs, divide the raw count by the CPU MHz and round up.
@@ -14,21 +65,15 @@ sid_set_isr_cycle_count
 	sta audio_driver_isr_cycle_count
 rts
 
-; ISR init will call this function to clear/mute the SID and get the proper
-; IRQ entry point.
-; returns .X/.Y = address low/high
+; this returns the output resolution of the volume tables in .A
 
-sid_init
+sid_set_volume_table_resolution
+	lda #4
+	sta volume_tables_resolution
+rts
+
+sid_start
 	jsr sid_mute
-
-	clc
-	lda stereo_sid_addr
-	sta utility_pointer
-	adc #$18
-	sta .s2a+1
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
-	sta .s2a+2
 
 	lda #$ff
 	sta SID+6
@@ -42,12 +87,14 @@ sid_init
 
 	bit stereo_enable
 	bmi +
-
-	ldx #<sid_isr_4b_mono
-	ldy #>sid_isr_4b_mono
 	rts
 
-+	lda #$ff
++	lda stereo_sid_addr
+	sta utility_pointer
+	lda stereo_sid_addr+1
+	sta utility_pointer+1
+
+	lda #$ff
 	ldy #6
 	sta (utility_pointer),y
 	ldy #13
@@ -62,19 +109,6 @@ sid_init
 	sta (utility_pointer),y
 	ldy #18
 	sta (utility_pointer),y
-
-	ldx #<sid_isr_4b_stereo
-	ldy #>sid_isr_4b_stereo
-rts
-
-; this returns the output resolution of the volume tables in .A
-
-sid_get_volume_table_resolution
-	lda #4
-	sta volume_tables_resolution
-rts
-
-sid_start
 rts
 
 sid_mute
@@ -120,5 +154,8 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
+}
+
 ; C64: each of the ISRs runs for 53 cycles
 ; C128: each runs for 56 cycles including clock stretching, divide by 2 = 28 cycles
+

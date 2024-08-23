@@ -331,11 +331,11 @@
 	print_vec							= $163c ; 2 bytes
 
 	audio_set_resolution_vec			= $163e ; 2 bytes
-	audio_init_vec						= $1640 ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $1640 ; 2 bytes
 	audio_start_vec						= $1642 ; 2 bytes
 	audio_stop_vec						= $1644 ; 2 bytes
+	audio_isr_vec						= $1646 ; 2 bytes
 
-	audio_driver_set_cycle_count_vec	= $1646 ; 2 bytes
 	ram_driver_set_cycle_counts_vec		= $1648 ; 2 bytes
 
 	product								= $164a ; and $164b / the product from multiply routine

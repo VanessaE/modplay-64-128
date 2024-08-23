@@ -75,7 +75,8 @@ start
 
 !source "src/isr-common.s"
 !source "src/driver-reu.s"
-!source "src/driver-sid.s"
+!source "src/driver-sid-4b.s"
+!source "src/driver-dac.s"
 
 !source "src/player.s"
 !source "src/sequencer.s"

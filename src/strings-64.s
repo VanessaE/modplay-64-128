@@ -293,20 +293,12 @@ scanning_dir_msg
 	!fill 15,RIGHT
 	!text "found #",0
 
-audio_driver_0_txt
-	!text "SID 4-bit",0
 audio_driver_1_txt
-	!text "SID 4b dither",0
+	!text "SID 4-bit",0
 audio_driver_2_txt
-	!text "SID 4b intrp.",0
-audio_driver_3_txt
 	!text "SID 8-bit",0
-audio_driver_4_txt
-	!text "SID 8b intrp.",0
-audio_driver_5_txt
+audio_driver_3_txt
 	!text "DAC 8-bit",0
-audio_driver_6_txt
-	!text "DAC 8b intrp.",0
 
 ram_driver_0_txt
 	!text "17xx REU",0
@@ -392,8 +384,7 @@ choose_audio_msg
 		!text CYAN,"Choose audio",RETURN
 	!byte 17,RIGHT
 	!byte $89
-		!text "driver:",RETURN,RETURN
-	!byte 14,RIGHT
+		!text "driver:",RETURN
 	!byte 0
 
 choose_memory_msg
@@ -405,7 +396,11 @@ choose_memory_msg
 	!byte 17,RIGHT
 	!byte $89
 		!text "driver:",RETURN,RETURN
-	!byte 14,RIGHT
+	!byte 0
+
+choose_driver_pos
+	!byte RETURN
+	!fill 14,RIGHT
 	!byte 0
 
 between_songs_msg

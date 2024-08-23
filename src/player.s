@@ -166,6 +166,20 @@ start_main_player
 	}
 
 no_player_ui
+	lda audio_driver
+	cmp #1
+	bne +
+	jsr sid_driver_init
+	jmp player_gen_tables
+
+;+	cmp #2
+;	bne +
+;	jsr sid_pwm_init
+;	jmp isr_timer_setup
+
++	jsr dac_driver_init
+
+player_gen_tables
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
@@ -194,13 +208,13 @@ no_player_ui
 
 	jsr backup_zero_page
 
-	+JSR_INDIRECT (audio_start_vec)
 	jsr isr_startup
+	+JSR_INDIRECT (audio_start_vec)
 
 	jsr start_sequencer
 
-	jsr isr_shutdown
 	+JSR_INDIRECT (audio_stop_vec)
+	jsr isr_shutdown
 
 	jsr restore_zero_page
 	jsr enable_kernal_only

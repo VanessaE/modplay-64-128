@@ -90,7 +90,84 @@ choose_audio_driver
 	ldx #<choose_audio_msg
 	ldy #>choose_audio_msg
 	jsr print_msg_rle
-	jsr press_any_key
+
+	lda #0
+	ldx #<choose_driver_pos
+	ldy #>choose_driver_pos
+	jsr print_msg
+
+	lda #GRN
+	jsr CHROUT
+	lda #"1"
+	jsr CHROUT
+	lda #")"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+	lda #LGRN
+	jsr CHROUT
+
+	lda #0
+	ldx #<audio_driver_1_txt
+	ldy #>audio_driver_1_txt
+	jsr print_msg
+
+	lda #0
+	ldx #<choose_driver_pos
+	ldy #>choose_driver_pos
+	jsr print_msg
+
+	jsr CHROUT
+	lda #DGRY
+	jsr CHROUT
+	lda #"2"
+	jsr CHROUT
+	lda #")"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+
+	lda #0
+	ldx #<audio_driver_2_txt
+	ldy #>audio_driver_2_txt
+	jsr print_msg
+
+	lda #0
+	ldx #<choose_driver_pos
+	ldy #>choose_driver_pos
+	jsr print_msg
+
+	jsr CHROUT
+	lda #GRN
+	jsr CHROUT
+	lda #"3"
+	jsr CHROUT
+	lda #")"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+	lda #LGRN
+	jsr CHROUT
+
+	lda #0
+	ldx #<audio_driver_3_txt
+	ldy #>audio_driver_3_txt
+	jsr print_msg
+
+-	jsr GETIN
+	beq -
+
+	cmp #$31
+	bcc -
+
+	cmp #$34
+	bcs -
+
+	cmp #$32 ; disable option 2, SID 8-bit PWM (not implemented yet)
+	beq -
+
+	and #$03
+	sta audio_driver
 rts
 
 choose_memory_driver
@@ -167,20 +244,14 @@ show_audio_driver
 	lda #WHT
 	jsr CHROUT
 	lda audio_driver
+	cmp #1
 	bne +
-	lda #0
-	ldx #<audio_driver_0_txt
-	ldy #>audio_driver_0_txt
-	jsr print_msg
-	jmp .adrv_app
 
-+	cmp #1
-	bne +
 	lda #0
 	ldx #<audio_driver_1_txt
 	ldy #>audio_driver_1_txt
 	jsr print_msg
-	jmp .adrv_app
+	jmp adrv_app
 
 +	cmp #2
 	bne +
@@ -188,38 +259,16 @@ show_audio_driver
 	ldx #<audio_driver_2_txt
 	ldy #>audio_driver_2_txt
 	jsr print_msg
-	jmp .adrv_app
+	jmp adrv_app
 
 +	cmp #3
-	bne +
+	bne adrv_app
 	lda #0
 	ldx #<audio_driver_3_txt
 	ldy #>audio_driver_3_txt
 	jsr print_msg
-	jmp .adrv_app
 
-+	cmp #4
-	bne +
-	lda #0
-	ldx #<audio_driver_4_txt
-	ldy #>audio_driver_4_txt
-	jsr print_msg
-	jmp .adrv_app
-
-+	cmp #5
-	bne +
-	lda #0
-	ldx #<audio_driver_5_txt
-	ldy #>audio_driver_5_txt
-	jsr print_msg
-	jmp .adrv_app
-
-+	lda #0
-	ldx #<audio_driver_6_txt
-	ldy #>audio_driver_6_txt
-	jsr print_msg
-
-.adrv_app
+adrv_app
  	lda #GRN
 	jsr CHROUT
 	lda #")"
@@ -294,8 +343,8 @@ show_sid_addr
 	ldy #sidaddr_col
 	jsr PLOT
 	ldx audio_driver
-	cpx #5
-	bmi +
+	cpx #3
+	bne +
 	rts
 
 +	bit stereo_enable
@@ -342,9 +391,7 @@ show_dac_addr
 	jsr PLOT
 
 	ldx audio_driver						; allow changing DAC address
-	cpx #5
-	beq +
-	cpx #6
+	cpx #3
 	beq +
 	rts
 
@@ -389,31 +436,18 @@ show_dac_addr
 rts
 
 change_audio_addr
-	ldx audio_driver
-	cpx #5
-	bpl .not_sid
-	bit stereo_enable
-	bmi +
-	rts
-
-+	!ifdef c128 {
+	!ifdef c128 {
 		jsr set_window_menu_pane
 	}
+
+	lda audio_driver
+	cmp #3
+	beq +
 	jsr change_sid_addr
 	rts
 
-.not_sid
-	cpx #5
-	beq +
-	cpx #6
-	beq +
-	rts
-
-+	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
-	jsr change_dac_addr
-rtc
++	jsr change_dac_addr
+rts
 
 change_sid_addr
 	clc
@@ -530,9 +564,7 @@ show_filter_setting
 	ldy #filter_col
 	jsr PLOT
 	lda audio_driver
-	cmp #3
-	beq +
-	cmp #4
+	cmp #2
 	beq +
 	rts
 
@@ -580,9 +612,7 @@ show_resonance_setting
 	ldy #reson_col
 	jsr PLOT
 	lda audio_driver
-	cmp #3
-	beq +
-	cmp #4
+	cmp #2
 	beq +
 	rts
 
@@ -636,9 +666,7 @@ change_resonance_setting
 	+	ldx #scr_en_row
 		!ifndef c128 {
 			lda audio_driver
-			cmp #3
-			beq +
-			cmp #4
+			cmp #2
 			bne ++
 
 		+	inx

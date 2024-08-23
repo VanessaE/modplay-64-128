@@ -92,11 +92,6 @@ isr_startup
 	sta CIA1+$0d
 	bit CIA1+$0d			; and clear any pending IRQ
 
-	; ask the audio driver for the ISR entry address
-	; returns with .X/.Y = address low/high
-
-	+JSR_INDIRECT (audio_init_vec)
-
 	!ifndef c128 {
 		; if the screen is off, don't bother with the double-IRQ code,
 		; just point the IRQ directly to the audio driver entry
@@ -104,12 +99,15 @@ isr_startup
 		bit enable_screen_on_playback
 		bmi +
 
+		lda audio_isr_vec
+		sta CPU_IRQ_vector
+		lda audio_isr_vec+1
+		sta CPU_IRQ_vector+1
+
 		lda #0
 		sta VIC+$1a				; disable VIC raster IRQ
 		lsr VIC+$19				; clear any VIC IRQ that's pending
 
-		stx CPU_IRQ_vector
-		sty CPU_IRQ_vector+1
 		lda #$11				; start CIA timer B in continuous mode,
 		sta CIA1+$0f			; counting Phi2 cycles, no output on PB6
 		bne ++
@@ -122,10 +120,7 @@ isr_startup
 		lda #$a1
 		sta ntsc_adj
 
-	+	stx .iel + 1
-		sty .ieh + 1
-
-		lda #$81
+	+	lda #$81
 		sta VIC+$1a				; enable VIC raster IRQ
 		lda #<irq_stage_1
 		sta CPU_IRQ_vector
@@ -143,8 +138,10 @@ isr_startup
 		sta VIC+$1a
 		lsr VIC+$19
 
-		stx CPU_IRQ_vector
-		sty CPU_IRQ_vector+1
+		lda audio_isr_vec
+		sta CPU_IRQ_vector
+		lda audio_isr_vec+1
+		sta CPU_IRQ_vector+1
 		lda #$11
 		sta CIA1+$0f			; start CIA timer B
 	}
@@ -226,9 +223,9 @@ rts
 
 		sta CIA1+$0f			; 4 / start CIA timer B
 
-	.iel lda #0					; re-point the IRQ to the audio driver entry that
-		sta CPU_IRQ_vector		; was fetched at the start of the ISR setup
-	.ieh lda #0
+		lda audio_isr_vec		; re-point the IRQ to the audio driver entry that
+		sta CPU_IRQ_vector		; was set at the start of this code
+		lda audio_isr_vec+1
 		sta CPU_IRQ_vector+1
 
 	.s1a lda #0					; restore .A

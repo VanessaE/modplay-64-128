@@ -247,20 +247,12 @@ scanning_dir_msg
 	!fill 10,RIGHT
 	!text "found #",0
 
-audio_driver_0_txt
-	!text "SID 4-bit",0
 audio_driver_1_txt
-	!text "SID 4-bit, with dithering",0
+	!text "SID 4-bit",0
 audio_driver_2_txt
-	!text "SID 4-bit, with interpolating",0
-audio_driver_3_txt
 	!text "SID 8-bit PWM",0
-audio_driver_4_txt
-	!text "SID 8-bit PWM, interpolating",0
-audio_driver_5_txt
+audio_driver_3_txt
 	!text "DAC/DigiMAX 8-bit",0
-audio_driver_6_txt
-	!text "DAC/DigiMAX 8b, interpolating",0
 
 ram_driver_0_txt
 	!text "Standard 17xx-style REU",0
@@ -341,15 +333,18 @@ playlist_filename_background
 choose_audio_msg
 	!byte 5,RIGHT
 	!byte $80+23
-		!text CYAN,"Choose audio driver:",RETURN,RETURN
-	!byte 8,RIGHT
+		!text CYAN,"Choose audio driver:",RETURN
 	!byte 0
 
 choose_memory_msg
 	!byte 5,RIGHT
 	!byte $80+24
 		!text CYAN,"Choose memory driver:",RETURN,RETURN
-	!byte 8,RIGHT
+	!byte 0
+
+choose_driver_pos
+	!byte RETURN
+	!fill 5,RIGHT
 	!byte 0
 
 sample_player_msg

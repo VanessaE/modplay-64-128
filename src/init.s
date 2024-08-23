@@ -203,31 +203,6 @@ init
 	sta expansion_memory_start_address+1		; main_mem_free_start for this
 	sta expansion_memory_start_address+2
 
-	lda #<sid_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec
-	lda #>sid_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+1
-
-	lda #<sid_get_volume_table_resolution
-	sta audio_set_resolution_vec
-	lda #>sid_get_volume_table_resolution
-	sta audio_set_resolution_vec+1
-
-	lda #<sid_init
-	sta audio_init_vec
-	lda #>sid_init
-	sta audio_init_vec+1
-
-	lda #<sid_start
-	sta audio_start_vec
-	lda #>sid_start
-	sta audio_start_vec+1
-
-	lda #<sid_mute
-	sta audio_stop_vec
-	lda #>sid_mute
-	sta audio_stop_vec+1
-
 	!ifndef c128 {
 		lda #0
 		sta enable_screen_on_playback
@@ -350,6 +325,20 @@ init
 
 	jsr control_code_flags_copy
 
+	lda audio_driver
+	cmp #1
+	bne +
+	jsr sid_driver_init
+	jmp init_tables_gen
+
+;+	cmp #2
+;	bne +
+;	jsr sid_pwm_init
+;	jmp isr_timer_setup
+
++	jsr dac_driver_init
+
+init_tables_gen
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
@@ -662,7 +651,7 @@ default_config
 	!byte 8					; default device
 	!word $d700				; default stereo SID addr
 	!word $dd01				; default DigiMAX/DAC addr
-	!byte 0					; default audio driver
+	!byte 1					; default audio driver
 	!byte 1					; default RAM driver
 	!byte $80				; default Stereo mode (on/off)
 	!byte 0					; default filter setting

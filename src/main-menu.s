@@ -263,15 +263,15 @@ chk_key_dollar
 
 chk_key_d
 	cmp #$44
-	bne chk_key_m
+	bne chk_key_s
 	jsr choose_audio_driver
 	jmp show_main_menu
 
-chk_key_m
-	cmp #$4d
-	bne chk_key_s
-	jsr choose_memory_driver
-	jmp show_main_menu
+;chk_key_m
+;	cmp #$4d
+;	bne chk_key_s
+;	jsr choose_memory_driver
+;	jmp show_main_menu
 
 chk_key_s
 	cmp #$53
@@ -279,12 +279,11 @@ chk_key_s
 	!ifdef c128 {
 		jsr set_window_menu_pane
 	}
+
 	jsr toggle_stereo_mode
 
 	lda audio_driver
-	cmp #5
-	beq +
-	cmp #6
+	cmp #3
 	beq +
 	jmp redraw_menu
 
@@ -294,8 +293,16 @@ chk_key_s
 chk_key_a
 	cmp #$41
 	bne chk_key_f
-	jsr change_audio_addr
-	jmp main_loop
+
+	lda audio_driver
+	cmp #3
+	beq +
+
+	bit stereo_enable
+	bpl ++
+
++	jsr change_audio_addr
+++	jmp main_loop
 
 chk_key_f
 	cmp #$46
@@ -303,8 +310,13 @@ chk_key_f
 	!ifdef c128 {
 		jsr set_window_menu_pane
 	}
+
+	lda audio_driver
+	cmp #2
+	bne +
 	jsr change_filter_setting
-	jmp main_loop
+
++	jmp main_loop
 
 chk_key_r
 	cmp #$52
@@ -312,8 +324,13 @@ chk_key_r
 	!ifdef c128 {
 		jsr set_window_menu_pane
 	}
+
+	lda audio_driver
+	cmp #2
+	bne +
 	jsr change_resonance_setting
-	jmp main_loop
+
++	jmp main_loop
 
 chk_key_e
 	!ifndef c128 {
@@ -624,8 +641,8 @@ draw_menu_page_c
 
 	; display either SID or DAC address, if SID addr, only if stereo is on.
 	lda audio_driver
-	cmp #5
-	bpl .not_sid_menu
+	cmp #3
+	beq not_sid_menu
 
 	bit stereo_enable
 	bpl +
@@ -650,14 +667,8 @@ draw_menu_page_c
 	}
 	jmp ++
 
-.not_sid_menu
-	cmp #5
-	beq +
-	cmp #6
-	beq +
-	jmp ++
-
-+	ldx #<menu_text_dac_addr
+not_sid_menu
+	ldx #<menu_text_dac_addr
 	ldy #>menu_text_dac_addr
 	jsr print_menu_line
 	!ifndef c128 {
@@ -668,9 +679,7 @@ draw_menu_page_c
 
 	; display filter and resonance or not
 ++	lda audio_driver
-	cmp #3
-	beq +
-	cmp #4
+	cmp #2
 	beq +
 	jmp ++
 
@@ -686,7 +695,7 @@ draw_menu_page_c
 	++	ldx #<menu_text_enable_screen
 		ldy #>menu_text_enable_screen
 		jsr print_menu_line
-		
+
 		ldx #<menu_text_enable_screen_b
 		ldy #>menu_text_enable_screen_b
 		jsr print_menu_line
