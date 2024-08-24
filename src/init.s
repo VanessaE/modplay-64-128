@@ -65,13 +65,15 @@ init
 	iny
 	bne -
 
-	ldy #15
+	ldy #0
 -	lda default_config,y
+	cmp #$ff
+	beq +
 	sta config_space,y
-	dey
-	bpl -
+	iny
+	jmp -
 
-	lda FA
++	lda FA
 	sta boot_device
 	sta load_device
 	lda #0
@@ -202,11 +204,6 @@ init
 	sta expansion_memory_start_address			; main mem driver will use 
 	sta expansion_memory_start_address+1		; main_mem_free_start for this
 	sta expansion_memory_start_address+2
-
-	!ifndef c128 {
-		lda #0
-		sta enable_screen_on_playback
-	}
 
 	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
 	; Code by Graham (reformatted for Acme and my code style)
@@ -644,19 +641,19 @@ fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
 default_config
 	!ifndef c128 {			; signature
-		!byte $ff,0,"c",6,4
+		!byte $64,0,"c",6,4
 	} else {
-		!byte $ff,"c",1,2,8
+		!byte $80,"c",1,2,8
 	}
 	!byte 8					; default device
 	!word $d700				; default stereo SID addr
 	!word $dd01				; default DigiMAX/DAC addr
-	!byte 1					; default audio driver
-	!byte 1					; default RAM driver
-	!byte $80				; default Stereo mode (on/off)
+	!byte 1					; default audio driver (SID 4-bit)
+	!byte 1					; default RAM driver (REU)
+	!byte $80				; default Stereo mode (on)
 	!byte 0					; default filter setting
 	!byte 0					; default resonance setting
-	!byte 0					; default screen enable
+	!byte $80				; default screen enable (on)
 	!byte $ff				; end of file marker
 configuration_data_end
 
