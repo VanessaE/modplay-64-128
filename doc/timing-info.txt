@@ -1,0 +1,104 @@
+REU DRIVER TIMING INFO
+assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo, C64 screen
+turned on unless otherwise noted.  All times rounded-up to the next whole
+cycle.
+
+-----------
+fetch DMA calls alone:
+
+on average, the step rate will be close to 1.7, so it'll be fetching
+16 * 1.7 = ~27 bytes per transfer:
+
+2 +4+4+27 = 37 cycles per track, total 148 cycles
+
+Worst possible case would be playing the highest note, B-4, which would have
+a step rate of about 8.688, so fetching 16 * 8.333 = ~139 bytes:
+
+2 +4+4+139 = 149 cycles per track, total 596 cycles
+
+plus it takes at least 3+4+3 = 10 cycles to check the CIA timer in case the
+fetch has to be postponed for the sake of the ISR
+
+For the C128, the hardware does clock stretching on I/O accesses, but only
+for the one cycle when the actual read/write is being committed.  Most of
+the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
+for their whole duration. The explicit 1/2 MHz switching above adds 18,
+2 MHz cycles (9 for the shift down to 1 MHz, 9 to shift back up).
+
+being almost twice as fast, it'll have half the step rates, so best step rate
+will be about 0.137, typical will be around 0.9, worst around 4.2, so it'll
+be fetching ~2, ~13, and ~66 bytes, respectively.
+
+that machine's fetch timings should be about:
+
+most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
+worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
+CIA timer check: 3+5+3 = 11 cycles
+
+----------
+fetch loop open:
+
+2+4+2+2 = 10 cycles
+
+within the loop (not counting the above DMA calls, those are added below):
+
+minimum time (also the most likely case), all four tracks updating two
+bytes of the 4-byte address, and not at the end of the sample yet:
+
+(3+2+3 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 208 cycles
+
+worst possible case, all four tracks have to update all four bytes, not at
+the end of sample yet:
+
+(3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 272 cycles
+
+---------
+fetch routine main loop close:
+5+2+6 = 13 cycles
+
+Total fetch runtime for all four tracks,
+amortized across 16 output samples:
+
+C64:
+likely: (10 + 208 + 148 + 13) / 16 = ~24 cycles
+worst:  (10 + 272 + 596 + 13) / 16 = ~56 cycles
+
+C128:
+likely: (10 + 208 + 180 + 11) / 16 = ~26 cycles
+worst:  (10 + 272 + 372 + 11) / 16 = ~42 cycles
+
+---------
+lookahead/mixer/push-to-buffer routine runtime per output sample
+
+mixer/lookahead timings
+entry + exit:  6 +2+2 +3+4+3 +6 = 26 cycles
+
+each loop:
+2+4+4+4+4+2+5 +2+4+4+4+4+2+5 +2 = 52 cycles per pass
+
+so per-sample, the mixer runtime is:
+(52 * 16 + 26) / 16 = ~54 cycles
+
+------------
+GRAND TOTALS
+
+Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53 or
+54 cycles per byte for the ISR, plus the "likely" code path in the fetch
+routine taking 24 or 26 cycles, plus some fudge:
+
+The C64 should be run at almost 7.7 kHz with the
+screen off, SID 4-bit stereo:
+
+1022727 / (54 + 53 + 24 + 2) = ~7689.7
+
+or about 5.2 KHz with the screen on since ISR is always 3 rasters:
+
+1022727 / (65 * 3) = ~5244.8
+
+C128 should be able to run at about 15 kHz:
+
+(1022727 * 2) / (54 + 54 + 26 + 2) = ~15040.1
+
+These timings do not take into account convergeance.  As the sample rate
+rises, the step rates drop, which decreases the lookahead fetch length,
+which in turn further reduces the cycle counts.

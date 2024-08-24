@@ -1098,6 +1098,8 @@ rts
 ; the actual mixer and lookahead routine
 ; this is run just after each pass through the RAM driver's fetch routine
 
+mixer_cycle_count = 54
+
 run_lookahead_and_mixer
 	txa													; 2
 	adc #16												; 2
@@ -1149,21 +1151,9 @@ run_lookahead_and_mixer
 		sta audio_buffer_right,x						; 5
 
 		inx												; 2
-
 	!if .idx2 = 0 { !set mixer_loop_close = * }
 	}
 rts
-
-mixer_cycle_count = 54
-
-; mixer/lookahead timings
-; entry + exit:  6 +2+2 +3+4+3 +6 = 26 cycles
-;
-; each loop:
-; 2+4+4+4+4+2+5 +2+4+4+4+4+2+5 +2 = 52 cycles per pass
-;
-; so per-sample, the mixer runtime is:
-; (52 * 16 + 26) / 16 = ~54 cycles
 
 lookahead_code_read_byte_addr_idx
 	!byte 0
@@ -1176,4 +1166,3 @@ lookahead_code_volume_addr_idx
 	!byte vol_addr_2 - vol_addr_1
 	!byte vol_addr_3 - vol_addr_1
 	!byte vol_addr_4 - vol_addr_1
-
