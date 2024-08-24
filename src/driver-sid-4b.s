@@ -26,8 +26,13 @@ sid_driver_init
 	sta audio_start_vec+1
 
 	lda #<sid_mute
-	sta audio_stop_vec
+	sta audio_mute_vec
 	lda #>sid_mute
+	sta audio_mute_vec+1
+
+	lda #<sid_stop
+	sta audio_stop_vec
+	lda #>sid_stop
 	sta audio_stop_vec+1
 
 	bit stereo_enable
@@ -118,6 +123,9 @@ sid_mute
 -	sta SID,x
 	dex
 	bpl -
+rts
+
+sid_stop
 rts
 
 sid_isr_4b_mono					; 7 cycles coming in

@@ -28,8 +28,13 @@ dac_driver_init
 	sta audio_start_vec+1
 
 	lda #<dac_mute
-	sta audio_stop_vec
+	sta audio_mute_vec
 	lda #>dac_mute
+	sta audio_mute_vec+1
+
+	lda #<dac_stop
+	sta audio_stop_vec
+	lda #>dac_stop
 	sta audio_stop_vec+1
 
 	lda dac_addr
@@ -55,12 +60,11 @@ is_stereo_dac
 
 	lda CIA2
 	and #%11110011
-	ora #%00001000
+	ora #%00000100
 	sta .dca+1
 
 	lda CIA2
 	and #%11110011
-	ora #%00001100
 	sta .dcb+1
 
 	lda #<dac_isr_stereo_user_port
@@ -135,6 +139,17 @@ dac_start
 
 dac_mute
 rts
+
+dac_stop
+	lda dac_addr+1
+	cmp #$dd
+	bne +
+
+	lda CIA2
+	and #%11110111
+	ora #%00000100
+	sta CIA2
++ rts
 
 dac_isr_mono					; 7 cycles coming in
 	sta .iam + 1				; 4

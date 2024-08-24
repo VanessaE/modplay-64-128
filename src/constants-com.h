@@ -321,18 +321,19 @@
 	num_rows							= $15ff
 	num_columns							= $1600
 
-	; free: $1601 through $1627
+	; free: $1601 through $1625
 
 	; various program vectors
 
-	fetch_block_vec						= $1628 ; 2 bytes
-	stash_block_vec						= $163a ; 2 bytes
+	fetch_block_vec						= $1626 ; 2 bytes
+	stash_block_vec						= $1638 ; 2 bytes
 
-	print_vec							= $163c ; 2 bytes
+	print_vec							= $163a ; 2 bytes
 
-	audio_set_resolution_vec			= $163e ; 2 bytes
-	audio_driver_set_cycle_count_vec	= $1640 ; 2 bytes
-	audio_start_vec						= $1642 ; 2 bytes
+	audio_set_resolution_vec			= $163c ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $163e ; 2 bytes
+	audio_start_vec						= $1640 ; 2 bytes
+	audio_mute_vec						= $1642 ; 2 bytes
 	audio_stop_vec						= $1644 ; 2 bytes
 	audio_isr_vec						= $1646 ; 2 bytes
 
