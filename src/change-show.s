@@ -362,14 +362,14 @@ show_sid_addr
 	lda #"D"
 	jsr CHROUT
 	lda stereo_sid_addr+1
-	jsr to_hex
+	jsr to_hex_caps
 	jsr CHROUT
 	lda stereo_sid_addr
 	lsr
 	lsr
 	lsr
 	lsr
-	jsr to_hex
+	jsr to_hex_caps
 	jsr CHROUT
 	lda #"0"
 	jsr CHROUT
@@ -416,17 +416,16 @@ show_dac_addr
 	lda #"D"
 	jsr CHROUT
 	lda dac_addr+1
-	jsr to_hex
+	jsr to_hex_caps
 	jsr CHROUT
 	lda dac_addr
 	lsr
 	lsr
 	lsr
 	lsr
-	jsr to_hex
+	jsr to_hex_caps
 	jsr CHROUT
-	lda dac_addr
-	jsr to_hex
+	lda #"0"
 	jsr CHROUT
 
 ++	lda #GRN

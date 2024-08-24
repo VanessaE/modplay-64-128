@@ -1040,7 +1040,7 @@ rts
 	rts
 }
 
-; translates a 0-15 value in .A into printable "0" to "F", returned in .A
+; translates a 0-15 value in .A into printable "0" to "f", returned in .A
 to_hex
 	and #$0f
 	cmp #10
@@ -1051,6 +1051,19 @@ rts
 +	clc
 	adc #$37
 rts
+
+; Same thing but with "A" through "F" capitalized.
+to_hex_caps
+	and #$0f
+	cmp #10
+	bcs +
+	adc #$30
+rts
+
++	clc
+	adc #$57
+rts
+
 
 ; directly stores to the screen starting at the address in utility_pointer to
 ; "print" the two-digit hex value in .A
