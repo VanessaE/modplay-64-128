@@ -55,11 +55,12 @@ is_stereo_dac
 
 	lda CIA2
 	and #%11110011
+	ora #%00001000
 	sta .dca+1
 
 	lda CIA2
 	and #%11110011
-	ora #%00000100
+	ora #%00001100
 	sta .dcb+1
 
 	lda #<dac_isr_stereo_user_port
