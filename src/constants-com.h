@@ -345,8 +345,9 @@
 
 	product								= $164a ; and $164b / the product from multiply routine
 
-	; $free: $164c through $16e9
+	; $free: $164c through $16e8
 
+	current_load_method					= $16e9
 	loader_compatibility_table			= $16ea ; 22 bytes - devices 8 through 30.
 
 	; mods' lengths are big-endian, but addrs and lengths here are little-

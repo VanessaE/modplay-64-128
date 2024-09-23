@@ -108,6 +108,10 @@ load_by_filename_entry
 
 	jsr test_loader_compatibility
 
+	ldx load_device
+	lda loader_compatibility_table-8,x
+	sta current_load_method
+
 	jsr populate_loader_mini_popup
 
 ; preset the divisor to be proportional to max number of progress bar segments
@@ -202,10 +206,9 @@ load_by_filename_entry
 	sta CIA1+$09
 	sta CIA1+$08
 
-	ldy load_device
-	lda loader_compatibility_table-8,y
-
+	bit current_load_method
 	bmi + 
+
 	jsr load_via_acptr
 	jmp ++
 
@@ -425,8 +428,7 @@ print_loader_type
 	ldy #>using_loader_msg
 	jsr print_msg
 
-	ldy load_device
-	lda loader_compatibility_table-8,y
+	bit current_load_method
 	bmi + 
 
 	ldx #<loader_acptr_msg
