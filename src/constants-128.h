@@ -6,12 +6,13 @@
 
 	; Zero Page
 
-	; free: $2b, $2c
+	progress_bar_char_pointer		= $2b ; and $2c
+
 	; free: $54, $55
 	; free: $61, $62
-	; free: $c9
 
-	progress_bar_char_pointer		= $ca ; and $cb
+	expansion_transfer_local_addr	= $c9 ; through $cb
+	; the third byte will always be 0, but SCPU RAM driver will need this later.
 
 	; low memory area -- duh 😛
 

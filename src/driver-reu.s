@@ -61,9 +61,9 @@ reu_fetch_row
 rts
 
 reu_fetch_block
-	lda #<load_buffer
+	lda expansion_transfer_local_addr
 	sta DMA_ADL
-	lda #>load_buffer
+	lda expansion_transfer_local_addr+1
 	sta DMA_ADH
 
 	lda expansion_memory_target_pointer
@@ -91,9 +91,9 @@ reu_fetch_block
 rts
 
 reu_stash_block
-	lda #<load_buffer
+	lda expansion_transfer_local_addr
 	sta DMA_ADL
-	lda #>load_buffer
+	lda expansion_transfer_local_addr+1
 	sta DMA_ADH
 
 	lda expansion_memory_target_pointer

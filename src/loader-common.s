@@ -137,6 +137,13 @@ load_by_filename_entry
 	sta divisor+1
 	stx divisor+2	; divisor is now number of bytes per segment.
 
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta expansion_transfer_local_addr+2
+
 	lda expansion_memory_start_address
 	sta expansion_memory_target_pointer
 	lda expansion_memory_start_address+1
@@ -204,9 +211,9 @@ load_by_filename_entry
 
 +	jsr load_via_stop_wedge
 
-++	jsr zero_first_exp_pages
+++	jsr reformat_pattern_data
 
-	jsr reformat_pattern_data
+	jsr zero_first_exp_pages
 rts
 
 abort_load
@@ -539,10 +546,17 @@ zero_first_exp_pages
 	lda #0
 	ldx #0
 
--	sta load_buffer,x
-	sta load_buffer+256,x
+-	sta expansion_transfer_buffer,x
+	sta expansion_transfer_buffer+256,x
 	dex
 	bne -
+
+	lda #<expansion_transfer_buffer
+	sta expansion_transfer_local_addr
+	lda #>expansion_transfer_buffer
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta expansion_transfer_local_addr+2
 
 	lda expansion_memory_start_address
 	sta expansion_memory_target_pointer
