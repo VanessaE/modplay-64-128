@@ -471,26 +471,23 @@ reformat_pattern_data
 	bne +
 
 	lda #<header15_seek_to_pat_data
+	clc
+	adc expansion_memory_start_address
 	sta expansion_memory_target_pointer
 	lda #>header15_seek_to_pat_data
+	adc expansion_memory_start_address+1
 	sta expansion_memory_target_pointer+1
 	bne ++
 
 +	lda #<header31_seek_to_pat_data
+	clc
+	adc expansion_memory_start_address
 	sta expansion_memory_target_pointer
 	lda #>header31_seek_to_pat_data
+	adc expansion_memory_start_address+1
 	sta expansion_memory_target_pointer+1
 
-++	clc
-	lda expansion_memory_start_address
-	adc expansion_memory_target_pointer
-	sta expansion_memory_target_pointer
-
-	lda expansion_memory_start_address+1
-	adc expansion_memory_target_pointer+1
-	sta expansion_memory_target_pointer+1
-
-	lda expansion_memory_start_address+2
+++	lda expansion_memory_start_address+2
 	adc #0
 	sta expansion_memory_target_pointer+2
 

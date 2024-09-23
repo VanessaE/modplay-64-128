@@ -137,9 +137,11 @@ load_by_filename_entry
 	sta divisor+1
 	stx divisor+2	; divisor is now number of bytes per segment.
 
-	lda #0
+	lda expansion_memory_start_address
 	sta expansion_memory_target_pointer
-	sta expansion_memory_target_pointer+1 ; start at $000000 in expansion RAM
+	lda expansion_memory_start_address+1
+	sta expansion_memory_target_pointer+1
+	lda expansion_memory_start_address+2
 	sta expansion_memory_target_pointer+2
 
 	lda #0
@@ -542,8 +544,11 @@ zero_first_exp_pages
 	dex
 	bne -
 
+	lda expansion_memory_start_address
 	sta expansion_memory_target_pointer
+	lda expansion_memory_start_address+1
 	sta expansion_memory_target_pointer+1
+	lda expansion_memory_start_address+2
 	sta expansion_memory_target_pointer+2
 
 	sta stash_size
