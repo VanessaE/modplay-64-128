@@ -213,6 +213,10 @@
 	audio_buffer_left					= $1100 ; 1 page
 	audio_buffer_right					= $1200 ; 1 page
 
+	expansion_transfer_buffer			= $1100 ; 2 pages
+	; it's safe to reuse the audio bufs for this since this will only be used
+	; by the loader
+
 	multab2hi							= $1300 ; 2 pages
 
 	; All of the various tables, buffers (both C64 and C128)
