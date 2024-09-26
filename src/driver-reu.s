@@ -51,12 +51,22 @@ reu_fetch_row
 
 	!ifndef c128 {
 		sty DMA_CMD
-	} else {			; on C128 we need to disable interrupts, lest the ISR
-		sei				; fire while the clock is at 1 MHz
-		sta VIC+$30
+	} else {
+	; on C128 we need to disable interrupts, lest the ISR fire while the clock
+	; is at 1 MHz... except: if there's a SCPU present, 1/2 MHz mode doesn't
+	; matter, the SCPU will automatically stretch the clock anyway.
+
+		!ifndef scpu {
+			sei
+			sta VIC+$30
+		}
+
 		sty DMA_CMD
-		sty VIC+$30
-		cli
+
+		!ifndef scpu {
+			sty VIC+$30
+			cli
+		}
 	}
 rts
 
@@ -80,13 +90,17 @@ reu_fetch_block
 	lda #$91
 
 	!ifdef c128 {
-		dec VIC+$30
+		!ifndef scpu {
+			dec VIC+$30
+		}
 	}
 
 	sta DMA_CMD
 
 	!ifdef c128 {
-		sta VIC+$30
+		!ifndef scpu {
+			sta VIC+$30
+		}
 	}
 rts
 
@@ -111,13 +125,17 @@ reu_stash_block
 	lda #$90
 
 	!ifdef c128 {
-		sta VIC+$30
+		!ifndef scpu {
+			sta VIC+$30
+		}
 	}
 
 	sta DMA_CMD
 
 	!ifdef c128 {
-		inc VIC+$30
+		!ifndef scpu {
+			inc VIC+$30
+		}
 	}
 rts
 
@@ -129,7 +147,9 @@ REUCOMMAND_FETCH    = $91   ; immediately, no reload
 
 reu_get_size
 	!ifdef c128 {
-		dec VIC+$30
+		!ifndef scpu {
+			dec VIC+$30
+		}
 	}
 
 	ldx #0  ; pre-init
@@ -173,7 +193,9 @@ reu_get_size
 	stx reu_highest_bank		; if 0, REU not detected at all.
 
 	!ifdef c128 {
-		inc VIC+$30
+		!ifndef scpu {
+			inc VIC+$30
+		}
 	}
 rts
 
@@ -320,8 +342,10 @@ reu_run_fetch_and_mixer
 				bcs -										; 3/2
 
 				!ifdef c128 {
-					sei										; 2
-					dec VIC+$30								; 7
+					!ifndef scpu {
+						sei										; 2
+						dec VIC+$30								; 7
+					}
 				}
 
 				sty DMA_CMD									; 4 + N
@@ -329,8 +353,10 @@ reu_run_fetch_and_mixer
 				; N will vary by pitch, on average it'll be around 32 (2*16) on C64
 
 				!ifdef c128 {
-					sty VIC+$30								; 4
-					cli										; 2
+					!ifndef scpu {
+						sty VIC+$30								; 4
+						cli										; 2
+					}
 				}
 			}
 

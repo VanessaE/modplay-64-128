@@ -112,10 +112,17 @@ isr_startup
 		sta CIA1+$0f			; counting Phi2 cycles, no output on PB6
 		bne ++
 
+	+	!ifdef scpu {
+			bit SCPU_PRESENT
+			bpl +
+			sta SCPU_TURBO_OFF
+		  +
+		}
+
 		; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
 		; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
 
-	+	bit pal_flag
+		bit pal_flag
 		bmi +
 		lda #$a1
 		sta ntsc_adj
@@ -230,6 +237,10 @@ rts
 
 	.s1a lda #0					; restore .A
 		cli
+
+		!ifdef scpu {
+			sta SCPU_TURBO_ON
+		}
 	rti
 }
 

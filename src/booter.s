@@ -32,9 +32,11 @@ boot_start
 	sta VIC+$20
 	sta VIC+$21
 	!ifdef c128 {
-		jsr disable_screen
-		lda #1
-		sta VIC+$30
+		!ifndef scpu {
+			jsr disable_screen
+			lda #1
+			sta VIC+$30
+		}
 
 		lda kernal_4080_mode
 		pha
@@ -55,8 +57,10 @@ boot_start
 
 		pla
 		bmi out ; if started on 80 columns, stay in 2 MHz mode.
-		dec VIC+$30
-		jsr enable_screen
+		!ifndef scpu {
+			dec VIC+$30
+			jsr enable_screen
+		}
 
 	} else {
 		lda CIA2					; CIA: select VIC-II bank 2

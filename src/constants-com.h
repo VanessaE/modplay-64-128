@@ -345,7 +345,10 @@
 
 	product								= $164a ; and $164b / the product from multiply routine
 
-	; $free: $164c through $16e8
+	supercpu_detected					= $164c
+	supercpu_turbo_available			= $164d
+
+	; $free: $164e through $16e8
 
 	current_load_method					= $16e9
 	loader_compatibility_table			= $16ea ; 22 bytes - devices 8 through 30.
@@ -401,6 +404,16 @@
 	; C128 only note:  in $D030, only bits 1 & 0 matter, so "test" and 1/2 MHz
 	; mode switching will work with any stored value as long as those two bits
 	; are correct.
+
+	!ifdef scpu {
+		SCPU_TURBO_OFF					= $d07a
+		SCPU_TURBO_ON					= $d07b
+		SCPU_ENABLE_HW_REGS				= $d07e
+		SCPU_DISABLE_HW_REGS			= $d07f
+		SCPU_OPTIMIZATION_MODE			= $d0b3
+		SCPU_JD_TURBO_SWITCH			= $d0b5
+		SCPU_PRESENT					= $d0b7
+	}
 
 	SID									= $d400
 	CIA1								= $dc00
@@ -481,7 +494,9 @@ LGRY								= $9b
 
 HOME								= $13
 CLR									= $93
+
 DEL									= $14
+INST								= $94
 
 UP									= $91
 DOWN								= $11

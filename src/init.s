@@ -15,8 +15,10 @@ rti
 
 init
 	!ifdef c128 {
-		lda #1
-		sta VIC+$30
+		!ifndef scpu {
+			lda #1
+			sta VIC+$30
+		}
 		jsr disable_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete
@@ -29,6 +31,26 @@ init
 	ldx #<initializing_msg
 	ldy #>initializing_msg
 	jsr print_msg
+
+	!ifdef scpu {
+		lda SCPU_PRESENT
+		cmp #1
+		bne +
+		ror
+		ror
+		sta supercpu_detected
+		sta SCPU_TURBO_ON
+
+		sta SCPU_ENABLE_HW_REGS
+		!ifndef c128 {
+			lda #%01000100
+		} else {
+			lda #%10000100
+		}
+		sta SCPU_OPTIMIZATION_MODE
+		sta SCPU_DISABLE_HW_REGS
+	  +
+	}
 
 	!ifdef c128 { ; reset F-keys to normal PETSCII codes
 		ldy #9

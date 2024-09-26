@@ -14,6 +14,9 @@
 
 	!text "modplay 128 v"
 	!text version_major+$30,".",version_minor+$30
+	!ifdef scpu {
+		!text " supercpu edition"
+	}
 	!byte 0				; Boot message: "BOOTING..."
 
 	!text "", 0							; Program to load on boot.

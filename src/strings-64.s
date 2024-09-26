@@ -1,7 +1,16 @@
 program_title
-	!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v"
-	!text LRED,version_major+$30,".",version_minor+$30
-	!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
+	!ifndef scpu {
+		!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v"
+		!text LRED,version_major+$30,".",version_minor+$30
+		!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
+	} else {
+		!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v"
+		!text LRED,version_major+$30,".",version_minor+$30
+		!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player"
+		!text LRED,"[",PUR,"SCPU",LRED,"]"
+		!fill 6,LEFT
+		!byte INST,RETURN,0
+	}
 
 ; these are all RLE-encoded for the print_msg_rle* function
 
