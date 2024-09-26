@@ -59,14 +59,23 @@ sid_driver_init
 rts
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
-; for faster CPUs, divide the raw count by the CPU MHz and round up.
+
+; For faster CPUs, divide the raw count by the CPU MHz and round up.
+; don't forget to account for clock stretching, and be sure to add one 1 MHz
+; cycle for "fudge".
 
 sid_set_isr_cycle_count
-	!ifndef c128 {
-		lda #53
+
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #53
+		} else {
+			lda #28
+		}
 	} else {
-		lda #28
+		lda #8					; could be as low as 6 but we're fudging it.
 	}
+
 	sta audio_driver_isr_cycle_count
 rts
 
@@ -163,7 +172,3 @@ sid_isr_4b_stereo				; 7 cycles coming in
 rti								; 6 cycles to exit
 
 }
-
-; C64: each of the ISRs runs for 53 cycles
-; C128: each runs for 56 cycles including clock stretching, divide by 2 = 28 cycles
-

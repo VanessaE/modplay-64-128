@@ -35,9 +35,22 @@ most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
 worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
 CIA timer check: 3+5+3 = 11 cycles
 
-----------
-fetch loop open:
 
+On SuperCPU we split the transfer into smaller chunks to avoid the need for
+the timer check loop, and on average each fetch will probably only need to get
+two bytes since the whole fetch-mix-output chain is already running several
+times faster than stock:
+
+(20+20+(2*20)) * 4 = 320 turbo cycles per track
+multiply by 4 = 1280 turbo cycles for all four tracks
+
+We'll just assume a worst-case of 3 times that amount, or 3840 turbo cycles.
+
+
+----------
+Fetch loop
+
+open:
 2+4+2+2 = 10 cycles
 
 within the loop (not counting the above DMA calls, those are added below):
@@ -52,20 +65,39 @@ the end of sample yet:
 
 (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 272 cycles
 
----------
 fetch routine main loop close:
 5+2+6 = 13 cycles
+
+
+On SuperCPU-equipped machines, accounting for cache misses:
+
+open loop:
+(2+20+2+2) = 26 turbo cycles
+
+within loop, most likely code path:
+2+20+3+2+3+3+2+3+20+3 +3+20 +3+20 +3+2+3+2+3+2+3 +2 = 127 cycles per track
+multiply by 4 = 508 turbo cycles for all four tracks
+
+We'll assume double that amount for the worst case, so 1016 turbo cycles.
+
+close loop:
+5+2+3 = 10 turbo cycles
 
 Total fetch runtime for all four tracks,
 amortized across 16 output samples:
 
 C64:
-likely: (10 + 208 + 148 + 13) / 16 = ~24 cycles
-worst:  (10 + 272 + 596 + 13) / 16 = ~56 cycles
+	likely: (10 + 208 + 148 + 13) / 16 = ~24 cycles
+	worst:  (10 + 272 + 596 + 13) / 16 = ~56 cycles
 
 C128:
-likely: (10 + 208 + 180 + 11) / 16 = ~26 cycles
-worst:  (10 + 272 + 372 + 11) / 16 = ~42 cycles
+	likely: (10 + 208 + 180 + 11) / 16 = ~26 cycles
+	worst:  (10 + 272 + 372 + 11) / 16 = ~42 cycles
+
+SCPU:
+	likely: (26 + 508 + 1280 + 10) / 16 = ~114 turbo cycles
+	worst:  (26 + 1016 + 3840 + 10) / 16 = ~305 turbo cycles
+
 
 ---------
 lookahead/mixer/push-to-buffer routine runtime per output sample
@@ -78,6 +110,36 @@ each loop:
 
 so per-sample, the mixer runtime is:
 (52 * 16 + 26) / 16 = ~54 cycles
+
+
+--------------------
+AUDIO DRIVER TIMINGS
+
+For the 4-bit SID driver:
+
+C64: each ISR call runs for 53 cycles.
+C128: each runs for 56 cycles including clock stretching, divide by 2 = 28 cycles
+
+SuperCPU:  treat each I/O access as a flat 20 turbo cycles, all other cycle
+counts like normal.  There are two I/O accesses in the mono driver and three
+in the stereo driver.
+
+Mono mode adds 16 * 2 cycles, for a total of 85 turbo cycles
+Stereo mode adds 16 * 3 cycles, for a total of 101 turbo cycles
+
+
+For the 8-bit DAC driver:
+
+Stock machines:
+Same timings as the SID driver if it's a single DAC on the Expansion or User
+Port, plus 12 cycles if it's stereo DigiMAX on the User Port, for a maximum of
+65 cycles on the C64, or 34, 1 MHz cycles on the C128.
+
+With SuperCPU:
+Identical to the SID driver's SuperCPU timings, except add 40 cycles if
+it's stereo DigiMAX on the User Port, for a total of 85, 101, or 141 turbo
+cycles.
+
 
 ------------
 GRAND TOTALS
@@ -99,6 +161,49 @@ C128 should be able to run at about 15 kHz:
 
 (1022727 * 2) / (54 + 54 + 26 + 2) = ~15040.1
 
-These timings do not take into account convergeance.  As the sample rate
-rises, the step rates drop, which decreases the lookahead fetch length,
-which in turn further reduces the cycle counts.
+C64 + SuperCPU with screen on will do 15.7 kHz on all modes (the timing could
+allow for a much faster rate, but it just rounds up to 1 raster even).
+
+On SuperCPU-equipped machines:
+
+These should need 54 turbo cycles for the mixer, 85 to 141 for the
+ISR, 114 to 305 for the actual fetch, and 20 cycles' worth of fudge, for a total of 
+273 to 329 turbo cycles.
+
+20000000 / (54 + 85 + 114 + 20) = ~73260.1 
+20000000 / (54 + 101 + 114 + 20) = ~69204.2
+20000000 / (54 + 141 + 114 + 20) = ~60790.3
+20000000 / (54 + 141 + 305 + 20) = ~38461.5
+
+So IN THEORY, such a machine should be able to break 38 kHz as long as VIC-II
+screen is turned off, and top out somewhere in the 73 kHz range with the
+fastest audio driver and best fetch case....
+
+But in reality? LOL, NOPE!
+
+Not only does none of this account for unexpected slowdowns and cache misses
+that I haven't thought of yet, we also have to limit the engine to around 50
+kHz or so or certain variables (like the tempo loop counter) will overflow and
+others will not be precise enough (like the steprate variables).
+
+Easiest way to limit it here is to use all of the aforementioned worst-case
+timings, and round each of the three code sections' timings up to the next
+20-turbo-cycle count, and add 20 cycles' worth of fudge:
+
+So (54 + 141 + 305) becomes (60 + 160 + 320 + 20)
+
+Divide by 20 gives (3 + 8 + 16 + 1) in 1 MHz equivalents, values we can use
+for the system's timers.
+
+1022727 / (3 + 8 + 16 + 1) = ~36526.0
+
+So almost 37 kHz, and that's with a really course, conservative limit.  It may
+be possible to go even faster, but let's not get greedy... yet. 😛
+
+
+====
+NOTE
+
+None of the above timings take into account convergeance.  As the sample rate
+rises, the step rates drop, which decreases the lookahead fetch length, which
+in turn further reduces the cycle counts.

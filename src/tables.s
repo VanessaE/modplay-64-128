@@ -175,31 +175,33 @@ regen_all_tables
 	bne +
 	rts
 
-+	bit allow_regen_msg
-	bpl no_msgs1
++	!ifndef scpu {
+		bit allow_regen_msg
+		bpl no_msgs1
 
-	!ifndef c128 {
-		bit enable_screen_on_playback ; because if it's enabled, the display will
-		bmi +						; have switched to ASCII mode by this point.
+		!ifndef c128 {
+			bit enable_screen_on_playback ; because if it's enabled, the display will
+			bmi +						; have switched to ASCII mode by this point.
 
-		jsr gray_out
-		jsr draw_short_popup
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		jsr print_msg
-		jmp ++
+			jsr gray_out
+			jsr draw_short_popup
+			lda #0
+			ldx #<main_player_regen_tables_msg
+			ldy #>main_player_regen_tables_msg
+			jsr print_msg
+			jmp ++
 
-	+	lda #0
-		ldx #<main_player_regen_tables_msg_ascii
-		ldy #>main_player_regen_tables_msg_ascii
-		jsr print_msg_ascii
-	 ++
-	} else {
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		jsr print_msg
+		+	lda #0
+			ldx #<main_player_regen_tables_msg_ascii
+			ldy #>main_player_regen_tables_msg_ascii
+			jsr print_msg_ascii
+		 ++
+		} else {
+			lda #0
+			ldx #<main_player_regen_tables_msg
+			ldy #>main_player_regen_tables_msg
+			jsr print_msg
+		}
 	}
 
 no_msgs1
@@ -218,22 +220,24 @@ no_msgs1
 	jsr generate_tempo_table
 	jsr generate_steprate_table
 
-+	bit allow_regen_msg
-	bpl no_msgs2
-
-	!ifndef c128 {
-		bit enable_screen_on_playback
++	!ifndef scpu {
+		bit allow_regen_msg
 		bpl no_msgs2
 
-		lda #0
-		ldx #<main_player_regen_erase_tables_msg_ascii
-		ldy #>main_player_regen_erase_tables_msg_ascii
-		jsr print_msg_ascii
-	} else {
-		lda #0
-		ldx #<main_player_regen_erase_tables_msg
-		ldy #>main_player_regen_erase_tables_msg
-		jsr print_msg
+		!ifndef c128 {
+			bit enable_screen_on_playback
+			bpl no_msgs2
+
+			lda #0
+			ldx #<main_player_regen_erase_tables_msg_ascii
+			ldy #>main_player_regen_erase_tables_msg_ascii
+			jsr print_msg_ascii
+		} else {
+			lda #0
+			ldx #<main_player_regen_erase_tables_msg
+			ldy #>main_player_regen_erase_tables_msg
+			jsr print_msg
+		}
 	}
 
   no_msgs2

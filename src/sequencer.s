@@ -1037,6 +1037,11 @@ do_realtime_selfmods_for_pitch_change
 		}
 	}
 
+	!ifdef scpu {
+		lsr
+		lsr
+	}
+
 	adc #1
 
 +	pha
@@ -1046,24 +1051,26 @@ do_realtime_selfmods_for_pitch_change
 	pla
 	sta (utility_pointer),y
 
-	; it takes 4, 1 MHz cycles to start a fetch.
-	; on C128, add 13, 1 MHz cycles to that for clock switching
-	; (SEI:DEC $D030 + STY $D030:CLI)
+	!ifndef scpu {
+		; it takes 4, 1 MHz cycles to start a fetch.
+		; on C128, add 13, 1 MHz cycles to that for clock switching
+		; (SEI:DEC $D030 + STY $D030:CLI)
 
-	; we'll allow up to 20 cycles' ISR delay before the mixer has to stop
-	; and wait.  too much more and it'll be audible.
+		; we'll allow up to 20 cycles' ISR delay before the mixer has to stop
+		; and wait.  too much more and it'll be audible.
 
-	sec
+		sec
 
-	!ifndef c128 {
-		sbc #16		; that is, add 4 cycles and subtract 20
-	} else {
-		sbc #3		; that is, add 17 and subtract 20
+		!ifndef c128 {
+			sbc #16		; that is, add 4 cycles and subtract 20
+		} else {
+			sbc #3		; that is, add 17 and subtract 20
+		}
+
+		bcs +
+		lda #1	; if the time is short enough, limit the timer check to one loop
+	  +	sta isr_minimum_times_before_fetch,x
 	}
-
-	bcs +
-	lda #1	; if the time is short enough, limit the timer check to one loop
-+	sta isr_minimum_times_before_fetch,x
 rts
 
 
@@ -1098,7 +1105,11 @@ rts
 ; the actual mixer and lookahead routine
 ; this is run just after each pass through the RAM driver's fetch routine
 
-mixer_cycle_count = 54
+!ifndef scpu {
+	mixer_cycle_count = 54
+} else {
+	mixer_cycle_count = 3
+}
 
 run_lookahead_and_mixer
 	txa													; 2

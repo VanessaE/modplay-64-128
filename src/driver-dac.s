@@ -89,30 +89,38 @@ not_up_stereo
 rts
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
-; for faster CPUs, divide the raw count by the CPU MHz and round up.
+
+; For faster CPUs, divide the raw count by the CPU MHz and round up.
+; don't forget to account for clock stretching, and be sure to add one 1 MHz
+; cycle for "fudge".
 
 dac_set_isr_cycle_count
-	!ifndef c128 {
-		lda #53
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #53
+		} else {
+			lda #28
+		}
+
+		bit stereo_enable
+		bpl +
+		ldx dac_addr+1
+		cpx #$dd
+		bne +
+
+		clc
+
+		!ifndef c128 {
+			adc #12
+		} else {
+			adc #6
+		}
+	  +
 	} else {
-		lda #28
+		lda #8					; could be as low as 6 but we're fudging it.
 	}
 
-	bit stereo_enable
-	bpl +
-	ldx dac_addr+1
-	cpx #$dd
-	bne +
-
-	clc
-
-	!ifndef c128 {
-		adc #12
-	} else {
-		adc #6
-	}
-
-+	sta audio_driver_isr_cycle_count
+	sta audio_driver_isr_cycle_count
 rts
 
 ; this returns the output resolution of the volume tables in .A
@@ -208,8 +216,3 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 rti								; 6 cycles to exit
 
 }
-
-; C64: each of the ISRs runs for 53 cycles minimum
-; C128: each runs for 56 cycles including clock stretching, divide by 2 = 28
-;
-; add 12 or 6 cycles if it's stereo User Port DigiMAX

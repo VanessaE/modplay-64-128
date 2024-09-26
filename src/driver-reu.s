@@ -16,13 +16,17 @@ reu_fetch_routine_index_table
 	!byte reu_fetch_unroll_close - reu_fetch_unroll_open ; fetch loop segment length
 
 ; this is the average cycles per sample pair for any one track.
-; see full details below.
+; see full details in doc/timing-info.txt.
 
 reu_set_cycle_counts
-	!ifndef c128 {
-		lda #24 + 2
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #24 + 2
+		} else {
+			lda #(26 + 2)/2 ; equivalent 1 MHz cycles
+		}
 	} else {
-		lda #(26 + 2)/2 ; equivalent 1 MHz cycles
+		lda #16 + 1 ; equivalent 1 MHz cycles
 	}
 	sta ram_driver_fetch_cycle_count
 rts
@@ -46,27 +50,36 @@ reu_fetch_row
 	sta DMA_DAH
 
 	ldy #$91
-	lda #16
-	sta DMA_DAL
 
-	!ifndef c128 {
-		sty DMA_CMD
-	} else {
-	; on C128 we need to disable interrupts, lest the ISR fire while the clock
-	; is at 1 MHz... except: if there's a SCPU present, 1/2 MHz mode doesn't
-	; matter, the SCPU will automatically stretch the clock anyway.
+	!ifndef scpu {
+		lda #16
+		sta DMA_DAL
 
-		!ifndef scpu {
+		!ifndef c128 {
+			sty DMA_CMD
+		} else {
+		; on C128 we need to disable interrupts, lest the ISR fire while the clock
+		; is at 1 MHz... except: if there's a SCPU present, 1/2 MHz mode doesn't
+		; matter, the SCPU will automatically stretch the clock anyway.
+
 			sei
 			sta VIC+$30
-		}
-
-		sty DMA_CMD
-
-		!ifndef scpu {
+			sty DMA_CMD
 			sty VIC+$30
 			cli
 		}
+	} else {
+		; on SCPU, we split the transfer into smaller pieces to minimize
+		; interference with the audio ISR's timing.
+		lda #4
+		sta DMA_DAL
+		sty DMA_CMD
+		sta DMA_DAL
+		sty DMA_CMD
+		sta DMA_DAL
+		sty DMA_CMD
+		sta DMA_DAL
+		sty DMA_CMD
 	}
 rts
 
@@ -334,12 +347,14 @@ reu_run_fetch_and_mixer
 				lda #1										; 2
 				sta DMA_DAL									; 4
 
-				; if the ISR would fire too soon after a fetch starts, just
-				; wait-out the timer and postpone the fetch.
+				!ifndef scpu {
+					; if the ISR would fire too soon after a fetch starts, just
+					; wait-out the timer and postpone the fetch.
 
-				lda isr_minimum_times_before_fetch+track	; 3
-			-	cmp CIA1+$06								; 4
-				bcs -										; 3/2
+					lda isr_minimum_times_before_fetch+track	; 3
+				-	cmp CIA1+$06								; 4
+					bcs -										; 3/2
+				}
 
 				!ifdef c128 {
 					!ifndef scpu {
@@ -348,9 +363,23 @@ reu_run_fetch_and_mixer
 					}
 				}
 
+				; N below will vary by pitch, on average it'll be around 32
+				; on C64
+				;
+				; On SCPU-equipped machines we omit the wait-for-timer code
+				; because it'll cause a lot of cache misses, and each
+				; chunk will likely only need N = 2 (*20).
+
 				sty DMA_CMD									; 4 + N
 
-				; N will vary by pitch, on average it'll be around 32 (2*16) on C64
+				!ifdef scpu {
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N
+				}
 
 				!ifdef c128 {
 					!ifndef scpu {
