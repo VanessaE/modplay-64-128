@@ -135,10 +135,18 @@ out
 }
 
 main_filename
-	!ifndef c128 {
-		!text "mp64.main",0
+	!ifndef scpu {
+		!ifndef c128 {
+			!text "mp64.main",0
+		} else {
+			!text "mp128.main",0
+		}
 	} else {
-		!text "mp128.main",0
+		!ifndef c128 {
+			!text "mp64-scpu.main",0
+		} else {
+			!text "mp128-scpu.main",0
+		}
 	}
 main_filename_end
 

@@ -13,8 +13,8 @@ all:
 	rm -f "$(TMPDIR)/*"
 
 	$(MAKE) clean
-	$(MAKE) c64_disk
-	$(MAKE) c128_disk
+	$(MAKE) c64_disks
+	$(MAKE) c128_disks
 	$(MAKE) mod_disks
 
 clean:
@@ -50,8 +50,18 @@ c64:
 	acme $(OPTIONS) -o bin/mp64 src/booter.s
 	acme $(OPTIONS) -l etc/mp64-sym.txt -o bin/mp64.main src/modplay.s
 
-c64_disk: c64
-	$(MAKE) gen_release_disk_img MACHINE=64
+c64_scpu:
+	@echo -e '\nBuilding Modplay 64 (SuperCPU edition)...\n'
+
+	etc/trim-whitespc.sh 40 etc/splash-64.seq          $(TMPDIR)/splash-64-t.seq
+	etc/compress-rle.sh  40 $(TMPDIR)/splash-64-t.seq  etc/splash-64.rle   etc/splash-64.seq
+
+	acme $(OPTIONS) -Dscpu=1 -o bin/mp64-scpu src/booter.s
+	acme $(OPTIONS) -Dscpu=1 -l etc/mp64-sym.txt -o bin/mp64-scpu.main src/modplay.s
+
+c64_disks: c64 c64_scpu
+	$(MAKE) gen_release_disk_img PLATFORM=64 ACCEL=""
+	$(MAKE) gen_release_disk_img PLATFORM=64 ACCEL="-scpu"
 
 c128:
 	@echo -e '\nBuilding Modplay 128...\n'
@@ -60,12 +70,24 @@ c128:
 	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
 
 	acme $(OPTIONS) -Dc128=1 -o bin/mp128 src/booter.s
-	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o bin/mp128.main src/modplay.s
+	acme $(OPTIONS) -Dc128=1 -l etc/mp128-sym.txt -o bin/mp128-scpu.main src/modplay.s
 
 	acme $(OPTIONS) --format plain -Dc128=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
 
-c128_disk: c128
-	$(MAKE) gen_release_disk_img MACHINE=128
+c128_scpu:
+	@echo -e '\nBuilding Modplay 128 (SuperCPU edition)...\n'
+
+	etc/trim-whitespc.sh 80 etc/splash-128.seq   $(TMPDIR)/splash-128-t.seq
+	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
+
+	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o bin/mp128-scpu src/booter.s
+	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -l etc/mp128-sym.txt -o bin/mp128.main src/modplay.s
+
+	acme $(OPTIONS) --format plain -Dc128=1 -Dscpu=1 -o src/c128-boot-sect.o src/c128-boot-sect.s
+
+c128_disks: c128 c128_scpu
+	$(MAKE) gen_release_disk_img PLATFORM=128 ACCEL=""
+	$(MAKE) gen_release_disk_img PLATFORM=128 ACCEL="-scpu"
 
 gen_release_disk_img:
 	$(eval SW := -D4)
@@ -73,42 +95,42 @@ gen_release_disk_img:
 	$(eval INTLV := -s 9)
 	$(eval PROGINTLV := -s 6)
 
-ifeq ($(MACHINE),128)
+ifeq ($(PLATFORM),128)
 	$(eval SW := -D7)
 	$(eval DISK_FORMAT := d71)
 	$(eval INTLV := -s 7)
 	$(eval PROGINTLV := -s 4)
 endif
 
-ifeq ($(MACHINE),64)
+ifeq ($(PLATFORM),64)
 	$(eval SEP := -)
 endif
 
-	$(eval PRG := mp$(MACHINE))
-	$(eval DISK_IMG := disk-images/modplay$(MACHINE)$(SEP)v2.$(DISK_FORMAT))
+	$(eval PRG := mp$(PLATFORM))
+	$(eval DISK_IMG := disk-images/$(PRG)$(SEP)v2$(ACCEL).$(DISK_FORMAT))
 
 	rm -f $(DISK_IMG)
 
-	export SW DISK_IMG PRG DISK_FORMAT
+	export SW DISK_IMG PRG DISK_FORMAT ACCEL
 
-	$(CC1541) -n 'modplay $(MACHINE) v$(VERSION_STRING)' -i '$(VERSION_ID)'  $(DISK_IMG)
+	$(CC1541) -n 'mp$(PRG) v$(VERSION_STRING) $(ACCEL)' -i '$(VERSION_ID)'  $(DISK_IMG)
 
-ifeq ($(MACHINE),128)
+ifeq ($(PLATFORM),128)
 	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)
 endif
 
 	$(CC1541)	\
-		$(PROGINTLV) -f $(PRG)				-w bin/$(PRG)				\
-		$(PROGINTLV) -f $(PRG).main			-w bin/$(PRG).main			\
-					-f '----------------'	-L							\
-					-f 'a few mod files:'	-L							\
-					-f '                '	-L							\
-		$(INTLV)	-f 'Acidbat II'			-w 'mods/Acidbat II.mod'	\
-		$(INTLV)	-f 'Cutie Pie'			-w 'mods/Cutie Pie.mod'		\
-		$(INTLV)	-f 'Fun Tune'			-w 'mods/Fun Tune.mod'		\
-																		$(DISK_IMG)
+		$(PROGINTLV) -f $(PRG)$(ACCEL)			-w bin/$(PRG)$(ACCEL)		\
+		$(PROGINTLV) -f $(PRG)$(ACCEL).main		-w bin/$(PRG)$(ACCEL).main	\
+					-f '----------------'		-L							\
+					-f 'a few mod files:'		-L							\
+					-f '                '		-L							\
+		$(INTLV)	-f 'Acidbat II'				-w 'mods/Acidbat II.mod'	\
+		$(INTLV)	-f 'Cutie Pie'				-w 'mods/Cutie Pie.mod'		\
+		$(INTLV)	-f 'Fun Tune'				-w 'mods/Fun Tune.mod'		\
+																			$(DISK_IMG)
 
-ifeq ($(MACHINE),128)
+ifeq ($(PLATFORM),128)
 	$(CC1541) $(INTLV)	-f 'On the Telly'	-w 'mods/On the Telly.mod' \
 		$(INTLV) -f 'Skate or Die'	\
 			-w 'mods/Skate or Die Intro (cover by Delorean).mod'		$(DISK_IMG)

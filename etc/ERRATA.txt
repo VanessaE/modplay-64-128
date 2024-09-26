@@ -64,11 +64,6 @@
 
 * C128: file name in infobox overwrites "Current"
 
-* C128: loading the program using the JiffyDOS `%*` shortcut is broken, but
-  only if there's a RAMLink present/enabled, even if the load is coming from a
-  floppy drive, yet `LOAD"*",8,1` works (by extension, disk autoboot works
-  too).  UNlike the above, `@P0` doesn't help. 😛
-
 * BOTH: progress bar has a minor off-by-1 overflow glitch.
 
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
