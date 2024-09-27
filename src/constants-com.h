@@ -325,9 +325,13 @@
 	num_rows							= $15ff
 	num_columns							= $1600
 
-	; free: $1601 through $1625
+	; free: $1601 through $161f
 
 	; various program vectors
+
+	do_selfmod_pitch_vec				= $1620 ; 2 bytes
+	do_selfmod_instrument_vec			= $1622 ; 2 bytes
+	set_volume_direct_vec				= $1624 ; 2 bytes
 
 	fetch_block_vec						= $1626 ; 2 bytes
 	stash_block_vec						= $1638 ; 2 bytes

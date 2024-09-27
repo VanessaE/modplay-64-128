@@ -80,8 +80,8 @@ fetch_routine_table_msb
 
 	lda #3
 	sta seq_current_track
--	jsr do_realtime_selfmods_for_pitch_change
-	jsr do_realtime_selfmods_for_instrument_change
+-	+JSR_INDIRECT (do_selfmod_pitch_vec)
+	+JSR_INDIRECT (do_selfmod_instrument_vec)
 	dec seq_current_track
 	bpl -
 
@@ -415,7 +415,7 @@ start_sample
 	lda sample_default_loop_flags,x
 	sta track_current_loop_flags,y
 
-	jsr do_realtime_selfmods_for_instrument_change
+	+JSR_INDIRECT (do_selfmod_instrument_vec)
 
 	ldy seq_current_track
 	ldx current_sample_numbers,y
@@ -445,7 +445,7 @@ set_pitch
 	lda steprate_table,x
 	sta current_steprates_ints,y
 
-	jsr do_realtime_selfmods_for_pitch_change
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
 
 ; set the sample's volume, and set the address targets in the mixer
@@ -461,27 +461,19 @@ set_volume
 	ldx track_current_enable_flags,y
 	bne +
 	lda #>volume_table_lower
-	jmp set_vol_direct
+	jmp (set_volume_direct_vec)
 
 +	lsr
 	cmp #16
 	bcs +
 
 	adc #>volume_table_lower
-	jmp set_vol_direct
+	jmp (set_volume_direct_vec)
 
 +	clc
 	adc #(>volume_table_upper)-16
 
-set_vol_direct
-	ldx lookahead_code_volume_addr_idx,y
-
-	!zone lookahead_idx_set {
-		!for .idx4, 0, 15 {
-			sta vol_addr_1 + mixer_loop_segment_length*.idx4 + 2,x
-		}
-	}
-rts
+	jmp (set_volume_direct_vec)
 
 unused
 rts
@@ -924,256 +916,3 @@ no_mute_ui
 no_valid_key
 	lda #0
 rts
-
-
-; =========================================================
-; === fetch loop and mixer loop self-mod setup routines ===
-; =========================================================
-
-mixer_loop_segment_length = mixer_loop_close - mixer_loop_open
-
-; SET-UP LOOKAHEAD INDEXES/ADDRESSES
-
-; This routine just sets up where in the fetch loop the changes will be made
-
-fetch_selfmods_init
-	ldx seq_current_track
-
-	ldy #8
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop code segment length
-	jsr multiply_8x8
-
-	ldy #0
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop open code address LSB
-	clc
-	adc product
-	sta utility_pointer
-
-	iny
-	lda (ram_drv_fetch_addr_table_pointer),y ; MSB
-	adc product+1
-	sta utility_pointer+1
-rts
-
-
-; This sets the self-mod steprate adds in the fetch routine, which control
-; each track's frequency, and sets the associated self-mods in the mixer so
-; that the lookahead finds the right data.
-;
-; Always operates on the track number specified by seq_current_track
-
-do_realtime_selfmods_for_pitch_change
-	jsr fetch_selfmods_init
-
-	ldx seq_current_track
-	ldy #2
-	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
-	tay
-	lda current_steprates_fracts,x
-	sta (utility_pointer),y
-
-	ldy #3
-	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
-	tay
-	lda current_steprates_ints,x
-	sta (utility_pointer),y
-
-	!zone lookahead_idx_set {
-		ldy seq_current_track
-
-		lda #0
-		sta utility_zpbk_counter
-		sta utility_zpbk_counter+1
-		sta utility_zpbk_counter+2
-
-		sta temp_zpbk_a
-		lda current_steprates_fracts,y
-		sta temp_zpbk_a+1
-
-		lda current_steprates_ints,y
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		sta temp_zpbk_a+2
-
-		ldx lookahead_code_read_byte_addr_idx,y
-
-		clc
-		lda seq_current_track
-		adc #>sample_data_buffer
-
-		!for .idx4, 0, 15 {
-			!set la_rd_addr_st = rd_la_track_1 + mixer_loop_segment_length * .idx4
-			sta la_rd_addr_st + 2,x
-		}
-
-		!for .idx5, 0, 15 {
-
-			!set la_rd_addr_st = rd_la_track_1 + mixer_loop_segment_length * .idx5
-
-			lda utility_zpbk_counter+2
-			sta la_rd_addr_st + 1,x
-
-			lda utility_zpbk_counter
-			adc temp_zpbk_a
-			sta utility_zpbk_counter
-
-			lda utility_zpbk_counter+1
-			adc temp_zpbk_a+1
-			sta utility_zpbk_counter+1
-
-			lda utility_zpbk_counter+2
-			adc temp_zpbk_a+2
-			sta utility_zpbk_counter+2
-		}
-	}
-
-	!ifdef scpu {
-		lsr
-		lsr
-	}
-
-	adc #1
-
-+	pha
-	ldy #7
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
-	tay
-	pla
-	sta (utility_pointer),y
-
-	!ifndef scpu {
-		; it takes 4, 1 MHz cycles to start a fetch.
-		; on C128, add 13, 1 MHz cycles to that for clock switching
-		; (SEI:DEC $D030 + STY $D030:CLI)
-
-		; we'll allow up to 20 cycles' ISR delay before the mixer has to stop
-		; and wait.  too much more and it'll be audible.
-
-		sec
-
-		!ifndef c128 {
-			sbc #16		; that is, add 4 cycles and subtract 20
-		} else {
-			sbc #3		; that is, add 17 and subtract 20
-		}
-
-		bcs +
-		lda #1	; if the time is short enough, limit the timer check to one loop
-	  +	sta isr_minimum_times_before_fetch,x
-	}
-rts
-
-
-; This simply sets the three self-mod immediate compares that look for the
-; end of the sample, in the fetch routine.
-;
-; Always operates on the track number specified by seq_current_track
-
-do_realtime_selfmods_for_instrument_change
-	jsr fetch_selfmods_init
-
-	ldx seq_current_track
-	ldy #4
-	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
-	tay
-	lda current_sample_end_addr_lows,x
-	sta (utility_pointer),y
-
-	ldy #5
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
-	tay
-	lda current_sample_end_addr_mids,x
-	sta (utility_pointer),y
-
-	ldy #6
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
-	tay
-	lda current_sample_end_addr_highs,x
-	sta (utility_pointer),y
-rts
-
-; the actual mixer and lookahead routine
-; this is run just after each pass through the RAM driver's fetch routine
-
-!ifndef scpu {
-	mixer_cycle_count = 54
-} else {
-	mixer_cycle_count = 3
-}
-
-run_lookahead_and_mixer
-	txa													; 2
-	adc #16												; 2
-
--	ldy audio_out_buf_index								; 3
-	cmp and_f0_table,y									; 4
-	beq -												; 3/2
-
-	mixer_loop_open
-	  !for .idx2, 0, 15 {
-
-		; the various `LDY $nnnn` below will have their addresses
-		; re-written by the above set_lookahead_addrs routine.
-		; Similarly, each corresponding `LDA/ADC $nnnn,Y` will
-		; have its high byte re-written by the set_volume routine.
-		;
-		; the addresses below are arbitrary, chosen only so that they're
-		; definitely in absolute mode when assembled, and so that failure
-		; to alter one of them is easy to spot in the ML monitor at runtime.
-
-		clc												; 2
-
-		!if .idx2 = 0 { rd_la_track_1 = * }
-		ldy $6100										; 4
-		!if .idx2 = 0 { vol_addr_1 = * }
-		lda $8100,y										; 4
-
-		!if .idx2 = 0 { rd_la_track_4 = *}
-		ldy $6400										; 4
-		!if .idx2 = 0 { vol_addr_4 = *}
-		adc $8400,y										; 4
-
-		ror												; 2
-		sta audio_buffer_left,x							; 5
-
-		clc												; 2
-
-		!if .idx2 = 0 { rd_la_track_2 = * }
-		ldy $6200										; 4
-		!if .idx2 = 0 { vol_addr_2 = * }
-		lda $8200,y										; 4
-
-		!if .idx2 = 0 { rd_la_track_3 = * }
-		ldy $6300										; 4
-		!if .idx2 = 0 { vol_addr_3 = * }
-		adc $8300,y										; 4
-
-		ror												; 2
-		sta audio_buffer_right,x						; 5
-
-		inx												; 2
-	!if .idx2 = 0 { !set mixer_loop_close = * }
-	}
-rts
-
-lookahead_code_read_byte_addr_idx
-	!byte 0
-	!byte rd_la_track_2 - rd_la_track_1
-	!byte rd_la_track_3 - rd_la_track_1
-	!byte rd_la_track_4 - rd_la_track_1
-
-lookahead_code_volume_addr_idx
-	!byte 0
-	!byte vol_addr_2 - vol_addr_1
-	!byte vol_addr_3 - vol_addr_1
-	!byte vol_addr_4 - vol_addr_1

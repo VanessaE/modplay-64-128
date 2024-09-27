@@ -5,6 +5,8 @@
 ; the sequencer will look here (via a vector) to find the address and offsets
 ; into the fetch routine that it must use to do the self-mod stuff.
 
+!zone reu_driver {
+
 reu_fetch_routine_index_table
 	!word reu_fetch_unroll_open
 	!byte reu_cur_steprate_f - reu_fetch_unroll_open + 1
@@ -17,6 +19,12 @@ reu_fetch_routine_index_table
 
 ; this is the average cycles per sample pair for any one track.
 ; see full details in doc/timing-info.txt.
+
+!ifndef scpu {
+	mixer_cycle_count = 54
+} else {
+	mixer_cycle_count = 3
+}
 
 reu_set_cycle_counts
 	!ifndef scpu {
@@ -231,7 +239,7 @@ rts
 ; THE ACTUAL FETCH AND MIX ROUTINE
 ; The hard work happens here 🙂
 
-fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
+reu_fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
 
 reu_run_fetch_and_mixer
 	lda #0
@@ -247,103 +255,105 @@ reu_run_fetch_and_mixer
 		ldy #$91											; 2
 
 		reu_fetch_unroll_open
-		  !for track, 0, 3 {
-			!zone fetchloop {
-				lda #(>sample_data_buffer)+track			; 2
+		  !for reu_fetch_track, 0, 3 {
+			!zone reu_fetchloop {
+				!set .track = reu_fetch_track
+
+				lda #(>sample_data_buffer)+.track			; 2
 				sta DMA_ADH									; 4
 
-				lda sample_pointers_fracts+track			; 3
-				!if track = 0 { !set reu_cur_steprate_f = * }
+				lda sample_pointers_fracts+.track			; 3
+				!if .track = 0 { !set reu_cur_steprate_f = * }
 				adc #0										; 2
-				sta sample_pointers_fracts+track			; 3
+				sta sample_pointers_fracts+.track			; 3
 
-				lda sample_pointers_lows+track				; 3
-				!if track = 0 { !set reu_cur_steprate_i = * }
+				lda sample_pointers_lows+.track				; 3
+				!if .track = 0 { !set reu_cur_steprate_i = * }
 				adc #0										; 2
-				sta sample_pointers_lows+track				; 3
+				sta sample_pointers_lows+.track				; 3
 				sta DMA_LO									; 4
 				bcc .reu_fix_dma_top_two_bytes				; 3/2
 
-				inc sample_pointers_mids+track				; 5
-				lda sample_pointers_mids+track				; 3
+				inc sample_pointers_mids+.track				; 5
+				lda sample_pointers_mids+.track				; 3
 				sta DMA_HI									; 4
 				bne .reu_fix_dma_top_byte					; 3/2
 
-				inc sample_pointers_highs+track				; 5
-				lda sample_pointers_highs+track				; 3
+				inc sample_pointers_highs+.track				; 5
+				lda sample_pointers_highs+.track				; 3
 				sta DMA_BANK								; 4
 				jmp .reu_check_end							; 3
 
 			.reu_fix_dma_top_two_bytes
-				lda sample_pointers_mids+track				; 3
+				lda sample_pointers_mids+.track				; 3
 				sta DMA_HI									; 4
 
 			.reu_fix_dma_top_byte
-				lda sample_pointers_highs+track				; 3
+				lda sample_pointers_highs+.track				; 3
 				sta DMA_BANK								; 4
 
 			.reu_check_end
-				lda sample_pointers_lows+track				; 3
-				!if track = 0 { !set reu_ckend_l = * }
+				lda sample_pointers_lows+.track				; 3
+				!if .track = 0 { !set reu_ckend_l = * }
 				cmp #0										; 2
 
-				lda sample_pointers_mids+track				; 3
-				!if track = 0 { !set reu_ckend_m = * }
+				lda sample_pointers_mids+.track				; 3
+				!if .track = 0 { !set reu_ckend_m = * }
 				sbc #0										; 2
 
-				lda sample_pointers_highs+track				; 3
-				!if track = 0 { !set reu_ckend_h = * }
+				lda sample_pointers_highs+.track				; 3
+				!if .track = 0 { !set reu_ckend_h = * }
 				sbc #0										; 2
 
 				bcc .reu_fetch_sample_data					; 3/2
 
 				clc											; 2
-				lda track_current_loop_flags+track			; 3
+				lda track_current_loop_flags+.track			; 3
 				bne .reu_sample_has_loop					; 3/2
-				sta sample_pointers_lows+track				; 3
-				sta sample_pointers_mids+track				; 3
-				sta sample_pointers_highs+track				; 3
+				sta sample_pointers_lows+.track				; 3
+				sta sample_pointers_mids+.track				; 3
+				sta sample_pointers_highs+.track			; 3
 
-				!set steprate_fract_addr	= reu_cur_steprate_f + fetch_loop_segment_length * track + 1
-				!set steprate_int_addr		= reu_cur_steprate_i + fetch_loop_segment_length * track + 1
-				!set samp_end_low_addr		= reu_ckend_l + fetch_loop_segment_length * track + 1
-				!set samp_end_mid_addr		= reu_ckend_m + fetch_loop_segment_length * track + 1
-				!set samp_end_high_addr		= reu_ckend_h + fetch_loop_segment_length * track + 1
+				!set reu_steprate_fract_addr	= reu_cur_steprate_f + reu_fetch_loop_segment_length * .track + 1
+				!set reu_steprate_int_addr		= reu_cur_steprate_i + reu_fetch_loop_segment_length * .track + 1
+				!set reu_samp_end_low_addr		= reu_ckend_l + reu_fetch_loop_segment_length * .track + 1
+				!set reu_samp_end_mid_addr		= reu_ckend_m + reu_fetch_loop_segment_length * .track + 1
+				!set reu_samp_end_high_addr		= reu_ckend_h + reu_fetch_loop_segment_length * .track + 1
 
-				sta steprate_fract_addr						; 4
-				sta steprate_int_addr						; 4
+				sta reu_steprate_fract_addr					; 4
+				sta reu_steprate_int_addr					; 4
 
-				sta samp_end_low_addr						; 4
-				sta samp_end_high_addr						; 4
+				sta reu_samp_end_low_addr					; 4
+				sta reu_samp_end_high_addr					; 4
 				lda #1										; 2
-				sta samp_end_mid_addr						; 4
+				sta reu_samp_end_mid_addr					; 4
 
 				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop
 				lda #0										; 2
-				sta sample_pointers_fracts+track			; 3
-				ldy current_sample_numbers+track			; 3
+				sta sample_pointers_fracts+.track			; 3
+				ldy current_sample_numbers+.track			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
-				sta sample_pointers_lows+track				; 3
+				sta sample_pointers_lows+.track				; 3
 				sta DMA_LO									; 4
 				lda sample_loop_start_addresses_mids,y		; 5
-				sta sample_pointers_mids+track				; 3
+				sta sample_pointers_mids+.track				; 3
 				sta DMA_HI									; 4
 				lda sample_loop_start_addresses_highs,y		; 5
-				sta sample_pointers_highs+track				; 3
+				sta sample_pointers_highs+.track				; 3
 				sta DMA_BANK								; 4
 				lda sample_loop_end_addresses_lows,y		; 5
-				sta samp_end_low_addr						; 4
+				sta reu_samp_end_low_addr					; 4
 				lda sample_loop_end_addresses_mids,y		; 5
-				sta samp_end_mid_addr						; 4
+				sta reu_samp_end_mid_addr					; 4
 				lda sample_loop_end_addresses_highs,y		; 5
-				sta samp_end_high_addr						; 4
+				sta reu_samp_end_high_addr					; 4
 				ldy #$91									; 2
 
 			.reu_fetch_sample_data
 
-				!if track = 0 { !set reu_fetchlen = * }
+				!if .track = 0 { !set reu_fetchlen = * }
 				lda #1										; 2
 				sta DMA_DAL									; 4
 
@@ -351,7 +361,7 @@ reu_run_fetch_and_mixer
 					; if the ISR would fire too soon after a fetch starts, just
 					; wait-out the timer and postpone the fetch.
 
-					lda isr_minimum_times_before_fetch+track	; 3
+					lda isr_minimum_times_before_fetch+.track	; 3
 				-	cmp CIA1+$06								; 4
 					bcs -										; 3/2
 				}
@@ -389,14 +399,266 @@ reu_run_fetch_and_mixer
 				}
 			}
 
-		!if track = 0 { reu_fetch_unroll_close = * }
+		!if reu_fetch_track = 0 { reu_fetch_unroll_close = * }
 		}
 
-		jsr run_lookahead_and_mixer ; that's over in sequencer.s
+	txa													; 2
+	adc #16												; 2
 
-		dec mixer_countdown									; 5
-		beq +												; 3/2
+-	ldy audio_out_buf_index								; 3
+	cmp and_f0_table,y									; 4
+	beq -												; 3/2
+
+	reu_mixer_loop_open
+	  !for idx2, 0, 15 {
+
+		; the various `LDY $nnnn` below will have their addresses re-written
+		; by the reu_do_realtime_selfmods_for_pitch_change routine below.
+		; Similarly, each corresponding `LDA/ADC $nnnn,Y` will
+		; have its high byte re-written by the set_volume routine.
+		;
+		; the addresses below are arbitrary, chosen only so that they're
+		; definitely in absolute mode when assembled, and so that failure
+		; to alter one of them is easy to spot in the ML monitor at runtime.
+
+		clc												; 2
+
+		!if idx2 = 0 { reu_rd_la_track_1 = * }
+		ldy $6100										; 4
+		!if idx2 = 0 { reu_vol_addr_1 = * }
+		lda $8100,y										; 4
+
+		!if idx2 = 0 { reu_rd_la_track_4 = *}
+		ldy $6400										; 4
+		!if idx2 = 0 { reu_vol_addr_4 = *}
+		adc $8400,y										; 4
+
+		ror												; 2
+		sta audio_buffer_left,x							; 5
+
+		clc												; 2
+
+		!if idx2 = 0 { reu_rd_la_track_2 = * }
+		ldy $6200										; 4
+		!if idx2 = 0 { reu_vol_addr_2 = * }
+		lda $8200,y										; 4
+
+		!if idx2 = 0 { reu_rd_la_track_3 = * }
+		ldy $6300										; 4
+		!if idx2 = 0 { reu_vol_addr_3 = * }
+		adc $8300,y										; 4
+
+		ror												; 2
+		sta audio_buffer_right,x						; 5
+
+		inx												; 2
+	  !if idx2 = 0 { !set reu_mixer_loop_close = * }
+	}
+
+	dec mixer_countdown									; 5
+	beq +												; 3/2
 	jmp reu_fetch_main_loop									; 3
 
 +	stx audio_in_buf_index
 rts
+
+
+; =========================================================
+; === fetch loop and mixer loop self-mod setup routines ===
+; =========================================================
+
+reu_set_vol_direct
+	ldx reu_lookahead_code_volume_addr_idx,y
+
+	!zone lookahead_idx_set {
+		!for idx6, 0, 15 {
+			sta reu_vol_addr_1 + reu_mixer_loop_segment_length * idx6 + 2,x
+		}
+	}
+rts
+
+reu_mixer_loop_segment_length = reu_mixer_loop_close - reu_mixer_loop_open
+
+; SET-UP LOOKAHEAD INDEXES/ADDRESSES
+
+; This routine just sets up where in the above fetch loop segment the changes
+; will be made
+
+reu_fetch_selfmods_init
+	ldx seq_current_track
+
+	ldy #8
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop code segment length
+	jsr multiply_8x8
+
+	ldy #0
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop open code address LSB
+	clc
+	adc product
+	sta utility_pointer
+
+	iny
+	lda (ram_drv_fetch_addr_table_pointer),y ; MSB
+	adc product+1
+	sta utility_pointer+1
+rts
+
+; This sets the self-mod steprate values that get added in the fetch routine,
+; which control each track's frequency, and sets the associated self-mods in
+; the mixer so that the lookahead code finds the right data.
+;
+; Always operates on the track number specified by seq_current_track
+
+reu_do_realtime_selfmods_for_pitch_change
+	jsr reu_fetch_selfmods_init
+
+	ldx seq_current_track
+	ldy #2
+	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
+	tay
+	lda current_steprates_fracts,x
+	sta (utility_pointer),y
+
+	ldy #3
+	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
+	tay
+	lda current_steprates_ints,x
+	sta (utility_pointer),y
+
+	!zone lookahead_idx_set {
+		ldy seq_current_track
+
+		lda #0
+		sta utility_zpbk_counter
+		sta utility_zpbk_counter+1
+		sta utility_zpbk_counter+2
+
+		sta temp_zpbk_a
+		lda current_steprates_fracts,y
+		sta temp_zpbk_a+1
+
+		lda current_steprates_ints,y
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		lsr
+		ror temp_zpbk_a+1
+		ror temp_zpbk_a
+		sta temp_zpbk_a+2
+
+		ldx reu_lookahead_code_read_byte_addr_idx,y
+
+		clc
+		lda seq_current_track
+		adc #>sample_data_buffer
+
+		!for idx4, 0, 15 {
+			!set reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * idx4
+			sta reu_la_rd_addr_st + 2,x
+		}
+
+		!for idx5, 0, 15 {
+
+			!set reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * idx5
+
+			lda utility_zpbk_counter+2
+			sta reu_la_rd_addr_st + 1,x
+
+			lda utility_zpbk_counter
+			adc temp_zpbk_a
+			sta utility_zpbk_counter
+
+			lda utility_zpbk_counter+1
+			adc temp_zpbk_a+1
+			sta utility_zpbk_counter+1
+
+			lda utility_zpbk_counter+2
+			adc temp_zpbk_a+2
+			sta utility_zpbk_counter+2
+		}
+	}
+
+	!ifdef scpu {
+		lsr
+		lsr
+	}
+
+	adc #1
+
++	pha
+	ldy #7
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
+	tay
+	pla
+	sta (utility_pointer),y
+
+	!ifndef scpu {
+		; it takes 4, 1 MHz cycles to start a fetch.
+		; on C128, add 13, 1 MHz cycles to that for clock switching
+		; (SEI:DEC $D030 + STY $D030:CLI)
+
+		; we'll allow up to 20 cycles' ISR delay before the mixer has to stop
+		; and wait.  too much more and it'll be audible.
+
+		sec
+
+		!ifndef c128 {
+			sbc #16		; that is, add 4 cycles and subtract 20
+		} else {
+			sbc #3		; that is, add 17 and subtract 20
+		}
+
+		bcs +
+		lda #1	; if the time is short enough, limit the timer check to one loop
+	  +	sta isr_minimum_times_before_fetch,x
+	}
+rts
+
+
+; This simply sets the three self-mod immediate compares that look for the
+; end of the sample, in the fetch routine.
+;
+; Always operates on the track number specified by seq_current_track
+
+reu_do_realtime_selfmods_for_instrument_change
+	jsr reu_fetch_selfmods_init
+
+	ldx seq_current_track
+	ldy #4
+	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
+	tay
+	lda current_sample_end_addr_lows,x
+	sta (utility_pointer),y
+
+	ldy #5
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
+	tay
+	lda current_sample_end_addr_mids,x
+	sta (utility_pointer),y
+
+	ldy #6
+	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
+	tay
+	lda current_sample_end_addr_highs,x
+	sta (utility_pointer),y
+rts
+
+reu_lookahead_code_read_byte_addr_idx
+	!byte 0
+	!byte reu_rd_la_track_2 - reu_rd_la_track_1
+	!byte reu_rd_la_track_3 - reu_rd_la_track_1
+	!byte reu_rd_la_track_4 - reu_rd_la_track_1
+
+reu_lookahead_code_volume_addr_idx
+	!byte 0
+	!byte reu_vol_addr_2 - reu_vol_addr_1
+	!byte reu_vol_addr_3 - reu_vol_addr_1
+	!byte reu_vol_addr_4 - reu_vol_addr_1
+
+}
