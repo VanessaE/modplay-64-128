@@ -546,6 +546,18 @@ status_line_pos
 		!byte 0
 }
 
+!ifdef scpu {
+	turn_turbo_on_msg
+		!byte DOWN
+		!fill 4,RIGHT
+		!text YEL,"Please flip",RETURN
+		!fill 11,RIGHT
+		!text " the turbo switch",RETURN
+		!fill 11,RIGHT
+		!text "to the ON position"
+		!byte 0
+}
+
 main_player_regen_tables_msg
 	!byte RETURN
 	!fill 8,RIGHT

@@ -27,20 +27,11 @@ init
 	jsr RESTOR ; this also undoes the "READY. trap"
 	jsr CLALL
 
-	lda #0
-	ldx #<initializing_msg
-	ldy #>initializing_msg
-	jsr print_msg
-
 	!ifdef scpu {
-		lda SCPU_PRESENT
-		cmp #1
-		bne +
-		ror
-		ror
-		sta supercpu_detected
-		sta SCPU_TURBO_ON
+		bit SCPU_PRESENT
+		bmi +
 
+		sta SCPU_TURBO_ON
 		sta SCPU_ENABLE_HW_REGS
 		!ifndef c128 {
 			lda #%01000100
@@ -51,6 +42,11 @@ init
 		sta SCPU_DISABLE_HW_REGS
 	  +
 	}
+
+	lda #0
+	ldx #<initializing_msg
+	ldy #>initializing_msg
+	jsr print_msg
 
 	!ifdef c128 { ; reset F-keys to normal PETSCII codes
 		ldy #9
@@ -86,6 +82,14 @@ init
 	sta main_variables_zone+$0800,y
 	iny
 	bne -
+
+	!ifdef scpu {			; now that the main vars zone is zeroed, we can
+		bit SCPU_PRESENT	; save the state of the detect flag
+		bmi +
+		lda #$80
+		sta supercpu_detected
+	  +
+	}
 
 	ldy #0
 -	lda default_config,y

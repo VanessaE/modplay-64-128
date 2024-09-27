@@ -1,5 +1,6 @@
 REU DRIVER TIMING INFO
-assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo, C64 screen
+
+Assuming stock C64/128, 4-bit SID stereo, no accelerator/turbo, C64 screen
 turned on unless otherwise noted.  All times rounded-up to the next whole
 cycle.
 
@@ -166,9 +167,9 @@ allow for a much faster rate, but it just rounds up to 1 raster even).
 
 On SuperCPU-equipped machines:
 
-These should need 54 turbo cycles for the mixer, 85 to 141 for the
-ISR, 114 to 305 for the actual fetch, and 20 cycles' worth of fudge, for a total of 
-273 to 329 turbo cycles.
+These should need 54 turbo cycles for the mixer, 85 to 141 for the ISR, 114 to
+305 for the actual fetch, and 20 cycles' worth of fudge, for a total of 273 to
+329 turbo cycles.
 
 20000000 / (54 + 85 + 114 + 20) = ~73260.1 
 20000000 / (54 + 101 + 114 + 20) = ~69204.2

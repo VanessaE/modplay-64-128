@@ -3,6 +3,32 @@
 !text "player",0
 
 start_main_player
+	!ifdef scpu {
+		lda #0
+		sta supercpu_turbo_available
+
+		bit supercpu_detected
+		bpl +
+
+		bit SCPU_JD_TURBO_SWITCH
+		bvc +
+
+		clc
+		jsr draw_mini_popup
+
+		lda #0
+		ldx #<turn_turbo_on_msg
+		ldy #>turn_turbo_on_msg
+		jsr print_msg
+
+	-	bit SCPU_JD_TURBO_SWITCH
+		bvs -
+
+		lda #$80
+		sta supercpu_turbo_available
+	  +
+	}
+
 	!ifdef c128 {
 		jsr gray_out
 

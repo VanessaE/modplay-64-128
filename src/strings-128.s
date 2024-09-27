@@ -454,6 +454,18 @@ status_line_pos
 	!fill 24,DOWN
 	!byte 0
 
+!ifdef scpu {
+	turn_turbo_on_msg
+		!byte DOWN
+		!fill 9,RIGHT
+		!text YEL,"Please flip",RETURN
+		!fill 7,RIGHT
+		!text "the turbo switch",RETURN
+		!fill 6,RIGHT
+		!text "to the ON position"
+		!byte 0
+}
+
 mm_lo
 	!byte <line_2
 	!byte <line_3
