@@ -75,13 +75,28 @@ gen_release_disk_image:
 
 	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)
 
-	$(CC1541)	\
-		$(C64INTLV)  -f 'mp64'				-w 'bin/mp64'				\
-		$(C128INTLV) -f 'mp128'				-w 'bin/mp128'				\
-		$(C64INTLV)  -f 'mp64.main'			-w 'bin/mp64.main'			\
-		$(C128INTLV) -f 'mp128.main'		-w 'bin/mp128.main'			\
-		$(C64INTLV)  -f 'mp64.main-scpu'	-w 'bin/mp64.main-scpu'		\
-		$(C128INTLV) -f 'mp128.main-scpu'	-w 'bin/mp128.main-scpu'	\
+	$(CC1541) -t -r 18 -b 7 \
+		$(C64INTLV)  -r 18 -f 'mp64' 			-w 'bin/mp64'				\
+																		$(DISK_IMG)
+
+	$(CC1541) -t -r 18 -b 5 \
+		$(C128INTLV) -r 18 -f 'mp128' 			-w 'bin/mp128'				\
+																		$(DISK_IMG)
+
+	$(CC1541) -t -r 18 \
+		$(C64INTLV) -f 'mp64.main'		-w 'bin/mp64.main'			\
+																		$(DISK_IMG)
+
+	$(CC1541) -r 18 \
+			$(C64INTLV) -f 'mp64.main-scpu' -w 'bin/mp64.main-scpu'		\
+																		$(DISK_IMG)
+
+	$(CC1541) -b 4 \
+		$(C128INTLV) -f 'mp128.main'			-w 'bin/mp128.main'			\
+																		$(DISK_IMG)
+
+	$(CC1541) -v \
+		$(C128INTLV) -f 'mp128.main-scpu'		-w 'bin/mp128.main-scpu'	\
 																		$(DISK_IMG)
 
 

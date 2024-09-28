@@ -17,9 +17,9 @@
 	!ifdef scpu {
 		!text " supercpu edition"
 	}
-	!byte 0				; Boot message: "BOOTING..."
+	!byte 0								; Boot message: "BOOTING..."
 
-	!text "", 0							; Program to load on boot.
+	!text "mp128", 0					; Program to load on boot.
 
 start
 	ldx #<cmd-1							; Lo-byte of cmd - 1
@@ -27,6 +27,6 @@ start
 	jmp $afa5							; Execute BASIC command.
 
 cmd
-	!text "run ", $22, "mp128", $22, ",u8"
+	!text "run"
 
 	!align 255,0,0						; Fill remaining bytes with 0
