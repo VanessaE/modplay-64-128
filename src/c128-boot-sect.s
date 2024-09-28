@@ -27,10 +27,6 @@ start
 	jmp $afa5							; Execute BASIC command.
 
 cmd
-	!ifndef scpu {
-		!text "run ", $22, "mp128", $22, ",u8"
-	} else {
-		!text "run ", $22, "mp128-scpu", $22, ",u8"
-	}
+	!text "run ", $22, "mp128", $22, ",u8"
 
 	!align 255,0,0						; Fill remaining bytes with 0

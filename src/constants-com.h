@@ -416,8 +416,9 @@
 		SCPU_DISABLE_HW_REGS			= $d07f
 		SCPU_OPTIMIZATION_MODE			= $d0b3
 		SCPU_JD_TURBO_SWITCH			= $d0b5
-		SCPU_PRESENT					= $d0b7
 	}
+
+	SCPU_PRESENT						= $d0b7
 
 	SID									= $d400
 	CIA1								= $dc00

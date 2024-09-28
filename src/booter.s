@@ -31,21 +31,23 @@ boot_start
 	lda #0
 	sta VIC+$20
 	sta VIC+$21
-	!ifdef c128 {
-		!ifndef scpu {
-			jsr disable_screen
-			lda #1
-			sta VIC+$30
-		}
 
-		lda kernal_4080_mode
+	!ifdef c128 {
+		bit SCPU_PRESENT
+		bpl +
+
+		jsr disable_screen
+		lda #1
+		sta VIC+$30
+
+	+	lda kernal_4080_mode
 		pha
 		bmi + ; if negative, already on 80 columns
 
 		lda #0
 		ldx #<wrong_screen_msg
 		ldy #>wrong_screen_msg ; ends with "ESC x", which flips back to 80 cols
-		jsr print_msg
+		jsr print_msg_rle
 
 	+	lda #36 ; reduce VDC refresh rate, speeds it up
 		sta VDC
@@ -57,10 +59,11 @@ boot_start
 
 		pla
 		bmi out ; if started on 80 columns, stay in 2 MHz mode.
-		!ifndef scpu {
-			dec VIC+$30
-			jsr enable_screen
-		}
+
+		bit SCPU_PRESENT
+		bpl out
+		dec VIC+$30
+		jsr enable_screen
 
 	} else {
 		lda CIA2					; CIA: select VIC-II bank 2
@@ -102,10 +105,18 @@ out
 
 ; now load and execute the main program file
 
-	lda #(main_filename_end - main_filename - 1)
+	lda main_filename_lengths+1
+	ldx #<(main_filename+16)
+	ldy #>(main_filename+16)
+
+	bit SCPU_PRESENT
+	bpl +
+
+	lda main_filename_lengths
 	ldx #<main_filename
 	ldy #>main_filename
-	jsr SETNAM
+
++	jsr SETNAM
 
 	!ifdef c128 {
 		lda #0
@@ -125,34 +136,37 @@ out
 
 	jmp program_start
 
-+PRINT_MSG
 +PRINT_MSG_RLE
 +SCREEN_ONOFF
 
 !ifdef c128 {
 	wrong_screen_msg
-		!byte LOWER,LGRY,CLR
-		!fill 12,DOWN
-		!text "Please switch to the 80-column display."
-		!byte ESC,"x"
+		!byte $80+3
+			!byte LOWER,LGRY,CLR
+		!byte 12,DOWN
+		!byte $80+41
+			!text "Please switch to the 80-column display."
+			!byte ESC,"x"
 		!byte 0
 }
 
 main_filename
-	!ifndef scpu {
-		!ifndef c128 {
-			!text "mp64.main",0
-		} else {
-			!text "mp128.main",0
-		}
+	!ifndef c128 {
+		!text "mp64.main",0,0,0,0,0,0,0
+		!text "mp64.main-scpu",0
 	} else {
-		!ifndef c128 {
-			!text "mp64-scpu.main",0
-		} else {
-			!text "mp128-scpu.main",0
-		}
+		!text "mp128.main",0,0,0,0,0,0
+		!text "mp128.main-scpu",0
 	}
-main_filename_end
+
+main_filename_lengths
+	!ifndef c128 {
+		!byte 9
+		!byte 14
+	} else {
+		!byte 10
+		!byte 15
+	}
 
 splash_data
 	!ifndef c128 {
