@@ -170,9 +170,9 @@ main_filename_lengths
 
 splash_data
 	!ifndef c128 {
-		!binary "etc/splash-64.rle"
+		!binary "etc/splash-40.rle"
 		!byte 0,0,0
 	} else {
-		!binary "etc/splash-128.rle"
+		!binary "etc/splash-80.rle"
 		!byte 0,0,0
 	}

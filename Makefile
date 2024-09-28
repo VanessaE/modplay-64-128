@@ -14,14 +14,14 @@ all:
 
 	$(MAKE) clean
 
-	etc/trim-whitespc.sh 40 etc/splash-64.seq          $(TMPDIR)/splash-64-t.seq
-	etc/compress-rle.sh  40 $(TMPDIR)/splash-64-t.seq  etc/splash-64.rle   etc/splash-64.seq
+	etc/trim-whitespc.sh 40 etc/splash-40.seq          $(TMPDIR)/splash-40-t.seq
+	etc/compress-rle.sh  40 $(TMPDIR)/splash-40-t.seq  etc/splash-40.rle   etc/splash-40.seq
 
 	$(MAKE) c64
 	$(MAKE) c64_scpu
 
-	etc/trim-whitespc.sh 80 etc/splash-128.seq   $(TMPDIR)/splash-128-t.seq
-	etc/compress-rle.sh  80 $(TMPDIR)/splash-128-t.seq etc/splash-128.rle etc/splash-128.seq
+	etc/trim-whitespc.sh 80 etc/splash-80.seq   $(TMPDIR)/splash-80-t.seq
+	etc/compress-rle.sh  80 $(TMPDIR)/splash-80-t.seq etc/splash-80.rle etc/splash-80.seq
 
 	$(MAKE) c128
 	$(MAKE) c128_scpu
