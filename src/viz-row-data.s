@@ -349,6 +349,7 @@ rts
 
 viz_show_track_mute
 	!ifndef c128 {
+		sty temp_abs_y2
 		clc
 		lda #<vizualizer_colors_row_3
 		adc viz_mute_color_cols,y
@@ -366,6 +367,7 @@ viz_show_track_mute
 	-	sta (utility_pointer),y
 		dey
 		bpl -
+		ldy temp_abs_y2
 	} else {
 		clc
 		lda #<vizualizer_colors_row_3
