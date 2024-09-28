@@ -458,23 +458,26 @@ rts
 set_volume
 	bcc +
 	sta current_sample_volume_levels,y
-+	lda current_sample_volume_levels,y
-	ldx track_current_enable_flags,y
+
++	lda track_current_enable_flags,y
 	bne +
 	lda #>volume_table_lower
-	jmp (set_volume_direct_vec)
+	jmp set_vol_direct
 
-+	lsr
++	lda current_sample_volume_levels,y
+	lsr
 	cmp #16
 	bcs +
 
 	adc #>volume_table_lower
-	jmp (set_volume_direct_vec)
+	jmp set_vol_direct
 
 +	clc
 	adc #(>volume_table_upper)-16
 
-	jmp (set_volume_direct_vec)
+set_vol_direct
+	set_lookahead_vol_addrs_vec
+	  jmp $1234
 
 unused
 rts

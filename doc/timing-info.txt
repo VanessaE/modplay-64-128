@@ -8,17 +8,17 @@ cycle.
 fetch DMA calls alone:
 
 on average, the step rate will be close to 1.7, so it'll be fetching
-16 * 1.7 = ~27 bytes per transfer:
+16 * 1.7 = ~27 bytes per transfer.  We have to split the transfer up into
+smaller pieces to avoid too much impact on the audio ISR.  With "rounding",
+the average will be closer to 32 bytes.  At any rate, this costs some
+performance but what else can we do?
 
-2 +4+4+27 = 37 cycles per track, total 148 cycles
+2 +4+4 +4+4 +4+4 +4+4 +32 = 66 cycles per track, total 264 cycles
 
 Worst possible case would be playing the highest note, B-4, which would have
 a step rate of about 8.688, so fetching 16 * 8.333 = ~139 bytes:
 
-2 +4+4+139 = 149 cycles per track, total 596 cycles
-
-plus it takes at least 3+4+3 = 10 cycles to check the CIA timer in case the
-fetch has to be postponed for the sake of the ISR
+2 +4+4 +4+4 +4+4 +4+4 +139 = 173 cycles per track, total 692 cycles
 
 For the C128, the hardware does clock stretching on I/O accesses, but only
 for the one cycle when the actual read/write is being committed.  Most of
@@ -26,20 +26,17 @@ the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
 for their whole duration. The explicit 1/2 MHz switching above adds 18,
 2 MHz cycles (9 for the shift down to 1 MHz, 9 to shift back up).
 
-being almost twice as fast, it'll have half the step rates, so best step rate
+Being almost twice as fast, it'll have half the step rates, so best step rate
 will be about 0.137, typical will be around 0.9, worst around 4.2, so it'll
 be fetching ~2, ~13, and ~66 bytes, respectively.
 
 that machine's fetch timings should be about:
 
-most likely:    2 +4+8+13 + 18 = 45 cycles, total 180
-worst possible: 2 +4+8+66 + 13 = 93 cycles, total 372
-CIA timer check: 3+5+3 = 11 cycles
+most likely:    2 +4+8 +8+8 +8+8 +8+8 +13 + 18 = 93 cycles, total 372
+worst possible: 2 +4+8 +8+8 +8+8 +8+8 +66 + 13 = 141 cycles, total 564
 
-
-On SuperCPU we split the transfer into smaller chunks to avoid the need for
-the timer check loop, and on average each fetch will probably only need to get
-two bytes since the whole fetch-mix-output chain is already running several
+On SuperCPU each fetch will probably only need to get two bytes or so on
+average, since the whole fetch-mix-output chain is already running several
 times faster than stock:
 
 (20+20+(2*20)) * 4 = 320 turbo cycles per track
@@ -47,14 +44,13 @@ multiply by 4 = 1280 turbo cycles for all four tracks
 
 We'll just assume a worst-case of 3 times that amount, or 3840 turbo cycles.
 
-
 ----------
 Fetch loop
 
 open:
 2+4+2+2 = 10 cycles
 
-within the loop (not counting the above DMA calls, those are added below):
+within the loop, not counting the above DMA calls, (those are added below):
 
 minimum time (also the most likely case), all four tracks updating two
 bytes of the 4-byte address, and not at the end of the sample yet:
@@ -68,7 +64,6 @@ the end of sample yet:
 
 fetch routine main loop close:
 5+2+6 = 13 cycles
-
 
 On SuperCPU-equipped machines, accounting for cache misses:
 
@@ -88,12 +83,12 @@ Total fetch runtime for all four tracks,
 amortized across 16 output samples:
 
 C64:
-	likely: (10 + 208 + 148 + 13) / 16 = ~24 cycles
-	worst:  (10 + 272 + 596 + 13) / 16 = ~56 cycles
+	likely: (10 + 208 + 264 + 13) / 16 = ~31 cycles
+	worst:  (10 + 272 + 692 + 13) / 16 = ~62 cycles
 
 C128:
-	likely: (10 + 208 + 180 + 11) / 16 = ~26 cycles
-	worst:  (10 + 272 + 372 + 11) / 16 = ~42 cycles
+	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles
+	worst:  (10 + 272 + 564 + 11) / 16 = ~54 cycles
 
 SCPU:
 	likely: (26 + 508 + 1280 + 10) / 16 = ~114 turbo cycles
@@ -149,18 +144,18 @@ Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53 or
 54 cycles per byte for the ISR, plus the "likely" code path in the fetch
 routine taking 24 or 26 cycles, plus some fudge:
 
-The C64 should be run at almost 7.7 kHz with the
+The C64 should be run at almost 7.3 kHz with the
 screen off, SID 4-bit stereo:
 
-1022727 / (54 + 53 + 24 + 2) = ~7689.7
+1022727 / (54 + 53 + 31 + 2) = ~7305.2
 
 or about 5.2 KHz with the screen on since ISR is always 3 rasters:
 
 1022727 / (65 * 3) = ~5244.8
 
-C128 should be able to run at about 15 kHz:
+C128 should be able to run at about 13.8 kHz:
 
-(1022727 * 2) / (54 + 54 + 26 + 2) = ~15040.1
+(1022727 * 2) / (54 + 54 + 38 + 2) = ~13820.6
 
 C64 + SuperCPU with screen on will do 15.7 kHz on all modes (the timing could
 allow for a much faster rate, but it just rounds up to 1 raster even).

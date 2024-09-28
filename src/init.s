@@ -220,10 +220,10 @@ init
 	lda #>reu_do_realtime_selfmods_for_instrument_change
 	sta do_selfmod_instrument_vec+1
 
-	lda #<reu_set_vol_direct
-	sta set_volume_direct_vec
-	lda #>reu_set_vol_direct
-	sta set_volume_direct_vec+1
+	lda #<reu_set_lookahead_vol_addrs
+	sta set_lookahead_vol_addrs_vec+1
+	lda #>reu_set_lookahead_vol_addrs
+	sta set_lookahead_vol_addrs_vec+2
 
 	lda #0
 	sta ramlink_detect
