@@ -4,18 +4,6 @@
 
 * add options to choose audio and RAM drivers
 
-* C128 main memory driver: file has to be split across banks, maximum file
-  size is ~81k on most machines, or ~199k if the banks 2+3 MMU hack is
-  installed. This requires adding a check to the loader pointer and to the
-  player's memory pointer steppers if an increment crosses banks.  Pattern
-  data can be split across banks as long at the split happens between
-  patterns.
-
-* C64 main memory and all other memory drivers: just check that file will fit,
-  else throw an error, "file too big" -- in the playlist it would be a good
-  idea to just filter-out files that are too big when loading the dir.  The
-  check is still needed for the load-by-filename function though.
-
 * add constants for GeoRAM, SCPU RAM, RAMLink DACC, and system RAM sizes
 
 * tinker with ISR sync code, try to get a consistently-better place on
@@ -35,39 +23,74 @@
 * BOTH: need to adjust height of player popup to give room for key assignments
   (pause, skip song, abort to main menu, 1-4 to toggle tracks on/off)
 
+* BOTH: the file list/directory load routine should filter-out the program's
+  own binaries if present.
+
+* C128 (mainly): file list repaint is too slow.
+
 ####################
 ##  KNOWN ISSUES  ##
 ####################
 
-* C64: STOP wedge loader fails if JiffyDOS is present.
+* ALL memory drivers: need to check that file will fit before loading,
+  else throw an appropriate error.
 
-* C128: STOP wedge loader fails on CMD HD if RAMLink exists and the parallel
-  connection is enabled.  Disable it with `@P0` before program load and the
-  STOP wedge works fine.
+* BOTH: The STOP wedge loader fails under some odd conditions, such as on
+  C64 with JiffyDOS, on C128 with SuperCPU, and C128 with RAMLink if CMD HD
+  parallel is available, leading to hangs, crashes, etc. The automatic loader
+  selector compensates for these just fine, it just means slower loads than
+  should otherwise be possible.
 
-  The automatic loader select compensates for both of these just fine, it just
-  means they don't load as fast as they should otherwise be able to.
+* BOTH: The loader needs REU 512 kB-wraparound mitigation, done in such a way
+  as to minimize any performance impact on the mixer/fetch code.  Idea for
+  that:  align each sample start point to a page boundary, then when iterating
+  through the data, if an increment results in a page value of $FE and a bank
+  value of (BANK AND 7) = 7, bump up to the next bank and continue from page
+  0, thus entirely ignoring the last two pages of the 512 kB segment.  The
+  fetch code will require a similar check, but it shouldn't be expensive.
 
-* BOTH: The REU driver's stash and fetch block calls need 512k-wraparound
-  mitigation.  Wouldn't hurt to look into that for the player also.
+  The C128 memory driver will require a similar mitigation, albeit with
+  different boundaries, as the first and last portions of each bank above 0
+  are unusable for file data.
 
-* C128 (mainly): playlist repaint is too slow
+* BOTH: all sample loops need to be unrolled to a minimum length of around
+  10 kB or so and appended to the end of the sample, ending with one final
+  copy of the first 256 bytes of the loop (or the whole thing if it was less
+  than that), whether it needed unrolled or not.  This will minimize the load
+  on the mixer and ensure that it won't cause the lookahead code to give bad
+  data to the mixer when it reaches the end of the loop.
+
+* BOTH: on samples that have no looping, the loader needs to pad the end of
+  the sample with 256 bytes of silence, so that when the fetch code gets to
+  the end of the sample, it won't cause the lookahead code to give garbage
+  data to the mixer (after it runs through whatever it wants, the fetch code
+  eventually land on and then stay within the "silence zone" in bank 0).
 
 * C128: cursor-left in main menu triggers switch pages code
 
-* BOTH: strings that should be centered are off by one: disk name is 1 to the left,
-  file size in loader is 1 to the right
+* BOTH: strings that should be centered are off by one: disk name is 1 to the
+  left, file size in loader is 1 to the right.
 
-* C64: if list is positioned not to fill the pane (e.g. close to start or end),
-  file sizes aren't shown properly at bottom when scrolling with cursor keys
-  (but page up/down, top/bottom, and C128 are all fine)
+* C64: if list is positioned not to fill the pane (e.g. close to start or
+  end), file sizes aren't shown properly at bottom when scrolling with cursor
+  keys (but page up/down, top/bottom, and C128 are all fine)
 
-* C128: file name in infobox overwrites "Current"
+* C128: the displayed file name in infobox overwrites "Current".
+
+* BOTH: sometimes, the filename displays as garbage in the mini popup when
+  loading, yet the file will still load just fine.
 
 * BOTH: progress bar has a minor off-by-1 overflow glitch.
 
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
-  happens on a friend's machine, not on my C128-DCR, and it's fine in VICE.
+  happens on a friend's machine, not on my C128-DCR, and it's fine in VICE
+  too.
 
-* C128: single sample player just crashes (not that it's supposed to DO
-  anything just yet).
+* C128: the single sample player just crashes, but it's supposed to pop-up a
+  placeholder and then exit on keypress, or at least I thought I had it set to
+  do that.
+
+* BOTH:  program hangs when trying to load from a VICE virtual filesystem
+  drive.  I'm guessing it's the load method tester's blocks-free check that
+  fails?  Not sure. Not that anyone would want to use that storage method, it
+  has no fast serial emulation of any kind.
