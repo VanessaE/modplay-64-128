@@ -482,14 +482,21 @@ print_loading_speed
 	adc product+1
 	sta divisor+1
 
-	bne +			; don't print the speed for the first couple of seconds
+	; only print the loading speed every couple of seconds
+
 	lda divisor
-	cmp #2
-	bcs ++
+	cmp last_seconds_lsb
+	bne +
 	rts
 
-+	sec
-++	lda expansion_memory_target_pointer
++	and #$01
+	bne +
+	rts
+
++	lda divisor
+	sta last_seconds_lsb
+	sec
+	lda expansion_memory_target_pointer
 	sbc expansion_memory_start_address
 	sta dividend
 	lda expansion_memory_target_pointer+1
@@ -599,3 +606,6 @@ rts
 
 kbs_fract_approx
 	!byte 0,0,1,1,2,3,3,4,5,5,6,6,7,8,8,9
+
+last_seconds_lsb
+	!byte 0
