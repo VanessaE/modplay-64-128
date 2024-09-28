@@ -6,13 +6,6 @@
 
 * add constants for GeoRAM, SCPU RAM, RAMLink DACC, and system RAM sizes
 
-* tinker with ISR sync code, try to get a consistently-better place on
-  the raster.  Ideal would be to get the very last write that enables the
-  interrupt to happen just as a bad line starts, so that the write doesn't
-  complete until the end of the line, so that the ISR will always just after
-  the end of any bad lines present from then on (this actually only matters on
-  C64 when screen is on, but not if it's off, and not on C128 at all)
-
 * add a function to change directory: it shall read the current dir looking
   for items with "DIR" filetype, offer a list thereof along with a ".." item,
   using the audio buffers for scratch space.

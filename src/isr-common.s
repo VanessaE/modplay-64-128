@@ -113,23 +113,51 @@ isr_startup
 
 		bne ++
 
-		; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
-		; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
+		+ !ifndef scpu {
+			; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
+			; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
 
-	+	bit pal_flag
-		bmi +
-		lda #$a1
-		sta ntsc_adj
+			bit pal_flag
+			bmi +
+			lda #$a1
+			sta ntsc_adj
 
-	+	lda #<irq_stage_1
-		sta CPU_IRQ_vector
-		lda #>irq_stage_1
-		sta CPU_IRQ_vector+1
+		+	lda #<irq_stage_1
+			sta CPU_IRQ_vector
+			lda #>irq_stage_1
+			sta CPU_IRQ_vector+1
 
-		lda #254				; stage 1 IRQ will fire on line 254
-		sta VIC+$12
-		lda #$81
-		sta VIC+$1a				; and now enable the raster IRQ
+			lda #254				; stage 1 IRQ will fire on line 254
+			sta VIC+$12
+			lda #$81
+			sta VIC+$1a				; and now enable the raster IRQ
+
+		} else {
+			sta SCPU_TURBO_ON		; on SCPU we don't have to double-IRQ...
+
+			lda audio_isr_vec
+			sta CPU_IRQ_vector
+			lda audio_isr_vec+1
+			sta CPU_IRQ_vector+1
+
+			ldx #254				; ...we can just spin-wait for line 254
+		-	cpx VIC+$12
+			bne -
+
+			inx						; just in case we were already there,
+		-	cpx VIC+$12				; now wait for line 255.
+			bne -
+
+			ldx #49					; waste 49, 1 MHz cycles
+		-	sta $c7ff				; anywhere above $C000 will do, we just
+			dex						; want to force the SCPU to wait on its
+			bne -					; async write cache.
+			lda #$82				; enable timer B IRQ
+			sta CIA1+$0d			; a CIA write takes 2, 1 MHz cycles
+			lda #$11
+			sta CIA1+$0f			; start CIA timer B
+									; we should now be on line 255, cycle 53.
+		}
 
 	} else {
 		; on C128, it's similar to C64 with screen off
@@ -154,9 +182,6 @@ rts
 ; (author unknown)
 
 	irq_stage_1					; 7 cycles to enter
-		!ifdef scpu {
-			sta SCPU_TURBO_OFF	; 4
-		}
 		inc VIC+$12				; 6
 		lda VIC+$19				; 4
 		sta VIC+$19				; 4
@@ -227,10 +252,6 @@ rts
 
 	.s1a lda #0					; restore .A
 		cli
-
-		!ifdef scpu {
-			sta SCPU_TURBO_ON
-		}
 	rti
 }
 
