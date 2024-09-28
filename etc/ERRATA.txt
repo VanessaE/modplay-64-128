@@ -86,10 +86,6 @@
   happens on a friend's machine, not on my C128-DCR, and it's fine in VICE
   too.
 
-* C128: the single sample player just crashes, but it's supposed to pop-up a
-  placeholder and then exit on keypress, or at least I thought I had it set to
-  do that.
-
 * BOTH:  program hangs when trying to load from a VICE virtual filesystem
   drive.  I'm guessing it's the load method tester's blocks-free check that
   fails?  Not sure. Not that anyone would want to use that storage method, it

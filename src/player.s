@@ -259,16 +259,12 @@ player_gen_tables
 rts
 
 single_sample_player
-	php
-	sei
-
-	!ifdef c128 {
-		jsr gray_out
-		clc
-	} else {
+	!ifndef c128 {
 		jsr gray_out_blur_out
 		sec
-		jsr switch_to_secondary_screen
+	} else {
+		jsr gray_out
+		clc
 	}
 
 	jsr draw_medium_popup
@@ -289,5 +285,4 @@ single_sample_player
 
 	jsr clear_primary_screen_early
 	jsr switch_to_primary_screen
-	plp
 rts

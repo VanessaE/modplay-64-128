@@ -212,15 +212,15 @@ chk_key_plus
 	jmp main_loop
 
 chk_key_shift_p
-	cmp #$70
-	beq +
-	cmp #$d0
-	bne chk_key_l
-
-+	lda current_file_type
-	beq chk_key_l
-	jsr single_sample_player
-	jmp show_main_menu
+;	cmp #$70
+;	beq +
+;	cmp #$d0
+;	bne chk_key_l
+;
+;+	lda current_file_type
+;	beq chk_key_l
+;	jsr single_sample_player
+;	jmp show_main_menu
 
 chk_key_l
 	cmp #$4c
@@ -263,11 +263,11 @@ chk_key_dollar
 
 chk_key_d
 	cmp #$44
-	bne chk_key_s
+	bne chk_key_m
 	jsr choose_audio_driver
 	jmp show_main_menu
 
-;chk_key_m
+chk_key_m
 ;	cmp #$4d
 ;	bne chk_key_s
 ;	jsr choose_memory_driver
@@ -566,18 +566,18 @@ draw_menu_page_b
 		jsr print_menu_line
 	}
 
-	lda current_file_type ; type 0 means nothing is loaded.
-	beq +
-
-	ldx #<menu_text_sample_mode
-	ldy #>menu_text_sample_mode
-	jsr print_menu_line
-	!ifndef c128 {
-		ldx #<menu_text_sample_mode_b
-		ldy #>menu_text_sample_mode_b
-		jsr print_menu_line
-	}
-	jmp ++
+;	lda current_file_type ; type 0 means nothing is loaded.
+;	beq +
+;
+;	ldx #<menu_text_sample_mode
+;	ldy #>menu_text_sample_mode
+;	jsr print_menu_line
+;	!ifndef c128 {
+;		ldx #<menu_text_sample_mode_b
+;		ldy #>menu_text_sample_mode_b
+;		jsr print_menu_line
+;	}
+;	jmp ++
 
 +	ldx #<menu_text_sample_mode_gray
 	ldy #>menu_text_sample_mode_gray
