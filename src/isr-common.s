@@ -85,12 +85,14 @@ isr_startup
 	lda #$01
 	sta CIA2+$0e			; start Timer A -> NMI
 
-	sta CIA1+$0f			; ensure that CIA #1 timer B is turned off
-	lda #$01				; disable timer A IRQ
+	lda #$03				; disable both CIA #1 timers' IRQ's
 	sta CIA1+$0d
-	lda #$82				; enable timer B IRQ
-	sta CIA1+$0d
-	bit CIA1+$0d			; and clear any pending IRQ
+	bit CIA1+$0d			; and clear any pending IRQs
+
+	lda #0
+	sta VIC+$1a				; disable VIC raster IRQ
+	lda VIC+$19				; and clear any VIC IRQ that's pending.  normally
+	sta VIC+$19				; we could lsr here but that doesn't work on SCPU
 
 	!ifndef c128 {
 		; if the screen is off, don't bother with the double-IRQ code,
@@ -104,51 +106,40 @@ isr_startup
 		lda audio_isr_vec+1
 		sta CPU_IRQ_vector+1
 
-		lda #0
-		sta VIC+$1a				; disable VIC raster IRQ
-		lsr VIC+$19				; clear any VIC IRQ that's pending
-
+		lda #$82				; enable timer B IRQ
+		sta CIA1+$0d
 		lda #$11				; start CIA timer B in continuous mode,
 		sta CIA1+$0f			; counting Phi2 cycles, no output on PB6
-		bne ++
 
-	+	!ifdef scpu {
-			bit SCPU_PRESENT
-			bpl +
-			sta SCPU_TURBO_OFF
-		  +
-		}
+		bne ++
 
 		; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
 		; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
 
-		bit pal_flag
+	+	bit pal_flag
 		bmi +
 		lda #$a1
 		sta ntsc_adj
 
-	+	lda #$81
-		sta VIC+$1a				; enable VIC raster IRQ
-		lda #<irq_stage_1
+	+	lda #<irq_stage_1
 		sta CPU_IRQ_vector
 		lda #>irq_stage_1
 		sta CPU_IRQ_vector+1
 
-		lda #$38				; stage 1 IRQ will fire on line $38
+		lda #254				; stage 1 IRQ will fire on line 254
 		sta VIC+$12
-		lsr VIC+$19
+		lda #$81
+		sta VIC+$1a				; and now enable the raster IRQ
 
 	} else {
 		; on C128, it's similar to C64 with screen off
-
-		lda #0
-		sta VIC+$1a
-		lsr VIC+$19
-
 		lda audio_isr_vec
 		sta CPU_IRQ_vector
 		lda audio_isr_vec+1
 		sta CPU_IRQ_vector+1
+
+		lda #$82				; enable timer B IRQ
+		sta CIA1+$0d
 		lda #$11
 		sta CIA1+$0f			; start CIA timer B
 	}
@@ -163,17 +154,18 @@ rts
 ; (author unknown)
 
 	irq_stage_1					; 7 cycles to enter
+		!ifdef scpu {
+			sta SCPU_TURBO_OFF	; 4
+		}
 		inc VIC+$12				; 6
-		lsr VIC+$19				; 6
-
+		lda VIC+$19				; 4
+		sta VIC+$19				; 4
 		sta .s1a + 1			; 4 / we're about to trash .A so back it up
 		lda #<irq_stage_2		; 2
 		sta CPU_IRQ_vector		; 4
 		lda #>irq_stage_2		; 2
 		sta CPU_IRQ_vector+1	; 4
-
 		cli						; 2 / 37 cycles for switchover (43 on C128)
-		nop
 		nop
 		nop
 		nop
@@ -193,47 +185,45 @@ rts
 	irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
 		lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
 		sta VIC+$1a				; 4 / the IRQ from now on.
+		lda VIC+$19				; 4
+		sta VIC+$19				; 4
 
 		pla						; 4 / discard stage 2's return address and cpu status
 		pla						; 4 / so that we return via stage 1's stack values
 		pla 					; 4
-
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
 	ntsc_adj
 		nop						; 2 \__ these become 'lda ($ea,x)'
 		nop						; 2 /   on NTSC to add 2 more cycles
 		nop						; 2
 		nop						; 2
+		nop						; 2
+		nop						; 2
+		lda (0,x)				; 6
+		lda (0,x)				; 6
 		lda VIC+$12				; 4 / 61 cycles, -0/+1
-		cmp #$39				; 2
+		cmp #255				; 2
 		beq fixcycle			; 3 or 2
 
-	fixcycle
-								; we are now at cycle 5 of the line.
+	fixcycle					; we are now at cycle 5 of line 255
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		lda (0,x)				; 6
+		nop						; 2  / waste 26 cycles
 
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6  / waste 48 cycles
+		lda audio_isr_vec		; 4 / re-point the IRQ to the audio driver
+		sta CPU_IRQ_vector		; 4 / entry point
+		lda audio_isr_vec+1		; 4
+		sta CPU_IRQ_vector+1	; 4
 
+		lda #$82				; 2 enable timer B IRQ
+		sta CIA1+$0d			; 4
 		lda #$11				; 2
 
-								; we should now be on cycle 55 of line $39, JUST
-								; past where the delay on bad line $3b will end.
+								; we should now be on cycle 55 of line 255, JUST
+								; past where the next bad line delay will end.
 
 		sta CIA1+$0f			; 4 / start CIA timer B
-
-		lda audio_isr_vec		; re-point the IRQ to the audio driver entry that
-		sta CPU_IRQ_vector		; was set at the start of this code
-		lda audio_isr_vec+1
-		sta CPU_IRQ_vector+1
 
 	.s1a lda #0					; restore .A
 		cli

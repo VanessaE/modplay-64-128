@@ -104,8 +104,9 @@ fetch_routine_table_msb
 	sta current_song_pos
 	sta seq_current_row
 
-	; the last write to register $0f before this point already sets the TOD
-	; flag such that writes to $08-0b set the time, not the alarm
+	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
+	and #$7f
+	sta CIA1+$0f
 
 	lda #0
 	sta CIA1+$0b
