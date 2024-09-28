@@ -166,9 +166,7 @@ load_by_filename_entry
 	bcc +
 	jmp load_err
 
-; in case the loader method (below) is STOP wedge mode, we have to use ACPTR
-; to read-in the file's header, because loading via the STOP wedge can't be
-; canceled from the calling program (unless the drive errors-out).
+; read-in the file's header
 
 +	ldy #0
 -	jsr ACPTR
