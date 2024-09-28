@@ -2,7 +2,7 @@
 ##  TODO  ##
 ############
 
-* add options to choose audio and RAM drivers
+* add option to choose RAM driver
 
 * add constants for GeoRAM, SCPU RAM, RAMLink DACC, and system RAM sizes
 
@@ -20,9 +20,6 @@
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 
-* BOTH: need to adjust height of player popup to give room for key assignments
-  (pause, skip song, abort to main menu, 1-4 to toggle tracks on/off)
-
 * BOTH: the file list/directory load routine should filter-out the program's
   own binaries if present.
 
@@ -35,36 +32,73 @@
 * ALL memory drivers: need to check that file will fit before loading,
   else throw an appropriate error.
 
-* BOTH: The STOP wedge loader fails under some odd conditions, such as on
-  C64 with JiffyDOS, on C128 with SuperCPU, and C128 with RAMLink if CMD HD
+* C64/128 BOTH: The STOP wedge loader fails under some odd conditions, such as
+  on C64 with JiffyDOS, on C128 with SuperCPU, and C128 with RAMLink if CMD HD
   parallel is available, leading to hangs, crashes, etc. The automatic loader
   selector compensates for these just fine, it just means slower loads than
   should otherwise be possible.
 
-* BOTH: The loader needs REU 512 kB-wraparound mitigation, done in such a way
-  as to minimize any performance impact on the mixer/fetch code.  Idea for
-  that:  align each sample start point to a page boundary, then when iterating
-  through the data, if an increment results in a page value of $FE and a bank
-  value of (BANK AND 7) = 7, bump up to the next bank and continue from page
-  0, thus entirely ignoring the last two pages of the 512 kB segment.  The
-  fetch code will require a similar check, but it shouldn't be expensive.
+* BOTH: The disk read portions of the loaders need to be decoupled from the
+  parts of the code that actually store the data into the expansion RAM, to
+  allow for easy manipulation of the data during loading, with predictable
+  chunk sizes (most likely, that'll be 256 bytes).
+
+* BOTH: The DMA chip in a standard REU does not know anything about RAM sizes
+  greater than 512 kB, due to its limited number of address lines.  As such,
+  it can't cross from bank 7 to 8, 15 to 16, etc. when doing a transfer -- it
+  just wraps around back to the start of the segment.
+
+  To deal with this, there needs to be some kind of wraparound mitigation in
+  the loaders, and it must be done in such a way as to minimize any
+  performance impact later when the player's fetch/lookahead/mix code is
+  plowing through the instrument data.
+
+  Idea for that:  start each instrument sample right on a page boundary, then
+  if a pointer increment puts the store target on page $FE with a bank value
+  of (BANK AND 7) = 7, go ahead and store the instrument data into that page
+  as normal, bump up to the next bank, copy that page $FE data into this
+  bank's page $00, then continue loading from page $01 of this bank. The fetch
+  code will of course require similar checks, but without resetting the
+  byte/LSB part of the pointer when jumping to the next bank.
+
+  The rationale with this extra copy of the data is that during playback, when
+  the fetch code advances to 7/$FE, the lookahead code will most likely have
+  already used some of page $FE's data from its previous pass, so we need a
+  cheap but seamless transition to the next bank so that the fetch and
+  lookahead can continue without skipping any instrument data.
 
   The C128 memory driver will require a similar mitigation, albeit with
   different boundaries, as the first and last portions of each bank above 0
   are unusable for file data.
 
-* BOTH: all sample loops need to be unrolled to a minimum length of around
-  10 kB or so and appended to the end of the sample, ending with one final
-  copy of the first 256 bytes of the loop (or the whole thing if it was less
-  than that), whether it needed unrolled or not.  This will minimize the load
-  on the mixer and ensure that it won't cause the lookahead code to give bad
-  data to the mixer when it reaches the end of the loop.
+* BOTH: all instrument loops need to be unrolled to a minimum length of around
+  10 kB, which shall be appended to the end of the sample.  That shall then be
+  padded end with one last copy of the first 256 bytes of the loop (or the
+  whole thing if it's shorter). If the loop was already over 10 kB, just pad
+  the end of the instrument with the first 256 bytes of the loop.  If the loop
+  had to be unrolled, its start and end points shall be set to the first and
+  last byte of the newly-unrolled data, excluding the final padding and
+  ignoring the original loop data.  If not unrolled, its start and endpoints
+  remain at their original locations.
 
-* BOTH: on samples that have no looping, the loader needs to pad the end of
-  the sample with 256 bytes of silence, so that when the fetch code gets to
-  the end of the sample, it won't cause the lookahead code to give garbage
-  data to the mixer (after it runs through whatever it wants, the fetch code
-  eventually land on and then stay within the "silence zone" in bank 0).
+* BOTH: on instrument that have no looping, the loader needs to pad the end of
+  the instrument with 256 bytes of silence, but the sample endpoint shall
+  remain at its original location.
+
+  The idea with all this unrolling and padding is to minimize the load on the
+  fetch code by requiring fewer loops per second (and hence fewer calls to
+  the code which resets the instrument sample pointer to the loop's start
+  point, which is a little expensive).  So-called "chip tunes" are especially
+  problematic here, owing to their minimal instrument data (sometimes only a
+  few hundreds of bytes, or even less).
+
+  The non-loop padding will also prevent the lookahead code from... well...
+  looking so far ahead that it finds either unallocated space or data that
+  belongs to the next instrument in the file.  In the case of loops, it
+  could potentially run across the instrument data that follows the loop,
+  which we don't want either, because that data isn't supposed to be part of
+  the loop.  Any of these would end up giving the mixer garbage sample bytes
+  on occasion, if left unchecked.
 
 * C128: cursor-left in main menu triggers switch pages code
 
