@@ -7,7 +7,7 @@
 !ifndef c128 {
 	mini_popup_left_column			= 10
 	mini_popup_width				= 18
-	mini_popup_height				= 5
+	mini_popup_height				= 6
 
 	short_popup_left_column			= 4
 	short_popup_width				= 30
@@ -27,7 +27,7 @@
 } else {
 	mini_popup_left_column			= 0
 	mini_popup_width				= 30
-	mini_popup_height				= 5
+	mini_popup_height				= 6
 
 	short_popup_left_column			= 0
 	short_popup_width				= 30

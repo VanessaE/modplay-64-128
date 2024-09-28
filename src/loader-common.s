@@ -7,14 +7,18 @@
 load_file_to_expansion
 	!ifndef c128 {
 		size_text = 9
-		progbar_row			= 14
+		progbar_row			= 13
 		progbar_column		= 12
 		progbar_len			= 16*8
+		kbs_row				= 15
+		kbs_column			= 15
 	} else {
 		size_text = 12
-		progbar_row			= 14
+		progbar_row			= 13
 		progbar_column		= 27
 		progbar_len			= 26*8
+		kbs_row				= 15
+		kbs_column			= 35
 
 		php
 		jsr FULLW
@@ -536,10 +540,10 @@ print_loading_speed
 	ror quotient+1
 	ror quotient
 
-	lda #0
-	ldx #<loader_kbs_position
-	ldy #>loader_kbs_position
-	jsr print_msg
+	clc
+	ldx #kbs_row
+	ldy #kbs_column
+	jsr PLOT
 
 	lda #0
 	ldx #<loader_erase_kbs_msg

@@ -422,19 +422,14 @@ between_songs_msg
 press_key_msg
 	!text "Press any key",0
 
-loader_kbs_position
-	!byte UP,RETURN
-	!fill 28,RIGHT
+loader_erase_kbs_msg
 	!byte GRN
+	!fill 11," "
+	!fill 11,LEFT
 	!byte 0
 
 loader_kbs_msg
 	!text LGRN," kB/sec",0
-
-loader_erase_kbs_msg
-	!fill 11," "
-	!fill 11,LEFT
-	!byte 0
 
 dir_window_left_margin
 	!fill 5,RIGHT
