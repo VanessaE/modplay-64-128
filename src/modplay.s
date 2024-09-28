@@ -63,8 +63,6 @@ start
 +SCREEN_ONOFF
 
 !source "src/loader-common.s"
-!source "src/loader-acptr.s"
-!source "src/loader-stopwdg.s"
 !source "src/decode-mod.s"
 
 !source "src/disk-ops.s"

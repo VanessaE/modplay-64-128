@@ -352,10 +352,7 @@
 	supercpu_detected					= $164c
 	supercpu_turbo_available			= $164d
 
-	; $free: $164e through $16e8
-
-	current_load_method					= $16e9
-	loader_compatibility_table			= $16ea ; 22 bytes - devices 8 through 30.
+	; $free: $164e through $16ff
 
 	; mods' lengths are big-endian, but addrs and lengths here are little-
 	; endian. each of these is 32 bytes, except the first byte of each one is

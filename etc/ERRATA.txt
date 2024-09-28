@@ -25,16 +25,10 @@
 * ALL memory drivers: need to check that file will fit before loading,
   else throw an appropriate error.
 
-* C64/128 BOTH: The STOP wedge loader fails under some odd conditions, such as
-  on C64 with JiffyDOS, on C128 with SuperCPU, and C128 with RAMLink if CMD HD
-  parallel is available, leading to hangs, crashes, etc. The automatic loader
-  selector compensates for these just fine, it just means slower loads than
-  should otherwise be possible.
-
-* BOTH: The disk read portions of the loaders need to be decoupled from the
-  parts of the code that actually store the data into the expansion RAM, to
-  allow for easy manipulation of the data during loading, with predictable
-  chunk sizes (most likely, that'll be 256 bytes).
+* BOTH: The disk read portion of the loader needs to be decoupled from the
+  part that actually stores the data into the expansion RAM, to allow for easy
+  manipulation of the data during loading, with predictable chunk sizes (most
+  likely, that'll be 256 bytes).
 
 * BOTH: The DMA chip in a standard REU does not know anything about RAM sizes
   greater than 512 kB, due to its limited number of address lines.  As such,

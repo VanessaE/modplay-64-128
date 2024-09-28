@@ -106,12 +106,6 @@ load_by_filename_entry
 	lsr file_size_in_kb+1
 	ror file_size_in_kb
 
-	jsr test_loader_compatibility
-
-	ldx load_device
-	lda loader_compatibility_table-8,x
-	sta current_load_method
-
 	jsr populate_loader_mini_popup
 
 ; preset the divisor to be proportional to max number of progress bar segments
@@ -187,16 +181,12 @@ load_by_filename_entry
 
 	jsr decode_mod_header
 
-	bcs abort_load
+	bcc +
+	jmp abort_load
 
 	; ### Okay, at this point we can go ahead and load the file.
 
-	; On some machines/drives, the STOP wedge won't work, so the loader calls
-	; a test routine to see if it's safe to use.
-
-	jsr print_loader_type
-
-	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
++	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
 	and #$7f
 	sta CIA1+$0f
 
@@ -206,17 +196,73 @@ load_by_filename_entry
 	sta CIA1+$09
 	sta CIA1+$08
 
-	bit current_load_method
-	bmi + 
-
 	jsr load_via_acptr
-	jmp ++
 
-+	jsr load_via_stop_wedge
-
-++	jsr reformat_pattern_data
+	jsr reformat_pattern_data
 
 	jsr zero_first_exp_pages
+rts
+
+load_via_acptr
+	lda #0
+	sta stash_size
+	lda #5
+	sta stash_size+1
+
+	+JSR_INDIRECT (stash_block_vec) ; stash the header
+
+	lda #5
+	sta expansion_memory_target_pointer+1
+
+.next_block
+	lda #0
+	sta load_pointer
+	lda #>load_buffer
+	sta load_pointer+1
+	ldy #0
+
+-	lda STATUS
+	bne .done
+
+	jsr ACPTR
+	sta (load_pointer),y
+	iny
+	bne -
+	inc load_pointer+1
+	lda load_pointer+1
+	cmp #>(load_buffer+$0500)		; load buffer full?
+	bne -
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	clc
+	lda expansion_memory_target_pointer+1
+	adc #5
+	sta expansion_memory_target_pointer+1
+	bcc +
+	inc expansion_memory_target_pointer+2
+
++	jsr update_progress
+	jmp .next_block
+
+.done
+	jsr close_file
+	+JSR_INDIRECT (stash_block_vec) ; last-loaded block
+
+	lda file_size_in_kb
+	sta current_file_size_in_kb
+	lda file_size_in_kb+1
+	sta current_file_size_in_kb+1
+
+	ldy #0
+-	lda string_buffer,y
+	sta current_file_name,y
+	beq acptr_exit
+	iny
+	cpy #16
+	bne -
+
+acptr_exit
 rts
 
 abort_load
@@ -415,31 +461,6 @@ update_progress
 
 	lda quotient
 	jsr update_progress_bar
-rts
-
-print_loader_type
-	lda #0
-	ldx #<status_line_pos
-	ldy #>status_line_pos
-	jsr print_msg
-
-	lda #0
-	ldx #<using_loader_msg
-	ldy #>using_loader_msg
-	jsr print_msg
-
-	bit current_load_method
-	bmi + 
-
-	ldx #<loader_acptr_msg
-	ldy #>loader_acptr_msg
-	jmp ++
-
-+	ldx #<loader_stop_wedge_msg
-	ldy #>loader_stop_wedge_msg
-
-++	lda #0
-	jsr print_msg
 rts
 
 print_loading_speed

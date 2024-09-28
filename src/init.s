@@ -105,8 +105,6 @@ init
 	lda #0
 	sta MSGFLG ; suppress "SEARCHING FOR..." message
 
-	jsr test_loader_compatibility_no_popup
-
 	lda #0
 	sta current_menu_page
 	!ifdef c128 {
