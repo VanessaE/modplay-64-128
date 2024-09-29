@@ -2,7 +2,7 @@
 
 !addr {
 
-	program_start							= $1e00
+	program_start							= $1500
 
 	; KERNAL zero-page variables
 
@@ -192,10 +192,160 @@
 	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
 	; C128 has system variables and such in that space
 
-	load_buffer							= $0b00 ; 5*254 bytes, plus the rest
-	load_buffer_end						= $0ff5 ; of the 5th page for overflow
+	; All of the various tables, buffers (both C64 and C128)
 
-	clear_main_memory					= load_buffer
+	main_variables_zone					= $0b00
+
+	config_space						= $0b00 ; 16 bytes
+
+	one_ten_thousandth_second			= $0b10 ; 2 bytes
+	number_of_song_positions			= $0b12
+	number_of_patterns					= $0b13
+
+	audio_driver_isr_cycle_count		= $0b14
+	ram_driver_fetch_cycle_count		= $0b15
+	isr_trigger_interval				= $0b16
+	last_isr_trigger_interval			= $0b17
+	playlist_length						= $0b18
+	playlist_scroll_pos					= $0b19
+	playlist_print_file_counter			= $0b1a
+	screen_row_to_print_at				= $0b1b
+	rasters_lo							= $0b1c
+	raster_len							= $0b1d
+	pal_flag							= $0b1e
+	boot_device							= $0b1f
+
+	string_buffer						= $0b20 ; 48 bytes
+	uint16_string_buffer				= $0b50 ; 7 bytes (of 8)
+	uint16_string_buf_trim				= $0b58 ; 7 bytes (of 8)
+
+	current_dir_name					= $0b60 ; 16 bytes plus a null
+	current_file_name					= $0b71 ; 16 bytes plus a null
+	current_file_title					= $0b82 ; 21 bytes (plus a bunch of nulls)
+	current_file_size					= $0ba0 ; 2 bytes
+	current_file_size_in_kb				= $0ba2 ; 2 bytes
+	current_file_type					= $0ba4
+	current_file_tracks					= $0ba5
+
+	current_menu_page					= $0ba6
+	clear_menu_screen_flag				= $0ba7
+
+	file_to_load_name_len				= $0ba8
+	file_to_load_size					= $0ba9 ; 2 bytes
+	file_size_in_kb						= $0bab ; 2 bytes
+	header_loaded						= $0bad
+
+	reu_highest_bank					= $0bae
+	ramlink_detect						= $0baf
+	main_memory_free_pages				= $0bb0
+
+	old_STOP_vec						= $0bb1 ; 2 bytes
+	parse_header_sample_pointer			= $0bb3 ; 3 bytes
+
+	arpeggio_extra_note_first			= $0bb6 ; \___ 16 bytes
+	arpeggio_extra_note_second			= $0bbe ; /
+	arpeggio_counters					= $0bc6 ; 8 bytes
+
+	utility_counter						= $0bce ; 3 bytes
+
+	stash_size							= $0bd1 ; 2 bytes
+
+	temp_abs_a							= $0bd3
+	temp_abs_b							= $0bd4
+	temp_abs_c							= $0bd5
+	temp_abs_x							= $0bd6
+	temp_abs_y							= $0bd7
+	temp_abs_y2							= $0bd8
+	temp_counter						= $0bd9 ; 3 bytes
+	scroll_area_target_addr				= $0bdc ; 2 bytes
+	scroll_area_width					= $0bde
+	scroll_area_height					= $0bdf
+	scroll_area_blank_last_line_flag	= $0be0
+
+	progress_bar_row					= $0be1
+	progress_bar_column					= $0be2
+	progress_bar_max_length				= $0be3
+	progress_bar_segments_to_draw		= $0be4
+	progress_bar_bytes_per_segment		= $0be5 ; 3 bytes
+
+	visualizer_mode						= $0be8
+	visualizer_base_address				= $0be9 ; 2 bytes
+
+	pattern_conv_pat_counter			= $0beb
+	pattern_conv_row_counter			= $0bec
+	pattern_conv_trk_counter			= $0bed
+
+	expansion_memory_start_page			= $0bee
+	expansion_memory_start_bank			= $0bef
+	match_header						= $0bf0
+
+	disk_free_space						= $0bf1 ; 2 bytes
+
+	char_table_select					= $0bf3 ; C64-only
+	print_msg_char_limit				= $0bf4
+
+	repeat_mode							= $0bf5
+	volume_tables_resolution			= $0bf6
+	last_volume_tables_resolution		= $0bf7
+	allow_regen_msg						= $0bf8
+
+	seq_abort_flag						= $0bf9
+
+	top_row_pos							= $0bfa
+	bottom_row_pos						= $0bfb
+	left_column_pos						= $0bfc
+
+	right_column_pos					= $0bfd
+	num_rows							= $0bfe
+	num_columns							= $0bff
+
+	supercpu_detected					= $0c00
+	supercpu_turbo_available			= $0c01
+
+	product								= $0c02 ; 2 bytes / for the multiply routine
+
+	; free: $0c04 through $0d07
+
+	; various program vectors
+
+	do_selfmod_pitch_vec				= $0d08 ; 2 bytes
+	do_selfmod_instrument_vec			= $0d0a ; 2 bytes
+
+	fetch_block_vec						= $0d0c ; 2 bytes
+	stash_block_vec						= $0d0e ; 2 bytes
+
+	print_vec							= $0d10 ; 2 bytes
+
+	audio_set_resolution_vec			= $0d12 ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $0d14 ; 2 bytes
+	audio_start_vec						= $0d16 ; 2 bytes
+	audio_mute_vec						= $0d18 ; 2 bytes
+	audio_stop_vec						= $0d1a ; 2 bytes
+	audio_isr_vec						= $0d1c ; 2 bytes
+
+	ram_driver_set_cycle_counts_vec		= $0d1e ; 2 bytes
+
+	; mods' lengths are big-endian, but addrs and lengths here are little-
+	; endian. each of these is 32 bytes, except the first byte of each one is
+	; unused.
+
+	sample_start_addresses_lows			= $0d20
+	sample_start_addresses_mids			= $0d40
+	sample_start_addresses_highs		= $0d60
+	sample_end_addresses_lows			= $0d80
+	sample_end_addresses_mids			= $0da0
+	sample_end_addresses_highs			= $0dc0
+	sample_loop_start_addresses_lows	= $0de0
+	sample_loop_start_addresses_mids	= $0e00
+	sample_loop_start_addresses_highs	= $0e20
+	sample_loop_end_addresses_lows		= $0e40
+	sample_loop_end_addresses_mids		= $0e60
+	sample_loop_end_addresses_highs		= $0e80
+	sample_default_loop_flags			= $0ea0
+	sample_default_fine_tunes			= $0ec0
+	sample_default_volume_levels		= $0ee0
+
+	zp_backup							= $0f00 ; 1 page (duh. 😛)
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
@@ -213,170 +363,13 @@
 	audio_buffer_left					= $1100 ; 1 page
 	audio_buffer_right					= $1200 ; 1 page
 
-	expansion_transfer_buffer			= $1100 ; 2 pages
-	; it's safe to reuse the audio bufs for this since this will only be used
-	; by the loader
+	clear_main_memory					= audio_buffer_left
+
+	; it's safe to reuse the audio bufs for this since it's only needed once.
 
 	multab2hi							= $1300 ; 2 pages
 
-	; All of the various tables, buffers (both C64 and C128)
-
-	main_variables_zone					= $1500
-
-	config_space						= $1500 ; 16 bytes
-
-	one_ten_thousandth_second			= $1510 ; 2 bytes
-	number_of_song_positions			= $1512
-	number_of_patterns					= $1513
-
-	audio_driver_isr_cycle_count		= $1514
-	ram_driver_fetch_cycle_count		= $1515
-	isr_trigger_interval				= $1516
-	last_isr_trigger_interval			= $1517
-	playlist_length						= $1518
-	playlist_scroll_pos					= $1519
-	playlist_print_file_counter			= $151a
-	screen_row_to_print_at				= $151b
-	rasters_lo							= $151c
-	raster_len							= $151d
-	pal_flag							= $151e
-	boot_device							= $151f
-
-	string_buffer						= $1520 ; 48 bytes
-	uint16_string_buffer				= $1550 ; 7 bytes (of 8)
-	uint16_string_buf_trim				= $1558 ; 7 bytes (of 8)
-
-	current_dir_name					= $1560 ; 16 bytes plus a null
-	current_file_name					= $1571 ; 16 bytes plus a null
-	current_file_title					= $1582 ; 21 bytes (plus a bunch of nulls)
-	current_file_size					= $15a0 ; 2 bytes
-	current_file_size_in_kb				= $15a2 ; 2 bytes
-	current_file_type					= $15a4
-	current_file_tracks					= $15a5
-
-	current_menu_page					= $15a6
-	clear_menu_screen_flag				= $15a7
-
-	file_to_load_name_len				= $15a8
-	file_to_load_size					= $15a9 ; 2 bytes
-	file_size_in_kb						= $15ab ; 2 bytes
-	header_loaded						= $15ad
-
-	reu_highest_bank					= $15ae
-	ramlink_detect						= $15af
-	main_memory_free_pages				= $15b0
-
-	old_STOP_vec						= $15b1 ; 2 bytes
-	parse_header_sample_pointer			= $15b3 ; 3 bytes
-
-	arpeggio_extra_note_first			= $15b6 ; \___ 16 bytes
-	arpeggio_extra_note_second			= $15be ; /
-	arpeggio_counters					= $15c6 ; 8 bytes
-
-	utility_counter						= $15ce ; 3 bytes
-
-	stash_size							= $15d1 ; 2 bytes
-
-	temp_abs_a							= $15d3
-	temp_abs_b							= $15d4
-	temp_abs_c							= $15d5
-	temp_abs_x							= $15d6
-	temp_abs_y							= $15d7
-	temp_abs_y2							= $15d8
-	temp_counter						= $15d9 ; 3 bytes
-	scroll_area_target_addr				= $15dc ; 2 bytes
-	scroll_area_width					= $15de
-	scroll_area_height					= $15df
-	scroll_area_blank_last_line_flag	= $15e0
-
-	progress_bar_row					= $15e1
-	progress_bar_column					= $15e2
-	progress_bar_max_length				= $15e3
-	progress_bar_segments_to_draw		= $15e4
-	progress_bar_bytes_per_segment		= $15e5 ; 3 bytes
-
-	visualizer_mode						= $15e8
-	visualizer_base_address				= $15e9 ; 2 bytes
-
-	pattern_conv_pat_counter			= $15eb
-	pattern_conv_row_counter			= $15ec
-	pattern_conv_trk_counter			= $15ed
-
-	expansion_memory_start_address		= $15ee ; 3 bytes
-	match_header						= $15f1
-
-	disk_free_space						= $15f2 ; 2 bytes
-
-	char_table_select					= $15f4 ; C64-only
-	print_msg_char_limit				= $15f5
-
-	repeat_mode							= $15f6
-	volume_tables_resolution			= $15f7
-	last_volume_tables_resolution		= $15f8
-	allow_regen_msg						= $15f9
-
-	seq_abort_flag						= $15fa
-
-	top_row_pos							= $15fb
-	bottom_row_pos						= $15fc
-	left_column_pos						= $15fd
-
-	right_column_pos					= $15fe
-	num_rows							= $15ff
-	num_columns							= $1600
-
-	; free: $1601 through $1621
-
-	; various program vectors
-
-	do_selfmod_pitch_vec				= $1622 ; 2 bytes
-	do_selfmod_instrument_vec			= $1624 ; 2 bytes
-
-	fetch_block_vec						= $1626 ; 2 bytes
-	stash_block_vec						= $1638 ; 2 bytes
-
-	print_vec							= $163a ; 2 bytes
-
-	audio_set_resolution_vec			= $163c ; 2 bytes
-	audio_driver_set_cycle_count_vec	= $163e ; 2 bytes
-	audio_start_vec						= $1640 ; 2 bytes
-	audio_mute_vec						= $1642 ; 2 bytes
-	audio_stop_vec						= $1644 ; 2 bytes
-	audio_isr_vec						= $1646 ; 2 bytes
-
-	ram_driver_set_cycle_counts_vec		= $1648 ; 2 bytes
-
-	product								= $164a ; and $164b / the product from multiply routine
-
-	supercpu_detected					= $164c
-	supercpu_turbo_available			= $164d
-
-	; $free: $164e through $16ff
-
-	; mods' lengths are big-endian, but addrs and lengths here are little-
-	; endian. each of these is 32 bytes, except the first byte of each one is
-	; unused.
-
-	sample_start_addresses_lows			= $1700
-	sample_start_addresses_mids			= $1720
-	sample_start_addresses_highs		= $1740
-	sample_end_addresses_lows			= $1760
-	sample_end_addresses_mids			= $1780
-	sample_end_addresses_highs			= $17a0
-	sample_loop_start_addresses_lows	= $17c0
-	sample_loop_start_addresses_mids	= $17e0
-	sample_loop_start_addresses_highs	= $1800
-	sample_loop_end_addresses_lows		= $1820
-	sample_loop_end_addresses_mids		= $1840
-	sample_loop_end_addresses_highs		= $1860
-	sample_default_loop_flags			= $1880
-	sample_default_fine_tunes			= $18a0
-	sample_default_volume_levels		= $18c0
-	mod_instrument_names				= $18e0 ; 32 * 31 bytes, through $1cbf
-
-	zp_backup							= $1d00 ; 1 page (duh. 😛)
-	
-	; main program code starts here, followed by free mem
+	; main program code starts here at $1500, followed by free mem
 	; then comes all the "high-memory" stuff, beginning at $a900 on C64 or
 	; $b100 on C128 -- see constants-64/128.h
 
@@ -412,6 +405,11 @@
 		SCPU_DISABLE_HW_REGS			= $d07f
 		SCPU_OPTIMIZATION_MODE			= $d0b3
 		SCPU_JD_TURBO_SWITCH			= $d0b5
+
+		SCPU_RAM_FIRST_PAGE				= $d27c
+		SCPU_RAM_FIRST_BANK				= $d27d
+		SCPU_RAM_LAST_PAGE				= $d27e
+		SCPU_RAM_LAST_BANK				= $d27f
 	}
 
 	SCPU_PRESENT						= $d0b7

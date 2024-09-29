@@ -139,25 +139,6 @@ load_by_filename_entry
 	sta divisor+1
 	stx divisor+2	; divisor is now number of bytes per segment.
 
-	lda #<load_buffer
-	sta expansion_transfer_local_addr
-	lda #>load_buffer
-	sta expansion_transfer_local_addr+1
-	lda #0
-	sta expansion_transfer_local_addr+2
-
-	lda expansion_memory_start_address
-	sta expansion_memory_target_pointer
-	lda expansion_memory_start_address+1
-	sta expansion_memory_target_pointer+1
-	lda expansion_memory_start_address+2
-	sta expansion_memory_target_pointer+2
-
-	lda #0
-	sta EAL
-	lda #>load_buffer
-	sta EAL+1
-
 	lda file_to_load_name_len
 	ldx #<string_buffer
 	ldy #>string_buffer+1
@@ -166,29 +147,31 @@ load_by_filename_entry
 	bcc +
 	jmp load_err
 
-; read-in the file's header
-
-+	ldy #0
--	jsr ACPTR
-	sta (EAL),y
-	iny
-	bne -
-	inc EAL+1
-	lda EAL+1
-	cmp #>(load_buffer+5*256)
-	bne -
-
++	lda #<load_buffer
+	sta expansion_transfer_local_addr
 	lda #>load_buffer
-	sta EAL+1
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta expansion_transfer_local_addr+2
 
-	jsr decode_mod_header
+	jsr zero_first_exp_pages	; note: this trashes the target pointer and stash size.
 
-	bcc +
-	jmp abort_load
+	clc							; actual music/sample data will go to start + $0200
+	lda #0
+	sta expansion_memory_target_pointer
+	lda expansion_memory_start_page
+	adc #2
+	sta expansion_memory_target_pointer+1
+	lda expansion_memory_start_bank
+	adc #0
+	sta expansion_memory_target_pointer+2
 
-	; ### Okay, at this point we can go ahead and load the file.
+	lda #0
+	sta stash_size
+	lda #4
+	sta stash_size+1
 
-+	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
+	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
 	and #$7f
 	sta CIA1+$0f
 
@@ -198,59 +181,59 @@ load_by_filename_entry
 	sta CIA1+$09
 	sta CIA1+$08
 
-	jsr load_via_acptr
+; read-in the header
 
-	jsr reformat_pattern_data
+	jsr load_mod_header		; returns .N = 0 on error or if header is bad
+	bit header_loaded		; or .C = 0 for 15 samples, .C = 1 for 31,
+	bmi +
+	jmp abort_load
++	bcc loaded_15
 
-	jsr zero_first_exp_pages
-rts
+; okay, at this point we can go ahead and load the rest of the file.
 
-load_via_acptr
-	lda #0
-	sta stash_size
-	lda #5
-	sta stash_size+1
-
-	+JSR_INDIRECT (stash_block_vec) ; stash the header
-
-	lda #5
-	sta expansion_memory_target_pointer+1
-
-.next_block
-	lda #0
+load_next_chunk
+	lda #<load_buffer
 	sta load_pointer
 	lda #>load_buffer
 	sta load_pointer+1
+
 	ldy #0
-
--	lda STATUS
-	bne .done
-
-	jsr ACPTR
+-	jsr loader_get_1_byte
 	sta (load_pointer),y
 	iny
 	bne -
 	inc load_pointer+1
 	lda load_pointer+1
-	cmp #>(load_buffer+$0500)		; load buffer full?
+	cmp #>(load_buffer+$0400)
 	bne -
 
+	lda pattern_conv_pat_counter
+	cmp number_of_patterns
+	bcs stash_pattern
+
+loaded_15
+	jsr reformat_pattern_data
+	inc pattern_conv_pat_counter
+
+stash_pattern
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
 	lda expansion_memory_target_pointer+1
-	adc #5
+	adc #4
 	sta expansion_memory_target_pointer+1
 	bcc +
 	inc expansion_memory_target_pointer+2
+	clc
 
-+	jsr update_progress
-	jmp .next_block
++	lda STATUS
+	bne .done
+
+	jsr update_progress
+	jmp load_next_chunk
 
 .done
 	jsr close_file
-	+JSR_INDIRECT (stash_block_vec) ; last-loaded block
-
 	lda file_size_in_kb
 	sta current_file_size_in_kb
 	lda file_size_in_kb+1
@@ -443,14 +426,13 @@ update_progress
 	jsr print_loading_speed
 
 	sec
-	lda expansion_memory_target_pointer
-	sbc expansion_memory_start_address
+	lda #0
 	sta dividend
 	lda expansion_memory_target_pointer+1
-	sbc expansion_memory_start_address+1
+	sbc expansion_memory_start_page
 	sta dividend+1
 	lda expansion_memory_target_pointer+2
-	sbc expansion_memory_start_address+2
+	sbc expansion_memory_start_bank
 	sta dividend+2
 
 	lda progress_bar_bytes_per_segment
@@ -519,14 +501,13 @@ print_loading_speed
 +	lda divisor
 	sta last_seconds_lsb
 	sec
-	lda expansion_memory_target_pointer
-	sbc expansion_memory_start_address
+	lda #0
 	sta dividend
 	lda expansion_memory_target_pointer+1
-	sbc expansion_memory_start_address+1
+	sbc expansion_memory_start_page
 	sta dividend+1
 	lda expansion_memory_target_pointer+2
-	sbc expansion_memory_start_address+2
+	sbc expansion_memory_start_bank
 	sta dividend+2
 
 	jsr divide_24by24
@@ -575,31 +556,21 @@ print_loading_speed
 rts
 
 zero_first_exp_pages
+	lda #2
+	sta stash_size+1
 	lda #0
-	ldx #0
+	sta stash_size
 
--	sta expansion_transfer_buffer,x
-	sta expansion_transfer_buffer+256,x
+	ldx #0
+-	sta load_buffer,x
+	sta load_buffer+256,x
 	dex
 	bne -
 
-	lda #<expansion_transfer_buffer
-	sta expansion_transfer_local_addr
-	lda #>expansion_transfer_buffer
-	sta expansion_transfer_local_addr+1
-	lda #0
-	sta expansion_transfer_local_addr+2
-
-	lda expansion_memory_start_address
-	sta expansion_memory_target_pointer
-	lda expansion_memory_start_address+1
+	lda expansion_memory_start_page
 	sta expansion_memory_target_pointer+1
-	lda expansion_memory_start_address+2
+	lda expansion_memory_start_bank
 	sta expansion_memory_target_pointer+2
-
-	sta stash_size
-	lda #2
-	sta stash_size+1
 
 	+JSR_INDIRECT (stash_block_vec)
 rts
@@ -625,6 +596,13 @@ load_err
 
 -	jsr GETIN
 	beq -
+rts
+
+; obviously this bit of indirection costs a few cycles but it'll be needed
+; later when multiple loaders are available.
+
+loader_get_1_byte
+	jsr ACPTR
 rts
 
 kbs_fract_approx

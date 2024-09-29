@@ -3,21 +3,106 @@
 
 !text "decode-mod",0
 
-decode_mod_header
-	lda expansion_memory_start_address
-	sta parse_header_sample_pointer
-	lda expansion_memory_start_address+1
-	sta parse_header_sample_pointer+1
-	lda expansion_memory_start_address+2
-	sta parse_header_sample_pointer+2
+load_mod_header ; and also the first pattern if it's a 15-sample mod
+	lda #0
+	sta utility_counter
+	sta utility_counter+1
+	sta utility_counter+2
 
-	ldx #19							; song title
+	lda #<load_buffer
+	sta load_pointer
+	lda #>load_buffer
+	sta load_pointer+1
+
+	ldy #0
+	sty header_loaded
+
+-	jsr loader_get_1_byte
+	sta (load_pointer),y
+	inc load_pointer
+	bne +
+	inc load_pointer+1
+
++	inc utility_counter
+	bne +
+	inc utility_counter+1
+
++	lda utility_counter
+	cmp #<header31_seek_to_pat_data
+	lda utility_counter+1
+	sbc #>header31_seek_to_pat_data
+	bcc -
+
+	jsr decode_mod_header
+	bcc +
+	rts
+
++	lda #0
+	sta pattern_conv_pat_counter
+	lda current_file_type
+	cmp #2
+	sec
+	beq loaded_31			; if it's a 31-sample mod, then we're right at the
+							; first byte of the first pattern.  otherwise, some
+							; of the first pattern is loaded, so get the rest.
+	lda #0
+	sta utility_counter
+	sta utility_counter+1
+
+	ldy #0
+-	jsr loader_get_1_byte
+	sta (load_pointer),y
+	inc load_pointer
+	bne +
+	inc load_pointer+1
+
++	inc utility_counter
+	bne +
+	inc utility_counter+1
+
++	lda utility_counter		; we got all but 540 bytes initially.
+	cmp #<540
+	lda utility_counter+1
+	sbc #>540
+	bcc -
+
+	; now that the header is no longer needed and the first pattern has been
+	; loaded, move it down to the bottom of the load buffer
+
+	lda #<load_buffer
+	sta load_pointer
+	lda #>load_buffer
+	sta load_pointer+1
+
+	lda #<(load_buffer+header15_seek_to_pat_data)
+	sta utility_pointer_b
+	lda #>(load_buffer+header15_seek_to_pat_data)
+	sta utility_pointer_b+1
+
+	ldy #0
+-	lda (utility_pointer_b),y
+	sta (load_pointer),y
+	iny
+	bne -
+	inc utility_pointer_b+1
+	inc load_pointer+1
+	lda load_pointer+1
+	cmp #>(load_buffer+$0400)
+	bne -
+	clc
+loaded_31
+	lda #$80
+	sta header_loaded
+rts
+
+decode_mod_header
+	ldx #19								; song title
 -	lda load_buffer,x
 	sta current_file_title,x
 	dex
 	bpl -
 
-	lda #1							; check filetype
+	lda #1								; check filetype
 	sta temp_abs_a
 	ldy #0
 
@@ -26,7 +111,7 @@ decode_mod_header
 
 -	lda mod_magic_numbers,y
 	beq mod_filetype_unsure				; if none of the magic numbers match, try
-	eor magic_number_location,x		; to identify the file another way
+	eor magic_number_location,x			; to identify the file another way
 	ora match_header
 	sta match_header
 
@@ -116,9 +201,6 @@ set_num_tracks
 	sta current_file_tracks		; all that's left, they have 8 tracks
 
 get_pattern_table
-
-; get pattern table
-
 	ldy #127
 	lda current_file_type
 	cmp #1
@@ -225,14 +307,13 @@ parse_instruments
 	bmi +
 	jmp -
 
-+	clc
-	lda expansion_memory_start_address
-	adc parse_header_sample_pointer
++	clc									; the first pattern is at start + $0200
+	lda #0
 	sta parse_header_sample_pointer
-	lda expansion_memory_start_address+1
-	adc parse_header_sample_pointer+1
+	lda expansion_memory_start_page
+	adc #2
 	sta parse_header_sample_pointer+1
-	lda expansion_memory_start_address+2
+	lda expansion_memory_start_bank
 	adc #0
 	sta parse_header_sample_pointer+2
 
@@ -458,160 +539,110 @@ rts
 ; cccc-zzzzzzzz   (4+8 bits) is the effect and its parameters
 
 reformat_pattern_data
+	php
 	sei
 	jsr disable_roms ; the note period table is buried under the KERNAL
 
-	lda #4			; fetch/stash size is 1 kB
-	sta stash_size+1
-	lda #0
-	sta stash_size
-
-	lda current_file_type
-	cmp #1
-	bne +
-
-	lda #<header15_seek_to_pat_data
-	clc
-	adc expansion_memory_start_address
-	sta expansion_memory_target_pointer
-	lda #>header15_seek_to_pat_data
-	adc expansion_memory_start_address+1
-	sta expansion_memory_target_pointer+1
-	bne ++
-
-+	lda #<header31_seek_to_pat_data
-	clc
-	adc expansion_memory_start_address
-	sta expansion_memory_target_pointer
-	lda #>header31_seek_to_pat_data
-	adc expansion_memory_start_address+1
-	sta expansion_memory_target_pointer+1
-
-++	lda expansion_memory_start_address+2
-	adc #0
-	sta expansion_memory_target_pointer+2
+	lda #<load_buffer
+	sta utility_pointer
+	lda #>load_buffer
+	sta utility_pointer+1
 
 	lda #0
-	sta pattern_conv_pat_counter
-	conv_pat_loop
-		+JSR_INDIRECT (fetch_block_vec)
+	sta pattern_conv_row_counter
 
-		lda #<load_buffer
-		sta utility_pointer
-		lda #>load_buffer
-		sta utility_pointer+1
-
+	conv_row_loop
 		lda #0
-		sta pattern_conv_row_counter
-		conv_row_loop
+		sta pattern_conv_trk_counter
+		conv_trk_loop
 
-			lda #0
-			sta pattern_conv_trk_counter
-			conv_trk_loop
+			lda #<note_period_table
+			sta binsearch_low
+			lda #>note_period_table
+			sta binsearch_low+1
 
-				lda #<note_period_table
-				sta binsearch_low
-				lda #>note_period_table
-				sta binsearch_low+1
+			lda #<(note_period_table+118)
+			sta binsearch_high
+			lda #>(note_period_table+118)
+			sta binsearch_high+1
 
-				lda #<(note_period_table+118)
-				sta binsearch_high
-				lda #>(note_period_table+118)
-				sta binsearch_high+1
+			ldy #1
+			lda (utility_pointer),y
+			sta binsearch_value
 
-				ldy #1
-				lda (utility_pointer),y
-				sta binsearch_value
+			ldy #0
+			lda (utility_pointer),y
+			and #$0f
+			sta binsearch_value+1
+			ora binsearch_value
+			beq no_bin_search
 
-				ldy #0
-				lda (utility_pointer),y
-				and #$0f
-				sta binsearch_value+1
-				ora binsearch_value
-				beq no_bin_search
+			jsr binary_search
+			bcc +
 
-				jsr binary_search
-				bcc +
+			lda binsearch_mid
+			bcs ++
 
-				lda binsearch_mid
-				bcs ++
+		+	lda binsearch_low
 
-			+	lda binsearch_low
+		++	sec							; it starts out as the address of the period word
+			sbc #<note_period_table		; make it into a byte offset
+			lsr
+			clc							; divide by 2 and add 1 and now it's
+			adc #1						; a note number 1-60.
 
-			++	sec							; it starts out as the address of the period word
-				sbc #<note_period_table		; make it into a byte offset
-				lsr
-				clc							; divide by 2 and add 1 and now it's
-				adc #1						; a note number 1-60.
+		no_bin_search
+			sta temp_abs_a
 
-			no_bin_search
-				sta temp_abs_a
+			ldy #0
+			lda (utility_pointer),y
+			and #$f0
+			sta temp_abs_b
 
-				ldy #0
-				lda (utility_pointer),y
-				and #$f0
-				sta temp_abs_b
+			ldy #2
+			lda (utility_pointer),y
+			lsr
+			lsr
+			lsr
+			lsr
+			ora temp_abs_b
+			ldy #1
+			sta (utility_pointer),y
 
-				ldy #2
-				lda (utility_pointer),y
-				lsr
-				lsr
-				lsr
-				lsr
-				ora temp_abs_b
-				ldy #1
-				sta (utility_pointer),y
+			ldy #2
+			lda (utility_pointer),y
+			and #$0f
+			sta (utility_pointer),y
 
-				ldy #2
-				lda (utility_pointer),y
-				and #$0f
-				sta (utility_pointer),y
+			ldy #0
+			lda temp_abs_a
+			sta (utility_pointer),y
 
-				ldy #0
-				lda temp_abs_a
-				sta (utility_pointer),y
+			clc
+			lda utility_pointer
+			adc #4
+			sta utility_pointer
+			bcc +
+			inc utility_pointer+1
 
-				clc
-				lda utility_pointer
-				adc #4
-				sta utility_pointer
-				bcc +
-				inc utility_pointer+1
+		+	inc pattern_conv_trk_counter
+			lda pattern_conv_trk_counter
+			cmp #4
+		bne conv_trk_loop
 
-			+	inc pattern_conv_trk_counter
-				lda pattern_conv_trk_counter
-				cmp #4
-			bne conv_trk_loop
-
-			inc pattern_conv_row_counter
-			lda pattern_conv_row_counter
-			cmp #64
-		beq +
-		jmp conv_row_loop
-
-	+	+JSR_INDIRECT (stash_block_vec)
-
-		clc
-		lda expansion_memory_target_pointer+1
-		adc #4
-		sta expansion_memory_target_pointer+1
-		bcc +
-		inc expansion_memory_target_pointer+2
-
-	+	inc pattern_conv_pat_counter
-		lda pattern_conv_pat_counter
-		cmp number_of_patterns
+		inc pattern_conv_row_counter
+		lda pattern_conv_row_counter
+		cmp #64
 	beq +
-	jmp conv_pat_loop
-  +
+	jmp conv_row_loop
 
-	jsr enable_kernal_only
-	cli
++	jsr enable_kernal_only
+	plp
 rts
 
 
 !ct raw {
-	mod_magic_numbers ; type 1 is Soundtracker
+	mod_magic_numbers ; type 1 is 15 samples e.g. Soundtracker
 		!text "M.K." ; file type 2 \___ Protracker
 		!text "M!K!" ;             /
 		!text "FLT4" ; file type 4 \___ StarTrekker

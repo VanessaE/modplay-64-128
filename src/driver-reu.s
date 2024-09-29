@@ -41,12 +41,14 @@ rts
 
 ; enter with .X = row number, .Y = pattern number
 reu_fetch_row
+	clc
 	lda utility_pointer_b
 	sta DMA_LO
 	lda utility_pointer_b+1
+	adc expansion_memory_start_page
 	sta DMA_HI
 	lda #0
-	rol
+	adc expansion_memory_start_bank
 	sta DMA_BANK
 
 	lda #<seq_current_row_data

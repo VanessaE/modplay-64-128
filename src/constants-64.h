@@ -31,7 +31,11 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $a900
+	main_mem_free_end				= $a500 ; overlaps the load buffer intentionally
+
+	load_buffer						= $9d00 ; 2 kB
+
+	mod_instrument_names			= $a500 ; 32 * 31 bytes, through $afef
 
 	playlist_file_sizes_lows		= $a900 ; \___ 2 bytes * 192 files
 	playlist_file_sizes_highs		= $aa00 ; /    (128 bytes unused but will be zeroed)

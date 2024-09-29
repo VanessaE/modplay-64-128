@@ -354,35 +354,18 @@ fetch_row_data
 	asl utility_pointer_b
 	rol
 
-	adc utility_pointer_b+1		; finish the addition, now we have an offset into
-	sta utility_pointer_b+1		; the pattern data
+	adc utility_pointer_b+1		; finish the addition, now we have a relative
+	sta utility_pointer_b+1		; offset from the first pattern byte
 	lda utility_pointer_b+2
 	adc #0
 	sta utility_pointer_b+2
 
-	lda current_file_type
-	cmp #1
-	bne +
-
-; add the header length and now we have the real address of the desired row
+; add the $0200 offset since the pattern data sits 2 pages up from the start
 
 	clc
-	lda utility_pointer_b
-	adc #<header15_seek_to_pat_data
-	sta utility_pointer_b
-
 	lda utility_pointer_b+1
-	adc #>header15_seek_to_pat_data
-	jmp ++
-
-+	clc
-	lda utility_pointer_b
-	adc #<header31_seek_to_pat_data
-	sta utility_pointer_b
-
-	lda utility_pointer_b+1
-	adc #>header31_seek_to_pat_data
-++	sta utility_pointer_b+1
+	adc #2
+	sta utility_pointer_b+1
 
 	fetch_row_expansion_vec
 		jmp $1234 ; just exit back to the caller via the fetch routine

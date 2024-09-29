@@ -29,7 +29,11 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $b100
+	main_mem_free_end				= $ac00 ; overlaps the load buffer intentionally
+
+	load_buffer						= $a400 ; 2 kB
+
+	mod_instrument_names			= $ac00 ; 32 * 31 bytes, through $afef
 
 	playlist_file_sizes_lows		= $b100 ; \___ 2 bytes * 192 files
 	playlist_file_sizes_highs		= $b200 ; /    (128 bytes unused but will be zeroed)

@@ -112,11 +112,11 @@ init
 		sta clear_menu_screen_flag
 	}
 
-	sec
-	lda #>main_mem_free_end
-	sbc #>expansion_memory_start_address
-	sta main_memory_free_pages
-	dec main_memory_free_pages
+;	sec
+;	lda #>main_mem_free_end
+;	sbc #>expansion_memory_start_address
+;	sta main_memory_free_pages
+;	dec main_memory_free_pages
 
 	; test highest C128 bank number (normally it'll only return 1 or 3, unless
 	; the user's MMU hack is broken :-P)
@@ -225,6 +225,10 @@ init
 	lda #>reu_set_lookahead_vol_addrs
 	sta set_lookahead_vol_addrs_vec+2
 
++	lda #0
+	sta expansion_memory_start_page
+	sta expansion_memory_start_bank
+
 	lda #0
 	sta ramlink_detect
 	sta RAMLINK_REG_ENABLE		; try to enable RAMLink registers
@@ -238,11 +242,6 @@ init
 	lda #$80
 	sta ramlink_detect
 	sta RAMLINK_REG_DISABLE		; disable RAMLink registers.
-
-+	lda #0
-	sta expansion_memory_start_address			; main mem driver will use 
-	sta expansion_memory_start_address+1		; main_mem_free_start for this
-	sta expansion_memory_start_address+2
 
 	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
 	; Code by Graham (reformatted for Acme and my code style)
