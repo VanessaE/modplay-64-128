@@ -369,13 +369,13 @@ reu_run_fetch_and_mixer
 				; on C64, which is quite large, so we'll split it into smaller
 				; transfers.
 
-				sty DMA_CMD									; 4 + N
+				sty DMA_CMD									; 4 + N/4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N
+				sty DMA_CMD									; 4 + N/4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N
+				sty DMA_CMD									; 4 + N/4
 				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N
+				sty DMA_CMD									; 4 + N/4
 
 				!ifdef c128 {
 					!ifndef scpu {
@@ -459,8 +459,8 @@ reu_set_lookahead_vol_addrs
 	ldx reu_lookahead_code_volume_addr_idx,y
 
 	!zone lookahead_idx_set {
-		!for idx6, 0, 15 {
-			sta reu_vol_addr_1 + reu_mixer_loop_segment_length * idx6 + 2,x
+		!for .idx6, 0, 15 {
+			sta reu_vol_addr_1 + reu_mixer_loop_segment_length * .idx6 + 2,x
 		}
 	}
 rts
@@ -544,17 +544,17 @@ reu_do_realtime_selfmods_for_pitch_change
 		lda seq_current_track
 		adc #>sample_data_buffer
 
-		!for idx4, 0, 15 {
-			!set reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * idx4
-			sta reu_la_rd_addr_st + 2,x
+		!for .idx4, 0, 15 {
+			!set .reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * .idx4
+			sta .reu_la_rd_addr_st + 2,x
 		}
 
-		!for idx5, 0, 15 {
+		!for .idx5, 0, 15 {
 
-			!set reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * idx5
+			!set .reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * .idx5
 
 			lda utility_zpbk_counter+2
-			sta reu_la_rd_addr_st + 1,x
+			sta .reu_la_rd_addr_st + 1,x
 
 			lda utility_zpbk_counter
 			adc temp_zpbk_a
