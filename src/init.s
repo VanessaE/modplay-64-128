@@ -15,10 +15,8 @@ rti
 
 init
 	!ifdef c128 {
-		!ifndef scpu {
-			lda #1
-			sta VIC+$30
-		}
+		lda #1
+		sta VIC+$30
 		jsr disable_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete

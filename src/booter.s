@@ -33,9 +33,6 @@ boot_start
 	sta VIC+$21
 
 	!ifdef c128 {
-		bit SCPU_PRESENT
-		bpl +
-
 		jsr disable_screen
 		lda #1
 		sta VIC+$30
@@ -60,8 +57,6 @@ boot_start
 		pla
 		bmi out ; if started on 80 columns, stay in 2 MHz mode.
 
-		bit SCPU_PRESENT
-		bpl out
 		dec VIC+$30
 		jsr enable_screen
 
