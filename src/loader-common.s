@@ -154,7 +154,7 @@ load_by_filename_entry
 	lda #0
 	sta expansion_transfer_local_addr+2
 
-	jsr zero_first_exp_pages	; note: this trashes the target pointer and stash size.
+	jsr set_first_exp_pages_to_silence	; note: this trashes the target pointer and stash size.
 
 	clc							; actual music/sample data will go to start + $0200
 	lda #0
@@ -170,6 +170,9 @@ load_by_filename_entry
 	sta stash_size
 	lda #4
 	sta stash_size+1
+
+	lda #0
+	sta loading_sample_data
 
 	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
 	and #$7f
@@ -199,7 +202,14 @@ load_next_chunk
 
 	ldy #0
 -	jsr loader_get_1_byte
-	sta (load_pointer),y
+
+	bit loading_sample_data
+	bpl +
+
+	clc					; mod samples are 2's-compliment signed
+	adc #$80			; this will translate the value to unsigned.
+
++	sta (load_pointer),y
 	iny
 	bne -
 	inc load_pointer+1
@@ -207,15 +217,18 @@ load_next_chunk
 	cmp #>(load_buffer+$0400)
 	bne -
 
-	lda pattern_conv_pat_counter
-	cmp number_of_patterns
-	bcs stash_pattern
+	bit loading_sample_data
+	bmi stash_loaded_data
 
 loaded_15
 	jsr reformat_pattern_data
 	inc pattern_conv_pat_counter
+	lda pattern_conv_pat_counter
+	cmp number_of_patterns
+	bcc stash_loaded_data
+	ror loading_sample_data
 
-stash_pattern
+stash_loaded_data
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
@@ -555,12 +568,13 @@ print_loading_speed
 	jsr print_msg
 rts
 
-zero_first_exp_pages
+set_first_exp_pages_to_silence
 	lda #2
 	sta stash_size+1
 	lda #0
 	sta stash_size
 
+	lda #$80
 	ldx #0
 -	sta load_buffer,x
 	sta load_buffer+256,x
@@ -610,3 +624,5 @@ kbs_fract_approx
 
 last_seconds_lsb
 	!byte 0
+
+loading_sample_data !byte 0

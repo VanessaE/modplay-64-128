@@ -9,78 +9,69 @@
 !text "tables",0
 
 generate_volume_tables
-	lda #0
+	lda #<volume_table_lower
 	sta fill_copy_target
-	sta vol_cnt							; volume counter
+	lda #>volume_table_lower
+	sta fill_copy_target+1
 
-	next_vol_val
-		lda vol_cnt
-		cmp #16
-		bcs +
-		adc #>volume_table_lower		; the first 16 pages fit below $c800...
-		jmp ++
+	lda #0
+	sta bval_cnt			; byte value counter
+	sta vol_cnt				; volume counter
 
-	+	clc
-		adc #(>volume_table_upper)-16	; ...while the rest goes under the KERNAL.
+-	lda bval_cnt
 
-	++	sta fill_copy_target+1
+	ldx vol_cnt			; for the highest volume, don't bother applying any
+	cpx #63				; scaling.
+	beq noscale
 
-		lda #0
-		sta bval_cnt					; byte value counter
+	jsr multiply_8x8 	; returns 14 bit value in 'product', MSB is in .A
 
-	next_byte_val
-		lda bval_cnt
-
-		; MOD samples are 2's-compliment signed
-		; this will translate the value to unsigned.
-		clc
-		adc #$80
-
-		ldx vol_cnt
-		jsr multiply_8x8				; on exit, product MSB is in .A
-
-		lsr								; divide by 32 since that's our max volume
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
-		lsr
-		ror product
+	asl product			; multiply by 4 and use the result in .A. This is
+	rol					; identical to dividing by 64, but it's faster.
+	asl product
+	rol
+	sta product+1
 
 ; re-center the amplitude range to keep the middle sample value at $7f/80.
 
-		sec
-		lda #32
-		sbc vol_cnt
-		asl
-		asl
-		clc
-		adc product
+	sec
+	lda #64
+	sbc vol_cnt
+	asl
+	adc product+1
+
+noscale
 
 ; divide the final value down to the resolution the audio driver needs
 ; only 4 or 8 bits allowed
+;
+	ldx volume_tables_resolution
+	cpx #4
+	bne nodownrez
 
-		ldx volume_tables_resolution
-		cpx #4
-		bne .nd
+	lsr
+	lsr
+	lsr
+	lsr
 
-		lsr
-		lsr
-		lsr
-		lsr
+nodownrez
+	ldy bval_cnt
+	sta (fill_copy_target),y
+	inc bval_cnt
+	bne -
 
-	.nd	ldy bval_cnt
-		sta (fill_copy_target),y
-		inc bval_cnt
-		bne next_byte_val
+	inc fill_copy_target+1
+	inc vol_cnt
+	lda vol_cnt
+	cmp #47		; the first 47 pages go in the lower part of the table
+	bne +
 
-		inc vol_cnt
-		lda vol_cnt
-		cmp #33
-		bne next_vol_val
+	lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
+	sta fill_copy_target+1
+	bne -
+
++	cmp #64
+	bne -
 rts
 
 generate_tempo_table

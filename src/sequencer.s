@@ -86,8 +86,7 @@ fetch_routine_table_msb
 	bpl -
 
 	ldy #3
--	sec
-	lda #64
+-	lda #64
 	jsr set_volume
 	dey
 	bpl -
@@ -404,7 +403,6 @@ start_sample
 	ldy seq_current_track
 	ldx current_sample_numbers,y
 	lda sample_default_volume_levels,x
-	sec
 	jmp set_volume  ; just exit from there
 
 ; convert a note period into a sample stepper value
@@ -431,36 +429,6 @@ set_pitch
 
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
-
-; set the sample's volume, and set the address targets in the mixer
-
-; enter with .A = volume, .Y = track, and carry set to store that setting as
-; the "current" volume level, or carry clear just to set the volume table
-; addresses e.g. if coming from the keyboard's 1-4 keys.
-
-set_volume
-	bcc +
-	sta current_sample_volume_levels,y
-
-+	lda track_current_enable_flags,y
-	bne +
-	lda #>volume_table_lower
-	jmp set_vol_direct
-
-+	lda current_sample_volume_levels,y
-	lsr
-	cmp #16
-	bcs +
-
-	adc #>volume_table_lower
-	jmp set_vol_direct
-
-+	clc
-	adc #(>volume_table_upper)-16
-
-set_vol_direct
-	set_lookahead_vol_addrs_vec
-	  jmp $1234
 
 unused
 rts
@@ -551,6 +519,44 @@ run_effect_arpeggio
 + rts
 
 
+; #### SET VOLUME
+
+; sets a sample's volume, either by way of an effect command, or by a new
+; sample being started, or by unmuting a track.  sets the address targets in
+; the mixer also.
+
+; enter run_effect_set_volume with .Y = track, the latter set_volume needs
+; that along with .A = new volume level.
+
+run_effect_set_volume
+	lda seq_command_arguments,y
+
+set_volume
+	sta current_sample_volume_levels,y
+	ldx track_current_enable_flags,y
+	bmi +
+	rts
+
++	cmp #64
+	bcc +
+	lda #63
+	bne voltab_use_upper
+
++	cmp #47
+	bcs voltab_use_upper
+
+	adc #>volume_table_lower
+	jmp set_vol_addrs_only
+
+voltab_use_upper
+	clc
+	adc #(>volume_table_upper)-47
+
+set_vol_addrs_only
+	set_lookahead_vol_addrs_vec
+	  jmp $1234
+
+
 ; #### VOLUME SLIDE
 
 start_effect_volume_slide
@@ -568,7 +574,7 @@ run_effect_volume_slide
 	lsr
 	clc
 	adc current_sample_volume_levels,y
-	cmp #65
+	cmp #64
 	bcc +
 	lda #64
 +	sta current_sample_volume_levels,y
@@ -588,13 +594,6 @@ vsdown
 	bcs +
 	lda #0
 +	sta current_sample_volume_levels,y
-	jmp set_volume
-
-
-; #### SET VOLUME
-
-run_effect_set_volume
-	lda seq_command_arguments,y
 	jmp set_volume
 
 
@@ -864,12 +863,12 @@ key_pressed
 +	cmp #%11111110			; row 0, the "1" key
 	bne +
 	ldy #0
-	jmp toggle_enable
+	jmp toggle_enable_track
 
 +	cmp #%11110111			; row 3, the "2" key
 	bne +
 	ldy #1
-	jmp toggle_enable
+	jmp toggle_enable_track
 
 +	lda #%11111101			; column 1 low
 	sta CIA1
@@ -878,28 +877,32 @@ key_pressed
 	cmp #%11111110			; row 0, the "3" key
 	bne +
 	ldy #2
-	jmp toggle_enable
+	jmp toggle_enable_track
 
 +	cmp #%11110111			; row 3, the "4" key
-	bne no_valid_key
+	bne exit_player_keyscan
 	ldy #3
 
-toggle_enable
+toggle_enable_track
 	lda track_current_enable_flags,y
 	eor #$80
 	sta track_current_enable_flags,y
+	bmi +
 
-	!ifndef c128 {
+	lda #>volume_table_lower
+	jsr set_vol_addrs_only
+	jmp ++
+
++	lda current_sample_volume_levels,y
+	jsr set_volume
+
+++	!ifndef c128 {
 		bit enable_screen_on_playback
-		bpl no_mute_ui
+		bpl exit_player_keyscan
 	}
 
 	jsr viz_show_track_mute
 
-no_mute_ui
-	clc
-	jsr set_volume
-
-no_valid_key
+exit_player_keyscan
 	lda #0
 rts

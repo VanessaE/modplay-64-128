@@ -2,7 +2,7 @@
 
 !addr {
 
-	default_start							= $1c01
+	default_start					= $1c01
 
 	; Zero Page
 
@@ -29,21 +29,21 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $ac00 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $8d00 ; overlaps the load buffer intentionally
 
-	load_buffer						= $a400 ; 2 kB
+	load_buffer						= $8500 ; 2 kB
 
-	mod_instrument_names			= $ac00 ; 32 * 31 bytes, through $afef
+	mod_instrument_names			= $8d00 ; 32 * 31 bytes, through $afef
 
-	playlist_file_sizes_lows		= $b100 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $b200 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $b300 ; 1 byte * 192
+	playlist_file_sizes_lows		= $9200 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $9300 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $9400 ; 1 byte * 192
 											; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $b400 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $c000
+	playlist_filenames				= $9500 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $a100
 
-	volume_table_lower				= $c000 ; 16 pages \__ 33 pages/8 kB, split
+	volume_table_lower				= $a100 ; 47 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 17 pages /   between two memory areas
 
 	; =================================================================

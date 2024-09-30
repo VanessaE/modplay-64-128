@@ -2,7 +2,7 @@
 
 !addr {
 
-	default_start							= $0801
+	default_start					= $0801
 
 	; Zero Page
 
@@ -31,21 +31,21 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $a500 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $8600 ; overlaps the load buffer intentionally
 
-	load_buffer						= $9d00 ; 2 kB
+	load_buffer						= $7e00 ; 2 kB
 
-	mod_instrument_names			= $a500 ; 32 * 31 bytes, through $afef
+	mod_instrument_names			= $8600 ; 32 * 31 bytes, through $afef
 
-	playlist_file_sizes_lows		= $a900 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $aa00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $ab00 ; 1 byte * 192
+	playlist_file_sizes_lows		= $8a00 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $8b00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $8c00 ; 1 byte * 192
 											; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $ac00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $b800
+	playlist_filenames				= $8d00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $9900
 
-	volume_table_lower				= $b800 ; 16 pages \__ 33 pages/8 kB, split
+	volume_table_lower				= $9900 ; 47 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 17 pages /   between two memory areas
 
 	VIC_SCREEN						= $c800
