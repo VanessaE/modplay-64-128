@@ -428,20 +428,20 @@ draw_menu_page_a
 	ldy #>menu_text_add_to_list
 	jsr print_menu_line
 
-	ldx #<menu_text_play_list
-	ldy #>menu_text_play_list
-	jsr print_menu_line
-
-	ldx #<menu_text_play_all
-	ldy #>menu_text_play_all
-	jsr print_menu_line
+;	ldx #<menu_text_play_list
+;	ldy #>menu_text_play_list
+;	jsr print_menu_line
+;
+;	ldx #<menu_text_play_all
+;	ldy #>menu_text_play_all
+;	jsr print_menu_line
 	jmp ++
 
 +	ldx #<menu_text_add_to_list_gray
 	ldy #>menu_text_add_to_list_gray
 	jsr print_menu_line
 
-	ldx #<menu_text_play_list_gray
+++	ldx #<menu_text_play_list_gray
 	ldy #>menu_text_play_list_gray
 	jsr print_menu_line
 
@@ -449,7 +449,9 @@ draw_menu_page_a
 	ldy #>menu_text_play_all_gray
 	jsr print_menu_line
 
-++	lda playlist_length ; 1 or more items required
+; ++
+
+	lda playlist_length ; 1 or more items required
 	beq +
 
 	ldx #<menu_text_repeat
@@ -482,19 +484,19 @@ draw_menu_page_a
 	ldy #>menu_text_clear_playlist_gray
 	jsr print_menu_line
 
-++	lda playlist_length ;  2 or more items required
-	cmp #2
-	bcc +
-
-	ldx #<menu_text_play_from_here
-	ldy #>menu_text_play_from_here
-	jsr print_menu_line
-	!ifndef c128 {
-		ldx #<menu_text_play_from_here_b
-		ldy #>menu_text_play_from_here_b
-		jsr print_menu_line
-	}
-	jmp ++
+++ ;	lda playlist_length ;  2 or more items required
+;	cmp #2
+;	bcc +
+;
+;	ldx #<menu_text_play_from_here
+;	ldy #>menu_text_play_from_here
+;	jsr print_menu_line
+;	!ifndef c128 {
+;		ldx #<menu_text_play_from_here_b
+;		ldy #>menu_text_play_from_here_b
+;		jsr print_menu_line
+;	}
+;	jmp ++
 
 +	ldx #<menu_text_play_from_here_gray
 	ldy #>menu_text_play_from_here_gray
