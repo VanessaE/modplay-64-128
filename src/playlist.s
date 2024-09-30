@@ -22,12 +22,11 @@
 	playlist_width				= 26
 	dirname_row					= 2
 	dirname_col					= 9
-	file_list_number_row		= 2
+	file_list_number_row		= 3
 	file_list_number_column		= 17
 	file_sizes_column			= 21
 
 	playlist_pane_base_addr = VDC_SCREEN + 3*80 + 5
-
 }
 
 playlist_pane_height = playlist_bottom_row - playlist_top_row + 1
