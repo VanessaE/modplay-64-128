@@ -17,11 +17,8 @@ start_sequencer
 	ldx #7
 -	sta current_sample_numbers,x
 
-	sta current_pitch_slide_flags,x
-	sta pitch_slide_rates,x
-
-	sta seq_pitch_slide_stop_point_lows,x
-	sta seq_pitch_slide_stop_point_highs,x
+	sta seq_pitch_slide_target_steprate_fracts,x
+	sta seq_pitch_slide_target_steprate_ints,x
 
 	sta fine_tune_values,x
 	sta retrigger_rates,x
@@ -378,7 +375,8 @@ start_sample
 	sta vibrato_rates,y
 	sta tremolo_rates,y
 	sta volume_slide_rates,y
-	sta pitch_slide_rates,y
+	sta current_pitch_slide_rates_fracts,y
+	sta current_pitch_slide_rates_ints,y
 
 	sta sample_pointers_fracts,y
 	lda sample_start_addresses_lows,x
@@ -517,6 +515,73 @@ run_effect_arpeggio
 	sbc arpeggio_extra_note_second,y
 	jmp set_pitch
 + rts
+; #### PITCH SLIDE UP/DOWN
+
+start_effect_pitch_slide
+	lda seq_command_arguments,y
+	sta current_pitch_slide_rates_fracts,y
+	lda #0
+	sta current_pitch_slide_rates_ints,y
+rts
+
+; slide up
+
+run_effect_pitch_slide_up
+	clc
+	lda current_steprates_fracts,y
+	adc current_pitch_slide_rates_fracts,y
+	sta current_steprates_fracts,y
+	lda current_steprates_ints,y
+	adc current_pitch_slide_rates_ints,y
+	sta current_steprates_ints,y
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
+rts
+
+; slide down
+
+run_effect_pitch_slide_down
+	sec
+	lda current_steprates_fracts,y
+	sbc current_pitch_slide_rates_fracts,y
+	sta current_steprates_fracts,y
+	lda current_steprates_ints,y
+	sbc current_pitch_slide_rates_ints,y
+	sta current_steprates_ints,y
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
+rts
+
+
+; slide/portamento to note
+
+run_effect_pitch_slide_to_note
+	lda current_steprates_fracts,y
+	cmp seq_pitch_slide_target_steprate_fracts,y
+	bne +
+	lda current_steprates_ints,y
+	sbc seq_pitch_slide_target_steprate_ints,y
+	bne +
+	rts
+
++	bcs slide_to_lower_note
+	lda current_steprates_fracts,y
+	adc current_pitch_slide_rates_fracts,y
+	sta current_steprates_fracts,y
+	lda current_steprates_ints,y
+	adc current_pitch_slide_rates_ints,y
+	sta current_steprates_ints,y
+	jmp slide_set_note
+
+slide_to_lower_note
+	lda current_steprates_fracts,y
+	sbc current_pitch_slide_rates_fracts,y
+	sta current_steprates_fracts,y
+	lda current_steprates_ints,y
+	sbc current_pitch_slide_rates_ints,y
+	sta current_steprates_ints,y
+
+slide_set_note
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
+rts
 
 
 ; #### SET VOLUME

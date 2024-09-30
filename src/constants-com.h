@@ -24,7 +24,9 @@
 	track_current_enable_flags			= $08 ; 8 bytes, through $0f
 	last_seconds						= $10
 
-	; free: $11 through $23
+	track_current_loop_flags			= $11 ; 8 bytes
+
+	; free: $19 through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -87,8 +89,8 @@
 
 	seq_tempo_bpm						= $60
 	seq_ticks_per_division				= $61
-	pitch_slide_rates					= $62 ; 8 bytes
-	track_current_loop_flags			= $6a ; 8 bytes
+	current_pitch_slide_rates_fracts	= $62 ; 8 bytes
+	current_pitch_slide_rates_ints		= $6a ; 8 bytes
 	fine_tune_values					= $72 ; 8 bytes
 	retrigger_rates						= $7a ; 8 bytes
 	cut_sample_ticks					= $82 ; 8 bytes
@@ -177,11 +179,10 @@
 	seq_prev_commands					= low_memory_area+$40
 	seq_command_arguments				= low_memory_area+$48
 	seq_prev_command_arguments			= low_memory_area+$50
-	current_pitch_slide_flags			= low_memory_area+$58
-	seq_pitch_slide_stop_point_lows		= low_memory_area+$60
-	seq_pitch_slide_stop_point_highs	= low_memory_area+$68
+	seq_pitch_slide_target_steprate_fracts = low_memory_area+$58
+	seq_pitch_slide_target_steprate_ints = low_memory_area+$60
 
-	; free: low_memory_area+$70 through low_memory_area+$a1
+	; free: low_memory_area+$68 through low_memory_area+$a1
 	; the above zone must not exceed +$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
