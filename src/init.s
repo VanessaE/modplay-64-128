@@ -247,7 +247,7 @@ init
 	; Code by Graham (reformatted for Acme and my code style)
 	; https://codebase64.org/doku.php?id=base:table_generator_routine_for_fast_8_bit_mul_table
 
-	ldx #0
++	ldx #0
 	txa
 	clc			; Sorry Graham, this is more readable than '!byte $c9' ;-)
 	bcc +
