@@ -369,13 +369,16 @@ reu_run_fetch_and_mixer
 				; on C64, which is quite large, so we'll split it into smaller
 				; transfers.
 
-				sty DMA_CMD									; 4 + N/4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N/4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N/4
-				sta DMA_DAL									; 4
-				sty DMA_CMD									; 4 + N/4
+				sty DMA_CMD									; 4 + N/2 or N/4
+
+				!ifdef scpu {
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N/4
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N/4
+					sta DMA_DAL									; 4
+					sty DMA_CMD									; 4 + N/4
+				}
 
 				!ifdef c128 {
 					!ifndef scpu {
@@ -570,8 +573,11 @@ reu_do_realtime_selfmods_for_pitch_change
 		}
 	}
 
-	lsr
-	lsr
+	!ifdef scpu {
+		lsr
+		lsr
+	}
+
 	adc #1
 
 +	pha
