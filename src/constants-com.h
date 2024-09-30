@@ -364,6 +364,7 @@
 	audio_buffer_right					= $1200 ; 1 page
 
 	clear_main_memory					= audio_buffer_left
+	program_loader						= audio_buffer_left
 
 	; it's safe to reuse the audio bufs for this since it's only needed once.
 

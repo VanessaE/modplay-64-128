@@ -103,38 +103,72 @@ out
 	lda #version_minor+$30
 	jsr CHROUT
 
-; now load and execute the main program file
+; we have to copy the program loader to somewhere below where the program
+; itself actually loads or it'll overwrite itself. 😛 
 
-	lda main_filename_lengths+1
-	ldx #<(main_filename+16)
-	ldy #>(main_filename+16)
+	ldx #0
+-	lda program_loader_origin,x
+	sta program_loader,x
+	lda program_loader_origin+$100,x
+	sta program_loader+$100,x
+	inx
+	bne -
 
-	bit SCPU_PRESENT
-	bpl +
+; now call that stub to load and execute the main program file
 
-	lda main_filename_lengths
-	ldx #<main_filename
-	ldy #>main_filename
+	jmp program_loader
 
-+	jsr SETNAM
+program_loader_origin
+	!pseudopc program_loader {
+		lda main_filename_lengths+1
+		ldx #<(main_filename+16)
+		ldy #>(main_filename+16)
 
-	!ifdef c128 {
+		bit SCPU_PRESENT
+		bpl +
+
+		lda main_filename_lengths
+		ldx #<main_filename
+		ldy #>main_filename
+
+	+	jsr SETNAM
+
+		!ifdef c128 {
+			lda #0
+			ldx #0
+			jsr SETBNK
+		}
+
 		lda #0
-		ldx #0
-		jsr SETBNK
+		ldx FA
+		ldy #$ff
+		jsr SETLFS
+
+		lda #0
+		ldx #<program_start
+		ldy #>program_start
+		jsr LOAD
+
+		jmp program_start
+
+	main_filename
+		!ifndef c128 {
+			!text "mp64.main",0,0,0,0,0,0,0
+			!text "mp64.main-scpu",0
+		} else {
+			!text "mp128.main",0,0,0,0,0,0
+			!text "mp128.main-scpu",0
+		}
+
+	main_filename_lengths
+		!ifndef c128 {
+			!byte 9
+			!byte 14
+		} else {
+			!byte 10
+			!byte 15
+		}
 	}
-
-	lda #0
-	ldx FA
-	ldy #$ff
-	jsr SETLFS
-
-	lda #0
-	ldx #<program_start
-	ldy #>program_start
-	jsr LOAD
-
-	jmp program_start
 
 +PRINT_MSG_RLE
 +SCREEN_ONOFF
@@ -149,24 +183,6 @@ out
 			!byte ESC,"x"
 		!byte 0
 }
-
-main_filename
-	!ifndef c128 {
-		!text "mp64.main",0,0,0,0,0,0,0
-		!text "mp64.main-scpu",0
-	} else {
-		!text "mp128.main",0,0,0,0,0,0
-		!text "mp128.main-scpu",0
-	}
-
-main_filename_lengths
-	!ifndef c128 {
-		!byte 9
-		!byte 14
-	} else {
-		!byte 10
-		!byte 15
-	}
 
 splash_data
 	!ifndef c128 {

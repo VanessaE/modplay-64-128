@@ -48,15 +48,6 @@ init
 	ldy #>initializing_msg
 	jsr print_msg
 
-	!ifdef c128 { ; reset F-keys to normal PETSCII codes
-		ldy #9
-	-	lda #1
-		sta PKYBUF,y
-		lda fkey_codes,y
-		sta PKYDEF,y
-		dey
-		bpl -
-	}
 
 	lda #0
 
@@ -89,6 +80,16 @@ init
 		lda #$80
 		sta supercpu_detected
 	  +
+	}
+
+	!ifdef c128 { ; reset F-keys to normal PETSCII codes
+		ldy #9
+	-	lda #1
+		sta PKYBUF,y
+		lda fkey_codes,y
+		sta PKYDEF,y
+		dey
+		bpl -
 	}
 
 	ldy #0
