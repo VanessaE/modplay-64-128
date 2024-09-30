@@ -10,7 +10,7 @@
 	playlist_width				= 16
 	dirname_row					= 2
 	dirname_col					= 1
-	file_list_number_row		= 14
+	file_list_number_row		= 13
 	file_list_number_column		= 22
 
 	playlist_pane_base_addr = VIC_SCREEN + 3*40 + 1
@@ -22,7 +22,7 @@
 	playlist_width				= 26
 	dirname_row					= 2
 	dirname_col					= 9
-	file_list_number_row		= 3
+	file_list_number_row		= 2
 	file_list_number_column		= 17
 	file_sizes_column			= 21
 

@@ -106,8 +106,3 @@
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
   happens on a friend's machine, not on my C128-DCR, and it's fine in VICE
   too.
-
-* BOTH:  program hangs when trying to load from a VICE virtual filesystem
-  drive.  I'm guessing it's the load method tester's blocks-free check that
-  fails?  Not sure. Not that anyone would want to use that storage method, it
-  has no fast serial emulation of any kind.
