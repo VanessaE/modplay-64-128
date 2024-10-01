@@ -91,8 +91,8 @@
 	seq_ticks_per_division				= $61
 	current_pitch_slide_rates_fracts	= $62 ; 8 bytes
 	current_pitch_slide_rates_ints		= $6a ; 8 bytes
-	fine_tune_values					= $72 ; 8 bytes
-	retrigger_rates						= $7a ; 8 bytes
+	arpeggio_counters					= $72 ; 8 bytes -- zero page is mandatory (STX $ZP,Y)
+	fine_tune_values					= $7a ; 8 bytes
 	cut_sample_ticks					= $82 ; 8 bytes
 	delay_sample_ticks					= $8a ; 8 bytes
 	current_sample_numbers				= $92 ; 8 bytes
@@ -245,7 +245,7 @@
 
 	arpeggio_extra_note_first			= $0bb6 ; \___ 16 bytes
 	arpeggio_extra_note_second			= $0bbe ; /
-	arpeggio_counters					= $0bc6 ; 8 bytes
+	retrigger_rates						= $0bc6 ; 8 bytes
 
 	utility_counter						= $0bce ; 3 bytes
 

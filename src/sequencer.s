@@ -408,8 +408,6 @@ start_sample
 ; enter with .A = note number 1-60 to set, .Y = track number
 
 set_pitch
-	stx sequencer_temp_x
-
 	sec
 	sbc #1	; subtract 1, then double it = 1-61 --> 0-59 --> 0-118
 	asl
@@ -491,30 +489,33 @@ start_effect_arpeggio
 rts
 
 run_effect_arpeggio
-	clc
-	lda arpeggio_counters,y
-	adc #1
-	cmp #3
-	bne +
-	lda #0
-	sta arpeggio_counters,y
-	jmp set_pitch
+	stx sequencer_temp_x
 
-+	sta arpeggio_counters,y
-	cmp #1
-	bne +
 	lda current_note_numbers,y
+	ldx arpeggio_counters,y
+	inx
+
++	cpx #1
+	bne +
 	sec
 	sbc arpeggio_extra_note_first,y
-	jmp set_pitch
+	jmp set_arp_pitch
 
-+	cmp #2
++	cpx #2
 	bne +
-	lda current_note_numbers,y
 	sec
 	sbc arpeggio_extra_note_second,y
-	jmp set_pitch
-+ rts
+	jmp set_arp_pitch
+
++	ldx #0
+
+set_arp_pitch
+	stx arpeggio_counters,y
+	jsr set_pitch
+
+	ldx sequencer_temp_x
+rts
+
 ; #### PITCH SLIDE UP/DOWN
 
 start_effect_pitch_slide
