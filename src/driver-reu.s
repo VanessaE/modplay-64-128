@@ -369,7 +369,7 @@ reu_run_fetch_and_mixer
 				; on C64, which is quite large, so we'll split it into smaller
 				; transfers.
 
-				sty DMA_CMD									; 4 + N/2 or N/4
+				sty DMA_CMD									; 4 + N or N/4
 
 				!ifdef scpu {
 					sta DMA_DAL									; 4

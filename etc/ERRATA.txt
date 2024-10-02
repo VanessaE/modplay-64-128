@@ -106,3 +106,15 @@
 * C128: "$" crashes on real hardware if the dir listing scrolls, but it only
   happens on a friend's machine, not on my C128-DCR, and it's fine in VICE
   too.
+
+* BOTH:  Although pitch slides and slide to note code has been added, they
+  don't work yet - the rate calculations are completely wrong.  probably need
+  to multiply by ISR and fine constant or something, or otherwise translate
+  the mod-given speeds from period-derived to frequency-derived.
+
+* C64: there is some kind of slowdown happening relating to arpeggios with
+  high pitches, but it only happens with one or two songs (Cybernoid 1 for
+  instance), and only on C64 + User Port DigiMAX, and only when playing in
+  stereo.  And, it only seems to affect speed/tempo, not note pitches, so the
+  actual output sample rate isn't changing.  doesn't seem to affect C128 or
+  SCPU at all.
