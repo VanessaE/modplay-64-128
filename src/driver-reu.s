@@ -501,7 +501,6 @@ rts
 reu_do_realtime_selfmods_for_pitch_change
 	jsr reu_fetch_selfmods_init
 
-	ldx seq_current_track
 	ldy #2
 	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
 	tay
@@ -597,7 +596,6 @@ rts
 reu_do_realtime_selfmods_for_instrument_change
 	jsr reu_fetch_selfmods_init
 
-	ldx seq_current_track
 	ldy #4
 	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
 	tay

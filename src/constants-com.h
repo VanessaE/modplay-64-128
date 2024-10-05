@@ -173,16 +173,15 @@
 
 	current_note_periods_lows			= low_memory_area
 	current_note_periods_highs			= low_memory_area+$08
-	current_note_numbers				= low_memory_area+$10
-	seq_current_row_data				= low_memory_area+$18 ; this one's 32 bytes
-	seq_commands						= low_memory_area+$38
-	seq_prev_commands					= low_memory_area+$40
-	seq_command_arguments				= low_memory_area+$48
-	seq_prev_command_arguments			= low_memory_area+$50
-	seq_pitch_slide_target_steprate_fracts = low_memory_area+$58
-	seq_pitch_slide_target_steprate_ints = low_memory_area+$60
+	seq_current_row_data				= low_memory_area+$10 ; this one's 32 bytes
+	seq_commands						= low_memory_area+$30
+	seq_prev_commands					= low_memory_area+$38
+	seq_command_arguments				= low_memory_area+$40
+	seq_prev_command_arguments			= low_memory_area+$48
+	seq_pitch_slide_target_steprate_fracts = low_memory_area+$50
+	seq_pitch_slide_target_steprate_ints = low_memory_area+$58
 
-	; free: low_memory_area+$68 through low_memory_area+$a1
+	; free: low_memory_area+$60 through low_memory_area+$a1
 	; the above zone must not exceed +$a1
 	; otherwise it'll stomp on C128 indirect routines.
 
@@ -243,25 +242,13 @@
 	old_STOP_vec						= $0bb1 ; 2 bytes
 	parse_header_sample_pointer			= $0bb3 ; 3 bytes
 
-	arpeggio_extra_note_first			= $0bb6 ; \___ 16 bytes
-	arpeggio_extra_note_second			= $0bbe ; /
-	retrigger_rates						= $0bc6 ; 8 bytes
+	arpeggio_extra_note_first_fracts	= $0bb6 ; \___ 16 bytes
+	arpeggio_extra_note_first_ints		= $0bbe ; /
+	arpeggio_extra_note_second_fracts	= $0bc6 ; \___ 16 bytes
+	arpeggio_extra_note_second_ints		= $0bce ; /
+	retrigger_rates						= $0bd6 ; 8 bytes
 
-	utility_counter						= $0bce ; 3 bytes
-
-	stash_size							= $0bd1 ; 2 bytes
-
-	temp_abs_a							= $0bd3
-	temp_abs_b							= $0bd4
-	temp_abs_c							= $0bd5
-	temp_abs_x							= $0bd6
-	temp_abs_y							= $0bd7
-	temp_abs_y2							= $0bd8
-	temp_counter						= $0bd9 ; 3 bytes
-	scroll_area_target_addr				= $0bdc ; 2 bytes
-	scroll_area_width					= $0bde
-	scroll_area_height					= $0bdf
-	scroll_area_blank_last_line_flag	= $0be0
+	utility_counter						= $0bde ; 3 bytes
 
 	progress_bar_row					= $0be1
 	progress_bar_column					= $0be2
@@ -303,9 +290,26 @@
 	supercpu_detected					= $0c00
 	supercpu_turbo_available			= $0c01
 
-	product								= $0c02 ; 2 bytes / for the multiply routine
+	multiplicand_a						= $0c02 ; 2 bytes / these first two are only
+	multiplicand_b						= $0c04 ; 2 bytes / used by 16x16 multiply
+	product								= $0c06 ; 4 bytes / 8x8 uses this one also.
 
-	; free: $0c04 through $0d07
+	temp_abs_a							= $0c0a
+	temp_abs_b							= $0c0b
+	temp_abs_c							= $0c0c
+	temp_abs_x							= $0c0d
+	temp_abs_y							= $0c0e
+	temp_abs_y2							= $0c0f
+	temp_counter						= $0c10 ; 3 bytes
+
+	stash_size							= $0c13 ; 2 bytes
+
+	scroll_area_target_addr				= $0c15 ; 2 bytes
+	scroll_area_width					= $0c17
+	scroll_area_height					= $0c18
+	scroll_area_blank_last_line_flag	= $0c19
+
+	; free: $0c1a through $0d07
 
 	; various program vectors
 
@@ -351,8 +355,7 @@
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
 
-	semitones_table_fracts				= $1020
-	semitones_table_lows				= $1030
+	semitones_table						= $1020
 
 	control_code_flags_table_low		= $1040
 	control_code_flags_table_high		= $1060
@@ -372,15 +375,11 @@
 	multab2hi							= $1300 ; 2 pages
 
 	; main program code starts here at $1500, followed by free mem
-	; then comes all the "high-memory" stuff, beginning at $a900 on C64 or
-	; $b100 on C128 -- see constants-64/128.h
+	; then comes all the "high-memory" stuff -- see constants-64/128.h
 
 	; Under-KERNAL-ROM stuff
 
-	sample_data_buffer					= $f100 ; 8 * 256 bytes
-
-	note_period_table					= $f900 ; 120 bytes + waste
-	steprate_table						= $f980 ; 120 bytes + waste
+	sample_data_buffer					= $f200 ; 8 * 256 bytes
 
 	note_names_table					= $fa00 ; 240 bytes + waste
 

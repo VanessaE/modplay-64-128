@@ -530,13 +530,14 @@ rts
 ;
 ; new format:
 ;
-; 76543210 76543210 7654-3210 76543210
-; xxxxxxxx wwwwyyyy 0000-cccc zzzzzzzz
+; 76543210 7654-3210 76543210 76543210
+; wwwwyyyy cccc xxxx-xxxxxxxx zzzzzzzz
 ;
 ; where:
-;      xxxxxxxx (now 8 bits) is the note number, 0 - 60 (see init.s)
-;      wwwwyyyy     (8 bits) is the sample number
-; cccc-zzzzzzzz   (4+8 bits) is the effect and its parameters
+;       wwwwyyyy (8 bits) is the sample number
+;  xxxx-xxxxxxxx (12 bits) is the note period
+;           cccc (4 bits) is the effect number
+;       zzzzzzzz (8 bits) is the effect parameter(s)
 
 reformat_pattern_data
 	php
@@ -555,63 +556,38 @@ reformat_pattern_data
 		lda #0
 		sta pattern_conv_trk_counter
 		conv_trk_loop
-
-			lda #<note_period_table
-			sta binsearch_low
-			lda #>note_period_table
-			sta binsearch_low+1
-
-			lda #<(note_period_table+118)
-			sta binsearch_high
-			lda #>(note_period_table+118)
-			sta binsearch_high+1
-
-			ldy #1
-			lda (utility_pointer),y
-			sta binsearch_value
-
-			ldy #0
-			lda (utility_pointer),y
-			and #$0f
-			sta binsearch_value+1
-			ora binsearch_value
-			beq no_bin_search
-
-			jsr binary_search
-			bcc +
-
-			lda binsearch_mid
-			bcs ++
-
-		+	lda binsearch_low
-
-		++	sec							; it starts out as the address of the period word
-			sbc #<note_period_table		; make it into a byte offset
-			lsr
-			clc							; divide by 2 and add 1 and now it's
-			adc #1						; a note number 1-60.
-
-		no_bin_search
-			sta temp_abs_a
-
+ 
 			ldy #0
 			lda (utility_pointer),y
 			and #$f0
+			sta temp_abs_a
+			ldy #2
+			lda (utility_pointer),y
+			lsr
+			lsr
+			lsr
+			lsr
+			ora temp_abs_a
+			sta temp_abs_a
+
+			ldy #2
+			lda (utility_pointer),y
+			asl
+			asl
+			asl
+			asl
 			sta temp_abs_b
 
-			ldy #2
-			lda (utility_pointer),y
-			lsr
-			lsr
-			lsr
-			lsr
-			ora temp_abs_b
 			ldy #1
+			lda (utility_pointer),y
+			iny
 			sta (utility_pointer),y
 
-			ldy #2
+			ldy #0
 			lda (utility_pointer),y
 			and #$0f
+			ora temp_abs_b
+			iny
 			sta (utility_pointer),y
 
 			ldy #0

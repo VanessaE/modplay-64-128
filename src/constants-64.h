@@ -31,22 +31,26 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $8600 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $7200 ; overlaps the load buffer intentionally
 
-	load_buffer						= $7e00 ; 2 kB
+	load_buffer						= $6a00 ; 2 kB plus some waste
 
-	mod_instrument_names			= $8600 ; 32 * 31 bytes, through $afef
+	viz_note_number_lookup_table	= $7200 ; 1712 bytes plus some waste
 
-	playlist_file_sizes_lows		= $8a00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $8b00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $8c00 ; 1 byte * 192
+	steprate_lookup_table			= $7900 ; 1712 * 2 bytes, plus some waste
+
+	mod_instrument_names			= $8700 ; 32 * 31 bytes
+
+	playlist_file_sizes_lows		= $8b00 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $8c00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $8d00 ; 1 byte * 192
 											; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $8d00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $9900
+	playlist_filenames				= $8e00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $9a00
 
-	volume_table_lower				= $9900 ; 47 pages \__ 64 pages/16 kB, split
-	volume_table_upper				= $e000 ; 17 pages /   between two memory areas
+	volume_table_lower				= $9a00 ; 46 pages \__ 64 pages/16 kB, split
+	volume_table_upper				= $e000 ; 18 pages /   between two memory areas
 
 	VIC_SCREEN						= $c800
 	secondary_screen				= $cc00

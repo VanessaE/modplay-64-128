@@ -35,7 +35,6 @@ start_sequencer
 
 	sta current_note_periods_lows,x
 	sta current_note_periods_highs,x
-	sta current_note_numbers,x
 
 	sta current_steprates_fracts,x
 	sta current_steprates_ints,x
@@ -139,14 +138,16 @@ nple
 
 ; row format (after processing by the loader)
 ;
-;   byte 0   byte 1    byte 2    byte 3
-; 76543210 76543210 7654-3210 76543210
-; xxxxxxxx wwwwyyyy 0000-cccc zzzzzzzz
+;  byte 0    byte 1   byte 2   byte 3
+; 76543210 7654-3210 76543210 76543210
+; wwwwyyyy cccc xxxx-xxxxxxxx zzzzzzzz
 ;
 ; where:
-;      xxxxxxxx (now 8 bits) is the note number, 0 - 60 (see init.s)
-;      wwwwyyyy     (8 bits) is the sample number
-; cccc-zzzzzzzz   (4+8 bits) is the effect and its parameters
+;       wwwwyyyy (8 bits) is the sample number
+;  xxxx-xxxxxxxx (12 bits) is the note period
+;           cccc (4 bits) is the effect number
+;       zzzzzzzz (8 bits) is the effect parameter(s)
+
 
 next_row
 	jsr viz_row_data_scroll
@@ -191,9 +192,11 @@ next_track_this_row
 	asl					; .X = track number x 4
 	tax
 
+; split each row, each track's four data bytes into their different components
+
 ; get sample number
-	lda seq_current_row_data+1,x		; if sample number is 0, keep using
-	beq get_note_number					; the previous sample number
+	lda seq_current_row_data,x			; if sample number is 0, keep using
+	beq get_note_period					; the previous sample number
 	sta current_sample_numbers,y
 
 	stx sequencer_temp_x
@@ -201,13 +204,20 @@ next_track_this_row
 	ldx sequencer_temp_x
 	ldy seq_current_track
 
-get_note_number
-	lda seq_current_row_data,x			; if note number is 0, keep using the
+get_note_period
+	lda seq_current_row_data+1,x
+	and #$0f
+	ora seq_current_row_data+2,x		; if period is 0, keep using the
 	beq get_command						; previous note/pitch
+
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta current_note_periods_highs,y
+	lda seq_current_row_data+2,x
+	sta current_note_periods_lows,y
 
 	; .A holds the note number 1-60
 	stx sequencer_temp_x
-	sta current_note_numbers,y
 	jsr set_pitch
 	ldx sequencer_temp_x
 	ldy seq_current_track
@@ -215,10 +225,19 @@ get_note_number
 get_command								; ...and its parameters.
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
-	lda seq_current_row_data+2,x
+	lda seq_current_row_data+1,x
+	lsr
+	lsr
+	lsr
+	tax ; .X will need command no. * 2
+	lsr
 	sta seq_commands,y
-	asl
-	tax
+
+	; if command and its params are all 0, don't call the command setup.
+	; (that would be arpeggio with extra notes both set to 0)
+
+	ora seq_command_arguments,y
+	beq no_command_this_row_this_track
 
 	; initialize/start the appropriate effect for this track
 
@@ -231,7 +250,8 @@ start_command_vec					; start or initialize an effect command
 	jsr $1234						; (also for stuff that just runs once)
 	ldy seq_current_track
 
-+	iny
+no_command_this_row_this_track
+	iny
 	sty seq_current_track
 	cpy #4
 	beq +
@@ -261,7 +281,7 @@ next_tick
 next_track_this_tick
 	lda seq_commands,y				; if command and its params are both 0,
 	ora seq_command_arguments,y		; then there's no command at all (whereas
-	beq no_cmd_this_tick			; command #0 + nonzero args = arpeggio)
+	beq no_command_this_tick_this_track ; command #0 + nonzero args = arpeggio)
 
 	lda seq_commands,y
 	asl
@@ -274,7 +294,7 @@ next_track_this_tick
 run_command_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
 
-no_cmd_this_tick
+no_command_this_tick_this_track
 	inc seq_current_track
 	ldy seq_current_track
 	cpy #4
@@ -404,24 +424,33 @@ start_sample
 	jmp set_volume  ; just exit from there
 
 ; convert a note period into a sample stepper value
-;
-; enter with .A = note number 1-60 to set, .Y = track number
+; enter with .Y = track number
 
 set_pitch
-	sec
-	sbc #1	; subtract 1, then double it = 1-61 --> 0-59 --> 0-118
-	asl
+	tya
 	tax
 
-	lda note_period_table,x
-	sta current_note_periods_lows,y
-	lda steprate_table,x
-	sta current_steprates_fracts,y
-	inx
-	lda note_period_table,x
-	sta current_note_periods_highs,y
-	lda steprate_table,x
-	sta current_steprates_ints,y
+	lda current_note_periods_lows,x
+	sta utility_pointer
+	lda current_note_periods_highs,x
+	asl utility_pointer
+	rol
+	sta utility_pointer+1
+
+	clc
+	lda utility_pointer
+	adc #<steprate_lookup_table
+	sta utility_pointer
+	lda utility_pointer+1
+	adc #>steprate_lookup_table
+	sta utility_pointer+1
+
+	ldy #0
+	lda (utility_pointer),y
+	sta current_steprates_fracts,x
+	iny
+	lda (utility_pointer),y
+	sta current_steprates_ints,x
 
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
@@ -467,51 +496,116 @@ run_effect_command_jump_table
 
 ; effect command decoders -- start-of-row/init routines
 ; enter each one with .Y = track number
-;
-; note that since note numbers are in reverse order (60 = lowest pitch),
-; commands which change a note have to decrease the note number if they're
-; supposed to increase the pitch.
-
 
 ; #### ARPEGGIO
 
 start_effect_arpeggio
+
+	tya
+	tax
+
+	lda current_note_periods_lows,x
+	sta utility_pointer
+	lda current_note_periods_highs,x
+	asl utility_pointer
+	rol
+	sta utility_pointer+1
+
+	clc
+	lda utility_pointer
+	adc #<steprate_lookup_table
+	sta utility_pointer
+	lda utility_pointer+1
+	adc #>steprate_lookup_table
+	sta utility_pointer+1
+
+	ldy #0
+	lda (utility_pointer),y
+	sta multiplicand_a
+	iny
+	lda (utility_pointer),y
+	sta multiplicand_a+1
+
+	ldy seq_current_track
+
 	lda seq_command_arguments,y
 	lsr
 	lsr
 	lsr
-	lsr
-	sta arpeggio_extra_note_first,y
+	and #$0e ; we want the note offset * 2
+	tax
+	lda semitones_table,x
+	sta multiplicand_b
+	inx
+	lda semitones_table,x
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16
+
+	; for precision sake, the semitones table is 256x higher than "normal", so
+	; use the middle two bytes of the product to divide it back down.
+
+	lda product+1
+	sta arpeggio_extra_note_first_fracts,y
+	lda product+2
+	sta arpeggio_extra_note_first_ints,y
 
 	lda seq_command_arguments,y
 	and #$0f
-	sta arpeggio_extra_note_second,y
+	asl
+	tax
+	lda semitones_table,x
+	sta multiplicand_b
+	inx
+	lda semitones_table,x
+	sta multiplicand_b+1
+
+	clc ; reuse the previous multiplicand_a preset
+	jsr multiply_16x16
+
+	lda product+1
+	sta arpeggio_extra_note_second_fracts,y
+	lda product+2
+	sta arpeggio_extra_note_second_ints,y
+
+	lda #2
+	sta arpeggio_counters,y
 rts
 
 run_effect_arpeggio
 	stx sequencer_temp_x
 
-	lda current_note_numbers,y
 	ldx arpeggio_counters,y
 	inx
 
 +	cpx #1
 	bne +
-	sec
-	sbc arpeggio_extra_note_first,y
-	jmp set_arp_pitch
+
+	lda arpeggio_extra_note_first_fracts,y
+	sta current_steprates_fracts,y
+	lda arpeggio_extra_note_first_ints,y
+	sta current_steprates_ints,y
+	jmp set_arp_pitch_2_3
 
 +	cpx #2
 	bne +
-	sec
-	sbc arpeggio_extra_note_second,y
-	jmp set_arp_pitch
+	lda arpeggio_extra_note_second_fracts,y
+	sta current_steprates_fracts,y
+	lda arpeggio_extra_note_second_ints,y
+	sta current_steprates_ints,y
+	jmp set_arp_pitch_2_3
 
 +	ldx #0
-
-set_arp_pitch
 	stx arpeggio_counters,y
 	jsr set_pitch
+
+	ldx sequencer_temp_x
+	rts
+
+set_arp_pitch_2_3
+	stx arpeggio_counters,y
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
 
 	ldx sequencer_temp_x
 rts
@@ -608,7 +702,7 @@ set_volume
 	lda #63
 	bne voltab_use_upper
 
-+	cmp #47
++	cmp #46
 	bcs voltab_use_upper
 
 	adc #>volume_table_lower
@@ -616,7 +710,7 @@ set_volume
 
 voltab_use_upper
 	clc
-	adc #(>volume_table_upper)-47
+	adc #(>volume_table_upper)-46
 
 set_vol_addrs_only
 	set_lookahead_vol_addrs_vec

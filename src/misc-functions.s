@@ -321,11 +321,11 @@ get_num_length
 ;# MATH OPERATIONS #
 ;###################
 
-
-; Description: Unsigned 8-bit multiplication with unsigned 16-bit result.
-; Code by JackAsser (reformatted for Acme and my code style)
+; Multiply routines by JackAsser (reformatted for Acme and my code style)
 ; https://codebase64.org/doku.php?id=base:seriously_fast_multiplication
 
+; Unsigned 8-bit multiplication with unsigned 16-bit result
+;
 ; Input: 8-bit unsigned values in .A and .X
 ;
 ; Output: 16-bit unsigned value in product
@@ -358,6 +358,127 @@ sm4	sbc multab2hi,x
 	sta product+1
 
 	rts
+
+
+; Unsigned 16-bit multiplication with unsigned 32-bit result
+;
+; Input: 16-bit unsigned value in multiplicand_a
+;        16-bit unsigned value in multiplicand_b
+;        Carry=0: Re-use multiplicand_a from previous multiplication (faster)
+;        Carry=1: Set multiplicand_a (slower)
+;
+; Output: 32-bit unsigned value in product
+;
+; Clobbered: product, .X, .A, .C
+;
+; Allocation setup: multiplicand_a, multiplicand_b, and product
+;                   multablo, multabhi, multab2lo, multab2hi must be
+;                   page aligned. Each table are 512 bytes. Total 2kb.
+;
+; Table generation: I:0..511
+;                   multablo = <((I*I)/4)
+;                   multabhi = >((I*I)/4)
+;                   multab2lo = <(((I-255)*(I-255))/4)
+;                   multab2hi = >(((I-255)*(I-255))/4)
+
+multiply_16x16
+
+		; <multiplicand_a * <multiplicand_b = AAaa
+		; <multiplicand_a * >multiplicand_b = BBbb
+		; >multiplicand_a * <multiplicand_b = CCcc
+		; >multiplicand_a * >multiplicand_b = DDdd
+		;
+		;       AAaa
+		;     BBbb
+		;     CCcc
+		; + DDdd
+		; ----------
+		;   product!
+
+		; Setup multiplicand_a if changed
+
+		bcc +
+		lda multiplicand_a+0
+		sta sm1a+1
+		sta sm3a+1
+		sta sm5a+1
+		sta sm7a+1
+		eor #$ff
+		sta sm2a+1
+		sta sm4a+1
+		sta sm6a+1
+		sta sm8a+1
+		lda multiplicand_a+1
+		sta sm1b+1
+		sta sm3b+1
+		sta sm5b+1
+		sta sm7b+1
+		eor #$ff
+		sta sm2b+1
+		sta sm4b+1
+		sta sm6b+1
+		sta sm8b+1
+
++		; Perform <multiplicand_a * <multiplicand_b = AAaa
+		ldx multiplicand_b+0
+		sec
+sm1a	lda multablo,x
+sm2a	sbc multab2lo,x
+		sta product+0
+sm3a	lda multabhi,x
+sm4a	sbc multab2hi,x
+		sta _AA+1
+
+		; Perform >multiplicand_a_hi * <multiplicand_b = CCcc
+		sec
+sm1b	lda multablo,x
+sm2b	sbc multab2lo,x
+		sta _cc+1
+sm3b	lda multabhi,x
+sm4b	sbc multab2hi,x
+		sta _CC+1
+
+		; Perform <multiplicand_a * >multiplicand_b = BBbb
+		ldx multiplicand_b+1
+		sec
+sm5a	lda multablo,x
+sm6a	sbc multab2lo,x
+		sta _bb+1
+sm7a	lda multabhi,x
+sm8a	sbc multab2hi,x
+		sta _BB+1
+
+		; Perform >multiplicand_a * >multiplicand_b = DDdd
+		sec
+sm5b	lda multablo,x
+sm6b	sbc multab2lo,x
+		sta _dd+1
+sm7b	lda multabhi,x
+sm8b	sbc multab2hi,x
+		sta product+3
+
+		; Add the separate multiplications together
+		clc
+_AA		lda #0
+_bb		adc #0
+		sta product+1
+_BB		lda #0
+_CC		adc #0
+		sta product+2
+		bcc +
+		inc product+3
+		clc
+	  +
+_cc		lda #0
+		adc product+1
+		sta product+1
+_dd		lda #0
+		adc product+2
+		sta product+2
+		bcc +
+		inc product+3
+	  +
+rts
 
 ; https://codebase64.org/doku.php?id=base:16bit_division_16-bit_result
 ; reminder:  quotient+remainder = dividend ÷ divisor  😛

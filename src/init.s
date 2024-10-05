@@ -354,7 +354,6 @@ init
 	}
 
 	jsr semitones_table_copy
-	jsr note_period_table_copy
 	jsr note_names_table_copy
 
 	jsr control_code_flags_copy
@@ -378,6 +377,8 @@ init_tables_gen
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
 	jsr regen_all_tables
+
+	jsr generate_note_number_lookup_table
 
 	jsr final_clear_copy
 
@@ -570,31 +571,20 @@ rts
 }
 
 semitones_table_copy
-	ldx #15
--	lda semitones_table_fracts_origin,x
-	sta semitones_table_fracts,x
-	lda semitones_table_lows_origin,x
-	sta semitones_table_lows,x
+	ldx #31
+-	lda semitones_table_origin,x
+	sta semitones_table,x
 	dex
 	bpl -
 rts
 
 twelfth_root_2 = 1.059463
 
-semitones_table_fracts_origin
-	!byte 0
-	!for s2, 1, 15 {
+semitones_table_origin
+	!for s2, 0, 15 {
 		!zone {
-			.n = twelfth_root_2 ^ s2
-			.ni = int(.n)
-			!byte (.n-.ni)*256
+			!word int((twelfth_root_2 ^ s2) * 256)
 		}
-	}
-
-semitones_table_lows_origin
-	!byte 1
-	!for s1, 1, 15 {
-		!byte int(twelfth_root_2 ^ s1)
 	}
 
 control_code_flags_copy
@@ -605,17 +595,6 @@ control_code_flags_copy
 	sta control_code_flags_table_high,x
 	dex
 	bpl -
-rts
-
-note_period_table_copy
-	ldx #0
-
--	lda note_period_table_origin,x
-	sta note_period_table,x
-	inx
-	cpx #120
-	bne -
-  +
 rts
 
 note_names_table_copy
@@ -734,18 +713,21 @@ initializing_msg
 		!byte 0
 }
 
-note_period_table_origin
-	!word  57,  60,   64,   67,   71,   76,   80,   85,   90,   95,  101,  107
-	!word 113, 120,  127,  135,  143,  151,  160,  170,  180,  190,  202,  214
-	!word 226, 240,  254,  269,  285,  302,  320,  339,  360,  381,  404,  428
-	!word 453, 480,  508,  538,  570,  604,  640,  678,  720,  762,  808,  856
-	!word 907, 961, 1017, 1077, 1141, 1209, 1281, 1357, 1440, 1525, 1616, 1712
-
 !ct raw {
 	note_names_table_origin
+		!text "???",0
 		!text "B-4",0,"A#4",0,"A-4",0,"G#4",0,"G-4",0,"F#4",0,"F-4",0,"E-4",0,"D#4",0,"D-4",0,"C#4",0,"C-4",0
 		!text "B-3",0,"A#3",0,"A-3",0,"G#3",0,"G-3",0,"F#3",0,"F-3",0,"E-3",0,"D#3",0,"D-3",0,"C#3",0,"C-3",0
 		!text "B-2",0,"A#2",0,"A-2",0,"G#2",0,"G-2",0,"F#2",0,"F-2",0,"E-2",0,"D#2",0,"D-2",0,"C#2",0,"C-2",0
 		!text "B-1",0,"A#1",0,"A-1",0,"G#1",0,"G-1",0,"F#1",0,"F-1",0,"E-1",0,"D#1",0,"D-1",0,"C#1",0,"C-1",0
 		!text "B-0",0,"A#0",0,"A-0",0,"G#0",0,"G-0",0,"F#0",0,"F-0",0,"E-0",0,"D#0",0,"D-0",0,"C#0",0,"C-0",0
 }
+
+!align 255,0
+
+binsearch_note_period_table
+	!word  57,  60,   64,   67,   71,   76,   80,   85,   90,   95,  101,  107
+	!word 113, 120,  127,  135,  143,  151,  160,  170,  180,  190,  202,  214
+	!word 226, 240,  254,  269,  285,  302,  320,  339,  360,  381,  404,  428
+	!word 453, 480,  508,  538,  570,  604,  640,  678,  720,  762,  808,  856
+	!word 907, 961, 1017, 1077, 1141, 1209, 1281, 1357, 1440, 1525, 1616, 1712

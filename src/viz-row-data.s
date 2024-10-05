@@ -171,7 +171,10 @@ viz_row_data_fetch_and_print
 	}
 
 	!for .viz_tr, 0, 3 {
-		lda seq_current_row_data + .viz_tr*4
+		; get/print note name
+		lda seq_current_row_data + .viz_tr*4 + 1
+		and #$0f
+		ora seq_current_row_data + .viz_tr*4 + 2
 		bne +
 
 		lda #$2d
@@ -180,8 +183,22 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 		bne ++
 
-	+	sec
-		sbc #1
+	+	lda seq_current_row_data + .viz_tr*4 + 2
+		sta utility_pointer_b
+		lda seq_current_row_data + .viz_tr*4 + 1
+		and #$0f
+		sta utility_pointer_b+1
+
+		clc
+		lda utility_pointer_b
+		adc #<viz_note_number_lookup_table
+		sta utility_pointer_b
+		lda utility_pointer_b+1
+		adc #>viz_note_number_lookup_table
+		sta utility_pointer_b+1
+
+		ldy #0
+		lda (utility_pointer_b),y
 		asl
 		asl
 		tax
@@ -194,18 +211,28 @@ viz_row_data_fetch_and_print
 		lda note_names_table,x
 		jsr viz_row_data_print_char
 
-	++	ldx seq_current_row_data + .viz_tr*4 + 1
+		; get/print sample number
+
+	++	ldx seq_current_row_data + .viz_tr*4
 		lda divide_by_16_table,x
 		jsr to_hex
 		jsr viz_row_data_print_char
 
-		lda seq_current_row_data + .viz_tr*4 + 1
+		lda seq_current_row_data + .viz_tr*4
 		jsr to_hex
 		jsr viz_row_data_print_char
 
-		lda seq_current_row_data + .viz_tr*4 + 2
+		; get/print effect command number
+
+		lda seq_current_row_data + .viz_tr*4 + 1
+		lsr
+		lsr
+		lsr
+		lsr
 		jsr to_hex
 		jsr viz_row_data_print_char
+
+		; get/print effect command params
 
 		ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x

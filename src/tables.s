@@ -63,7 +63,7 @@ nodownrez
 	inc fill_copy_target+1
 	inc vol_cnt
 	lda vol_cnt
-	cmp #47		; the first 47 pages go in the lower part of the table
+	cmp #46		; the first 46 pages go in the lower part of the table
 	bne +
 
 	lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
@@ -113,15 +113,33 @@ generate_tempo_table
 	bne -
 rts
 
-generate_steprate_table
+generate_period_table
 	sei
 	jsr disable_roms
+
+	ldy #57 * 2 + 1
+	lda #0
+-	dey
+	sta steprate_lookup_table,y
+	bne -
+
+	lda #57					; will step through the entire period range.  the
+	sta utility_counter		; highest note in octave 4 has a period of 57, so
+	lda #0					; just ignore the rest.  technically the lowest
+	sta utility_counter+1	; note should be 1712 but it's easier to fill the page.
+
+	clc
+	lda #<steprate_lookup_table
+	adc #57 * 2
+	sta fill_copy_target
+
+	lda #>steprate_lookup_table
+	adc #0
+	sta fill_copy_target+1
 
 	lda isr_trigger_interval
 	ldx #pitch_fine_adjust_constant
 	jsr multiply_8x8
-
-	ldx #0
 
 -	lda #0
 	sta dividend
@@ -132,26 +150,113 @@ generate_steprate_table
 	lda product+1
 	sta dividend+2
 
-	lda note_period_table,x
+	lda utility_counter
 	sta divisor
-	inx
-	lda note_period_table,x
+	lda utility_counter+1
 	sta divisor+1
 
-	stx temp_abs_x
 	jsr divide_24by24
-	ldx temp_abs_x
 
-	dex
+	ldy #0
 	lda quotient
-	sta steprate_table,x
-	inx
+	sta (fill_copy_target),y
+	iny
 	lda quotient+1
-	sta steprate_table,x
+	sta (fill_copy_target),y
 
-+	inx
-	cpx #120
+	clc							; for every step of the period value in
+	lda fill_copy_target		; utility_counter, store two bytes in a row at
+	adc #2						; (fill_copy_target), LSB first.
+	sta fill_copy_target
+	bcc +
+	inc fill_copy_target+1
+
++	inc utility_counter
+	bne +
+	inc utility_counter+1
+
++	lda utility_counter+1
+	cmp #7
 	bne -
+
+	jsr enable_kernal_only
+	cli
+rts
+
+generate_note_number_lookup_table
+	sei
+	jsr disable_roms
+
+	ldy #0
+	lda #0
+-	sta viz_note_number_lookup_table,y
+	sta viz_note_number_lookup_table+$0600,y
+	dey
+	bne -
+
+	lda #57
+	sta utility_counter
+	lda #0
+	sta utility_counter+1
+
+	clc
+	lda #<viz_note_number_lookup_table
+	adc #57
+	sta fill_copy_target
+	lda #>viz_note_number_lookup_table
+	adc #0
+	sta fill_copy_target+1
+
+-	lda #<binsearch_note_period_table
+	sta binsearch_low
+	lda #>binsearch_note_period_table
+	sta binsearch_low+1
+
+	lda #<(binsearch_note_period_table + 118)
+	sta binsearch_high
+	lda #>(binsearch_note_period_table + 118)
+	sta binsearch_high+1
+
+	lda utility_counter
+	sta binsearch_value
+	lda utility_counter+1
+	sta binsearch_value+1
+
+	jsr binary_search
+
+	; returns the address in memory of the exact match in binsearch_mid if
+	;.C = 1, or the address of the closest match in binsearch_low if .C = 0 
+
+	bcc +
+
+	lda binsearch_mid			; the table uses 16-bit entries, so this will
+	sbc #<binsearch_note_period_table ; return a value 0 to 118 in steps of 2.
+	jmp ++
+
++	sec
+	lda binsearch_low
+	sbc #<binsearch_note_period_table
+ 
+++	lsr							; divide by 2 and add 1 and now it's a note
+	clc							; number 1-60
+	adc #1
+
+	ldy #0
+	sta (fill_copy_target),y
+
+	inc fill_copy_target
+	bne +
+	inc fill_copy_target+1
+
++	inc utility_counter
+	bne +
+	inc utility_counter+1
+
++	lda utility_counter
+	cmp #<1712
+	lda utility_counter+1
+	sbc #>1712
+	bcc -
 
 	jsr enable_kernal_only
 	cli
@@ -209,7 +314,7 @@ no_msgs1
 	sta last_isr_trigger_interval
 
 	jsr generate_tempo_table
-	jsr generate_steprate_table
+	jsr generate_period_table
 
 +	!ifndef scpu {
 		bit allow_regen_msg
