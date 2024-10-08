@@ -89,8 +89,8 @@
 
 	seq_tempo_bpm						= $60
 	seq_ticks_per_division				= $61
-	current_pitch_slide_rates_fracts	= $62 ; 8 bytes
-	current_pitch_slide_rates_ints		= $6a ; 8 bytes
+	current_pitch_slide_rates			= $62 ; 8 bytes
+	current_slide_to_note_dir			= $6a ; 8 bytes
 	arpeggio_counters					= $72 ; 8 bytes -- zero page is mandatory (STX $ZP,Y)
 	fine_tune_values					= $7a ; 8 bytes
 	cut_sample_ticks					= $82 ; 8 bytes
@@ -178,8 +178,8 @@
 	seq_prev_commands					= low_memory_area+$38
 	seq_command_arguments				= low_memory_area+$40
 	seq_prev_command_arguments			= low_memory_area+$48
-	seq_pitch_slide_target_steprate_fracts = low_memory_area+$50
-	seq_pitch_slide_target_steprate_ints = low_memory_area+$58
+	seq_pitch_slide_target_period_lows = low_memory_area+$50
+	seq_pitch_slide_target_period_highs = low_memory_area+$58
 
 	; free: low_memory_area+$60 through low_memory_area+$a1
 	; the above zone must not exceed +$a1

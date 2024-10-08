@@ -17,8 +17,8 @@ start_sequencer
 	ldx #7
 -	sta current_sample_numbers,x
 
-	sta seq_pitch_slide_target_steprate_fracts,x
-	sta seq_pitch_slide_target_steprate_ints,x
+	sta seq_pitch_slide_target_period_lows,x
+	sta seq_pitch_slide_target_period_highs,x
 
 	sta fine_tune_values,x
 	sta retrigger_rates,x
@@ -191,36 +191,9 @@ next_track_this_row
 	asl
 	asl					; .X = track number x 4
 	tax
+	stx sequencer_temp_x
 
 ; split each row, each track's four data bytes into their different components
-
-; get sample number
-	lda seq_current_row_data,x			; if sample number is 0, keep using
-	beq get_note_period					; the previous sample number
-	sta current_sample_numbers,y
-
-	stx sequencer_temp_x
-	jsr start_sample
-	ldx sequencer_temp_x
-	ldy seq_current_track
-
-get_note_period
-	lda seq_current_row_data+1,x
-	and #$0f
-	ora seq_current_row_data+2,x		; if period is 0, keep using the
-	beq get_command						; previous note/pitch
-
-	lda seq_current_row_data+1,x
-	and #$0f
-	sta current_note_periods_highs,y
-	lda seq_current_row_data+2,x
-	sta current_note_periods_lows,y
-
-	; .A holds the note number 1-60
-	stx sequencer_temp_x
-	jsr set_pitch
-	ldx sequencer_temp_x
-	ldy seq_current_track
 
 get_command								; ...and its parameters.
 	lda seq_current_row_data+3,x
@@ -233,18 +206,62 @@ get_command								; ...and its parameters.
 	lsr
 	sta seq_commands,y
 
-	; if command and its params are all 0, don't call the command setup.
-	; (that would be arpeggio with extra notes both set to 0)
-
-	ora seq_command_arguments,y
-	beq no_command_this_row_this_track
-
 	; initialize/start the appropriate effect for this track
 
 	lda start_effect_command_jump_table,x
 	sta start_command_vec+1
 	lda start_effect_command_jump_table+1,x
 	sta start_command_vec+2
+
+get_sample_number
+	ldx sequencer_temp_x
+	lda seq_current_row_data,x			; if sample number is 0, keep using
+	beq get_note_period					; the previous sample number
+
+	ldx seq_commands,y					; if slide-to-note is in effect, just
+	cpx #3								; ignore the sample number and don't
+	beq get_note_period					; re-trigger the sample
+	cpx #5								; ditto for pitch slide + volume slide
+	beq get_note_period
+
+	sta current_sample_numbers,y
+
+	jsr start_sample
+	ldy seq_current_track
+
+get_note_period
+	ldx sequencer_temp_x
+	lda seq_current_row_data+1,x
+	and #$0f
+	ora seq_current_row_data+2,x		; if period is 0, keep using the
+	beq run_command						; previous note/pitch
+
+	lda seq_commands,y					; for commands 3 and 5, the given
+	cmp #3								; period is a parameter to the
+	beq set_target_period				; command, to be used later.
+	cmp #5
+	beq set_target_period
+	jmp use_given_period
+
+set_target_period
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta seq_pitch_slide_target_period_highs,y
+	lda seq_current_row_data+2,x
+	sta seq_pitch_slide_target_period_lows,y
+	jmp run_command
+
+use_given_period
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta current_note_periods_highs,y
+	lda seq_current_row_data+2,x
+	sta current_note_periods_lows,y
+
+run_command
+	jsr set_pitch
+	ldx sequencer_temp_x
+	ldy seq_current_track
 
 start_command_vec					; start or initialize an effect command
 	jsr $1234						; (also for stuff that just runs once)
@@ -278,27 +295,33 @@ next_tick
 +	ldy #0
 	sty seq_current_track
 
-next_track_this_tick
-	lda seq_commands,y				; if command and its params are both 0,
-	ora seq_command_arguments,y		; then there's no command at all (whereas
-	beq no_command_this_tick_this_track ; command #0 + nonzero args = arpeggio)
+next_track_pre_tick
+	ldy seq_current_track
+	lda seq_commands,y					; commands 0-3, and 5 need to be run
+	cmp #5								; after the fetch/mixer routine, not
+	beq dont_run_pre_tick_command		; before.
+	cmp #4
+	bcc dont_run_pre_tick_command
 
-	lda seq_commands,y
+pre_tick_command
 	asl
 	tax
 	lda run_effect_command_jump_table,x
-	sta run_command_vec+1
+	sta run_command_pre_tick_vec+1
 	lda run_effect_command_jump_table+1,x
-	sta run_command_vec+2
+	sta run_command_pre_tick_vec+2
 
-run_command_vec			; run effect command if it needs tick-interval timing
+run_command_pre_tick_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
 
-no_command_this_tick_this_track
+dont_run_pre_tick_command
 	inc seq_current_track
-	ldy seq_current_track
-	cpy #4
-	bne next_track_this_tick
+	lda seq_current_track
+	cmp #4
+	bne next_track_pre_tick
+
+; -----------------------------------------------------
+; run the sample data fetch and mix routines... duh. 😉
 
 	; resetting the countdown this way allows the mixer to run one extra loop
 	; every so often, for more accurate timing control (even if the ISR were
@@ -313,18 +336,46 @@ no_command_this_tick_this_track
 	adc #0
 	sta mixer_countdown
 
-	; ----------------------------------
-	; run the sample data fetch and mix routines
+run_fetch_and_mixer_vec
+	jsr $1234
 
-	run_fetch_and_mixer_vec
-		jsr $1234
+	ldy #0
+	sty seq_current_track
+
+next_track_post_tick
 	ldy seq_current_track
-	; ----------------------------------
+	lda seq_commands,y					; commands 0-3, and 5 need to be run here.
+	cmp #5
+	beq run_post_tick_command
+	cmp #4
+	bcs dont_run_post_tick_command
+
+run_post_tick_command
+	ldx seq_ticks_counter				; post-tick commands only run N-1 times
+	cpx #1								; per row/division
+	beq dont_run_post_tick_command
+
+	asl
+	tax
+	lda run_effect_command_jump_table,x
+	sta run_command_post_tick_vec+1
+	lda run_effect_command_jump_table+1,x
+	sta run_command_post_tick_vec+2
+
+run_command_post_tick_vec
+	jsr $1234
+
+dont_run_post_tick_command
+	inc seq_current_track
+	lda seq_current_track
+	cmp #4
+	bne next_track_post_tick
 
 	dec seq_ticks_counter
-	bne next_tick
+	beq +
+	jmp next_tick
 
-	lda pattern_break_target_row
++	lda pattern_break_target_row
 	beq +
 	jmp next_pattern 
 
@@ -395,8 +446,7 @@ start_sample
 	sta vibrato_rates,y
 	sta tremolo_rates,y
 	sta volume_slide_rates,y
-	sta current_pitch_slide_rates_fracts,y
-	sta current_pitch_slide_rates_ints,y
+	sta current_pitch_slide_rates,y
 
 	sta sample_pointers_fracts,y
 	lda sample_start_addresses_lows,x
@@ -460,11 +510,11 @@ rts
 
 start_effect_command_jump_table
 	!word start_effect_arpeggio
-	!word unused ; start_effect_pitch_slide_up
-	!word unused ; start_effect_pitch_slide_down
-	!word unused ; start_effect_pitch_slide_to_note
+	!word start_effect_pitch_slide
+	!word start_effect_pitch_slide
+	!word start_effect_pitch_slide_to_note
 	!word unused ; start_effect_vibrato
-	!word unused ; start_effect_pitch_slide_plus_volume_slide
+	!word start_effect_pitch_slide_plus_volume_slide
 	!word unused ; start_effect_vibrato_plus_volume_slide
 	!word unused
 	!word unused
@@ -478,11 +528,11 @@ start_effect_command_jump_table
 
 run_effect_command_jump_table
 	!word run_effect_arpeggio
-	!word unused ; run_effect_pitch_slide_up
-	!word unused ; run_effect_pitch_slide_down
-	!word unused ; run_effect_pitch_slide_to_note
+	!word run_effect_pitch_slide_up
+	!word run_effect_pitch_slide_down
+	!word run_effect_pitch_slide_to_note
 	!word unused ; run_effect_vibrato
-	!word unused ; run_effect_pitch_slide_plus_volume_slide
+	!word run_effect_pitch_slide_plus_volume_slide
 	!word unused ; run_effect_vibrato_plus_volume_slide
 	!word unused
 	!word unused
@@ -500,8 +550,11 @@ run_effect_command_jump_table
 ; #### ARPEGGIO
 
 start_effect_arpeggio
+	lda seq_command_arguments,y
+	bne +
+	rts
 
-	tya
++	tya
 	tax
 
 	lda current_note_periods_lows,x
@@ -574,12 +627,15 @@ start_effect_arpeggio
 rts
 
 run_effect_arpeggio
-	stx sequencer_temp_x
+	lda seq_command_arguments,y
+	bne +
+	rts
 
++	stx sequencer_temp_x
 	ldx arpeggio_counters,y
 	inx
 
-+	cpx #1
+	cpx #1
 	bne +
 
 	lda arpeggio_extra_note_first_fracts,y
@@ -610,74 +666,165 @@ set_arp_pitch_2_3
 	ldx sequencer_temp_x
 rts
 
-; #### PITCH SLIDE UP/DOWN
+; #### PITCH SLIDING
 
 start_effect_pitch_slide
 	lda seq_command_arguments,y
-	sta current_pitch_slide_rates_fracts,y
-	lda #0
-	sta current_pitch_slide_rates_ints,y
+	sta current_pitch_slide_rates,y
 rts
 
 ; slide up
 
 run_effect_pitch_slide_up
-	clc
-	lda current_steprates_fracts,y
-	adc current_pitch_slide_rates_fracts,y
-	sta current_steprates_fracts,y
-	lda current_steprates_ints,y
-	adc current_pitch_slide_rates_ints,y
-	sta current_steprates_ints,y
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
-rts
+	lda current_pitch_slide_rates,y
+	bne +
+	rts
+
++	sec
+	lda current_note_periods_lows,y
+	sbc current_pitch_slide_rates,y
+	sta current_note_periods_lows,y
+	lda current_note_periods_highs,y
+	sbc #0
+	sta current_note_periods_highs,y
+	bcc stop_slide_up
+
+	lda current_note_periods_lows,y
+	cmp #57
+	lda current_note_periods_highs,y
+	sbc #0
+	bcs +
+
+stop_slide_up
+	lda #57
+	sta current_note_periods_lows,y
+	lda #0
+	sta current_note_periods_highs,y
+	sta current_pitch_slide_rates,y
+
++	jmp set_pitch
 
 ; slide down
 
 run_effect_pitch_slide_down
-	sec
-	lda current_steprates_fracts,y
-	sbc current_pitch_slide_rates_fracts,y
-	sta current_steprates_fracts,y
-	lda current_steprates_ints,y
-	sbc current_pitch_slide_rates_ints,y
-	sta current_steprates_ints,y
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
-rts
-
-
-; slide/portamento to note
-
-run_effect_pitch_slide_to_note
-	lda current_steprates_fracts,y
-	cmp seq_pitch_slide_target_steprate_fracts,y
-	bne +
-	lda current_steprates_ints,y
-	sbc seq_pitch_slide_target_steprate_ints,y
+	lda current_pitch_slide_rates,y
 	bne +
 	rts
 
-+	bcs slide_to_lower_note
-	lda current_steprates_fracts,y
-	adc current_pitch_slide_rates_fracts,y
-	sta current_steprates_fracts,y
-	lda current_steprates_ints,y
-	adc current_pitch_slide_rates_ints,y
-	sta current_steprates_ints,y
-	jmp slide_set_note
++	clc
+	lda current_note_periods_lows,y
+	adc current_pitch_slide_rates,y
+	sta current_note_periods_lows,y
+	lda current_note_periods_highs,y
+	adc #0
+	sta current_note_periods_highs,y
+	bcs stop_slide_down
 
-slide_to_lower_note
-	lda current_steprates_fracts,y
-	sbc current_pitch_slide_rates_fracts,y
-	sta current_steprates_fracts,y
-	lda current_steprates_ints,y
-	sbc current_pitch_slide_rates_ints,y
-	sta current_steprates_ints,y
+	lda current_note_periods_lows,y
+	cmp #<1712
+	lda current_note_periods_highs,y
+	sbc #>1712
+	bcc +
 
-slide_set_note
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
+stop_slide_down
+	lda #<1712
+	sta current_note_periods_lows,y
+	lda #>1712
+	sta current_note_periods_highs,y
+	lda #0
+	sta current_pitch_slide_rates,y
+
++	jmp set_pitch
+
+; slide/portamento to note
+
+start_effect_pitch_slide_to_note
+	lda seq_command_arguments,y
+	sta current_pitch_slide_rates,y
+
+	lda current_note_periods_lows,y
+	cmp seq_pitch_slide_target_period_lows,y
+	lda current_note_periods_highs,y
+	sbc seq_pitch_slide_target_period_highs,y
+	bcs +
+	lda #0
+	sta current_slide_to_note_dir,y
+	rts
+
++	lda #$80
+	sta current_slide_to_note_dir,y
 rts
 
+run_effect_pitch_slide_to_note
+	lda current_pitch_slide_rates,y
+	bne +
+	rts
+
++	lda current_slide_to_note_dir,y
+	bpl slide_to_lower_note
+
+	sec
+	lda current_note_periods_lows,y
+	sbc current_pitch_slide_rates,y
+	sta current_note_periods_lows,y
+	lda current_note_periods_highs,y
+	sbc #0
+	sta current_note_periods_highs,y
+	bcc stop_porta_up
+
+	lda current_note_periods_lows,y
+	cmp seq_pitch_slide_target_period_lows,y
+	lda current_note_periods_highs,y
+	sbc seq_pitch_slide_target_period_highs,y
+	bcs +
+
+stop_porta_up
+	lda seq_pitch_slide_target_period_lows,y
+	sta current_note_periods_lows,y
+	lda seq_pitch_slide_target_period_highs,y
+	sta current_note_periods_highs,y
+	lda #0
+	sta current_pitch_slide_rates,y
+
++	jmp set_pitch
+
+slide_to_lower_note
+	clc
+	lda current_note_periods_lows,y
+	adc current_pitch_slide_rates,y
+	sta current_note_periods_lows,y
+	lda current_note_periods_highs,y
+	adc #0
+	sta current_note_periods_highs,y
+	bcs stop_porta_down
+
+	lda seq_pitch_slide_target_period_lows,y
+	cmp current_note_periods_lows,y
+	lda seq_pitch_slide_target_period_highs,y
+	sbc current_note_periods_highs,y
+	bcs +
+
+stop_porta_down
+	lda seq_pitch_slide_target_period_lows,y
+	sta current_note_periods_lows,y
+	lda seq_pitch_slide_target_period_highs,y
+	sta current_note_periods_highs,y
+	lda #0
+	sta current_pitch_slide_rates,y
+
++	jmp set_pitch
+
+; continue pitch slide and add volume slide
+
+start_effect_pitch_slide_plus_volume_slide
+	jsr start_effect_pitch_slide_to_note
+	jsr start_effect_volume_slide
+rts
+
+run_effect_pitch_slide_plus_volume_slide
+	jsr run_effect_pitch_slide_to_note
+	jsr run_effect_volume_slide
+rts
 
 ; #### SET VOLUME
 
