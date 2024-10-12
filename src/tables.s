@@ -325,9 +325,9 @@ no_msgs1
 			bpl no_msgs2
 
 			lda #0
-			ldx #<main_player_regen_erase_tables_msg_ascii
-			ldy #>main_player_regen_erase_tables_msg_ascii
-			jsr print_msg_ascii
+			ldx #<main_player_regen_erase_tables_msg
+			ldy #>main_player_regen_erase_tables_msg
+			jsr print_msg_rle
 		} else {
 			lda #0
 			ldx #<main_player_regen_erase_tables_msg
