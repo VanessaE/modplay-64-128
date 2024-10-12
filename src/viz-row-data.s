@@ -3,7 +3,7 @@
 !text "viz-row-data",0
 
 !ifndef c128 {
-	vizualizer_base_addr = secondary_screen + screen_width * visualizer_screen_row + visualizer_screen_column
+	vizualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
 } else {
 	vizualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 }

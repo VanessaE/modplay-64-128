@@ -249,13 +249,13 @@ player_gen_tables
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
-		jsr switch_to_primary_screen
+		jsr set_normal_screen
 		jsr enable_screen
 		rts
 	}
 
-+	jsr clear_primary_screen_early
-	jsr switch_to_primary_screen
++	jsr clear_screen_early
+	jsr set_normal_screen
 rts
 
 single_sample_player
@@ -283,6 +283,6 @@ single_sample_player
 		jsr press_any_key
 	}
 
-	jsr clear_primary_screen_early
-	jsr switch_to_primary_screen
+	jsr clear_screen_early
+	jsr set_normal_screen
 rts

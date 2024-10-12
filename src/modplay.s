@@ -42,7 +42,7 @@ start
 	!ifndef c128 {
 		jsr disable_screen
 		jsr erase_file_list
-		jsr switch_to_primary_screen
+		jsr set_normal_screen
 		lda #CLR
 		jsr CHROUT
 		jsr enable_screen

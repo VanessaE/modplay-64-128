@@ -6,7 +6,7 @@
 	gray_out_blur_out
 		jsr gray_out
 		jsr blur_out
-		jsr switch_to_secondary_screen
+		jsr set_ascii_screen
 	rts
 }
 
@@ -47,16 +47,16 @@ rts
 			cpx #128
 			bcs +
 			lda blurring_table,x
-		+	sta secondary_screen + .page*256,y
+		+	sta VIC_SCREEN + .page*256,y
 		}
 		dey
 		bne -
 	rts
 }
 
-switch_to_primary_screen ; also switches to the PETSCII charset on C64
+set_normal_screen ; also switches back to the PETSCII charset on C64
 	!ifndef c128 {
-		+C64_PRIMARY_SCREEN
+		+C64_NORMAL_SCREEN
 	} else {
 		lda #12
 		sta VDC
@@ -70,7 +70,14 @@ switch_to_primary_screen ; also switches to the PETSCII charset on C64
 	}
 rts
 
-clear_primary_screen_early	; redirect the KERNAL and clear
+!ifndef c128 {
+	set_ascii_screen
+		lda #$34
+		sta VIC+$18
+	rts
+}
+
+clear_screen_early	; redirect the KERNAL and clear
 	!ifndef c128 {			; the primary screen
 		lda #>VIC_SCREEN
 		sta HIBASE
@@ -81,18 +88,6 @@ clear_primary_screen_early	; redirect the KERNAL and clear
 	lda #CLR
 	jsr CHROUT
 rts
-
-!ifndef c128 {
-	switch_to_secondary_screen ; also switches to the ASCII charset on C64
-		lda CIA2
-		and #$fc
-		sta CIA2
-		lda #$34
-		sta VIC+$18
-		lda #>secondary_screen ; point the KERNAL
-		sta HIBASE
-	rts
-}
 
 !ifdef c128 {
 	reset_attributes_charset

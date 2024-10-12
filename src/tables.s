@@ -63,7 +63,7 @@ nodownrez
 	inc fill_copy_target+1
 	inc vol_cnt
 	lda vol_cnt
-	cmp #46		; the first 46 pages go in the lower part of the table
+	cmp #38		; the first 38 pages go in the lower part of the table
 	bne +
 
 	lda #>volume_table_upper	; ...while the rest goes under the KERNAL.

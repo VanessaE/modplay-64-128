@@ -379,8 +379,6 @@
 
 	; Under-KERNAL-ROM stuff
 
-	sample_data_buffer					= $f200 ; 8 * 256 bytes
-
 	note_names_table					= $fa00 ; 240 bytes + waste
 
 	divide_by_16_table					= $fb00 ; 1 page

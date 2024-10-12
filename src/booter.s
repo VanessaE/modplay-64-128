@@ -64,9 +64,9 @@ boot_start
 		lda CIA2					; CIA: select VIC-II bank 2
 		and #$fd
 		sta CIA2
-		lda #$24					; point VIC-II to $8800 for the screen
+		lda #$04					; point VIC-II to $8000 for the screen
 		sta VIC+$18					; and use the char ROM image at $9000
-		lda #$88					; point the KERNAL appropriately
+		lda #$80					; point the KERNAL appropriately
 		sta HIBASE
 		lda #$36					; disable BASIC, else it'll corrupt the
 		sta $01						; splash data

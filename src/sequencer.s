@@ -849,7 +849,7 @@ set_volume
 	lda #63
 	bne voltab_use_upper
 
-+	cmp #46
++	cmp #38
 	bcs voltab_use_upper
 
 	adc #>volume_table_lower
@@ -857,7 +857,7 @@ set_volume
 
 voltab_use_upper
 	clc
-	adc #(>volume_table_upper)-46
+	adc #(>volume_table_upper)-38
 
 set_vol_addrs_only
 	set_lookahead_vol_addrs_vec
@@ -959,7 +959,7 @@ rts
 ; ===========================
 
 !ifndef c128 {
-	print_nsp_target = secondary_screen + 10*40 + 18
+	print_nsp_target = VIC_SCREEN + 10*40 + 18
 } else {
 	print_nsp_target = VDC_SCREEN + 10*80 + 38
 }
@@ -982,8 +982,8 @@ print_num_song_pos
 rts
 
 !ifndef c128 {
-	print_sp_target = secondary_screen + 10*40 + 15
-	print_pn_target = secondary_screen + 10*40 + 33
+	print_sp_target = VIC_SCREEN + 10*40 + 15
+	print_pn_target = VIC_SCREEN + 10*40 + 33
 } else {
 	print_sp_target = VDC_SCREEN + 10*80 + 35
 	print_pn_target = VDC_SCREEN + 10*80 + 53
@@ -1012,7 +1012,7 @@ print_song_pos_pat_num ; enter with .X = song position
 rts
 
 !ifndef c128 {
-	print_rn_target = secondary_screen + 11*40 + 7
+	print_rn_target = VIC_SCREEN + 11*40 + 7
 } else {
 	print_rn_target = VDC_SCREEN + 11*80 + 27
 }
@@ -1033,8 +1033,8 @@ print_row_num
 rts
 
 !ifndef c128 {
-	print_sst_target = secondary_screen + 11*40 + 19
-	print_ssb_target = secondary_screen + 11*40 + 22
+	print_sst_target = VIC_SCREEN + 11*40 + 19
+	print_ssb_target = VIC_SCREEN + 11*40 + 22
 } else {
 	print_sst_target = VDC_SCREEN + 11*80 + 39
 	print_ssb_target = VDC_SCREEN + 11*80 + 42
@@ -1067,7 +1067,7 @@ print_elapsed_time
 
 	!ifndef c128 {
 
-		print_et_target = secondary_screen + 11*40 + 33
+		print_et_target = VIC_SCREEN + 11*40 + 33
 
 		ldx CIA1+$0a ; minutes
 		lda divide_by_16_table,x

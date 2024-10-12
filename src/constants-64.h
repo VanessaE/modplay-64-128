@@ -31,29 +31,29 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $7200 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $7e00 ; overlaps the load buffer intentionally
 
-	load_buffer						= $6a00 ; 2 kB plus some waste
+	load_buffer						= $7600			; \__ 2 kB
+	sample_data_buffer				= load_buffer	; /
 
-	viz_note_number_lookup_table	= $7200 ; 1712 bytes plus some waste
+	playlist_filenames				= $7e00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $8a00
 
-	steprate_lookup_table			= $7900 ; 1712 * 2 bytes, plus some waste
+	mod_instrument_names			= $8a00 ; 32 * 31 bytes plus some waste
 
-	mod_instrument_names			= $8700 ; 32 * 31 bytes
-
-	playlist_file_sizes_lows		= $8b00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $8c00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $8d00 ; 1 byte * 192
+	playlist_file_sizes_lows		= $8e00 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $8f00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $9000 ; 1 byte * 192
 											; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $8e00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $9a00
+	viz_note_number_lookup_table	= $9100 ; 1712 bytes plus some waste
 
-	volume_table_lower				= $9a00 ; 46 pages \__ 64 pages/16 kB, split
-	volume_table_upper				= $e000 ; 18 pages /   between two memory areas
+	steprate_lookup_table			= $9800 ; 1712 * 2 bytes, plus some waste
 
-	VIC_SCREEN						= $c800
-	secondary_screen				= $cc00
+	volume_table_lower				= $a600 ; 38 pages \__ 64 pages/16 kB, split
+	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
+
+	VIC_SCREEN						= $cc00
 
 	; ========================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

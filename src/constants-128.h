@@ -29,26 +29,27 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $7900 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $8200 ; overlaps the load/sample buffers intentionally
 
-	load_buffer						= $7100 ; 2 kB plus some waste
+	load_buffer						= $7a00			; \__  2 kB
+	sample_data_buffer				= load_buffer	; /
 
-	viz_note_number_lookup_table	= $7900 ; 1712 bytes plus some waste
+	viz_note_number_lookup_table	= $8200 ; 1712 bytes plus some waste
 
-	steprate_lookup_table			= $8000 ; 1712 * 2 bytes, plus some waste
+	steprate_lookup_table			= $8900 ; 1712 * 2 bytes, plus some waste
 
-	mod_instrument_names			= $8e00 ; 32 * 31 bytes
+	mod_instrument_names			= $9700 ; 32 * 31 bytes pls some waste
 
-	playlist_file_sizes_lows		= $9300 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $9400 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $9500 ; 1 byte * 192
+	playlist_file_sizes_lows		= $9b00 ; \___ 2 bytes * 192 files
+	playlist_file_sizes_highs		= $9c00 ; /    (128 bytes unused but will be zeroed)
+	playlist_file_flags				= $9d00 ; 1 byte * 192
 											; (48 bytes unused but will be zeroed)
 
-	playlist_filenames				= $9600 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $a200
+	playlist_filenames				= $9e00 ; 16 bytes * 192 (3 kB)
+	playlist_filenames_end			= $aa00
 
-	volume_table_lower				= $a200 ; 46 pages \__ 64 pages/16 kB, split
-	volume_table_upper				= $e000 ; 18 pages /   between two memory areas
+	volume_table_lower				= $aa00 ; 38 pages \__ 64 pages/16 kB, split
+	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
 
 	; =================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

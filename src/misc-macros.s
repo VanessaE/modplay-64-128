@@ -96,11 +96,11 @@ rts
 }
 
 !ifndef c128 {
-	!macro C64_PRIMARY_SCREEN {
+	!macro C64_NORMAL_SCREEN {
 		lda CIA2
 		and #$fc
 		sta CIA2
-		lda #$27
+		lda #$37
 		sta VIC+$18
 		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
 		sta HIBASE					; screen editor/CHROUT/etc.
