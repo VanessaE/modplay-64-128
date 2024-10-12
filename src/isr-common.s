@@ -10,20 +10,24 @@ isr_set_interval
 	;
 	; IMPORTANT:
 	;
-	; for accuracy-sake, the total cycle count *must not* exceed 3 raster
-	; lines (so 195 cycles on NTSC or 189 cycles on PAL) when the screen is
-	; enabled on the C64, otherwise the round-up code below will overflow.
-	; If the screen is off or it's the C128, just keep the total under 255.
+	; the total cycle count below must not exceed 255 prior to rounding!
 	;
-	; that said, 3 rasters is already a bit slow, so if a combo of drivers
-	; is too slow, that combo should only be allowed when the screen is turned
-	; off, or only on faster machines if that's the only choice (e.g. C128, or
-	; if an accelerator is in use).
+	; if a combo of drivers is too slow, that combo should probably only be
+	; allowed when the screen is turned off, or only on faster machines, if
+	; that's the only choice (e.g. C128, or if an accelerator is in use).
+
+	lda #0
+	sta isr_trigger_interval+1
 
 	clc
 	lda #mixer_cycle_count
 	adc audio_driver_isr_cycle_count
 	adc ram_driver_fetch_cycle_count
+
+	; add some fudge just to ensure the sequencer always has enough time
+	; to run.
+
+	adc #20
 
 	!ifndef c128 {
 		bit enable_screen_on_playback
@@ -33,7 +37,7 @@ isr_set_interval
 		lda raster_len				; sync to the VIC-II raster, so we divide
 		sta divisor					; that total cycles figure by the raster
 		lda #0						; line length
-		sta dividend+1	
+		sta dividend+1
 		sta divisor+1
 		jsr divide_16by16
 
@@ -41,9 +45,11 @@ isr_set_interval
 		lda quotient				; discard the remainder and add 1
 		adc #1
 		ldx raster_len
-		jsr multiply_8x8			; and multiply it back up, thus rounding
-		lda product					; the ISR time to the next whole multiple
-	}								; of the raster length
+		jsr multiply_8x8			; then multiply it back up, thus rounding
+		lda product+1				; the ISR time to the next whole multiple
+		sta isr_trigger_interval+1	; of the raster length
+		lda product
+	}
 
 ; if the screen is off, or on C128 in any case, we don't need all that BS 😛
 ; because no VIC-II/IIe screen means no need to sync to the raster.
@@ -61,11 +67,12 @@ isr_startup
 	iny
 	bne -
 
-	lda isr_trigger_interval
 	sec
+	lda isr_trigger_interval
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
 	sta CIA1+$06			; set the result as CIA #1 timer B interval
-	lda #0
+	lda isr_trigger_interval+1
+	sbc #0
 	sta CIA1+$07
 
 	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
@@ -129,6 +136,9 @@ isr_startup
 
 			lda #254				; stage 1 IRQ will fire on line 254
 			sta VIC+$12
+			lda VIC+$11
+			and #$7f
+			sta VIC+$11
 			lda #$81
 			sta VIC+$1a				; and now enable the raster IRQ
 

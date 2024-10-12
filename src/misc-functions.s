@@ -530,13 +530,13 @@ divide_24by24
 	tay					;LSB result -> Y, for we may need it later
 	lda remainder+1
 	sbc divisor+1
-	sta divide24_tmp
+	sta divide_tmp
 	lda remainder+2
 	sbc divisor+2
 	bcc +				;if carry=0 then divisor didn't fit in yet
 
 	sta remainder+2		;else save substraction result as new remainder,
-	lda divide24_tmp
+	lda divide_tmp
 	sta remainder+1
 	sty remainder
 	inc dividend		;and INCrement result cause divisor fit in 1 times
@@ -553,26 +553,63 @@ divide_32by16
 	ldx #32				;repeat for each bit: ...
 
 .lp3
-	asl dividend32		;dividend lb & hb*3, msb -> Carry
-	rol dividend32+1
-	rol dividend32+2
-	rol dividend32+3
+	asl dividend		;dividend lb & hb*3, msb -> Carry
+	rol dividend+1
+	rol dividend+2
+	rol dividend+3
 	rol remainder		;remainder lb & hb * 2 + msb from carry
 	rol remainder+1
 	lda remainder
 	sec
-	sbc divisor16		;sustract divisor to see if it fits in
+	sbc divisor		;sustract divisor to see if it fits in
 	tay					;lb quotient -> Y, for we may need it later
 	lda remainder+1
-	sbc divisor16+1
+	sbc divisor+1
 	bcc +				;if carry=0 then divisor didn't fit in yet
 
 	sta remainder+1		;else save substraction quotient as new remainder,
 	sty remainder
-	inc quotient32		;and INCrement quotient cause divisor fit in 1 times
+	inc quotient		;and INCrement quotient cause divisor fit in 1 times
 
 +	dex
 	bne .lp3
+rts
+
+
+divide_32by24
+	lda #0				;preset remainder to 0
+	sta remainder
+	sta remainder+1
+	sta remainder+2
+	ldx #32				;repeat for each bit: ...
+
+.lp4
+	asl dividend		;dividend lb & hb*2, msb -> Carry
+	rol dividend+1
+	rol dividend+2
+	rol dividend+3
+	rol remainder		;remainder lb & hb * 2 + msb from carry
+	rol remainder+1
+	rol remainder+2
+	lda remainder
+	sec
+	sbc divisor			;subtract divisor to see if it fits in
+	tay					;LSB result -> Y, for we may need it later
+	lda remainder+1
+	sbc divisor+1
+	sta divide_tmp
+	lda remainder+2
+	sbc divisor+2
+	bcc +				;if carry=0 then divisor didn't fit in yet
+
+	sta remainder+2		;else save substraction result as new remainder,
+	lda divide_tmp
+	sta remainder+1
+	sty remainder
+	inc quotient		;and INCrement result cause divisor fit in 1 times
+
++	dex
+	bne .lp4
 rts
 
 

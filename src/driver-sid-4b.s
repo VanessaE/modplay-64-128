@@ -9,30 +9,30 @@
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
-sid_driver_init
-	lda #<sid_set_volume_table_resolution
+sid_4bit_driver_init
+	lda #<sid_4bit_set_volume_table_resolution
 	sta audio_set_resolution_vec
-	lda #>sid_set_volume_table_resolution
+	lda #>sid_4bit_set_volume_table_resolution
 	sta audio_set_resolution_vec+1
 
-	lda #<sid_set_isr_cycle_count
+	lda #<sid_4bit_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec
-	lda #>sid_set_isr_cycle_count
+	lda #>sid_4bit_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec+1
 
-	lda #<sid_start
+	lda #<sid_4bit_start
 	sta audio_start_vec
-	lda #>sid_start
+	lda #>sid_4bit_start
 	sta audio_start_vec+1
 
-	lda #<sid_mute
+	lda #<sid_4bit_mute
 	sta audio_mute_vec
-	lda #>sid_mute
+	lda #>sid_4bit_mute
 	sta audio_mute_vec+1
 
-	lda #<sid_stop
+	lda #<sid_4bit_stop
 	sta audio_stop_vec
-	lda #>sid_stop
+	lda #>sid_4bit_stop
 	sta audio_stop_vec+1
 
 	bit stereo_enable
@@ -64,13 +64,13 @@ rts
 ; don't forget to account for clock stretching, and be sure to add one 1 MHz
 ; cycle for "fudge".
 
-sid_set_isr_cycle_count
+sid_4bit_set_isr_cycle_count
 
 	!ifndef scpu {
 		!ifndef c128 {
 			lda #53
 		} else {
-			lda #28
+			lda #56 / 2
 		}
 	} else {
 		lda #8					; could be as low as 6 but we're fudging it.
@@ -81,23 +81,28 @@ rts
 
 ; this returns the output resolution of the volume tables in .A
 
-sid_set_volume_table_resolution
+sid_4bit_set_volume_table_resolution
 	lda #4
 	sta volume_tables_resolution
 rts
 
-sid_start
-	jsr sid_mute
+sid_4bit_start
+	lda #0
+	ldx #$20
+
+-	sta SID,x
+	dex
+	bpl -
 
 	lda #$ff
-	sta SID+6
-	sta SID+13
-	sta SID+20
+	sta SID+$06
+	sta SID+$0d
+	sta SID+$14
 
 	lda #$49
-	sta SID+4
-	sta SID+11
-	sta SID+18
+	sta SID+$04
+	sta SID+$0b
+	sta SID+$12
 
 	bit stereo_enable
 	bmi +
@@ -109,32 +114,26 @@ sid_start
 	sta utility_pointer+1
 
 	lda #$ff
-	ldy #6
+	ldy #$06
 	sta (utility_pointer),y
-	ldy #13
+	ldy #$0d
 	sta (utility_pointer),y
-	ldy #20
+	ldy #$14
 	sta (utility_pointer),y
 
 	lda #$49
-	ldy #4
+	ldy #$04
 	sta (utility_pointer),y
-	ldy #11
+	ldy #$0b
 	sta (utility_pointer),y
-	ldy #18
+	ldy #$12
 	sta (utility_pointer),y
 rts
 
-sid_mute
-	lda #0
-	ldx #$20
-
--	sta SID,x
-	dex
-	bpl -
+sid_4bit_mute
 rts
 
-sid_stop
+sid_4bit_stop
 rts
 
 sid_isr_4b_mono					; 7 cycles coming in
@@ -146,7 +145,7 @@ sid_isr_4b_mono					; 7 cycles coming in
 	clc							; 2
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
-	lsr							; 2
+	ror							; 2
 	sta SID+$18					; 4
 
 .iam lda #00					; 2

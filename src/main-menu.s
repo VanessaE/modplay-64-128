@@ -320,7 +320,7 @@ chk_key_f
 
 chk_key_r
 	cmp #$52
-	bne chk_key_e
+	bne chk_key_t
 	!ifdef c128 {
 		jsr set_window_menu_pane
 	}
@@ -329,6 +329,21 @@ chk_key_r
 	cmp #2
 	bne +
 	jsr change_resonance_setting
+
++	jmp main_loop
+
+chk_key_t
+	cmp #$54
+	bne chk_key_e
+
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+
+	lda audio_driver
+	cmp #1
+	bne +
+	jsr change_dithering_setting
 
 +	jmp main_loop
 
@@ -693,8 +708,16 @@ not_sid_menu
 	ldy #>menu_text_resonance
 	jsr print_menu_line
 
-	!ifndef c128 {
-	++	ldx #<menu_text_enable_screen
+++	lda audio_driver
+	cmp #1
+	bne +
+
+	ldx #<menu_text_dithering
+	ldy #>menu_text_dithering
+	jsr print_menu_line
+
++	!ifndef c128 {
+		ldx #<menu_text_enable_screen
 		ldy #>menu_text_enable_screen
 		jsr print_menu_line
 
@@ -704,7 +727,7 @@ not_sid_menu
 	}
 
 	; display "save config"
-++	ldx #<menu_text_save_config
+	ldx #<menu_text_save_config
 	ldy #>menu_text_save_config
 	jsr print_menu_line
 
@@ -715,6 +738,7 @@ not_sid_menu
 	jsr show_stereo_mode
 	jsr show_filter_setting
 	jsr show_resonance_setting
+	jsr show_dithering_setting
 	!ifndef c128 {
 		jsr show_screen_enable
 	}

@@ -21,7 +21,11 @@ reu_fetch_routine_index_table
 ; see full details in doc/timing-info.txt.
 
 !ifndef scpu {
-	mixer_cycle_count = 54
+	!ifndef c128 {
+		mixer_cycle_count = 54
+	} else {
+		mixer_cycle_count = 54 / 2
+	}
 } else {
 	mixer_cycle_count = 3
 }
@@ -31,7 +35,7 @@ reu_set_cycle_counts
 		!ifndef c128 {
 			lda #31 + 2
 		} else {
-			lda #(38 + 2)/2 ; equivalent 1 MHz cycles
+			lda #38 / 2 ; equivalent 1 MHz cycles
 		}
 	} else {
 		lda #16 + 1 ; equivalent 1 MHz cycles

@@ -21,7 +21,9 @@
 	filter_col		= 30
 	reson_row		= 10
 	reson_col		= 33
-	scr_en_row		= 10
+	dith_en_row		= 9
+	dith_en_col		= 33
+	scr_en_row		= 11
 	scr_en_col		= 30
 } else {
 	rpt_row			= 6
@@ -42,6 +44,8 @@
 	filter_col		= 26
 	reson_row		= 7
 	reson_col		= 30
+	dith_en_row		= 6
+	dith_en_col		= 22
 }
 
 show_repeat_mode
@@ -648,6 +652,46 @@ change_resonance_setting
 	jsr show_resonance_setting
 + rts
 
+show_dithering_setting
+	lda current_menu_page
+	cmp #2
+	beq +
+	rts
+
++	lda audio_driver
+	cmp #1
+	beq +
+	rts
+
++	clc
+	ldx #dith_en_row
+	ldy #dith_en_col
+	jsr PLOT
+
+	bit dither_enable
+	bpl +
+
+	ldx #<mode_on_txt
+	ldy #>mode_on_txt
+	jmp ++
+
++	ldx #<mode_off_txt
+	ldy #>mode_off_txt
+++	jsr print_msg
+rts
+
+change_dithering_setting
+	lda audio_driver
+	cmp #1
+	beq +
+	rts
+
++	lda dither_enable
+	eor #$80
+	sta dither_enable
+	jsr show_dithering_setting
++ rts
+
 !ifndef c128 {
 	toggle_screen_enable
 		lda enable_screen_on_playback
@@ -666,10 +710,12 @@ change_resonance_setting
 		!ifndef c128 {
 			lda audio_driver
 			cmp #2
-			bne ++
-
-		+	inx
+			bne +
 			inx
+			jmp ++
+		+	cmp #3
+			bne ++
+			dex
 		}
 
 	++	clc

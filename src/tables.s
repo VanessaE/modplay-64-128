@@ -84,25 +84,36 @@ generate_tempo_table
 
 	ldx #32 ; entries 0-31 are unused.
 
--	stx temp_abs_x
 	lda isr_trigger_interval
-	jsr multiply_8x8
+	sta multiplicand_a
+	lda isr_trigger_interval+1
+	sta multiplicand_a+1
+
+-	stx temp_abs_x
+	stx multiplicand_b
+	lda #0
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16
 
 	lda #0
-	sta dividend32
+	sta dividend
 	lda #<tempo_fine_adjust_constant
-	sta dividend32+1
+	sta dividend+1
 	lda #>tempo_fine_adjust_constant
-	sta dividend32+2
+	sta dividend+2
 	lda #^tempo_fine_adjust_constant ; "^" means "bank" e.g. bits 16-23
-	sta dividend32+3
+	sta dividend+3
 
 	lda product
-	sta divisor16
+	sta divisor
 	lda product+1
-	sta divisor16+1
+	sta divisor+1
+	lda product+2
+	sta divisor+2
 
-	jsr divide_32by16
+	jsr divide_32by24
 
 	ldx temp_abs_x
 	lda quotient
@@ -116,6 +127,19 @@ rts
 generate_period_table
 	sei
 	jsr disable_roms
+
+	lda #pitch_fine_adjust_constant
+	sta multiplicand_a
+	lda #0
+	sta multiplicand_a+1
+
+	lda isr_trigger_interval
+	sta multiplicand_b
+	lda isr_trigger_interval+1
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16		; we'll run this once and keep reusing the product
 
 	ldy #57 * 2 + 1
 	lda #0
@@ -137,10 +161,6 @@ generate_period_table
 	adc #0
 	sta fill_copy_target+1
 
-	lda isr_trigger_interval
-	ldx #pitch_fine_adjust_constant
-	jsr multiply_8x8
-
 -	lda #0
 	sta dividend
 	sta divisor+2
@@ -149,13 +169,15 @@ generate_period_table
 	sta dividend+1
 	lda product+1
 	sta dividend+2
+	lda product+2
+	sta dividend+3
 
 	lda utility_counter
 	sta divisor
 	lda utility_counter+1
 	sta divisor+1
 
-	jsr divide_24by24
+	jsr divide_32by24
 
 	ldy #0
 	lda quotient
@@ -266,6 +288,10 @@ regen_all_tables
 	lda isr_trigger_interval
 	cmp last_isr_trigger_interval
 	bne +
+	lda isr_trigger_interval+1
+	cmp last_isr_trigger_interval+1
+	bne +
+
 	lda volume_tables_resolution
 	cmp last_volume_tables_resolution 
 	bne +
@@ -310,13 +336,20 @@ no_msgs1
 
 +	lda isr_trigger_interval
 	cmp last_isr_trigger_interval
-	beq +
+	bne +
+	lda isr_trigger_interval+1
+	cmp last_isr_trigger_interval+1
+	beq ++
+
++	lda isr_trigger_interval
 	sta last_isr_trigger_interval
+	lda isr_trigger_interval+1
+	sta last_isr_trigger_interval+1
 
 	jsr generate_tempo_table
 	jsr generate_period_table
 
-+	!ifndef scpu {
+++	!ifndef scpu {
 		bit allow_regen_msg
 		bpl no_msgs2
 

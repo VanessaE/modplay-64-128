@@ -92,9 +92,9 @@ init
 
 	ldy #0
 -	lda default_config,y
+	sta config_space,y
 	cmp #$ff
 	beq +
-	sta config_space,y
 	iny
 	jmp -
 
@@ -360,16 +360,25 @@ init
 
 	lda audio_driver
 	cmp #1
-	bne +
-	jsr sid_driver_init
-	jmp init_tables_gen
+	bne ns4init
 
-;+	cmp #2
+	bit dither_enable
+	bpl +
+
+	jsr sid_4bit_dithered_driver_init
+	jmp ++
+
++	jsr sid_4bit_driver_init
+
+++	jmp init_tables_gen
+
+ns4init
+;	cmp #2
 ;	bne +
 ;	jsr sid_pwm_init
 ;	jmp isr_timer_setup
 
-+	jsr dac_driver_init
+	jsr dac_driver_init
 
 init_tables_gen
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
@@ -669,6 +678,7 @@ default_config
 	!byte $80				; default Stereo mode (on)
 	!byte 0					; default filter setting
 	!byte 0					; default resonance setting
+	!byte $0				; default dithering mode (off)
 	!byte $80				; default screen enable (on)
 	!byte $ff				; end of file marker
 configuration_data_end

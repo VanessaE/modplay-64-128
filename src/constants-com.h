@@ -37,8 +37,8 @@
 	; divisor uses $27 through $29
 
 	; for 32/16 divide:
-	; dividend32/quotient32 uses $24 through $27
-	; divisor16 uses $28/$29
+	; dividend/quotient uses $24 through $27
+	; divisor uses $28/$29
 
 	; for the binary search:
 	; binsearch_low is at $24/$25
@@ -79,13 +79,13 @@
 	sequencer_temp_a					= $55 ; 2 bytes \__ these can also be used
 	sequencer_temp_b					= $57 ; 2 bytes /   as one 4-byte temp
 
-	; division remainder uses $59 through $5b
+	; remainder, load pointer and other random stuff uses $59 through $5b
 	; expansion_memory_target_pointer uses $5c/$5d
 	; binary search binsearch_value is at $59/$5a
 
 	song_speed							= $5e
 
-	; divide24_tmp uses $5f
+	; divide_tmp uses $5f
 
 	seq_tempo_bpm						= $60
 	seq_ticks_per_division				= $61
@@ -118,15 +118,10 @@
 	; The rest of these Zero Page addrs can be the same on both C64 and C128
 	; and are for use when Zero Page is not backed-up.
 
-	dividend							= $24 ; to $26
-	divisor								= $27 ; to $29
-
-	remainder							= $59 ; to $5b
+	dividend							= $24 ; to $27
+	; free: $27 through $29
 	quotient = dividend
-
-	dividend32							= $24 ; to $27
-	divisor16							= $28 ; and $29
-	quotient32 = dividend32
+	divisor								= $59 ; through $5b
 
 	rle_mode_flag						= $24 ; safe to overwrite - math ops aren't used
 	rle_byte_count						= $25 ; at the same time as RLE printing
@@ -138,7 +133,7 @@
 
 	print_msg_addr						= $5f ; and $60
 	save_addr							= $5f ; and $60
-	divide24_tmp						= $5f
+	divide_tmp							= $5f ; and $60
 
 	binsearch_low						= $24 ; and $25
 	binsearch_mid						= $26 ; and $27
@@ -196,16 +191,29 @@
 
 	main_variables_zone					= $0b00
 
-	config_space						= $0b00 ; 16 bytes
+	; config file declarations
 
-	one_ten_thousandth_second			= $0b10 ; 2 bytes
-	number_of_song_positions			= $0b12
-	number_of_patterns					= $0b13
+	config_space						= $0b00 ; first 5 bytes is the config "header"
 
-	audio_driver_isr_cycle_count		= $0b14
-	ram_driver_fetch_cycle_count		= $0b15
-	isr_trigger_interval				= $0b16
-	last_isr_trigger_interval			= $0b17
+	load_device							= $0b05
+	stereo_sid_addr						= $0b06 ; 2 bytes
+	dac_addr							= $0b08 ; 2 bytes
+	audio_driver						= $0b0a
+	ram_driver							= $0b0b
+	stereo_enable						= $0b0c
+	filter_setting						= $0b0d
+	resonance_setting					= $0b0e
+	dither_enable						= $0b0f
+	enable_screen_on_playback			= $0b10
+
+	cfg_data_end						= $0b11 ; one byte past the real end
+
+	; free: $0b12, $0b13
+
+	audio_driver_isr_cycle_count		= $0b12
+	ram_driver_fetch_cycle_count		= $0b13
+	isr_trigger_interval				= $0b14 ; 2 bytes
+	last_isr_trigger_interval			= $0b16 ; 2 bytes
 	playlist_length						= $0b18
 	playlist_scroll_pos					= $0b19
 	playlist_print_file_counter			= $0b1a
@@ -294,22 +302,28 @@
 	multiplicand_b						= $0c04 ; 2 bytes / used by 16x16 multiply
 	product								= $0c06 ; 4 bytes / 8x8 uses this one also.
 
-	temp_abs_a							= $0c0a
-	temp_abs_b							= $0c0b
-	temp_abs_c							= $0c0c
-	temp_abs_x							= $0c0d
-	temp_abs_y							= $0c0e
-	temp_abs_y2							= $0c0f
-	temp_counter						= $0c10 ; 3 bytes
+	remainder							= $0c0a ; through $0c0c
 
-	stash_size							= $0c13 ; 2 bytes
+	temp_abs_a							= $0c0d
+	temp_abs_b							= $0c0e
+	temp_abs_c							= $0c0f
+	temp_abs_x							= $0c10
+	temp_abs_y							= $0c11
+	temp_abs_y2							= $0c12
+	temp_counter						= $0c13 ; 3 bytes
 
-	scroll_area_target_addr				= $0c15 ; 2 bytes
-	scroll_area_width					= $0c17
-	scroll_area_height					= $0c18
-	scroll_area_blank_last_line_flag	= $0c19
+	stash_size							= $0c16 ; 2 bytes
 
-	; free: $0c1a through $0d07
+	scroll_area_target_addr				= $0c18 ; 2 bytes
+	scroll_area_width					= $0c1a
+	scroll_area_height					= $0c1b
+	scroll_area_blank_last_line_flag	= $0c1c
+
+	one_ten_thousandth_second			= $0c1d ; 2 bytes
+	number_of_song_positions			= $0c1f
+	number_of_patterns					= $0c20
+
+	; free: $0c21 through $0d07
 
 	; various program vectors
 
@@ -537,15 +551,3 @@ pitch_fine_adjust_constant = 57
 
 tempo_fine_adjust_constant = 159778
 
-; config file declarations - the actual file gets loaded/saved as above
-
-load_device						= config_space+5 ; config header is first 5 bytes
-stereo_sid_addr					= load_device+1
-dac_addr						= stereo_sid_addr+2
-audio_driver					= dac_addr+2
-ram_driver						= audio_driver+1
-stereo_enable					= ram_driver+1
-filter_setting					= stereo_enable+1
-resonance_setting				= filter_setting+1
-enable_screen_on_playback		= resonance_setting+1
-cfg_data_end					= enable_screen_on_playback+2 ; one byte past the real end

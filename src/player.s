@@ -194,16 +194,24 @@ start_main_player
 no_player_ui
 	lda audio_driver
 	cmp #1
-	bne +
-	jsr sid_driver_init
-	jmp player_gen_tables
+	bne ns4ip
 
-;+	cmp #2
+	bit dither_enable
+	bpl +
+
+	jsr sid_4bit_dithered_driver_init
+	jmp ++
+
++	jsr sid_4bit_driver_init
+
+++	jmp player_gen_tables
+
+ns4ip
+;	cmp #2
 ;	bne +
 ;	jsr sid_pwm_init
 ;	jmp isr_timer_setup
-
-+	jsr dac_driver_init
+	jsr dac_driver_init
 
 player_gen_tables
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
