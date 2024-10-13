@@ -103,16 +103,15 @@
 
 * BOTH: progress bar has a minor off-by-1 overflow glitch.
 
-* C128: "$" crashes on real hardware if the dir listing scrolls, but it only
-  happens on a friend's machine, not on my C128-DCR, and it's fine in VICE
-  too.
-
-* C64: there is some kind of slowdown happening relating to arpeggios with
+* C64: there is some kind of slowdown happening relating to arpeggios and/or
   high pitches, but it only happens with one or two songs (Cybernoid 1 for
   instance), and only on C64 + User Port DigiMAX, and only when playing in
   stereo.  And, it only seems to affect speed/tempo, not note pitches, so the
   actual output sample rate isn't changing.  doesn't seem to affect C128 or
   SCPU at all.
+
+  Best guess, the REU code is simply fetching too much data and slowing
+  everything down because there's no limiter.
 
 * BOTH: "Happy As Fish" skips some notes at one point late in the song,
   probably new-note triggers being skipped when they shouldn't be due to
