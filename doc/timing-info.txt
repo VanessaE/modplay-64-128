@@ -7,7 +7,7 @@ cycle.
 -----------
 fetch DMA calls alone:
 
-on average, the step rate will be close to 1.7, so it'll be fetching
+On average, the step rate will be close to 1.7, so it'll be fetching
 16 * 1.7 = ~27 bytes per transfer.  We have to split the transfer up into
 smaller pieces to avoid too much impact on the audio ISR.  With "rounding",
 the average will be closer to 32 bytes.  At any rate, this costs some
@@ -16,7 +16,8 @@ performance but what else can we do?
 2 +4+4 +4+4 +4+4 +4+4 +32 = 66 cycles per track, total 264 cycles
 
 Worst possible case would be playing the highest note, B-4, which would have
-a step rate of about 8.688, so fetching 16 * 8.333 = ~139 bytes:
+a step rate of about 8.688, so fetching 16 * 8.333 = ~139 bytes without any
+kind of cap or limiter:
 
 2 +4+4 +4+4 +4+4 +4+4 +139 = 173 cycles per track, total 692 cycles
 
@@ -27,13 +28,13 @@ for their whole duration. The explicit 1/2 MHz switching above adds 18,
 2 MHz cycles (9 for the shift down to 1 MHz, 9 to shift back up).
 
 Being almost twice as fast, it'll have half the step rates, so best step rate
-will be about 0.137, typical will be around 0.9, worst around 4.2, so it'll
-be fetching ~2, ~13, and ~66 bytes, respectively.
+will be about 0.137, typical will be around 0.9, worst around 6.4, so it'll
+be fetching ~2, ~13, and ~101 bytes, respectively.
 
-that machine's fetch timings should be about:
+That machine's fetch timings should be about:
 
 most likely:    2 +4+8 +8+8 +8+8 +8+8 +13 + 18 = 93 cycles, total 372
-worst possible: 2 +4+8 +8+8 +8+8 +8+8 +66 + 13 = 141 cycles, total 564
+worst possible: 2 +4+8 +8+8 +8+8 +8+8 +101 + 13 = 176 cycles, total 704
 
 On SuperCPU each fetch will probably only need to get two bytes or so on
 average, since the whole fetch-mix-output chain is already running several
@@ -88,7 +89,7 @@ C64:
 
 C128:
 	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles
-	worst:  (10 + 272 + 564 + 11) / 16 = ~54 cycles
+	worst:  (10 + 272 + 704 + 11) / 16 = ~63 cycles
 
 SCPU:
 	likely: (26 + 508 + 1280 + 10) / 16 = ~114 turbo cycles
