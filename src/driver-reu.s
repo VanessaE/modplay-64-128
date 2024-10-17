@@ -77,9 +77,9 @@ reu_fetch_row
 		; matter, the SCPU will automatically stretch the clock anyway.
 
 			sei
-			sta VIC+$30
+			sta VIC_2_MHZ
 			sty DMA_CMD
-			sty VIC+$30
+			sty VIC_2_MHZ
 			cli
 		}
 	} else {
@@ -118,7 +118,7 @@ reu_fetch_block
 
 	!ifdef c128 {
 		!ifndef scpu {
-			dec VIC+$30
+			dec VIC_2_MHZ
 		}
 	}
 
@@ -126,7 +126,7 @@ reu_fetch_block
 
 	!ifdef c128 {
 		!ifndef scpu {
-			sta VIC+$30
+			sta VIC_2_MHZ
 		}
 	}
 rts
@@ -153,7 +153,7 @@ reu_stash_block
 
 	!ifdef c128 {
 		!ifndef scpu {
-			sta VIC+$30
+			sta VIC_2_MHZ
 		}
 	}
 
@@ -161,7 +161,7 @@ reu_stash_block
 
 	!ifdef c128 {
 		!ifndef scpu {
-			inc VIC+$30
+			inc VIC_2_MHZ
 		}
 	}
 rts
@@ -175,7 +175,7 @@ REUCOMMAND_FETCH    = $91   ; immediately, no reload
 reu_get_size
 	!ifdef c128 {
 		!ifndef scpu {
-			dec VIC+$30
+			dec VIC_2_MHZ
 		}
 	}
 
@@ -221,7 +221,7 @@ reu_get_size
 
 	!ifdef c128 {
 		!ifndef scpu {
-			inc VIC+$30
+			inc VIC_2_MHZ
 		}
 	}
 rts
@@ -365,7 +365,7 @@ reu_run_fetch_and_mixer
 				!ifdef c128 {
 					!ifndef scpu {
 						sei									; 2
-						dec VIC+$30							; 7
+						dec VIC_2_MHZ							; 7
 					}
 				}
 
@@ -386,7 +386,7 @@ reu_run_fetch_and_mixer
 
 				!ifdef c128 {
 					!ifndef scpu {
-						sty VIC+$30							; 4
+						sty VIC_2_MHZ							; 4
 						cli									; 2
 					}
 				}

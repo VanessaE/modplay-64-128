@@ -99,15 +99,15 @@ fetch_routine_table_msb
 	sta current_song_pos
 	sta seq_current_row
 
-	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
+	lda CIA1_CRB	; ensure that the next few STA's reset the TOD clock
 	and #$7f
-	sta CIA1+$0f
+	sta CIA1_CRB
 
 	lda #0
-	sta CIA1+$0b
-	sta CIA1+$0a
-	sta CIA1+$09
-	sta CIA1+$08
+	sta CIA1_TOD_HOURS
+	sta CIA1_TOD_MINUTES
+	sta CIA1_TOD_SECONDS
+	sta CIA1_TOD_TENTHS
 
 	ldx number_of_song_positions
 	dex
@@ -282,7 +282,7 @@ next_tick
 		bit enable_screen_on_playback
 		bpl +
 	}
-	lda CIA1+$09
+	lda CIA1_TOD_SECONDS
 	cmp last_seconds
 	beq +
 	sta last_seconds
@@ -1063,13 +1063,13 @@ print_song_speed
 rts
 
 print_elapsed_time
-	bit CIA1+$0b; read hours to latch the time
+	bit CIA1_TOD_HOURS; read hours to latch the time
 
 	!ifndef c128 {
 
 		print_et_target = VIC_SCREEN + 11*40 + 33
 
-		ldx CIA1+$0a ; minutes
+		ldx CIA1_TOD_MINUTES
 		lda divide_by_16_table,x
 		ora #$30
 		sta print_et_target
@@ -1078,7 +1078,7 @@ print_elapsed_time
 		ora #$30
 		sta print_et_target+1
 
-		ldx CIA1+$09 ; seconds
+		ldx CIA1_TOD_SECONDS
 		lda divide_by_16_table,x
 		ora #$30
 		sta print_et_target+3
@@ -1089,23 +1089,23 @@ print_elapsed_time
 	} else {
 		print_et_target = VDC_SCREEN + 11*80 + 53
 
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
 		lda #18
-		sta VDC
+		sta VDC_ADDR
 		lda #>print_et_target
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #19
-		sta VDC
+		sta VDC_ADDR
 		lda #<print_et_target
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #31
-		sta VDC
+		sta VDC_ADDR
 
-		ldx CIA1+$0a
+		ldx CIA1_TOD_MINUTES
 		lda divide_by_16_table,x
 		ora #$30
 		jsr vdc_continue_write_ram
@@ -1118,7 +1118,7 @@ print_elapsed_time
 		lda #":"
 		jsr vdc_continue_write_ram
 
-		ldx CIA1+$09
+		ldx CIA1_TOD_SECONDS
 		lda divide_by_16_table,x
 		ora #$30
 		jsr vdc_continue_write_ram
@@ -1129,13 +1129,13 @@ print_elapsed_time
 		jsr vdc_continue_write_ram
 	}
 
-	bit CIA1+$08; read tenths to un-latch the time
+	bit CIA1_TOD_TENTHS; read tenths to un-latch the time
 rts
 
 seq_check_keyboard
 	lda #0					; drive all columns low
-	sta CIA1
-	lda CIA1+$01
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
 	cmp #$ff				; is any row low?
 	bne key_pressed			; if so, a key was pressed
 
@@ -1152,16 +1152,16 @@ key_pressed
 +	dec seq_key_debounce
 
 	lda #%11111110			; column 0 low
-	sta CIA1
-	lda CIA1+$01
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
 	cmp #%11110111			; look for row 3, F7 key
 	bne +
 	lda #1
 	rts
 
 +	lda #%01111111			; column 7 low
-	sta CIA1
-	lda CIA1+$01
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
 	cmp #%11101111			; look for row 4, spacebar
 	bne +
 	lda #1
@@ -1178,8 +1178,8 @@ key_pressed
 	jmp toggle_enable_track
 
 +	lda #%11111101			; column 1 low
-	sta CIA1
-	lda CIA1+$01
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
 
 	cmp #%11111110			; row 0, the "3" key
 	bne +

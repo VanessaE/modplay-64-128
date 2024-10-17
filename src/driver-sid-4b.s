@@ -95,14 +95,14 @@ sid_4bit_start
 	bpl -
 
 	lda #$ff
-	sta SID+$06
-	sta SID+$0d
-	sta SID+$14
+	sta SID_VOICE1_ENV_SR
+	sta SID_VOICE2_ENV_SR
+	sta SID_VOICE3_ENV_SR
 
 	lda #$49
-	sta SID+$04
-	sta SID+$0b
-	sta SID+$12
+	sta SID_VOICE1_CR
+	sta SID_VOICE2_CR
+	sta SID_VOICE3_CR
 
 	bit stereo_enable
 	bmi +
@@ -146,11 +146,11 @@ sid_isr_4b_mono					; 7 cycles coming in
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
 	ror							; 2
-	sta SID+$18					; 4
+	sta SID_VOLUME				; 4
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 
@@ -161,13 +161,13 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
-	sta SID+$18					; 4
+	sta SID_VOLUME				; 4
 	lda audio_buffer_right,x	; 4
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
 .ias lda #00					; 2
 .ixs ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 }

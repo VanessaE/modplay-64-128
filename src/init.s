@@ -16,7 +16,7 @@ rti
 init
 	!ifdef c128 {
 		lda #1
-		sta VIC+$30
+		sta VIC_2_MHZ
 		jsr disable_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete
@@ -308,7 +308,7 @@ init
 
 --	ldx #$aa
 	-	tax
-		lda VIC+$12
+		lda VIC_RASTER_LOW
 		bne -
 	txa
 	bmi --
@@ -341,10 +341,10 @@ init
 ++	lda #1
 	sta visualizer_mode
 
-	lda CIA1+$0e	; ensure that the TOD clock counts 50 or 60 ticks/sec
+	lda CIA2_CRA	; ensure that the TOD clock counts 50 or 60 ticks/sec
 	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64
 	ora pal_flag
-	sta CIA1+$0e
+	sta CIA2_CRA
 
 	jsr charset_copy
 

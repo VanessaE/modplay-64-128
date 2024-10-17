@@ -83,25 +83,25 @@ rts
 
 !macro SCREEN_ONOFF {
 	disable_screen
-		lda VIC+$11
+		lda VIC_CONTROL_A
 		and #%11101111
-		sta VIC+$11
+		sta VIC_CONTROL_A
 	rts
 
 	enable_screen
-		lda VIC+$11
+		lda VIC_CONTROL_A
 		ora #%00010000
-		sta VIC+$11
+		sta VIC_CONTROL_A
 	rts
 }
 
 !ifndef c128 {
 	!macro C64_NORMAL_SCREEN {
-		lda CIA2
+		lda CIA2_PORT_A
 		and #$fc
-		sta CIA2
+		sta CIA2_PORT_A
 		lda #$37
-		sta VIC+$18
+		sta VIC_MEM_CTRL
 		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
 		sta HIBASE					; screen editor/CHROUT/etc.
 	}

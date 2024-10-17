@@ -9,17 +9,17 @@
 !ifdef c128 {
 	disable_roms
 		lda #%00111110
-		sta MMU
+		sta MMU_CR1
 	rts
 
 	enable_kernal_only
 		lda #%00001110
-		sta MMU
+		sta MMU_CR1
 	rts
 
 	enable_roms
 		lda #0
-		sta MMU
+		sta MMU_CR1
 	rts
 
 } else {
@@ -637,13 +637,13 @@ rts
 
 check_com_key ; check if C= key is pressed, wait for release
 	lda #$7f ; column 7 low
-	sta CIA1
+	sta CIA1_PORT_A
 	lda #$df ; look for row 5
-	cmp CIA1+$01
+	cmp CIA1_PORT_B
 	bne .ck_out
 
 	lda #$ff
--	cmp CIA1+$01
+-	cmp CIA1_PORT_B
 	bne -
 	lda #0
 .ck_out
@@ -1074,20 +1074,20 @@ rts
 !ifdef c128 {
 
 	!macro VDC_WRITE_SETUP {
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
 		lda #18
-		sta VDC
+		sta VDC_ADDR
 		lda fill_copy_target+1
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #19
-		sta VDC
+		sta VDC_ADDR
 		lda fill_copy_target
-		sta VDC+1
+		sta VDC_DATA
 
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 	}
 
@@ -1095,23 +1095,23 @@ rts
 		+VDC_WRITE_SETUP
 
 		lda #24
-		sta VDC
+		sta VDC_ADDR
 		lda #$a0
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #32
-		sta VDC
+		sta VDC_ADDR
 		lda fill_copy_source+1
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #33
-		sta VDC
+		sta VDC_ADDR
 		lda fill_copy_source
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #30
-		sta VDC
-		stx VDC+1
+		sta VDC_ADDR
+		stx VDC_DATA
 	rts
 
 	; enter with fill_copy_target = start address, .A = fill byte,
@@ -1123,22 +1123,22 @@ rts
 		+VDC_WRITE_SETUP
 
 		lda #31
-		sta VDC
+		sta VDC_ADDR
 		lda temp_abs_a
-		sta VDC+1
+		sta VDC_DATA
 
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
 		lda #24
-		sta VDC
+		sta VDC_ADDR
 		lda #$20
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #30
-		sta VDC
+		sta VDC_ADDR
 		dex
-		stx VDC+1
+		stx VDC_DATA
 
 		lda temp_abs_a
 	rts
@@ -1147,25 +1147,25 @@ rts
 
 	vdc_block_fill_extend
 		sta temp_abs_a
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
 		lda #31
-		sta VDC
+		sta VDC_ADDR
 		lda temp_abs_a
-		sta VDC+1
+		sta VDC_DATA
 
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
 		lda #24
-		sta VDC
+		sta VDC_ADDR
 		lda #$20
-		sta VDC+1
+		sta VDC_DATA
 
 		lda #30
-		sta VDC
-		stx VDC+1
+		sta VDC_ADDR
+		stx VDC_DATA
 		lda temp_abs_a
 
 	rts
@@ -1178,23 +1178,23 @@ rts
 		+VDC_WRITE_SETUP
 
 		lda #31
-		sta VDC
+		sta VDC_ADDR
 		pla
-		sta VDC+1
+		sta VDC_DATA
 	rts
 
 	vdc_write_ram_reg_31_select_only
 		+VDC_WRITE_SETUP
 
 		lda #31
-		sta VDC
+		sta VDC_ADDR
 	rts
 
 	vdc_continue_write_ram
-	-	bit VDC
+	-	bit VDC_ADDR
 		bpl -
 
-		sta VDC+1
+		sta VDC_DATA
 	rts
 }
 

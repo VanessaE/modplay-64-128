@@ -174,15 +174,15 @@ load_by_filename_entry
 	lda #0
 	sta loading_sample_data
 
-	lda CIA1+$0f	; ensure that the next few STA's reset the TOD clock
+	lda CIA1_CRB	; ensure that the next few STA's reset the TOD clock
 	and #$7f
-	sta CIA1+$0f
+	sta CIA1_CRB
 
 	lda #0
-	sta CIA1+$0b
-	sta CIA1+$0a
-	sta CIA1+$09
-	sta CIA1+$08
+	sta CIA1_TOD_HOURS
+	sta CIA1_TOD_MINUTES
+	sta CIA1_TOD_SECONDS
+	sta CIA1_TOD_TENTHS
 
 ; read-in the header
 
@@ -461,9 +461,9 @@ update_progress
 rts
 
 print_loading_speed
-	bit CIA1+$0b; read hours to latch the time
+	bit CIA1_TOD_HOURS; read hours to latch the time
 
-	lda CIA1+$0a ; minutes
+	lda CIA1_TOD_MINUTES ; minutes
 	lsr
 	lsr
 	lsr
@@ -471,14 +471,14 @@ print_loading_speed
 	tax
 	lda nybble_x10,x ; CIA's TOD clock is expressed in BCD.
 	sta temp_abs_a
-	lda CIA1+$0a
+	lda CIA1_TOD_MINUTES
 	and #$0f
 	clc
 	adc temp_abs_a
 	ldx #60
 	jsr multiply_8x8
 
-	lda CIA1+$09 ; seconds
+	lda CIA1_TOD_SECONDS ; seconds
 	lsr
 	lsr
 	lsr
@@ -486,12 +486,12 @@ print_loading_speed
 	tax
 	lda nybble_x10,x
 	sta temp_abs_a
-	lda CIA1+$09
+	lda CIA1_TOD_SECONDS
 	and #$0f
 	clc
 	adc temp_abs_a
 
-	ldx CIA1+$08; read tenths to un-latch the time
+	ldx CIA1_TOD_TENTHS; read tenths to un-latch the time
 
 	adc product
 	sta divisor

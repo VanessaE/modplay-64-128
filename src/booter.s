@@ -29,13 +29,13 @@ basic_header
 boot_start
 ; first, show the splash screen
 	lda #0
-	sta VIC+$20
-	sta VIC+$21
+	sta VIC_BORDER
+	sta VIC_BACKGROUND
 
 	!ifdef c128 {
 		jsr disable_screen
 		lda #1
-		sta VIC+$30
+		sta VIC_2_MHZ
 
 	+	lda kernal_4080_mode
 		pha
@@ -47,9 +47,9 @@ boot_start
 		jsr print_msg_rle
 
 	+	lda #36 ; reduce VDC refresh rate, speeds it up
-		sta VDC
+		sta VDC_ADDR
 		lda #0
-		sta VDC+1
+		sta VDC_DATA
 		ldx #<splash_data
 		ldy #>splash_data
 		jsr print_msg_rle
@@ -57,15 +57,15 @@ boot_start
 		pla
 		bmi out ; if started on 80 columns, stay in 2 MHz mode.
 
-		dec VIC+$30
+		dec VIC_2_MHZ
 		jsr enable_screen
 
 	} else {
-		lda CIA2					; CIA: select VIC-II bank 2
+		lda CIA2_PORT_A				; select VIC-II bank 2
 		and #$fd
-		sta CIA2
+		sta CIA2_PORT_A
 		lda #$04					; point VIC-II to $8000 for the screen
-		sta VIC+$18					; and use the char ROM image at $9000
+		sta VIC_MEM_CTRL			; and use the char ROM image at $9000
 		lda #$80					; point the KERNAL appropriately
 		sta HIBASE
 		lda #$36					; disable BASIC, else it'll corrupt the

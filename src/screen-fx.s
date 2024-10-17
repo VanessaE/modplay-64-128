@@ -59,13 +59,13 @@ set_normal_screen ; also switches back to the PETSCII charset on C64
 		+C64_NORMAL_SCREEN
 	} else {
 		lda #12
-		sta VDC
+		sta VDC_ADDR
 		lda #>VDC_SCREEN
-		sta VDC+1
+		sta VDC_DATA
 		lda #13
-		sta VDC
+		sta VDC_ADDR
 		lda #<VDC_SCREEN
-		sta VDC+1
+		sta VDC_DATA
 		sta VDC_VM3 ; point the KERNAL
 	}
 rts
@@ -73,7 +73,7 @@ rts
 !ifndef c128 {
 	set_ascii_screen
 		lda #$34
-		sta VIC+$18
+		sta VIC_MEM_CTRL
 	rts
 }
 

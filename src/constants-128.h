@@ -84,8 +84,10 @@
 	VDC_CHARSETS					= $2000
 	VDC_VM3							= $0a2e ; base of VDC screen mem
 
-	MMU								= $d500
-	VDC								= $d600
+	MMU_CR1							= $d500
+
+	VDC_ADDR						= $d600
+	VDC_DATA						= $d601
 
 	; KERNAL/editor routines and jump table
 

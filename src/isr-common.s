@@ -70,10 +70,10 @@ isr_startup
 	sec
 	lda isr_trigger_interval
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
-	sta CIA1+$06			; set the result as CIA #1 timer B interval
+	sta CIA1_TIMER_B_LOW	; set the result as CIA #1 timer B interval
 	lda isr_trigger_interval+1
 	sbc #0
-	sta CIA1+$07
+	sta CIA1_TIMER_B_HIGH
 
 	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
 	lda #<lockout_nmi		; while changing this vector, this'll make sure it
@@ -84,22 +84,22 @@ isr_startup
 
 	; force CIA2 to generate an NMI so that we can lock them out.
 	lda #0					; stop CIA #2 timer A
-	sta CIA2+$0e
-	sta CIA2+$04			; set Timer A to 0, after starting
-	sta CIA2+$05			; NMI will occur immediately
+	sta CIA2_CRA
+	sta CIA2_TIMER_A_LOW	; set Timer A to 0, after starting
+	sta CIA2_TIMER_A_HIGH	; NMI will occur immediately
 	lda #$81
-	sta CIA2+$0d			; set Timer A as source for NMI
+	sta CIA2_ICR			; set Timer A as source for NMI
 	lda #$01
-	sta CIA2+$0e			; start Timer A -> NMI
+	sta CIA2_CRA			; start Timer A -> NMI
 
 	lda #$03				; disable both CIA #1 timers' IRQ's
-	sta CIA1+$0d
-	bit CIA1+$0d			; and clear any pending IRQs
+	sta CIA1_ICR
+	bit CIA1_ICR			; and clear any pending IRQs
 
 	lda #0
-	sta VIC+$1a				; disable VIC raster IRQ
-	lda VIC+$19				; and clear any VIC IRQ that's pending.  normally
-	sta VIC+$19				; we could lsr here but that doesn't work on SCPU
+	sta VIC_IRQ_MASK		; disable VIC raster IRQ
+	lda VIC_IRQ_FLAGS		; and clear any VIC IRQ that's pending.  normally
+	sta VIC_IRQ_FLAGS		; we could lsr here but that doesn't work on SCPU
 
 	!ifndef c128 {
 		; if the screen is off, don't bother with the double-IRQ code,
@@ -113,10 +113,10 @@ isr_startup
 		lda audio_isr_vec+1
 		sta CPU_IRQ_vector+1
 
-		lda #$82				; enable timer B IRQ
-		sta CIA1+$0d
-		lda #$11				; start CIA timer B in continuous mode,
-		sta CIA1+$0f			; counting Phi2 cycles, no output on PB6
+		lda #$82			; enable timer B IRQ
+		sta CIA1_ICR
+		lda #$11			; start CIA timer B in continuous mode,
+		sta CIA1_CRB		; counting Phi2 cycles, no output on PB6
 
 		bne ++
 
@@ -135,12 +135,12 @@ isr_startup
 			sta CPU_IRQ_vector+1
 
 			lda #254				; stage 1 IRQ will fire on line 254
-			sta VIC+$12
-			lda VIC+$11
+			sta VIC_RASTER_LOW
+			lda VIC_CONTROL_A
 			and #$7f
-			sta VIC+$11
+			sta VIC_CONTROL_A
 			lda #$81
-			sta VIC+$1a				; and now enable the raster IRQ
+			sta VIC_IRQ_MASK		; and now enable the raster IRQ
 
 		} else {
 			sta SCPU_TURBO_ON		; on SCPU we don't have to double-IRQ...
@@ -151,11 +151,11 @@ isr_startup
 			sta CPU_IRQ_vector+1
 
 			ldx #254				; ...we can just spin-wait for line 254
-		-	cpx VIC+$12
+		-	cpx VIC_RASTER_LOW
 			bne -
 
 			inx						; just in case we were already there,
-		-	cpx VIC+$12				; now wait for line 255.
+		-	cpx VIC_RASTER_LOW				; now wait for line 255.
 			bne -
 
 			ldx #49					; waste 49, 1 MHz cycles
@@ -163,9 +163,9 @@ isr_startup
 			dex						; want to force the SCPU to wait on its
 			bne -					; async write cache.
 			lda #$82				; enable timer B IRQ
-			sta CIA1+$0d			; a CIA write takes 2, 1 MHz cycles
+			sta CIA1_ICR			; a CIA write takes 2, 1 MHz cycles
 			lda #$11
-			sta CIA1+$0f			; start CIA timer B
+			sta CIA1_CRB			; start CIA timer B
 									; we should now be on line 255, cycle 53.
 		}
 
@@ -177,9 +177,9 @@ isr_startup
 		sta CPU_IRQ_vector+1
 
 		lda #$82				; enable timer B IRQ
-		sta CIA1+$0d
+		sta CIA1_ICR
 		lda #$11
-		sta CIA1+$0f			; start CIA timer B
+		sta CIA1_CRB			; start CIA timer B
 	}
 
 ++	cli
@@ -192,9 +192,9 @@ rts
 ; (author unknown)
 
 	irq_stage_1					; 7 cycles to enter
-		inc VIC+$12				; 6
-		lda VIC+$19				; 4
-		sta VIC+$19				; 4
+		inc VIC_RASTER_LOW				; 6
+		lda VIC_IRQ_FLAGS				; 4
+		sta VIC_IRQ_FLAGS				; 4
 		sta .s1a + 1			; 4 / we're about to trash .A so back it up
 		lda #<irq_stage_2		; 2
 		sta CPU_IRQ_vector		; 4
@@ -219,9 +219,9 @@ rts
 
 	irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
 		lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
-		sta VIC+$1a				; 4 / the IRQ from now on.
-		lda VIC+$19				; 4
-		sta VIC+$19				; 4
+		sta VIC_IRQ_MASK				; 4 / the IRQ from now on.
+		lda VIC_IRQ_FLAGS				; 4
+		sta VIC_IRQ_FLAGS				; 4
 
 		pla						; 4 / discard stage 2's return address and cpu status
 		pla						; 4 / so that we return via stage 1's stack values
@@ -235,7 +235,7 @@ rts
 		nop						; 2
 		lda (0,x)				; 6
 		lda (0,x)				; 6
-		lda VIC+$12				; 4 / 61 cycles, -0/+1
+		lda VIC_RASTER_LOW				; 4 / 61 cycles, -0/+1
 		cmp #255				; 2
 		beq fixcycle			; 3 or 2
 
@@ -252,13 +252,13 @@ rts
 		sta CPU_IRQ_vector+1	; 4
 
 		lda #$82				; 2 enable timer B IRQ
-		sta CIA1+$0d			; 4
+		sta CIA1_ICR			; 4
 		lda #$11				; 2
 
 								; we should now be on cycle 55 of line 255, JUST
 								; past where the next bad line delay will end.
 
-		sta CIA1+$0f			; 4 / start CIA timer B
+		sta CIA1_CRB			; 4 / start CIA timer B
 
 	.s1a lda #0					; restore .A
 		cli
@@ -274,26 +274,26 @@ isr_shutdown
 	sei
 
 	lda #0
-	sta CIA1+$0f
+	sta CIA1_CRB
 
 	!ifndef c128 {
 		lda #0
-		sta VIC+$1a
+		sta VIC_IRQ_MASK
 		lda #$81
-		sta CIA1+$0d
+		sta CIA1_ICR
 	} else {
 		lda #$81
-		sta VIC+$1a
+		sta VIC_IRQ_MASK
 	}
 
-	lda VIC+$19
-	lda CIA1+$0d
+	lda VIC_IRQ_FLAGS
+	lda CIA1_ICR
 
 	!ifdef c128 {
 		lda #36
-		sta VDC
+		sta VDC_ADDR
 		lda #0
-		sta VDC+1
+		sta VDC_DATA
 	}
 rts
 

@@ -101,23 +101,23 @@ sid_4bit_dithered_start
 	bpl -
 
 	lda #$ff
-	sta SID+$06
-	sta SID+$0d
+	sta SID_VOICE1_ENV_SR
+	sta SID_VOICE2_ENV_SR
 
-	sta SID+$0e	; voice 3 freq = $ffff
-	sta SID+$0f
+	sta SID_VOICE3_FREQ_LOW
+	sta SID_VOICE3_FREQ_HIGH
 
 	lda #0		; voice 3 ADSR = 0,0,f,0
-	sta SID+$13
+	sta SID_VOICE3_ENV_AD
 	lda #$f0
-	sta SID+$14
+	sta SID_VOICE3_ENV_SR
 
 	lda #$81	; voice 3 waveform = noise + gate
-	sta SID+$12
+	sta SID_VOICE3_CR
 
 	lda #$49
-	sta SID+$04
-	sta SID+$0b
+	sta SID_VOICE1_CR
+	sta SID_VOICE2_CR
 
 	bit stereo_enable
 	bmi +
@@ -134,7 +134,7 @@ sid_4bit_dithered_start
 	ldy #$0d
 	sta (utility_pointer),y
 
-	ldy #$0e						; right SID voice 3 freq = $ffff
+	ldy #$0e					; right SID voice 3 freq = $ffff
 	sta (utility_pointer),y
 	ldy #$0f
 	sta (utility_pointer),y
@@ -176,7 +176,7 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 	adc audio_buffer_right,x	; 4
 	ror							; 2
 	sta .sd4bm+1				; 4
-	lda SID+$1b					; 4
+	lda SID_VOICE3_OSC_OUT		; 4
 	and #$0f					; 2
 	clc							; 2
 .sd4bm adc #0					; 2
@@ -186,11 +186,11 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 +	tax							; 2
 	lda divide_by_16_table,x	; 4
 	ora #$80					; 2 / cut-off voice 3 from audio path
-++	sta SID+$18					; 4
+++	sta SID_VOLUME					; 4
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 
@@ -201,7 +201,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 
-	lda SID+$1b					; 4
+	lda SID_VOICE3_OSC_OUT		; 4
 	and #$0f					; 2
 	sta .sd4br+1				; 4
 	clc							; 2
@@ -213,7 +213,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 +	tax							; 2
 	lda divide_by_16_table,x	; 4
 	ora #$80					; 2 / cut-off voice 3 from audio path
-++	sta SID+$18					; 4
+++	sta SID_VOLUME					; 4
 
 	ldx audio_out_buf_index		; 3
 .sd4br
@@ -230,7 +230,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 
 .ias lda #00					; 2
 .ixs ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 }

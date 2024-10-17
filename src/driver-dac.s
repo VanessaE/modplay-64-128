@@ -58,12 +58,12 @@ is_stereo_dac
 	cmp #$dd
 	bne not_up_stereo
 
-	lda CIA2
+	lda CIA2_PORT_A
 	and #%11110011
 	ora #%00000100
 	sta .dca+1
 
-	lda CIA2
+	lda CIA2_PORT_A
 	and #%11110011
 	sta .dcb+1
 
@@ -132,7 +132,7 @@ rts
 
 dac_start
 	lda #$ff
-	sta CIA2+$03
+	sta CIA2_DDR_B
 
 	bit stereo_enable
 	bpl +
@@ -140,9 +140,9 @@ dac_start
 	cmp #$dd
 	bne +
 
-	lda CIA2+$02
+	lda CIA2_DDR_A
 	ora #%00001100
-	sta CIA2+$02
+	sta CIA2_DDR_A
 + rts
 
 dac_mute
@@ -153,10 +153,10 @@ dac_stop
 	cmp #$dd
 	bne +
 
-	lda CIA2
+	lda CIA2_PORT_A
 	and #%11110111
 	ora #%00000100
-	sta CIA2
+	sta CIA2_PORT_A
 + rts
 
 dac_isr_mono					; 7 cycles coming in
@@ -174,7 +174,7 @@ dac_isr_mono					; 7 cycles coming in
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 
@@ -191,7 +191,7 @@ dac_isr_stereo					; 7 cycles coming in
 
 .ias lda #00					; 2
 .ixs ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 
@@ -202,17 +202,17 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 .dca lda #0						; 2
-	sta CIA2					; 4
+	sta CIA2_PORT_A				; 4
 	lda audio_buffer_left,x		; 4
-	sta CIA2+$01				; 4
+	sta CIA2_PORT_B				; 4
 .dcb lda #0						; 2
-	sta CIA2					; 4
+	sta CIA2_PORT_A				; 4
 	lda audio_buffer_right,x	; 4
-	sta CIA2+$01				; 4
+	sta CIA2_PORT_B				; 4
 
 .iasup lda #00					; 2
 .ixsup ldx #00					; 2
-	bit CIA1+$0d				; 4 / acknowledge CIA#1 timer B interrupt
+	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
 rti								; 6 cycles to exit
 
 }

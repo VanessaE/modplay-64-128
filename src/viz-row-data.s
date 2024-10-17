@@ -165,9 +165,9 @@ viz_row_data_fetch_and_print
 		txa
 		jsr display_byte_hex_direct
 
-	-	bit VDC		; perform a dummy read to skip ahead one byte
+	-	bit VDC_ADDR	; perform a dummy read to skip ahead one byte
 		bpl -
-		bit VDC+1
+		bit VDC_DATA
 	}
 
 	!for .viz_tr, 0, 3 {
@@ -275,9 +275,9 @@ viz_row_data_print_char
 		cmp #RIGHT
 		bne +
 
-	-	bit VDC		; perform a dummy read to skip ahead one byte
+	-	bit VDC_ADDR	; perform a dummy read to skip ahead one byte
 		bpl -
-		bit VDC+1
+		bit VDC_DATA
 		jmp ++
 
 	+	jsr vdc_continue_write_ram
@@ -353,9 +353,9 @@ viz_row_data_erase_row
 			cmp #RIGHT
 			bne +
 
-		-	bit VDC
+		-	bit VDC_ADDR
 			bpl -
-			bit VDC+1 ; do a read to skip the byte, and it's guaranteed to be non-zero
+			bit VDC_DATA ; do a read to skip the byte, and it's guaranteed to be non-zero
 			jmp ++
 
 		+	jsr vdc_continue_write_ram

@@ -406,7 +406,15 @@
 
 	VIC_COLOR_RAM						= $d800
 
-	VIC									= $d000
+	VIC_CONTROL_A						= $d011
+	VIC_RASTER_LOW						= $d012
+	VIC_MEM_CTRL						= $d018
+	VIC_IRQ_FLAGS						= $d019
+	VIC_IRQ_MASK						= $d01a
+	VIC_BORDER							= $d020
+	VIC_BACKGROUND						= $d021
+
+	VIC_2_MHZ							= $d030
 	; C128 only note:  in $D030, only bits 1 & 0 matter, so "test" and 1/2 MHz
 	; mode switching will work with any stored value as long as those two bits
 	; are correct.
@@ -428,8 +436,41 @@
 	SCPU_PRESENT						= $d0b7
 
 	SID									= $d400
-	CIA1								= $dc00
-	CIA2								= $dd00
+	SID_VOICE1_CR						= $d404
+	SID_VOICE1_ENV_SR					= $d406
+
+	SID_VOICE2_CR						= $d40b
+	SID_VOICE2_ENV_SR					= $d40d
+
+	SID_VOICE3_FREQ_LOW					= $d40e
+	SID_VOICE3_FREQ_HIGH				= $d40f
+	SID_VOICE3_CR						= $d412
+	SID_VOICE3_ENV_AD					= $d413
+	SID_VOICE3_ENV_SR					= $d414
+
+	SID_VOICE3_OSC_OUT					= $d41b
+	SID_VOLUME							= $d418
+
+	CIA1_PORT_A							= $dc00
+	CIA1_PORT_B							= $dc01
+	CIA1_TIMER_B_LOW					= $dc06
+	CIA1_TIMER_B_HIGH					= $dc07
+	CIA1_TOD_TENTHS						= $dc08
+	CIA1_TOD_SECONDS					= $dc09
+	CIA1_TOD_MINUTES					= $dc0a
+	CIA1_TOD_HOURS						= $dc0b
+	CIA1_ICR							= $dc0d
+	CIA1_CRA							= $dc0e
+	CIA1_CRB							= $dc0f
+
+	CIA2_PORT_A							= $dd00
+	CIA2_PORT_B							= $dd01
+	CIA2_DDR_A							= $dd02
+	CIA2_DDR_B							= $dd03
+	CIA2_TIMER_A_LOW					= $dd04
+	CIA2_TIMER_A_HIGH					= $dd05
+	CIA2_ICR							= $dd0d
+	CIA2_CRA							= $dd0e
 
 	DMA_CMD								= $df01
 
