@@ -22,9 +22,9 @@ reu_fetch_routine_index_table
 
 !ifndef scpu {
 	!ifndef c128 {
-		mixer_cycle_count = 54
+		mixer_cycle_count = 46
 	} else {
-		mixer_cycle_count = 54 / 2
+		mixer_cycle_count = 46 / 2
 	}
 } else {
 	mixer_cycle_count = 3
@@ -402,6 +402,8 @@ reu_run_fetch_and_mixer
 	cmp and_f0_table,y										; 4
 	beq -													; 3/2
 
+	clc														; 2
+
 	reu_mixer_loop_open
 	  !for .idx2, 0, 15 {
 
@@ -414,8 +416,6 @@ reu_run_fetch_and_mixer
 		; definitely in absolute mode when assembled, and so that failure
 		; to alter one of them is easy to spot in the ML monitor at runtime.
 
-		clc													; 2
-
 		!if .idx2 = 0 { reu_rd_la_track_1 = * }
 		ldy $6100											; 4
 		!if .idx2 = 0 { reu_vol_addr_1 = * }
@@ -426,10 +426,7 @@ reu_run_fetch_and_mixer
 		!if .idx2 = 0 { reu_vol_addr_4 = *}
 		adc $8400,y											; 4
 
-		ror													; 2
 		sta audio_buffer_left,x								; 5
-
-		clc													; 2
 
 		!if .idx2 = 0 { reu_rd_la_track_2 = * }
 		ldy $6200											; 4
@@ -441,7 +438,6 @@ reu_run_fetch_and_mixer
 		!if .idx2 = 0 { reu_vol_addr_3 = * }
 		adc $8300,y											; 4
 
-		ror													; 2
 		sta audio_buffer_right,x							; 5
 
 		inx													; 2
