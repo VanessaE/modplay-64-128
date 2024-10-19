@@ -24,10 +24,22 @@ isr_set_interval
 	adc audio_driver_isr_cycle_count
 	adc ram_driver_fetch_cycle_count
 
-	; add some fudge just to ensure the sequencer always has enough time
-	; to run.
+	; on non-SCPU setups, add some fudge just to ensure the sequencer always
+	; has enough time to run - 20 cycles on C128 and on C64 when the screen is
+	; off, 40 cycles on C64 is the screen is on.
 
-	adc #20
+	!ifndef scpu {
+		!ifdef c128 {
+			adc #20
+		} else {
+			bit enable_screen_on_playback
+			bpl +
+			adc #40
+			jmp ++
+		  + adc #20
+		 ++
+		}
+	}
 
 	!ifndef c128 {
 		bit enable_screen_on_playback
