@@ -43,22 +43,27 @@ generate_volume_tables
 noscale
 
 ; divide the final value down to the resolution the audio driver needs
-; only 4 or 8 is allowed
-;
+
+; the output of the table will be 3 or 7 bits in order to avoid excessive
+; ROR's and CLC's in the mixer and ISRs, at a cost of one or two steps of
+; the output range (e.g. 0-14 instead of 0-15, 0-254 vs. 0-255, etc).
+
+; anything other than 3 selects 7-bit mode
+
 	ldx volume_tables_resolution
-	cpx #4
-	bne nodownrez
+	cpx #3
+	bne use7bit
 
 	lsr
 	lsr
 	lsr
 	lsr
 
-nodownrez
-	lsr							; actually, the output of the table will be 3
-	ldy bval_cnt				; or 7 bits, saving 8 cycles in the mixer by
-	sta (fill_copy_target),y	; avoiding ROR's and CLC's, at a cost of half
-	inc bval_cnt				; a bit of post-mix sample depth.
+use7bit
+	lsr
+	ldy bval_cnt
+	sta (fill_copy_target),y
+	inc bval_cnt
 	bne -
 
 	inc fill_copy_target+1

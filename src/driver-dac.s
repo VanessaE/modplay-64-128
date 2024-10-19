@@ -126,7 +126,7 @@ rts
 ; this returns the output resolution of the volume tables in .A
 
 dac_set_volume_table_resolution
-	lda #8
+	lda #7
 	sta volume_tables_resolution
 rts
 

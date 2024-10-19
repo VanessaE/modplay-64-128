@@ -82,7 +82,7 @@ rts
 ; this returns the output resolution of the volume tables in .A
 
 sid_4bit_set_volume_table_resolution
-	lda #4
+	lda #3
 	sta volume_tables_resolution
 rts
 
