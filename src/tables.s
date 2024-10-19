@@ -48,15 +48,24 @@ noscale
 ; ROR's and CLC's in the mixer and ISRs, at a cost of one or two steps of
 ; the output range (e.g. 0-14 instead of 0-15, 0-254 vs. 0-255, etc).
 
-; anything other than 3 selects 7-bit mode
+; anything other than 3, 6, or 7 selects 2-bit mode
 
 	ldx volume_tables_resolution
 	cpx #3
-	bne use7bit
+	beq use3bit
+	cpx #6
+	beq use6bit
+	cpx #7
+	beq use7bit
 
 	lsr
+
+use3bit
 	lsr
 	lsr
+	lsr
+
+use6bit
 	lsr
 
 use7bit

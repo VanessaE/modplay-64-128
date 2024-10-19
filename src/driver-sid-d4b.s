@@ -58,38 +58,33 @@ sid_4bit_dithered_driver_init
 	sta audio_isr_vec+1
 rts
 
-; This sets the audio ISR's cycle count, in 1 MHz units.
-
-; For faster CPUs, divide the raw count by the CPU MHz and round up.
-; don't forget to account for clock stretching, and be sure to add one 1 MHz
-; cycle for "fudge".
-
 sid_4bit_dithered_set_isr_cycle_count
 
 	!ifndef scpu {
 		!ifndef c128 {
-			lda #76
+			lda #66
 			bit stereo_enable
 			bpl +
 			lda #88
 		} else {
-			lda #(79 + 1) / 2
+			lda #(69 + 1) / 2
 			bit stereo_enable
 			bpl +
 			lda #92 / 2
 		}
 	} else {
-		lda #8					; could be as low as 6 but we're fudging it.
+		lda #8
 	}
 
 +	sta audio_driver_isr_cycle_count
 rts
 
-; this returns the output resolution of the volume tables in .A
-
 sid_4bit_dithered_set_volume_table_resolution
 	lda #7
-	sta volume_tables_resolution
+	bit stereo_enable
+	bmi +
+	lda #6
++	sta volume_tables_resolution
 rts
 
 sid_4bit_dithered_start
@@ -155,7 +150,6 @@ sid_4bit_dithered_start
 	sta (utility_pointer),y
 	ldy #$0b
 	sta (utility_pointer),y
-
 rts
 
 sid_4bit_dithered_mute
@@ -172,17 +166,14 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 	ldx audio_out_buf_index		; 3
 
 	clc							; 2
-	lda audio_buffer_left,x		; 4
-	adc audio_buffer_right,x	; 4
-	ror							; 2
-	sta .sd4bm+1				; 4
 	lda SID_VOICE3_OSC_OUT		; 4
 	and #$0f					; 2
-	clc							; 2
-.sd4bm adc #0					; 2
+	adc audio_buffer_left,x		; 4
+	adc audio_buffer_right,x	; 4
 	bcc +						; 3/2
-	lda #$8f					; 2
-	bne ++						; 3
+	lda #$0f					; 2
+	jmp ++						; 3
+
 +	tax							; 2
 	lda divide16_or80_table,x	; 4
 ++	sta SID_VOLUME				; 4

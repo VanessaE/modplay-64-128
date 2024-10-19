@@ -141,39 +141,41 @@ cycles.
 ------------
 GRAND TOTALS
 
-Using the 4-bit SID driver, with dithering turned off (also applies to 8-bit
-DAC driver if it's running in mono, or if it's the Expansion Port version)...
+Using the 4-bit SID driver in mono, with dithering turned off (also applies to
+8-bit DAC driver if it's running in mono)...
 
-Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53 to
-54 cycles per byte for the ISR, plus the "likely" code path in the fetch
-routine taking 24 to 26 cycles, plus 20 cycles of fudge to give the sequencer
-enough time to run:
+Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 51 cycles
+per byte for the ISR, plus the "likely" code path in the fetch routine taking
+24 to 26 cycles, plus 20 cycles of fudge to give the sequencer enough time to
+run:
 
-The C64 should be run at about 7 kHz with the screen off:
+The C64 should be run at about 7.1 kHz with the screen off:
 
-1022727 / (46 + 53 + 26 + 20) = ~7053.3
+1022727 / (46 + 51 + 26 + 20) = ~7151.9
 
 or about 5.2 KHz with the screen on, since ISR is always 3 rasters:
 
 1022727 / (65 * 3) = ~5244.8
 
-With 27 (1 MHz) cycles for the mixer, 28 for the ISR, 19 for the fetch, and
-10 for the sequencer, the C128 should be able to run at about 12.7 kHz:
+With 27 (1 MHz) cycles for the mixer, 27 for the ISR, 19 for the fetch, and
+10 for the sequencer, the C128 should be able to run at about 12.9 kHz:
 
-1022727 / (23 + 28 + 19 + 10) = ~12784.1
+1022727 / (23 + 27 + 19 + 10) = ~12945.9
 
-Dithering mode, on the other hand is ... expensive 😕
+Dithering mode, on the other hand is... expensive 😕
 
-SID 4-bit mono with dithering needs 74-78 cycles in the ISR on C64, and 77-81
-cycles at 2 MHz (that is, 39-41 at 1 MHz) on C128.  Stereo needs 86-92 cycles
+SID 4-bit mono with dithering needs 64-66 cycles in the ISR on C64, and 65-69
+cycles at 2 MHz (that is, ~33-35 at 1 MHz) on C128.  Stereo needs 86-92 cycles
 on C64, 90-96 at 2 MHz (45-48 at 1 MHz) on C128.
 
-So basically add 24 cycles on the C64 or 20 (1 MHz) cycles on the C128, to the
-totals above.
+Adding in the fudge and other stuff, the C64 just manages to eek-out a 5.2 kHz
+(3-raster-line) sample rate with dithering in mono, with the screen on.  With
+the screen off, it runs at just shy of 6.2 kHz.  The C128 manages a
+respectable 11.7 kHz in this mode.
 
-In that mode, with the screen on, the C64 gets forced to a 4-line ISR
-interval, for a paltry 3.9 kHz.  With the screen off, it runs at about
-5.7 kHz.  The C128 still runs at a respectable 8.9 kHz with dithering.
+If all you've got is a stock C64 with only one SID, I highly recommend using
+dithering with the screen turned off.  Yes, it's more noise, but it's a much
+higher sample rate and a higher effective sample resolution.
 
 
 ===============================

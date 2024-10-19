@@ -60,30 +60,41 @@ rts
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
 
-; For faster CPUs, divide the raw count by the CPU MHz and round up.
-; don't forget to account for clock stretching, and be sure to add one 1 MHz
-; cycle for "fudge".
+; For faster CPUs, divide the raw count by the CPU MHz and round up to the
+; next whole 1 MHz equivalent count.  Don't forget to account for clock
+; stretching and cache misses.
+;
+; on SCPU, the count could be as low as 6, but we're fudging it for now.
 
 sid_4bit_set_isr_cycle_count
 
 	!ifndef scpu {
 		!ifndef c128 {
 			lda #53
+			bit stereo_enable
+			bmi +
+			lda #51
+		  +
 		} else {
 			lda #56 / 2
+			bit stereo_enable
+			bmi +
+			lda #54 / 2
+		  +
 		}
 	} else {
-		lda #8					; could be as low as 6 but we're fudging it.
+		lda #8
 	}
 
 	sta audio_driver_isr_cycle_count
 rts
 
-; this returns the output resolution of the volume tables in .A
-
 sid_4bit_set_volume_table_resolution
 	lda #3
-	sta volume_tables_resolution
+	bit stereo_enable
+	bmi +
+	lda #2
++	sta volume_tables_resolution
 rts
 
 sid_4bit_start
@@ -145,7 +156,6 @@ sid_isr_4b_mono					; 7 cycles coming in
 	clc							; 2
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
-	ror							; 2
 	sta SID_VOLUME				; 4
 
 .iam lda #00					; 2
