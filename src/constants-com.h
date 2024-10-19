@@ -397,7 +397,8 @@
 
 	divide_by_16_table					= $fb00 ; 1 page
 
-	and_f0_table						= $fc00 ; 1 page
+	; 1 page, used by dither driver, or-$80 cuts-off voice 3 from audio path
+	divide16_or80_table					= $fc00 
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page

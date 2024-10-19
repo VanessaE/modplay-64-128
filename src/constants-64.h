@@ -31,10 +31,12 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $7e00 ; overlaps the load buffer intentionally
+	main_mem_free_end				= $7d00 ; overlaps the load buffer intentionally
 
-	load_buffer						= $7600			; \__ 2 kB
+	load_buffer						= $7500			; \__ 2 kB
 	sample_data_buffer				= load_buffer	; /
+
+	and_f0_table					= $7d00 ; 1 page
 
 	playlist_filenames				= $7e00 ; 16 bytes * 192 (3 kB)
 	playlist_filenames_end			= $8a00

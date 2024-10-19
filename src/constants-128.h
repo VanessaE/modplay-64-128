@@ -29,10 +29,12 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $8200 ; overlaps the load/sample buffers intentionally
+	main_mem_free_end				= $8100 ; overlaps the load/sample buffers intentionally
 
-	load_buffer						= $7a00			; \__  2 kB
+	load_buffer						= $7900			; \__  2 kB
 	sample_data_buffer				= load_buffer	; /
+
+	and_f0_table					= $8100 ; 1 page
 
 	viz_note_number_lookup_table	= $8200 ; 1712 bytes plus some waste
 

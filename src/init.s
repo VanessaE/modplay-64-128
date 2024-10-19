@@ -294,6 +294,8 @@ init
 	lsr
 	lsr
 	sta divide_by_16_table,x
+	ora #$80
+	sta divide16_or80_table,x
 	inx
 	bne -
 

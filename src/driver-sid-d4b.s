@@ -68,15 +68,15 @@ sid_4bit_dithered_set_isr_cycle_count
 
 	!ifndef scpu {
 		!ifndef c128 {
-			lda #78
+			lda #76
 			bit stereo_enable
 			bpl +
-			lda #92
+			lda #88
 		} else {
-			lda #(81 + 1) / 2
+			lda #(79 + 1) / 2
 			bit stereo_enable
 			bpl +
-			lda #96 / 2
+			lda #92 / 2
 		}
 	} else {
 		lda #8					; could be as low as 6 but we're fudging it.
@@ -184,9 +184,8 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 	lda #$8f					; 2
 	bne ++						; 3
 +	tax							; 2
-	lda divide_by_16_table,x	; 4
-	ora #$80					; 2 / cut-off voice 3 from audio path
-++	sta SID_VOLUME					; 4
+	lda divide16_or80_table,x	; 4
+++	sta SID_VOLUME				; 4
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
@@ -211,9 +210,8 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 	lda #$8f					; 2
 	bne ++						; 3
 +	tax							; 2
-	lda divide_by_16_table,x	; 4
-	ora #$80					; 2 / cut-off voice 3 from audio path
-++	sta SID_VOLUME					; 4
+	lda divide16_or80_table,x	; 4
+++	sta SID_VOLUME				; 4
 
 	ldx audio_out_buf_index		; 3
 .sd4br
@@ -223,8 +221,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 	lda #$8f					; 2
 	bne ++						; 3
 +	tax							; 2
-	lda divide_by_16_table,x	; 4
-	ora #$80					; 2 / cut-off voice 3 from audio path
+	lda divide16_or80_table,x	; 4
 ++
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
