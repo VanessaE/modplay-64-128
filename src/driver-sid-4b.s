@@ -71,16 +71,8 @@ sid_4bit_set_isr_cycle_count
 	!ifndef scpu {
 		!ifndef c128 {
 			lda #53
-			bit stereo_enable
-			bmi +
-			lda #51
-		  +
 		} else {
 			lda #56 / 2
-			bit stereo_enable
-			bmi +
-			lda #54 / 2
-		  +
 		}
 	} else {
 		lda #8
@@ -91,10 +83,7 @@ rts
 
 sid_4bit_set_volume_table_resolution
 	lda #3
-	bit stereo_enable
-	bmi +
-	lda #2
-+	sta volume_tables_resolution
+	sta volume_tables_resolution
 rts
 
 sid_4bit_start
@@ -156,6 +145,7 @@ sid_isr_4b_mono					; 7 cycles coming in
 	clc							; 2
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
+	ror							; 2
 	sta SID_VOLUME				; 4
 
 .iam lda #00					; 2
