@@ -141,7 +141,8 @@ cycles.
 ------------
 GRAND TOTALS
 
-Using the 4-bit SID driver, with dithering turned off...
+Using the 4-bit SID driver, with dithering turned off (also applies to 8-bit
+DAC driver if it's running in mono, or if it's the Expansion Port version)...
 
 Factoring-in the mixer/lookahead runtime of 54 cycles per byte, plus 53 to
 54 cycles per byte for the ISR, plus the "likely" code path in the fetch
@@ -157,9 +158,9 @@ or about 5.2 KHz with the screen on, since ISR is always 3 rasters:
 1022727 / (65 * 3) = ~5244.8
 
 With 27 (1 MHz) cycles for the mixer, 28 for the ISR, 19 for the fetch, and
-20 for the sequencer, the C128 should be able to run at about 11.3 kHz:
+10 for the sequencer, the C128 should be able to run at about 12.7 kHz:
 
-1022727 / (23 + 28 + 19 + 20) = ~11363.6
+1022727 / (23 + 28 + 19 + 10) = ~12784.1
 
 Dithering mode, on the other hand is ... expensive 😕
 

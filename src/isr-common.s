@@ -25,12 +25,12 @@ isr_set_interval
 	adc ram_driver_fetch_cycle_count
 
 	; on non-SCPU setups, add some fudge just to ensure the sequencer always
-	; has enough time to run - 20 cycles on C128 and on C64 when the screen is
-	; off, 40 cycles on C64 is the screen is on.
+	; has enough time to run - 10 cycles on C128, 20 on C64 when the screen is
+	; off, 40 on C64 is the screen is turned on.
 
 	!ifndef scpu {
 		!ifdef c128 {
-			adc #20
+			adc #10
 		} else {
 			bit enable_screen_on_playback
 			bpl +
