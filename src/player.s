@@ -217,7 +217,29 @@ nsmah
 	jsr dac_driver_init
 
 player_gen_tables
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+	bit stereo_enable
+	bpl +
+
+	!ifdef scpu {
+		sta SCPU_TURBO_OFF
+	}
+
+	!ifdef c128 {
+		lda #0
+		sta VIC_2_MHZ
+	}
+
+	jsr check_sid_type_right
+
+	!ifdef scpu {
+		sta SCPU_TURBO_OFF
+	}
+
+	!ifdef c128 {
+		inc VIC_2_MHZ
+	}
+
++	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval

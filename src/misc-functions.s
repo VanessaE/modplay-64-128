@@ -1262,3 +1262,67 @@ display_byte_hex_direct
 
 	ldy temp_abs_y
 rts
+
+; SID DETECTION ROUTINES
+;
+; By SounDemon - Based on a tip from Dag Lem.
+; Put together by FTC after SounDemons instructions
+; ...and tested by Rambones and Jeff.
+;
+; with right-SID variant
+
+check_sid_type_left
+	sei		;No disturbing interrupts
+	lda #$ff
+-	cmp VIC_RASTER_LOW	;Don't run it on a badline.
+	bne -
+
+	;Detection itself starts here
+	lda #$ff				;Set frequency in voice 3 to $ffff 
+	sta SID_VOICE3_CR		;...and set testbit (other bits don't matter) in VCREG3 ($d412) to disable oscillator
+	sta SID_VOICE3_FREQ_LOW
+	sta SID_VOICE3_FREQ_HIGH
+	lda #$20				;Sawtooth wave and gatebit OFF to start oscillator again.
+	sta SID_VOICE3_CR
+	lda SID_VOICE3_OSC_OUT	;Accu now has different value depending on sid model (6581=3/8580=2)
+	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
+	lda #0
+	ror
+	eor #$80
+	sta sid_type_left
+rts
+
+check_sid_type_right
+	lda #$ff
+-	cmp VIC_RASTER_LOW
+	bne -
+
+	lda stereo_sid_addr
+	sta utility_pointer
+	lda stereo_sid_addr+1
+	sta utility_pointer+1
+
+	lda #$ff
+	ldy #$12
+	sta (utility_pointer),y
+	ldy #$0e
+	sta (utility_pointer),y
+	ldy #$0f
+	sta (utility_pointer),y
+
+	lda #$20
+	ldy #$12
+	sta (utility_pointer),y
+
+	ldy #$1b
+	lda (utility_pointer),y
+
+	; because those instructions take longer than a regular STA:LDA pair
+	; the value returned from the SID will be from a couple of cycles later in
+	; the oscillator run than normal:  6 for 6581, 5 for 8580.
+
+	lsr
+	lda #0
+	ror
+	sta sid_type_right
+rts
