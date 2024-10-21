@@ -200,17 +200,20 @@ no_player_ui
 	bpl +
 
 	jsr sid_4bit_dithered_driver_init
-	jmp ++
+	jmp player_gen_tables
 
 +	jsr sid_4bit_driver_init
 
-++	jmp player_gen_tables
+	jmp player_gen_tables
 
 ns4ip
-;	cmp #2
-;	bne +
-;	jsr sid_pwm_init
-;	jmp isr_timer_setup
+	cmp #2
+	bne nsmah
+	jsr sid_mahoney_driver_init
+
+	jmp player_gen_tables
+
+nsmah
 	jsr dac_driver_init
 
 player_gen_tables

@@ -307,7 +307,7 @@ scanning_dir_msg
 audio_driver_1_txt
 	!text "SID 4-bit",0
 audio_driver_2_txt
-	!text "SID 8-bit",0
+	!text "SID Mahoney",0
 audio_driver_3_txt
 	!text "DAC 8-bit",0
 
@@ -409,7 +409,12 @@ choose_memory_msg
 		!text "driver:",RETURN,RETURN
 	!byte 0
 
-choose_driver_pos
+choose_aud_driver_pos
+	!byte RETURN
+	!fill 13,RIGHT
+	!byte 0
+
+choose_mem_driver_pos
 	!byte RETURN
 	!fill 14,RIGHT
 	!byte 0

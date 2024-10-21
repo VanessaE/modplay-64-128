@@ -96,8 +96,8 @@ choose_audio_driver
 	jsr print_msg_rle
 
 	lda #0
-	ldx #<choose_driver_pos
-	ldy #>choose_driver_pos
+	ldx #<choose_aud_driver_pos
+	ldy #>choose_aud_driver_pos
 	jsr print_msg
 
 	lda #GRN
@@ -117,18 +117,20 @@ choose_audio_driver
 	jsr print_msg
 
 	lda #0
-	ldx #<choose_driver_pos
-	ldy #>choose_driver_pos
+	ldx #<choose_aud_driver_pos
+	ldy #>choose_aud_driver_pos
 	jsr print_msg
 
 	jsr CHROUT
-	lda #DGRY
+	lda #GRN
 	jsr CHROUT
 	lda #"2"
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
 	lda #" "
+	jsr CHROUT
+	lda #LGRN
 	jsr CHROUT
 
 	lda #0
@@ -137,8 +139,8 @@ choose_audio_driver
 	jsr print_msg
 
 	lda #0
-	ldx #<choose_driver_pos
-	ldy #>choose_driver_pos
+	ldx #<choose_aud_driver_pos
+	ldy #>choose_aud_driver_pos
 	jsr print_msg
 
 	jsr CHROUT
@@ -166,9 +168,6 @@ choose_audio_driver
 
 	cmp #$34
 	bcs -
-
-	cmp #$32 ; disable option 2, SID 8-bit PWM (not implemented yet)
-	beq -
 
 	and #$03
 	sta audio_driver
@@ -567,7 +566,7 @@ show_filter_setting
 	ldy #filter_col
 	jsr PLOT
 	lda audio_driver
-	cmp #2
+	cmp #4 ; unknown actually, might end up being #3 and DAC moves to #4?  idk
 	beq +
 	rts
 
@@ -615,7 +614,7 @@ show_resonance_setting
 	ldy #reson_col
 	jsr PLOT
 	lda audio_driver
-	cmp #2
+	cmp #4 ; or maybe #3?  idk yet.
 	beq +
 	rts
 
@@ -709,12 +708,8 @@ change_dithering_setting
 	+	ldx #scr_en_row
 		!ifndef c128 {
 			lda audio_driver
-			cmp #2
-			bne +
-			inx
-			jmp ++
-		+	cmp #3
-			bne ++
+			cmp #1
+			beq ++
 			dex
 		}
 

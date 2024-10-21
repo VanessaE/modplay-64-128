@@ -323,7 +323,10 @@
 	number_of_song_positions			= $0c1f
 	number_of_patterns					= $0c20
 
-	; free: $0c21 through $0d07
+	sid_type_left						= $0c21 ; $80 = 8580, 0 = 6581.
+	sid_type_right						= $0c22
+
+	; free: $0c23 through $0d07
 
 	; various program vectors
 
@@ -438,9 +441,11 @@
 
 	SID									= $d400
 	SID_VOICE1_CR						= $d404
+	SID_VOICE1_ENV_AD					= $d405
 	SID_VOICE1_ENV_SR					= $d406
 
 	SID_VOICE2_CR						= $d40b
+	SID_VOICE2_ENV_AD					= $d40c
 	SID_VOICE2_ENV_SR					= $d40d
 
 	SID_VOICE3_FREQ_LOW					= $d40e
@@ -449,8 +454,12 @@
 	SID_VOICE3_ENV_AD					= $d413
 	SID_VOICE3_ENV_SR					= $d414
 
-	SID_VOICE3_OSC_OUT					= $d41b
+	SID_FILT_CUTOFF_LOW					= $d415
+	SID_FILT_CUTOFF_HIGH				= $d416
+	SID_FILT_VOICE_SEL					= $d417
 	SID_VOLUME							= $d418
+
+	SID_VOICE3_OSC_OUT					= $d41b
 
 	CIA1_PORT_A							= $dc00
 	CIA1_PORT_B							= $dc01

@@ -360,6 +360,85 @@ init
 
 	jsr control_code_flags_copy
 
+	!ifdef scpu {
+		sta SCPU_TURBO_OFF
+	}
+
+	!ifdef c128 {
+		dec VIC_2_MHZ
+	}
+
+	;SID DETECTION ROUTINE
+
+	;By SounDemon - Based on a tip from Dag Lem.
+	;Put together by FTC after SounDemons instructions
+	;...and tested by Rambones and Jeff.
+
+	; - Don't run this routine on a badline
+
+	sei		;No disturbing interrupts
+	lda #$ff
+-	cmp VIC_RASTER_LOW	;Don't run it on a badline.
+	bne -
+
+	;Detection itself starts here
+	lda #$ff				;Set frequency in voice 3 to $ffff 
+	sta SID_VOICE3_CR		;...and set testbit (other bits don't matter) in VCREG3 ($d412) to disable oscillator
+	sta SID_VOICE3_FREQ_LOW
+	sta SID_VOICE3_FREQ_HIGH
+	lda #$20				;Sawtooth wave and gatebit OFF to start oscillator again.
+	sta SID_VOICE3_CR
+	lda SID_VOICE3_OSC_OUT	;Accu now has different value depending on sid model (6581=3/8580=2)
+	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
+	lda #0
+	ror
+	eor #$80
+	sta sid_type_left
+
+	bit stereo_enable
+	bpl +
+
+	lda #$ff
+-	cmp VIC_RASTER_LOW
+	bne -
+
+	lda stereo_sid_addr
+	sta utility_pointer
+	lda stereo_sid_addr+1
+	sta utility_pointer+1
+
+	lda #$ff
+	ldy #$12
+	sta (utility_pointer),y
+	ldy #$0e
+	sta (utility_pointer),y
+	ldy #$0f
+	sta (utility_pointer),y
+
+	lda #$20
+	ldy #$12
+	sta (utility_pointer),y
+
+	ldy #$1b
+	lda (utility_pointer),y
+
+	; because that instruction takes longer than a regular STA:LDA pair
+	; the value returned from the SID will be from a couple of cycles later in
+	; the oscillator run than normal:  6 for 6581, 5 for 8580.
+
+	lsr
+	lda #0
+	ror
+	sta sid_type_right
+
++	!ifdef scpu {
+		sta SCPU_TURBO_ON
+	}
+
+	!ifdef c128 {
+		inc VIC_2_MHZ
+	}
+
 	lda audio_driver
 	cmp #1
 	bne ns4init
@@ -375,11 +454,12 @@ init
 ++	jmp init_tables_gen
 
 ns4init
-;	cmp #2
-;	bne +
-;	jsr sid_pwm_init
-;	jmp isr_timer_setup
+	cmp #2
+	bne nmahinit
+	jsr sid_mahoney_driver_init
+	jmp init_tables_gen
 
+nmahinit
 	jsr dac_driver_init
 
 init_tables_gen
@@ -428,8 +508,8 @@ init_tables_gen
 	jsr read_err_channel
 
 
-
 ; ####### end of main init code
+
 
 zero_count	!byte 0
 
@@ -675,7 +755,7 @@ default_config
 	!byte 8					; default device
 	!word $d700				; default stereo SID addr
 	!word $dd01				; default DigiMAX/DAC addr
-	!byte 1					; default audio driver (SID 4-bit)
+	!byte 2					; default audio driver (SID Mahoney method)
 	!byte 1					; default RAM driver (REU)
 	!byte $80				; default Stereo mode (on)
 	!byte 0					; default filter setting

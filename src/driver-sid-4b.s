@@ -88,7 +88,7 @@ rts
 
 sid_4bit_start
 	lda #0
-	ldx #$20
+	ldx #$1f
 
 -	sta SID,x
 	dex
@@ -112,6 +112,13 @@ sid_4bit_start
 	sta utility_pointer
 	lda stereo_sid_addr+1
 	sta utility_pointer+1
+
+	lda #0
+	ldy #$1f
+
+-	sta (utility_pointer),y
+	dey
+	bpl -
 
 	lda #$ff
 	ldy #$06

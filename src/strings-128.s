@@ -261,7 +261,7 @@ scanning_dir_msg
 audio_driver_1_txt
 	!text "SID 4-bit",0
 audio_driver_2_txt
-	!text "SID 8-bit PWM",0
+	!text "SID Mahoney method",0
 audio_driver_3_txt
 	!text "DAC/DigiMAX 8-bit",0
 
@@ -353,7 +353,12 @@ choose_memory_msg
 		!text CYAN,"Choose memory driver:",RETURN,RETURN
 	!byte 0
 
-choose_driver_pos
+choose_aud_driver_pos
+	!byte RETURN
+	!fill 4,RIGHT
+	!byte 0
+
+choose_mem_driver_pos
 	!byte RETURN
 	!fill 5,RIGHT
 	!byte 0

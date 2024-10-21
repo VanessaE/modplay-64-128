@@ -76,6 +76,7 @@ start
 !source "src/driver-reu.s"
 !source "src/driver-sid-4b.s"
 !source "src/driver-sid-d4b.s"
+!source "src/driver-sid-mah.s"
 !source "src/driver-dac.s"
 
 !source "src/player.s"
