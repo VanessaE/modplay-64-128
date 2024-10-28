@@ -265,13 +265,13 @@ player_gen_tables
 
 	jsr backup_zero_page
 
-	jsr isr_startup
 	+JSR_INDIRECT (audio_start_vec)
+	jsr isr_startup
 
 	jsr start_sequencer
 
-	+JSR_INDIRECT (audio_stop_vec)
 	jsr isr_shutdown
+	+JSR_INDIRECT (audio_stop_vec)
 
 	jsr restore_zero_page
 	jsr enable_kernal_only
