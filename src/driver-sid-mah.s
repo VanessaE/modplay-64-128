@@ -87,12 +87,7 @@ sid_mahoney_set_volume_table_resolution
 rts
 
 sid_mahoney_start
-	lda #0
-	ldx #$1f
-
--	sta SID,x
-	dex
-	bpl -
+	jsr sid_mahoney_stop		; clears the SID(s).
 
 	lda #$0f					;Setup attack=0 and decay=15
 	sta SID_VOICE1_ENV_AD
@@ -128,13 +123,6 @@ sid_mahoney_start
 	sta utility_pointer
 	lda stereo_sid_addr+1
 	sta utility_pointer+1
-
-	lda #0
-	ldy #$1f
-
--	sta (utility_pointer),y
-	dey
-	bpl -
 
 	lda #$0f
 	ldy #$05
@@ -181,6 +169,28 @@ sid_mahoney_mute
 rts
 
 sid_mahoney_stop
+	lda #0
+	ldy #$1f
+
+-	sta SID,y
+	dey
+	bpl -
+
+	bit stereo_enable
+	bmi +
+	rts
+
++	lda stereo_sid_addr
+	sta utility_pointer
+	lda stereo_sid_addr+1
+	sta utility_pointer+1
+
+	lda #0
+	ldy #$1f
+
+-	sta (utility_pointer),y
+	dey
+	bpl -
 rts
 
 sid_isr_mahoney_mono			; 7 cycles coming in
