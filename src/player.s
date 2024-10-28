@@ -192,31 +192,6 @@ start_main_player
 	}
 
 no_player_ui
-	lda audio_driver
-	cmp #1
-	bne ns4ip
-
-	bit dither_enable
-	bpl +
-
-	jsr sid_4bit_dithered_driver_init
-	jmp player_gen_tables
-
-+	jsr sid_4bit_driver_init
-
-	jmp player_gen_tables
-
-ns4ip
-	cmp #2
-	bne nsmah
-	jsr sid_mahoney_driver_init
-
-	jmp player_gen_tables
-
-nsmah
-	jsr dac_driver_init
-
-player_gen_tables
 	bit stereo_enable
 	bpl +
 
@@ -239,7 +214,30 @@ player_gen_tables
 		inc VIC_2_MHZ
 	}
 
-+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
++	lda audio_driver
+	cmp #1
+	bne ns4ip
+
+	bit dither_enable
+	bpl +
+
+	jsr sid_4bit_dithered_driver_init
+	jmp player_gen_tables
+
++	jsr sid_4bit_driver_init
+	jmp player_gen_tables
+
+ns4ip
+	cmp #2
+	bne nsmah
+	jsr sid_mahoney_driver_init
+	jmp player_gen_tables
+
+nsmah
+	jsr dac_driver_init
+
+player_gen_tables
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
 	jsr isr_set_interval
