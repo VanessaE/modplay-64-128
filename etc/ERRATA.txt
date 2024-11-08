@@ -13,64 +13,103 @@
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 
-* BOTH: the file list/directory load routine should filter-out the program's
-  own binaries if present.
+* Dir loader: the file list routine should filter-out the program's own
+  binaries if present.
 
 * C128 (mainly): file list repaint is too slow.
+
+* Loader:  consider massaging the header and music data to normalize the
+  volume levels, so that something like DJ Metune's "Axel-F" is as loud as
+  "Fun Tune", while preserving the song's dynamic range.
+
+  The program could look through the header/patterns just after loading the
+  file, find the highest direct volume setting out of everything, calculate
+  the ratio of 65 to that value, and then multiply all volumes and volume-
+  related effects' rate parameters (such as used by slide or tremolo) by that
+  ratio, capped as necessary.
+
 
 ####################
 ##  KNOWN ISSUES  ##
 ####################
 
-* ALL memory drivers: need to check that file will fit before loading,
-  else throw an appropriate error.
+* Loader: need to check that file will fit before loading, else throw an
+  appropriate error.
 
-* BOTH: The disk read portion of the loader needs to be decoupled from the
+* Loader: The disk read portion of the loader needs to be decoupled from the
   part that actually stores the data into the expansion RAM, to allow for easy
   manipulation of the data during loading, with predictable chunk sizes (most
   likely, that'll be 256 bytes).
 
-* BOTH: The DMA chip in a standard REU does not know anything about RAM sizes
+* Loader: The DMA chip in a standard REU does not know anything about RAM sizes
   greater than 512 kB, due to its limited number of address lines.  As such,
   it can't cross from bank 7 to 8, 15 to 16, etc. when doing a transfer -- it
   just wraps around back to the start of the segment.
 
-  To deal with this, there needs to be some kind of wraparound mitigation in
-  the loaders, and it must be done in such a way as to minimize any
-  performance impact later when the player's fetch/lookahead/mix code is
-  plowing through the instrument data.
+  This is causing the silence zone set aside for the fetch code to land on
+  at sample end, to be replaced by garbage if the file is large enough.  The
+  file loads, hits the wrap-around two pages before the end of the 512K block,
+  then advances by 1k for the next chunk of the file, so two pages get left
+  with whatever was already and the data belonging there ends up at the start
+  of exp RAM, overwriting the silence zone.  This would also happen for the
+  1 MB -> 1.5 MB crossover except the data ends up at the start of the chunk,
+  overwriting a previous sample.
 
-  Idea for that:  start each instrument sample right on a page boundary, then
-  if a pointer increment puts the store target on page $FE with a bank value
-  of (BANK AND 7) = 7, go ahead and store the instrument data into that page
-  as normal, bump up to the next bank, copy that page $FE data into this
-  bank's page $00, then continue loading from page $01 of this bank. The fetch
-  code will of course require similar checks, but without resetting the
-  byte/LSB part of the pointer when jumping to the next bank.
+  A simple solution would be to increase the silence zone to 1 kB.  Then
+  each transfer into the REU would happen at an even 1 kB boundary, and no
+  wraparound errors will occur while loading.
 
-  The rationale with this extra copy of the data is that during playback, when
-  the fetch code advances to 7/$FE, the lookahead code will most likely have
-  already used some of page $FE's data from its previous pass, so we need a
-  cheap but seamless transition to the next bank so that the fetch and
-  lookahead can continue without skipping any instrument data.
+* Fetch code:  There still needs to be some kind of further mitigation for the
+  above-described wraparound, for the benefit playback code since it can grab
+  up to 200 or so bytes in one go.  Not sure how to handle this.
 
-  The C128 memory driver will require a similar mitigation, albeit with
-  different boundaries, as the first and last portions of each bank above 0
-  are unusable for file data.
+* Loader: Add a mipmap-like feature with filtering.  After the whole file is
+  loaded, iterate through the instrument samples, creating downsampled
+  versions of each, averaging the sample data at 2:1, 4:1, 8:1, and 16:1
+  ratios.  Store the new data all after the end of the original data.
 
-* BOTH: all instrument loops need to be unrolled to a minimum length of around
+  The rationale here is simple:  at the highest pitches on the slowest
+  configurations -- so stock C64 using an REU, in 4-bit SID mode, in stereo,
+  with dithering, playing a B-4 note, with the screen enabled -- the REU
+  transfer length for the lookahead cache can reach to upwards of 200 bytes.
+
+  Simply switch to the highest ratio (that is, the ratio closest to 1:1) that
+  keeps the fetch length at less than 16, and divide the step rate
+  accordingly.  The faster the setup, the higher the needed ratio can be.
+
+  This will also allow the program to use a fixed 16-byte fetch length, which
+  will trim a few cycles from the lookahead setup code and the fetch/mixer
+  code.
+
+  Not only will this likely raise sample rates across the board, it will also
+  have the side effect of having properly-averaged the sample data at the
+  higher pitches, which should sound a lot better than just skipping over the
+  unneded bytes.  Think linear versus nearest neighbor in graphics scaling.
+
+  The only negative side effect is mipmapping will require a bit under twice
+  as much expansion RAM, but even at the absolute maximum, counting the
+  padding mentioned below, and violating the mod file format by using 128 kB
+  samples, a mod can only be up to about 4.4 MB in size, so the most
+  mipmapping could possibly use is about 8.5 MB, and 16 MB REUs are commonly
+  available these days.
+
+  That'll rule out using a few of the mods in my testing library on my C128,
+  as my REU is just a puny little 1 MB unit.  🙂  Guess I have another reason
+  to write the planned SuperCPU RAM driver.  Oh horror. 😉
+  
+* Loader: all instrument loops need to be unrolled to a minimum length of
   10 kB, which shall be appended to the end of the sample.  That shall then be
-  padded end with one last copy of the first 256 bytes of the loop (or the
+  padded end with one last copy of the first 1 kB of the loop (or the
   whole thing if it's shorter). If the loop was already over 10 kB, just pad
-  the end of the instrument with the first 256 bytes of the loop.  If the loop
+  the end of the instrument with the first 1 kB bytes of the loop.  If the loop
   had to be unrolled, its start and end points shall be set to the first and
-  last byte of the newly-unrolled data, excluding the final padding and
-  ignoring the original loop data.  If not unrolled, its start and endpoints
-  remain at their original locations.
+  last byte of the newly-unrolled data, excluding the padding, and ignoring
+  the original loop data entirely.  If not unrolled, the  start and end
+  points will remain at their original locations.
 
-* BOTH: on instrument that have no looping, the loader needs to pad the end of
-  the instrument with 256 bytes of silence, but the sample endpoint shall
-  remain at its original location.
+  If an instrument that have no looping, the loader needs to pad the end of
+  the instrument with silence, but the sample endpoint shall remain at its
+  original location.
 
   The idea with all this unrolling and padding is to minimize the load on the
   fetch code by requiring fewer loops per second (and hence fewer calls to
@@ -87,6 +126,9 @@
   the loop.  Any of these would end up giving the mixer garbage sample bytes
   on occasion, if left unchecked.
 
+  In any case, whatever is done to pad the sample, the next one needs to start
+  at an even 1 kB boundary to avoid wraparound issues.
+
 * C128: cursor-left in main menu triggers switch pages code
 
 * BOTH: strings that should be centered are off by one: disk name is 1 to the
@@ -98,10 +140,10 @@
 
 * C128: the displayed file name in infobox overwrites "Current".
 
-* BOTH: sometimes, the filename displays as garbage in the mini popup when
+* Loader: sometimes, the filename displays as garbage in the mini popup when
   loading, yet the file will still load just fine.
 
-* BOTH: progress bar has a minor off-by-1 overflow glitch.
+* Loader: progress bar has a minor off-by-1 overflow glitch.
 
 * C64: there is some kind of slowdown happening relating to arpeggios and/or
   high pitches, but it only happens with one or two songs (Cybernoid 1 for
@@ -113,54 +155,70 @@
   Best guess, the REU code is simply fetching too much data and slowing
   everything down because there's no limiter.
 
-* BOTH: "Happy As Fish" skips some notes at one point late in the song,
+* BOTH: "Happy As Fish" omits some notes at one point late in the song,
   probably new-note triggers being skipped when they shouldn't be due to
   the newly-added pre-/post-tick behavior needed for pitch sliding.
 
+* BOTH:  setting vibrato to 00 repeatedly may be causing the sort of rapid
+  ticking some songs are displaying....?  division error?
 
-<algorithm> your 4 bit d418 table, how is it laid out
-<algorithm> i tend to get better results making it non linear
-<VanessaE> how?  I'm not sure I understand
-<VanessaE> I'm using the two "generic" tables
-<algorithm> so you focus on the variations earlier on and spread it out
-<algorithm> e.g instead of linear 0,1,2,3,4,5,6,7,8... 
-<algorithm> or shall i say instead of 16 zeros, 16 ones, 16 twos.. 
-<VanessaE> OH you mean for plain 4 bits
-<algorithm> you make the numbers more repeating outwards
-<algorithm> and then focused more in the mid 32 bytes near dc
-<algorithm> yes
-<VanessaE> it... well..  is exactly that
-<VanessaE> it's simple linear
-<VanessaE> that's encoded into the volume table itself though
-<algorithm> if you do it non linear, you should get higher quality overall especially the quieter sections
-<VanessaE> so I could do any kind of thing I want and it would have zero CPU cost at playback
-<algorithm> provided output is 8bits and you map to 4bits
-<VanessaE> correctr
-<VanessaE> sorta
-<VanessaE> the input data is always 8 bits
-<VanessaE> and the volume table outputs either 3, 4, 6, or 7 bits, depending on the driver mode
-<VanessaE> it gets re-calculated before playback as needed
-<VanessaE> it's one bit less than "true" in most cases, to allow for at least two tracks per channel downmixing
-<VanessaE> (without needing an ROR in the realtime codew)
-<VanessaE> -w
-<VanessaE> could you maybe take a look at https://gitlab.com/VanessaE/modplay-64-128/-/blob/master/src/tables.s?ref_type=heads  and maybe make a code proposal against it for the lower-resolution outputs?
-<VanessaE> (note that the 2-bit option isn't actually used)
-<algorithm> 00-29 =0
-<algorithm> 2a-41 =1
-<algorithm> 42-55 =2
-<algorithm> 56-65 =3
-<algorithm> 66-71 =4
-<algorithm> 72-79 =5
-<algorithm> 7a-7d =6
-<algorithm> 7e-7f =7
-<algorithm> 80-81 =8
-<algorithm> 82-85 =9
-<algorithm> 86-8d =a
-<algorithm> 8e-99 =b
-<algorithm> 9a-a9 =c
-<algorithm> aa-bd =d
-<algorithm> be-d1 =e
-<algorithm> d2-ff =f
-<algorithm> if you set the mappings this way 8bit->4bit, you should get better results overall
-<algorithm> but thats also dependant on the mod itself too
-<VanessaE> algo-flood=-rithm ;)
+* BOTH: first row in the pattern seems to have one or more extra ticks
+  compared to everything else under some conditions.  The glitch is
+  repeatable: it's the same duration from one song to another, and if any
+  given song has shown it, it'll happen at the same places every time in that
+  song.
+
+* Some notes from algorithm regarding working-around a linearity issue in the
+  SID chip's classic 4-bit sample capability:
+
+	<algorithm> your 4 bit d418 table, how is it laid out
+	<algorithm> i tend to get better results making it non linear
+	<VanessaE> how?  I'm not sure I understand
+	<VanessaE> I'm using the two "generic" tables
+	<algorithm> so you focus on the variations earlier on and spread it out
+	<algorithm> e.g instead of linear 0,1,2,3,4,5,6,7,8... 
+	<algorithm> or shall i say instead of 16 zeros, 16 ones, 16 twos.. 
+	<VanessaE> OH you mean for plain 4 bits
+	<algorithm> you make the numbers more repeating outwards
+	<algorithm> and then focused more in the mid 32 bytes near dc
+	<algorithm> yes
+	<VanessaE> it... well..  is exactly that
+	<VanessaE> it's simple linear
+	<VanessaE> that's encoded into the volume table itself though
+	<algorithm> if you do it non linear, you should get higher quality overall
+				especially the quieter sections
+	<VanessaE> so I could do any kind of thing I want and it would have zero
+				CPU cost at playback
+	<algorithm> provided output is 8bits and you map to 4bits
+	<VanessaE> correctr
+	<VanessaE> sorta
+	<VanessaE> the input data is always 8 bits
+	<VanessaE> and the volume table outputs either 3, 4, 6, or 7 bits,
+				depending on the driver mode
+	<VanessaE> it gets re-calculated before playback as needed
+	<VanessaE> it's one bit less than "true" in most cases, to allow for at
+				least two tracks per channel downmixing
+	<VanessaE> (without needing an ROR in the realtime codew)
+	<VanessaE> -w
+	<VanessaE> could you maybe take a look at
+				https://gitlab.com/VanessaE/modplay-64-128/-/blob/master/src/tables.s?ref_type=heads  and maybe make a code proposal against it for the lower-resolution outputs?
+	<VanessaE> (note that the 2-bit option isn't actually used)
+	<algorithm> 00-29 =0
+	<algorithm> 2a-41 =1
+	<algorithm> 42-55 =2
+	<algorithm> 56-65 =3
+	<algorithm> 66-71 =4
+	<algorithm> 72-79 =5
+	<algorithm> 7a-7d =6
+	<algorithm> 7e-7f =7
+	<algorithm> 80-81 =8
+	<algorithm> 82-85 =9
+	<algorithm> 86-8d =a
+	<algorithm> 8e-99 =b
+	<algorithm> 9a-a9 =c
+	<algorithm> aa-bd =d
+	<algorithm> be-d1 =e
+	<algorithm> d2-ff =f
+	<algorithm> if you set the mappings this way 8bit->4bit, you should get
+				better results overall
+	<algorithm> but thats also dependant on the mod itself too
