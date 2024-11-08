@@ -116,3 +116,51 @@
 * BOTH: "Happy As Fish" skips some notes at one point late in the song,
   probably new-note triggers being skipped when they shouldn't be due to
   the newly-added pre-/post-tick behavior needed for pitch sliding.
+
+
+<algorithm> your 4 bit d418 table, how is it laid out
+<algorithm> i tend to get better results making it non linear
+<VanessaE> how?  I'm not sure I understand
+<VanessaE> I'm using the two "generic" tables
+<algorithm> so you focus on the variations earlier on and spread it out
+<algorithm> e.g instead of linear 0,1,2,3,4,5,6,7,8... 
+<algorithm> or shall i say instead of 16 zeros, 16 ones, 16 twos.. 
+<VanessaE> OH you mean for plain 4 bits
+<algorithm> you make the numbers more repeating outwards
+<algorithm> and then focused more in the mid 32 bytes near dc
+<algorithm> yes
+<VanessaE> it... well..  is exactly that
+<VanessaE> it's simple linear
+<VanessaE> that's encoded into the volume table itself though
+<algorithm> if you do it non linear, you should get higher quality overall especially the quieter sections
+<VanessaE> so I could do any kind of thing I want and it would have zero CPU cost at playback
+<algorithm> provided output is 8bits and you map to 4bits
+<VanessaE> correctr
+<VanessaE> sorta
+<VanessaE> the input data is always 8 bits
+<VanessaE> and the volume table outputs either 3, 4, 6, or 7 bits, depending on the driver mode
+<VanessaE> it gets re-calculated before playback as needed
+<VanessaE> it's one bit less than "true" in most cases, to allow for at least two tracks per channel downmixing
+<VanessaE> (without needing an ROR in the realtime codew)
+<VanessaE> -w
+<VanessaE> could you maybe take a look at https://gitlab.com/VanessaE/modplay-64-128/-/blob/master/src/tables.s?ref_type=heads  and maybe make a code proposal against it for the lower-resolution outputs?
+<VanessaE> (note that the 2-bit option isn't actually used)
+<algorithm> 00-29 =0
+<algorithm> 2a-41 =1
+<algorithm> 42-55 =2
+<algorithm> 56-65 =3
+<algorithm> 66-71 =4
+<algorithm> 72-79 =5
+<algorithm> 7a-7d =6
+<algorithm> 7e-7f =7
+<algorithm> 80-81 =8
+<algorithm> 82-85 =9
+<algorithm> 86-8d =a
+<algorithm> 8e-99 =b
+<algorithm> 9a-a9 =c
+<algorithm> aa-bd =d
+<algorithm> be-d1 =e
+<algorithm> d2-ff =f
+<algorithm> if you set the mappings this way 8bit->4bit, you should get better results overall
+<algorithm> but thats also dependant on the mod itself too
+<VanessaE> algo-flood=-rithm ;)

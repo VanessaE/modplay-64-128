@@ -372,7 +372,7 @@ init
 	jsr check_sid_type_left
 
 	!ifdef scpu {
-		sta SCPU_TURBO_OFF
+		sta SCPU_TURBO_ON
 	}
 
 	!ifdef c128 {
