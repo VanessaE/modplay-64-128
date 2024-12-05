@@ -263,6 +263,15 @@ run_command
 	ldx sequencer_temp_x
 	ldy seq_current_track
 
+	; if the command number is > 15 or the command is unimplemented, don't
+	; try to run anything.
+
+	lda seq_commands,y
+	cmp #16
+	bcs no_command_this_row_this_track
+	lda start_command_vec+2
+	beq no_command_this_row_this_track
+
 start_command_vec					; start or initialize an effect command
 	jsr $1234						; (also for stuff that just runs once)
 	ldy seq_current_track
@@ -302,6 +311,8 @@ next_track_pre_tick
 	beq dont_run_pre_tick_command		; before.
 	cmp #4
 	bcc dont_run_pre_tick_command
+	cmp #16
+	bcs dont_run_pre_tick_command
 
 pre_tick_command
 	asl
@@ -310,6 +321,7 @@ pre_tick_command
 	sta run_command_pre_tick_vec+1
 	lda run_effect_command_jump_table+1,x
 	sta run_command_pre_tick_vec+2
+	beq dont_run_pre_tick_command
 
 run_command_pre_tick_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
@@ -349,6 +361,8 @@ next_track_post_tick
 	beq run_post_tick_command
 	cmp #4
 	bcs dont_run_post_tick_command
+	cmp #16
+	bcs dont_run_post_tick_command
 
 run_post_tick_command
 	ldx seq_ticks_counter				; post-tick commands only run N-1 times
@@ -361,6 +375,7 @@ run_post_tick_command
 	sta run_command_post_tick_vec+1
 	lda run_effect_command_jump_table+1,x
 	sta run_command_post_tick_vec+2
+	beq dont_run_post_tick_command
 
 run_command_post_tick_vec
 	jsr $1234
@@ -505,25 +520,22 @@ set_pitch
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
 
-unused
-rts
-
 start_effect_command_jump_table
 	!word start_effect_arpeggio
 	!word start_effect_pitch_slide
 	!word start_effect_pitch_slide
 	!word start_effect_pitch_slide_to_note
-	!word unused ; start_effect_vibrato
+	!word 0 ; start_effect_vibrato
 	!word start_effect_pitch_slide_plus_volume_slide
-	!word unused ; start_effect_vibrato_plus_volume_slide
-	!word unused
-	!word unused
-	!word unused ; run_effect_set_sample_offset
+	!word 0 ; start_effect_vibrato_plus_volume_slide
+	!word 0
+	!word 0
+	!word 0 ; run_effect_set_sample_offset
 	!word start_effect_volume_slide
-	!word unused ; run_effect_position_jump
+	!word 0 ; run_effect_position_jump
 	!word run_effect_set_volume
 	!word run_effect_pattern_break
-	!word unused
+	!word 0
 	!word run_effect_set_speed
 
 run_effect_command_jump_table
@@ -531,18 +543,18 @@ run_effect_command_jump_table
 	!word run_effect_pitch_slide_up
 	!word run_effect_pitch_slide_down
 	!word run_effect_pitch_slide_to_note
-	!word unused ; run_effect_vibrato
+	!word 0 ; run_effect_vibrato
 	!word run_effect_pitch_slide_plus_volume_slide
-	!word unused ; run_effect_vibrato_plus_volume_slide
-	!word unused
-	!word unused
-	!word unused
+	!word 0 ; run_effect_vibrato_plus_volume_slide
+	!word 0
+	!word 0
+	!word 0
 	!word run_effect_volume_slide
-	!word unused
-	!word unused
-	!word unused
-	!word unused
-	!word unused
+	!word 0
+	!word 0
+	!word 0
+	!word 0
+	!word 0
 
 ; effect command decoders -- start-of-row/init routines
 ; enter each one with .Y = track number
