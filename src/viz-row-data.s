@@ -223,18 +223,43 @@ viz_row_data_fetch_and_print
 		jsr viz_row_data_print_char
 
 		; get/print effect command number
+		; and its parameters, if possible.
+
+		; if the effect number points to a "start" jump table entry with
+		; high byte = 0, then the command is unimplemented. if greater than
+		; 15, it and its params must be garbage.
 
 		lda seq_current_row_data + .viz_tr*4 + 1
 		lsr
 		lsr
 		lsr
 		lsr
-		jsr to_hex
+		cmp #16
+		bcc +
+		lda #$3f
+		jsr viz_row_data_print_char
+		jmp ++
+
+	+	jsr to_hex
 		jsr viz_row_data_print_char
 
-		; get/print effect command params
+		; unimplemented or garbage commands get a param of "??"
 
-		ldx seq_current_row_data + .viz_tr*4 + 3
+		lda seq_current_row_data + .viz_tr*4 + 1
+		and #$f0
+		lsr
+		lsr
+		lsr
+		tax ; .X will need command no. * 2
+		lda start_effect_command_jump_table+1,x
+		bne +++
+
+	++	lda #$3f
+		jsr viz_row_data_print_char
+		jsr viz_row_data_print_char
+		jmp +
+
+	+++	ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x
 		jsr to_hex
 		jsr viz_row_data_print_char
@@ -243,7 +268,7 @@ viz_row_data_fetch_and_print
 		jsr to_hex
 		jsr viz_row_data_print_char
 
-		!if .viz_tr < 3 {
+	+	!if .viz_tr < 3 {
 			lda #RIGHT
 			jsr viz_row_data_print_char
 		}
