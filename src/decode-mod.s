@@ -307,11 +307,11 @@ parse_instruments
 	bmi +
 	jmp -
 
-+	clc									; the first pattern is at start + $0200
++	clc									; the first pattern is at start + $0400
 	lda #0
 	sta parse_header_sample_pointer
 	lda expansion_memory_start_page
-	adc #2
+	adc #4
 	sta parse_header_sample_pointer+1
 	lda expansion_memory_start_bank
 	adc #0

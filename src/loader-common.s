@@ -156,11 +156,11 @@ load_by_filename_entry
 
 	jsr set_first_exp_pages_to_silence	; note: this trashes the target pointer and stash size.
 
-	clc							; actual music/sample data will go to start + $0200
+	clc							; actual music/sample data will go to start + $0400
 	lda #0
 	sta expansion_memory_target_pointer
 	lda expansion_memory_start_page
-	adc #2
+	adc #4
 	sta expansion_memory_target_pointer+1
 	lda expansion_memory_start_bank
 	adc #0

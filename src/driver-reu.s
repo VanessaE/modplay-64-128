@@ -43,7 +43,6 @@ reu_set_cycle_counts
 	sta ram_driver_fetch_cycle_count
 rts
 
-; enter with .X = row number, .Y = pattern number
 reu_fetch_row
 	clc
 	lda utility_pointer_b

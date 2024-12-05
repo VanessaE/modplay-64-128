@@ -41,26 +41,8 @@
   manipulation of the data during loading, with predictable chunk sizes (most
   likely, that'll be 256 bytes).
 
-* Loader: The DMA chip in a standard REU does not know anything about RAM sizes
-  greater than 512 kB, due to its limited number of address lines.  As such,
-  it can't cross from bank 7 to 8, 15 to 16, etc. when doing a transfer -- it
-  just wraps around back to the start of the segment.
-
-  This is causing the silence zone set aside for the fetch code to land on
-  at sample end, to be replaced by garbage if the file is large enough.  The
-  file loads, hits the wrap-around two pages before the end of the 512K block,
-  then advances by 1k for the next chunk of the file, so two pages get left
-  with whatever was already and the data belonging there ends up at the start
-  of exp RAM, overwriting the silence zone.  This would also happen for the
-  1 MB -> 1.5 MB crossover except the data ends up at the start of the chunk,
-  overwriting a previous sample.
-
-  A simple solution would be to increase the silence zone to 1 kB.  Then
-  each transfer into the REU would happen at an even 1 kB boundary, and no
-  wraparound errors will occur while loading.
-
-* Fetch code:  There still needs to be some kind of further mitigation for the
-  above-described wraparound, for the benefit playback code since it can grab
+* Fetch code:  There needs to be some kind of further mitigation for the REU
+  512k wraparound glitch, for the benefit playback code, since it can grab
   up to 200 or so bytes in one go.  Not sure how to handle this.
 
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is

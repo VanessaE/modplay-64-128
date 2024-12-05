@@ -427,11 +427,11 @@ fetch_row_data
 	adc #0
 	sta utility_pointer_b+2
 
-; add the $0200 offset since the pattern data sits 2 pages up from the start
+	; add the $0400 offset since the pattern data sits 4 pages up from the start
 
 	clc
 	lda utility_pointer_b+1
-	adc #2
+	adc #4
 	sta utility_pointer_b+1
 
 	fetch_row_expansion_vec
