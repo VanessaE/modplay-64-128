@@ -97,11 +97,11 @@ start
 }
 
 !ifndef c128 {
-	config_filename_len !byte 13
-	config_filename     !text "modplay64.cfg",0
+	config_filename_len !byte 8
+	config_filename     !text "mp64.cfg",0
 } else {
-	config_filename_len !byte 14
-	config_filename     !text "modplay128.cfg",0
+	config_filename_len !byte 9
+	config_filename     !text "mp128.cfg",0
 }
 
 dirname

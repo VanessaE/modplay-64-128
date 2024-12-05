@@ -732,46 +732,4 @@ change_dithering_setting
 	rts
 }
 
-save_config
-	jsr gray_out
-	clc
-	jsr draw_mini_popup
 
-	lda #0
-	ldx #<saving_msg
-	ldy #>saving_msg
-	jsr print_msg
-	!ifndef c128 {
-		ldx #<mini_popup_next_line
-		ldy #>mini_popup_next_line
-		jsr print_msg_rle
-		lda #0
-		ldx #<saving_msg_b
-		ldy #>saving_msg_b
-		jsr print_msg
-	}
-
-	lda config_filename_len
-	ldx #<config_filename
-	ldy #>config_filename
-	jsr SETNAM
-	!ifdef c128 {
-		lda #0
-		ldx #0
-		jsr SETBNK
-	}
-	lda #0
-	ldx boot_device
-	ldy #0
-	jsr SETLFS
-
-	lda #<config_space
-	sta save_addr
-	lda #>config_space
-	sta save_addr+1
-
-	lda #save_addr
-	ldx #<cfg_data_end
-	ldy #>cfg_data_end
-	jsr SAVE
-rts

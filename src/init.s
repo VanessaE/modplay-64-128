@@ -417,12 +417,7 @@ init_tables_gen
 		jsr erase_file_list
 	}
 
-; ############# we're dumping-out early here
-
-	jmp clear_main_memory
-
-; ############
-
+	; try to load the config file
 
 	lda config_filename_len
 	ldx #<config_filename
@@ -447,9 +442,11 @@ init_tables_gen
 	bcc +
 	jsr read_err_channel
 
+; end of main init code
 
-; ####### end of main init code
++	jmp clear_main_memory
 
+; ####### Support/copy-in routines
 
 zero_count	!byte 0
 
