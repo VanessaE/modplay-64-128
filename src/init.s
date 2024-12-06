@@ -46,7 +46,6 @@ init
 	ldy #>initializing_msg
 	jsr print_msg
 
-
 	lda #0
 
 	!ifndef c128 {
@@ -104,7 +103,32 @@ init
 	lda #0
 	sta MSGFLG ; suppress "SEARCHING FOR..." message
 
+	; try to load the config file
+
+	lda config_filename_len
+	ldx #<config_filename
+	ldy #>config_filename
+	jsr SETNAM
+
+	!ifdef c128 {
+		lda #0
+		ldx #0
+		jsr SETBNK
+	}
+
 	lda #0
+	ldx boot_device
+	ldy #$ff
+	jsr SETLFS
+
+	lda #0
+	ldx #<config_space
+	ldy #>config_space
+	jsr LOAD
+	bcc +
+	jsr read_err_channel
+
++	lda #0
 	sta current_menu_page
 	!ifdef c128 {
 		lda #$80
@@ -342,7 +366,6 @@ init
 
 ++	lda #1
 	sta visualizer_mode
-
 	lda CIA2_CRA	; ensure that the TOD clock counts 50 or 60 ticks/sec
 	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64
 	ora pal_flag
@@ -411,42 +434,16 @@ init_tables_gen
 
 	jsr generate_note_number_lookup_table
 
-	jsr final_clear_copy
-
 	!ifdef c128 {
 		jsr erase_file_list
 	}
 
-	; try to load the config file
+	jsr final_clear_copy
+	jmp clear_main_memory
 
-	lda config_filename_len
-	ldx #<config_filename
-	ldy #>config_filename
-	jsr SETNAM
+; ####### end of main init code
 
-	!ifdef c128 {
-		lda #0
-		ldx #0
-		jsr SETBNK
-	}
-
-	lda #0
-	ldx boot_device
-	ldy #$ff
-	jsr SETLFS
-
-	lda #0
-	ldx #<config_space
-	ldy #>config_space
-	jsr LOAD
-	bcc +
-	jsr read_err_channel
-
-; end of main init code
-
-+	jmp clear_main_memory
-
-; ####### Support/copy-in routines
+; Support/copy-in routines
 
 zero_count	!byte 0
 
