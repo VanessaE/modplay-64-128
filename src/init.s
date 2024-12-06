@@ -350,20 +350,7 @@ init
 	inx
 +	stx raster_len
 
-	bit pal_flag
-	bpl +
-	lda #<one_ten_thou_pal
-	sta one_ten_thousandth_second
-	lda #>one_ten_thou_pal
-	sta one_ten_thousandth_second+1
-	bne ++
-
-+	lda #<one_ten_thou_ntsc
-	sta one_ten_thousandth_second
-	lda #>one_ten_thou_ntsc
-	sta one_ten_thousandth_second+1
-
-++	lda #1
+	lda #1
 	sta visualizer_mode
 	lda CIA2_CRA	; ensure that the TOD clock counts 50 or 60 ticks/sec
 	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64

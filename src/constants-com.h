@@ -319,7 +319,7 @@
 	scroll_area_height					= $0c1b
 	scroll_area_blank_last_line_flag	= $0c1c
 
-	one_ten_thousandth_second			= $0c1d ; 2 bytes
+	; free: $0c1d and $0c1e
 	number_of_song_positions			= $0c1f
 	number_of_patterns					= $0c20
 
