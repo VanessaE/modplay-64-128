@@ -330,19 +330,18 @@ init
 	inx
 	bne -
 
-	; Codefault's count raster lines code, to know if PAL or NTSC
+	; J0x's count raster lines code, to know if machine is PAL or NTSC
 
---	ldx #$aa
-	-	tax
-		lda VIC_RASTER_LOW
-		bne -
-	txa
+	sei
+--	lda VIC_RASTER_LOW
+-	cmp VIC_RASTER_LOW
+	beq -
 	bmi --
+	cmp #$20			; leaves carry set if PAL
+	cli
 
 	ldx #63
-	sta rasters_lo
-	sec
-	sbc #7 				; if rasters_lo > 6, the carry stays set, meaning PAL
+
 	lda #0
 	ror					; which we then roll into bit 7 of a 0 value
 	sta pal_flag

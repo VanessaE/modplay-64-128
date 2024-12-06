@@ -218,7 +218,7 @@
 	playlist_scroll_pos					= $0b19
 	playlist_print_file_counter			= $0b1a
 	screen_row_to_print_at				= $0b1b
-	rasters_lo							= $0b1c
+	; free: $0b1c
 	raster_len							= $0b1d
 	pal_flag							= $0b1e
 	boot_device							= $0b1f
