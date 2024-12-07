@@ -98,6 +98,37 @@ out
 	lda #version_minor+$30
 	jsr CHROUT
 
+	!ifndef c128 {
+		build_no_row = 16
+		build_no_col = 14
+	} else {
+		build_no_row = 17
+		build_no_col = 33
+	}
+
+	clc
+	ldx #build_no_row
+	ldy #build_no_col
+	jsr PLOT
+
+	lda #0
+	ldx #<build_no_msg
+	ldy #>build_no_msg
+	jsr print_msg
+
+	sec
+	ldx #<build_no
+	ldy #>build_no
+	jsr print_uint16
+
+	!ifdef c128 {
+		lda #" "
+		jsr CHROUT
+	}
+
+	lda #"]"
+	jsr CHROUT
+
 ; we have to copy the program loader to somewhere below where the program
 ; itself actually loads or it'll overwrite itself. 😛 
 
@@ -166,6 +197,7 @@ program_loader_origin
 	}
 
 +PRINT_MSG_RLE
++PRINT_MSG
 +SCREEN_ONOFF
 
 !ifdef c128 {
@@ -187,3 +219,12 @@ splash_data
 		!binary "etc/splash-80.rle"
 		!byte 0,0,0
 	}
+
+build_no_msg
+	!ifndef c128 {
+		!text GRN,"[Build #",0
+	} else {
+		!text GRN,"[ Build #",0
+	}
+
+!source "src/misc-functions.s"

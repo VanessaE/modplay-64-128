@@ -956,56 +956,6 @@ print_msg_ascii
 	bne -
 + rts
 
-print_filetype
-	lda current_file_type
-	cmp #1
-	bne +
-	ldx #<tracker_name_msg_soundtracker
-	ldy #>tracker_name_msg_soundtracker
-	jmp ++
-
-+	cmp #4
-	bcs +
-	ldx #<tracker_name_msg_protracker
-	ldy #>tracker_name_msg_protracker
-	jmp ++
-
-+	cmp #6
-	bcs +
-	ldx #<tracker_name_msg_startrekker
-	ldy #>tracker_name_msg_startrekker
-	jmp ++
-
-+	ldx #<tracker_name_msg_fasttracker
-	ldy #>tracker_name_msg_fasttracker
-++ rts
-
-!ifndef c128 {
-	print_filetype_ascii
-		lda current_file_type
-		cmp #1
-		bne +
-		ldx #<tracker_name_msg_soundtracker_ascii
-		ldy #>tracker_name_msg_soundtracker_ascii
-		jmp ++
-
-	+	cmp #4
-		bcs +
-		ldx #<tracker_name_msg_protracker_ascii
-		ldy #>tracker_name_msg_protracker_ascii
-		jmp ++
-
-	+	cmp #6
-		bcs +
-		ldx #<tracker_name_msg_startrekker_ascii
-		ldy #>tracker_name_msg_startrekker_ascii
-		jmp ++
-
-	+	ldx #<tracker_name_msg_fasttracker_ascii
-		ldy #>tracker_name_msg_fasttracker_ascii
-	++ rts
-}
-
 ; enter with fill_copy_target set to the start address of the block to
 ; be filled, .A holds the fill byte, .X holds the block length.
 
@@ -1326,3 +1276,7 @@ check_sid_type_right
 	ror
 	sta sid_type_right
 rts
+
+press_key_msg_ascii
+press_key_msg
+	!text "Press any key",0

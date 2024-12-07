@@ -429,9 +429,6 @@ main_player_regen_erase_tables_msg
 	!fill 4,UP
 	!byte RETURN,ESC,"@",0
 
-press_key_msg
-	!text "Press any key",0
-
 loader_erase_kbs_msg
 	!byte GRN
 	!fill 12," "
@@ -457,6 +454,9 @@ status_line_pos
 		!text "to the ON position"
 		!byte 0
 }
+
+build_no_msg
+	!text GRN,"[ Build #",0
 
 mm_lo
 	!byte <line_2

@@ -426,9 +426,6 @@ between_songs_msg
 	!byte 20,RIGHT
 	!byte 0
 
-press_key_msg
-	!text "Press any key",0
-
 loader_erase_kbs_msg
 	!byte GRN
 	!fill 11," "
@@ -458,9 +455,6 @@ status_line_pos
 		!text CYAN,"Loader here",RETURN,RETURN
 		!fill 20,RIGHT
 		!byte 0
-
-	press_key_msg_ascii
-		!text "Press any key",0
 
 	main_player_now_playing_msg_ascii
 		!fill 10,RIGHT
@@ -559,6 +553,9 @@ main_player_regen_tables_msg
 	!text "the sample rate, re-generating",RETURN
 	!fill 8,RIGHT
 	!text "pitch and tempo tables...",RETURN,0
+
+build_no_msg
+	!text GRN,"[Build #",0
 
 mm_lo
 	!byte <line_2

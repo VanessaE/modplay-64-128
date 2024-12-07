@@ -1,13 +1,13 @@
 VERSION_MAJOR=0
 VERSION_MINOR=0
+BUILD_NO := $(shell git rev-list --count HEAD)
 
 OPTIONS=-Wno-label-indent -v3 --format cbm \
-	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR)
+	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) -Dbuild_no=$(BUILD_NO) 
 CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
 TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
 VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
-
 
 all:
 	rm -f "$(TMPDIR)/*"
@@ -30,6 +30,7 @@ all:
 
 	$(MAKE) gen_mod_disks
 
+	@echo -e '\nFinished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)'
 
 clean:
 	rm -f bin/*

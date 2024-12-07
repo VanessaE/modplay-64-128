@@ -41,6 +41,37 @@ show_main_menu
 		bpl -
 	}
 
+	build_no_row = 23
+
+	!ifndef c128 {
+		build_no_col = 3
+	} else {
+		build_no_col = 11
+	}
+
+	clc
+	ldx #build_no_row
+	ldy #build_no_col
+	jsr PLOT
+
+	lda #0
+	ldx #<build_no_msg
+	ldy #>build_no_msg
+	jsr print_msg
+
+	sec
+	ldx #<build_no
+	ldy #>build_no
+	jsr print_uint16
+
+	!ifdef c128 {
+		lda #" "
+		jsr CHROUT
+	}
+
+	lda #"]"
+	jsr CHROUT
+
 	jsr populate_info_box
 	jsr display_playlist
 
@@ -950,3 +981,53 @@ populate_info_box
 	ldy #>kb_msg
 	jsr print_msg
 rts
+
+print_filetype
+	lda current_file_type
+	cmp #1
+	bne +
+	ldx #<tracker_name_msg_soundtracker
+	ldy #>tracker_name_msg_soundtracker
+	jmp ++
+
++	cmp #4
+	bcs +
+	ldx #<tracker_name_msg_protracker
+	ldy #>tracker_name_msg_protracker
+	jmp ++
+
++	cmp #6
+	bcs +
+	ldx #<tracker_name_msg_startrekker
+	ldy #>tracker_name_msg_startrekker
+	jmp ++
+
++	ldx #<tracker_name_msg_fasttracker
+	ldy #>tracker_name_msg_fasttracker
+++ rts
+
+!ifndef c128 {
+	print_filetype_ascii
+		lda current_file_type
+		cmp #1
+		bne +
+		ldx #<tracker_name_msg_soundtracker_ascii
+		ldy #>tracker_name_msg_soundtracker_ascii
+		jmp ++
+
+	+	cmp #4
+		bcs +
+		ldx #<tracker_name_msg_protracker_ascii
+		ldy #>tracker_name_msg_protracker_ascii
+		jmp ++
+
+	+	cmp #6
+		bcs +
+		ldx #<tracker_name_msg_startrekker_ascii
+		ldy #>tracker_name_msg_startrekker_ascii
+		jmp ++
+
+	+	ldx #<tracker_name_msg_fasttracker_ascii
+		ldy #>tracker_name_msg_fasttracker_ascii
+	++ rts
+}
