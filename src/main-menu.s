@@ -41,37 +41,6 @@ show_main_menu
 		bpl -
 	}
 
-	build_no_row = 23
-
-	!ifndef c128 {
-		build_no_col = 3
-	} else {
-		build_no_col = 11
-	}
-
-	clc
-	ldx #build_no_row
-	ldy #build_no_col
-	jsr PLOT
-
-	lda #0
-	ldx #<build_no_msg
-	ldy #>build_no_msg
-	jsr print_msg
-
-	sec
-	ldx #<build_no
-	ldy #>build_no
-	jsr print_uint16
-
-	!ifdef c128 {
-		lda #" "
-		jsr CHROUT
-	}
-
-	lda #"]"
-	jsr CHROUT
-
 	jsr populate_info_box
 	jsr display_playlist
 
@@ -773,6 +742,38 @@ not_sid_menu
 	!ifndef c128 {
 		jsr show_screen_enable
 	}
+
+	!ifndef c128 {
+		build_no_row = 16
+		build_no_col = 22
+	} else {
+		build_no_row = 14
+		build_no_col = 14
+	}
+
+	clc
+	ldx #build_no_row
+	ldy #build_no_col
+	jsr PLOT
+
+	lda #0
+	ldx #<build_no_msg
+	ldy #>build_no_msg
+	jsr print_msg
+
+	sec
+	ldx #<build_no
+	ldy #>build_no
+	jsr print_uint16
+
+	!ifdef c128 {
+		lda #" "
+		jsr CHROUT
+	}
+
+	lda #"]"
+	jsr CHROUT
+
 rts
 
 print_menu_line

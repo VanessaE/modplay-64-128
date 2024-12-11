@@ -28,7 +28,7 @@ long_line_behaviour=1
 long_line_column=79
 
 [files]
-current_page=8
+current_page=32
 FILE_NAME_0=2517;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2Ftrim-whitespc.sh;0;4
 FILE_NAME_1=213;Make;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FMakefile;0;4
 FILE_NAME_2=1610;Markdown;0;EUTF-8;1;1;1;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FREADME.md;0;4
@@ -61,7 +61,7 @@ FILE_NAME_28=1382;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmod
 FILE_NAME_29=407;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fc128-boot-sect.s;0;4
 FILE_NAME_30=6249;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Finit.s;0;4
 FILE_NAME_31=0;None;1;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FDocuments%2FACME%2FAllPOs.txt;0;4
-FILE_NAME_32=940;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmain-menu.s;0;4
+FILE_NAME_32=12255;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmain-menu.s;0;4
 FILE_NAME_33=1869;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fplaylist.s;0;4
 FILE_NAME_34=4822;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fplayer.s;0;4
 FILE_NAME_35=2119;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdriver-sid-d4b.s;0;4
