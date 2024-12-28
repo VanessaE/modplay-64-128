@@ -2,6 +2,9 @@ VERSION_MAJOR=0
 VERSION_MINOR=0
 BUILD_NO := $(shell git rev-list --count HEAD)
 
+X64=/home/vanessa/.local/bin/x64sc
+X128=/home/vanessa/.local/bin/x128
+
 OPTIONS=-Wno-label-indent -v3 --format cbm \
 	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) -Dbuild_no=$(BUILD_NO) 
 CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
@@ -31,6 +34,13 @@ all:
 	$(MAKE) gen_mod_disks
 
 	@echo -e '\nFinished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)'
+
+	@echo "Launching VICE and auto-starting..."
+
+	$(X64) -warp -autostart ~/Commodore-related/modplay-v2.0/disk-images/modplay-v0.0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
+
+	$(X128) -warp -8 ~/Commodore-related/modplay-v2.0/disk-images/modplay-v0.0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
+
 
 clean:
 	rm -f bin/*
