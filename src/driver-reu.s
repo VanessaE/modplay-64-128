@@ -17,18 +17,8 @@ reu_fetch_routine_index_table
 	!byte reu_fetchlen - reu_fetch_unroll_open + 1
 	!byte reu_fetch_unroll_close - reu_fetch_unroll_open ; fetch loop segment length
 
-; this is the average cycles per sample pair for any one track.
+; this is the average fetch time, in cycles, per final output sample pair
 ; see full details in doc/timing-info.txt.
-
-!ifndef scpu {
-	!ifndef c128 {
-		mixer_cycle_count = 46
-	} else {
-		mixer_cycle_count = 46 / 2
-	}
-} else {
-	mixer_cycle_count = 3
-}
 
 reu_set_cycle_counts
 	!ifndef scpu {
@@ -364,7 +354,7 @@ reu_run_fetch_and_mixer
 				!ifdef c128 {
 					!ifndef scpu {
 						sei									; 2
-						dec VIC_2_MHZ							; 7
+						dec VIC_2_MHZ						; 7
 					}
 				}
 
@@ -375,17 +365,17 @@ reu_run_fetch_and_mixer
 				sty DMA_CMD									; 4 + N or N/4
 
 				!ifdef scpu {
-					sta DMA_DAL									; 4
-					sty DMA_CMD									; 4 + N/4
-					sta DMA_DAL									; 4
-					sty DMA_CMD									; 4 + N/4
-					sta DMA_DAL									; 4
-					sty DMA_CMD									; 4 + N/4
+					sta DMA_DAL								; 4
+					sty DMA_CMD								; 4 + N/4
+					sta DMA_DAL								; 4
+					sty DMA_CMD								; 4 + N/4
+					sta DMA_DAL								; 4
+					sty DMA_CMD								; 4 + N/4
 				}
 
 				!ifdef c128 {
 					!ifndef scpu {
-						sty VIC_2_MHZ							; 4
+						sty VIC_2_MHZ						; 4
 						cli									; 2
 					}
 				}
@@ -394,54 +384,7 @@ reu_run_fetch_and_mixer
 		!if reu_fetch_track = 0 { reu_fetch_unroll_close = * }
 		}
 
-	txa														; 2
-	adc #16													; 2
-
--	ldy audio_out_buf_index									; 3
-	cmp and_f0_table,y										; 4
-	beq -													; 3/2
-
-	clc														; 2
-
-	reu_mixer_loop_open
-	  !for .idx2, 0, 15 {
-
-		; the various `LDY $nnnn` below will have their addresses re-written
-		; by the reu_do_realtime_selfmods_for_pitch_change routine below.
-		; Similarly, each corresponding `LDA/ADC $nnnn,Y` will
-		; have its high byte re-written by the set_volume routine.
-		;
-		; the addresses below are arbitrary, chosen only so that they're
-		; definitely in absolute mode when assembled, and so that failure
-		; to alter one of them is easy to spot in the ML monitor at runtime.
-
-		!if .idx2 = 0 { reu_rd_la_track_1 = * }
-		ldy $6100											; 4
-		!if .idx2 = 0 { reu_vol_addr_1 = * }
-		lda $8100,y											; 4
-
-		!if .idx2 = 0 { reu_rd_la_track_4 = *}
-		ldy $6400											; 4
-		!if .idx2 = 0 { reu_vol_addr_4 = *}
-		adc $8400,y											; 4
-
-		sta audio_buffer_left,x								; 5
-
-		!if .idx2 = 0 { reu_rd_la_track_2 = * }
-		ldy $6200											; 4
-		!if .idx2 = 0 { reu_vol_addr_2 = * }
-		lda $8200,y											; 4
-
-		!if .idx2 = 0 { reu_rd_la_track_3 = * }
-		ldy $6300											; 4
-		!if .idx2 = 0 { reu_vol_addr_3 = * }
-		adc $8300,y											; 4
-
-		sta audio_buffer_right,x							; 5
-
-		inx													; 2
-	  !if .idx2 = 0 { !set reu_mixer_loop_close = * }
-	}
+	jsr run_mixer_lookahead									; 6
 
 	dec mixer_countdown										; 5
 	beq +													; 3/2
@@ -452,20 +395,8 @@ rts
 
 
 ; =========================================================
-; === fetch loop and mixer loop self-mod setup routines ===
+; === fetch loop self-mod setup routines ===
 ; =========================================================
-
-reu_mixer_loop_segment_length = reu_mixer_loop_close - reu_mixer_loop_open
-
-reu_set_lookahead_vol_addrs
-	ldx reu_lookahead_code_volume_addr_idx,y
-
-	!zone lookahead_idx_set {
-		!for .idx6, 0, 15 {
-			sta reu_vol_addr_1 + reu_mixer_loop_segment_length * .idx6 + 2,x
-		}
-	}
-rts
 
 ; SET-UP LOOKAHEAD INDEXES/ADDRESSES
 
@@ -497,7 +428,7 @@ rts
 ;
 ; Always operates on the track number specified by seq_current_track
 
-reu_do_realtime_selfmods_for_pitch_change
+reu_do_selfmods_for_pitch_change
 	jsr reu_fetch_selfmods_init
 
 	ldy #2
@@ -512,73 +443,10 @@ reu_do_realtime_selfmods_for_pitch_change
 	lda current_steprates_ints,x
 	sta (utility_pointer),y
 
-	!zone lookahead_idx_set {
-		ldy seq_current_track
+	jsr mixer_do_selfmods_for_pitch_change
+	; returns the total lookahead distance in .A
 
-		lda #0
-		sta utility_zpbk_counter
-		sta utility_zpbk_counter+1
-		sta utility_zpbk_counter+2
-
-		sta temp_zpbk_a
-		lda current_steprates_fracts,y
-		sta temp_zpbk_a+1
-
-		lda current_steprates_ints,y
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		lsr
-		ror temp_zpbk_a+1
-		ror temp_zpbk_a
-		sta temp_zpbk_a+2
-
-		ldx reu_lookahead_code_read_byte_addr_idx,y
-
-		clc
-		lda seq_current_track
-		adc #>sample_data_buffer
-
-		!for .idx4, 0, 15 {
-			!set .reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * .idx4
-			sta .reu_la_rd_addr_st + 2,x
-		}
-
-		!for .idx5, 0, 15 {
-
-			!set .reu_la_rd_addr_st = reu_rd_la_track_1 + reu_mixer_loop_segment_length * .idx5
-
-			lda utility_zpbk_counter+2
-			sta .reu_la_rd_addr_st + 1,x
-
-			lda utility_zpbk_counter
-			adc temp_zpbk_a
-			sta utility_zpbk_counter
-
-			lda utility_zpbk_counter+1
-			adc temp_zpbk_a+1
-			sta utility_zpbk_counter+1
-
-			lda utility_zpbk_counter+2
-			adc temp_zpbk_a+2
-			sta utility_zpbk_counter+2
-		}
-	}
-
-	!ifdef scpu {
-		lsr
-		lsr
-	}
-
-	adc #1
-
-+	pha
+	pha
 	ldy #7
 	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
 	tay
@@ -586,13 +454,12 @@ reu_do_realtime_selfmods_for_pitch_change
 	sta (utility_pointer),y
 rts
 
-
 ; This simply sets the three self-mod immediate compares that look for the
 ; end of the sample, in the fetch routine.
 ;
 ; Always operates on the track number specified by seq_current_track
 
-reu_do_realtime_selfmods_for_instrument_change
+reu_do_selfmods_for_instrument_change
 	jsr reu_fetch_selfmods_init
 
 	ldy #4
@@ -613,17 +480,4 @@ reu_do_realtime_selfmods_for_instrument_change
 	lda current_sample_end_addr_highs,x
 	sta (utility_pointer),y
 rts
-
-reu_lookahead_code_read_byte_addr_idx
-	!byte 0
-	!byte reu_rd_la_track_2 - reu_rd_la_track_1
-	!byte reu_rd_la_track_3 - reu_rd_la_track_1
-	!byte reu_rd_la_track_4 - reu_rd_la_track_1
-
-reu_lookahead_code_volume_addr_idx
-	!byte 0
-	!byte reu_vol_addr_2 - reu_vol_addr_1
-	!byte reu_vol_addr_3 - reu_vol_addr_1
-	!byte reu_vol_addr_4 - reu_vol_addr_1
-
 }

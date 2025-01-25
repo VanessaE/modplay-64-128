@@ -233,20 +233,15 @@ init
 	lda #>reu_fetch_routine_index_table
 	sta fetch_routine_table_msb+1
 
-	lda #<reu_do_realtime_selfmods_for_pitch_change
+	lda #<reu_do_selfmods_for_pitch_change
 	sta do_selfmod_pitch_vec
-	lda #>reu_do_realtime_selfmods_for_pitch_change
+	lda #>reu_do_selfmods_for_pitch_change
 	sta do_selfmod_pitch_vec+1
 
-	lda #<reu_do_realtime_selfmods_for_instrument_change
+	lda #<reu_do_selfmods_for_instrument_change
 	sta do_selfmod_instrument_vec
-	lda #>reu_do_realtime_selfmods_for_instrument_change
+	lda #>reu_do_selfmods_for_instrument_change
 	sta do_selfmod_instrument_vec+1
-
-	lda #<reu_set_lookahead_vol_addrs
-	sta set_lookahead_vol_addrs_vec+1
-	lda #>reu_set_lookahead_vol_addrs
-	sta set_lookahead_vol_addrs_vec+2
 
 +	lda #0
 	sta expansion_memory_start_page
