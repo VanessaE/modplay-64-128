@@ -430,6 +430,17 @@ rts
 
 reu_do_selfmods_for_pitch_change
 	jsr reu_fetch_selfmods_init
+	jsr mixer_do_selfmods_for_pitch_change
+	; returns the total lookahead distance in .A
+
+	pha
+	ldy #7
+	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
+	tay
+	pla
+	sta (utility_pointer),y
+
+	ldx seq_current_track
 
 	ldy #2
 	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
@@ -441,16 +452,6 @@ reu_do_selfmods_for_pitch_change
 	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
 	tay
 	lda current_steprates_ints,x
-	sta (utility_pointer),y
-
-	jsr mixer_do_selfmods_for_pitch_change
-	; returns the total lookahead distance in .A
-
-	pha
-	ldy #7
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
-	tay
-	pla
 	sta (utility_pointer),y
 rts
 
