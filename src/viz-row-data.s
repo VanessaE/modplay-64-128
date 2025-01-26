@@ -1,24 +1,9 @@
-; This file contains all of the various in-player visualizers
+; This file contains the row data visualizer (e.g. music/sequencer data,
+; similar to what Protracker shows)
 
 !text "viz-row-data",0
 
-!ifndef c128 {
-	vizualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
-} else {
-	vizualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
-}
-
-viz_line_2 = vizualizer_base_addr + screen_width
-viz_line_3 = vizualizer_base_addr + screen_width*2
-viz_line_4 = vizualizer_base_addr + screen_width*3
-viz_line_5 = vizualizer_base_addr + screen_width*4
-viz_line_6 = vizualizer_base_addr + screen_width*5
-
-vizualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
-
-vizualizer_colors_row_3 = vizualizer_colors_base_addr + screen_width*2
-
-; set up base addresses, print the column dividers, and pre-fill the colors
+; print the column dividers and pre-fill the colors
 ;
 ; This routine is called before the sequencer starts, so any Zero Page usage
 ; must be stuff that's safe to use when ZP IS NOT BACKED-UP, and the KERNAL is
@@ -30,50 +15,25 @@ viz_row_data_init
 		bpl no_vrdi
 	}
 
-	lda #<vizualizer_base_addr
-	sta visualizer_base_address
-	lda #>vizualizer_base_addr
-	sta visualizer_base_address+1
+	lda #<viz_row_data_colors
+	sta viz_row_colors_vec+1
+	lda #>viz_row_data_colors
+	sta viz_row_colors_vec+2
 
-	lda #<vizualizer_colors_base_addr
-	sta utility_pointer
-	sta fill_copy_target
-	lda #>vizualizer_colors_base_addr
-	sta utility_pointer+1
-	sta fill_copy_target+1
+	jsr visualizer_prefill_colors
 
 	lda #0
 	sta temp_abs_b
 
 	lda #0
-	ldx #<viz_row_position
-	ldy #>viz_row_position
+	ldx #<visualizer_row_position
+	ldy #>visualizer_row_position
 	jsr print_msg
 
-	vis_init_next_row
-		ldx temp_abs_b
-		lda viz_row_data_colors,x
-		ldx #visualizer_area_width
-
-		!ifndef c128 {
-			jsr local_ram_block_fill
-		} else {
-			jsr vdc_block_fill
-		}
-
-		clc
-		lda utility_pointer
-		adc #screen_width
-		sta utility_pointer
-		sta fill_copy_target
-		lda utility_pointer+1
-		adc #0
-		sta utility_pointer+1
-		sta fill_copy_target+1
-
+	vis_row_data_init_next_row
 		lda #0
-		ldx #<viz_dividers_msg
-		ldy #>viz_dividers_msg
+		ldx #<viz_row_data_dividers_msg
+		ldy #>viz_row_data_dividers_msg
 
 		!ifndef c128 {
 			jsr print_msg_ascii
@@ -84,7 +44,7 @@ viz_row_data_init
 		inc temp_abs_b
 		lda temp_abs_b
 		cmp #6
-	bne vis_init_next_row
+	bne vis_row_data_init_next_row
 
 	lda #0
 	sta scroll_area_blank_last_line_flag
@@ -106,36 +66,36 @@ viz_row_data_pattern_preload
 		rts
 	}
 
-+	lda #<vizualizer_base_addr
++	lda #<visualizer_base_addr
 	sta utility_pointer 
-	lda #>vizualizer_base_addr
+	lda #>visualizer_base_addr
 	sta utility_pointer+1
-	jsr viz_row_data_erase_row
+	jsr visualizer_erase_row
 
-	lda #<viz_line_2
+	lda #<visualizer_line_2
 	sta utility_pointer 
-	lda #>viz_line_2
+	lda #>visualizer_line_2
 	sta utility_pointer+1
-	jsr viz_row_data_erase_row
+	jsr visualizer_erase_row
 
-	lda #<viz_line_3
+	lda #<visualizer_line_3
 	sta utility_pointer 
-	lda #>viz_line_3
+	lda #>visualizer_line_3
 	sta utility_pointer+1
 
 	ldx #0
 	jsr viz_row_data_fetch_and_print
 
-	lda #<viz_line_4
+	lda #<visualizer_line_4
 	sta utility_pointer 
-	lda #>viz_line_4
+	lda #>visualizer_line_4
 	sta utility_pointer+1
 	inx
 	jsr viz_row_data_fetch_and_print
 
-	lda #<viz_line_5
+	lda #<visualizer_line_5
 	sta utility_pointer 
-	lda #>viz_line_5
+	lda #>visualizer_line_5
 	sta utility_pointer+1
 	inx
 	jsr viz_row_data_fetch_and_print
@@ -178,9 +138,9 @@ viz_row_data_fetch_and_print
 		bne +
 
 		lda #$2d
-		jsr viz_row_data_print_char
-		jsr viz_row_data_print_char
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
+		jsr visualizer_print_char
+		jsr visualizer_print_char
 		bne ++
 
 	+	lda seq_current_row_data + .viz_tr*4 + 2
@@ -203,24 +163,24 @@ viz_row_data_fetch_and_print
 		asl
 		tax
 		lda note_names_table,x
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 		inx
 		lda note_names_table,x
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 		inx
 		lda note_names_table,x
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 		; get/print sample number
 
 	++	ldx seq_current_row_data + .viz_tr*4
 		lda divide_by_16_table,x
 		jsr to_hex
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 		lda seq_current_row_data + .viz_tr*4
 		jsr to_hex
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 		; get/print effect command number
 		; and its parameters, if possible.
@@ -237,11 +197,11 @@ viz_row_data_fetch_and_print
 		cmp #16
 		bcc +
 		lda #$3f
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 		jmp ++
 
 	+	jsr to_hex
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 		; unimplemented or garbage commands get a param of "??"
 
@@ -255,60 +215,27 @@ viz_row_data_fetch_and_print
 		bne +++
 
 	++	lda #$3f
-		jsr viz_row_data_print_char
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
+		jsr visualizer_print_char
 		jmp +
 
 	+++	ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x
 		jsr to_hex
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 		lda seq_current_row_data + .viz_tr*4 + 3
 		jsr to_hex
-		jsr viz_row_data_print_char
+		jsr visualizer_print_char
 
 	+	!if .viz_tr < 3 {
 			lda #RIGHT
-			jsr viz_row_data_print_char
+			jsr visualizer_print_char
 		}
 	}
 
 	ldx temp_abs_x
 	ldy temp_abs_y2
-rts
-
-; "print" a single character by directly storing it to the screen
-; interpreting #RIGHT as a skip-byte symbol
-
-viz_row_data_print_char
-	sta temp_abs_b
-
-	!ifndef c128 {
-		lda temp_abs_b
-
-		cmp #RIGHT
-		beq +
-
-		ldy #0
-		sta (utility_pointer),y
-	+	inc utility_pointer
-		bne ++
-		inc utility_pointer+1
-	} else {
-		lda temp_abs_b
-		cmp #RIGHT
-		bne +
-
-	-	bit VDC_ADDR	; perform a dummy read to skip ahead one byte
-		bpl -
-		bit VDC_DATA
-		jmp ++
-
-	+	jsr vdc_continue_write_ram
-	}
-
-++	lda temp_abs_b
 rts
 
 ; scroll the visualizer up one line
@@ -322,9 +249,9 @@ viz_row_data_scroll
 	stx temp_abs_x
 	sty temp_abs_y
 
-	lda #<vizualizer_base_addr
+	lda #<visualizer_base_addr
 	sta scroll_area_target_addr
-	lda #>vizualizer_base_addr
+	lda #>visualizer_base_addr
 	sta scroll_area_target_addr+1
 
 	lda #visualizer_area_width
@@ -338,11 +265,11 @@ viz_row_data_scroll
 	cmp #61
 	bne +
 
-	lda #<viz_line_6
+	lda #<visualizer_line_6
 	sta utility_pointer 
-	lda #>viz_line_6
+	lda #>visualizer_line_6
 	sta utility_pointer+1
-	jsr viz_row_data_erase_row
+	jsr visualizer_erase_row
 
 +	ldx temp_abs_x
 	ldy temp_abs_y
@@ -350,63 +277,18 @@ viz_row_data_scroll
   no_vrdsc
 rts
 
-; blank-out a line of the visualizer display pointed to by fill_copy_target
-
-viz_row_data_erase_row
-	sty temp_abs_y2
-
-	!ifdef c128 {
-		lda utility_pointer
-		sta fill_copy_target
-		lda utility_pointer+1
-		sta fill_copy_target+1
-
-		jsr vdc_write_ram_reg_31_select_only
-	}
-
-	ldy #0
-
-	vre_loop
-		lda viz_row_erase_msg,y
-		beq .done_erase
-
-		!ifndef c128 {
-			cmp #RIGHT
-			beq ++
-			sta (utility_pointer),y
-		} else {
-			cmp #RIGHT
-			bne +
-
-		-	bit VDC_ADDR
-			bpl -
-			bit VDC_DATA ; do a read to skip the byte, and it's guaranteed to be non-zero
-			jmp ++
-
-		+	jsr vdc_continue_write_ram
-		}
-
-	++	iny
-		cpy #visualizer_area_width
-	bne vre_loop
-
-.done_erase
-	ldy temp_abs_y2
-rts
-
-
 ; if the user toggles mute on a track, this switches the color on the highlight
 ; row between red and white.  ENter with .Y = track number, mute status set in
 ; track_current_enable_flags + .Y
 
-viz_show_track_mute
+viz_row_data_show_track_mute
 	!ifndef c128 {
 		sty temp_abs_y2
 		clc
-		lda #<vizualizer_colors_row_3
-		adc viz_mute_color_cols,y
+		lda #<visualizer_colors_row_3
+		adc viz_row_data_mute_color_cols,y
 		sta utility_pointer
-		lda #>vizualizer_colors_row_3
+		lda #>visualizer_colors_row_3
 		adc #0
 		sta utility_pointer+1
 		lda track_current_enable_flags,y
@@ -415,17 +297,17 @@ viz_show_track_mute
 		rol
 		rol
 		adc #1
-		ldy #viz_mute_colors_width
+		ldy #viz_row_data_mute_colors_width
 	-	sta (utility_pointer),y
 		dey
 		bpl -
 		ldy temp_abs_y2
 	} else {
 		clc
-		lda #<vizualizer_colors_row_3
-		adc viz_mute_color_cols,y
+		lda #<visualizer_colors_row_3
+		adc viz_row_data_mute_color_cols,y
 		sta fill_copy_target
-		lda #>vizualizer_colors_row_3
+		lda #>visualizer_colors_row_3
 		adc #0
 		sta fill_copy_target+1
 		clc
@@ -433,30 +315,20 @@ viz_show_track_mute
 		bpl +
 		lda #7
 	+	adc #8
-		ldx #viz_mute_colors_width
+		ldx #viz_row_data_mute_colors_width
 		jsr vdc_block_fill
 	}
 rts
 
-
 !ifndef c128 {
-	viz_mute_color_cols
+	viz_row_data_mute_color_cols
 		!byte 0,9,18,27
-	viz_mute_colors_width = 7
+	viz_row_data_mute_colors_width = 7
 } else {
-	viz_mute_color_cols
+	viz_row_data_mute_color_cols
 		!byte 3,12,21,30
-	viz_mute_colors_width = 8
+	viz_row_data_mute_colors_width = 8
 }
-
-viz_row_erase_msg
-	!ifdef c128 {
-		!byte $20,$20,RIGHT
-	}
-	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-	!byte $20,$20,$20,$20,$20,$20,$20,$20,RIGHT
-	!byte $20,$20,$20,$20,$20,$20,$20,$20,0
 
 viz_row_data_colors
 	!ifndef c128 {
@@ -467,7 +339,7 @@ viz_row_data_colors
 		!byte $01, $06, $0f, $06, $06, $01
 	}
 
-viz_dividers_msg
+viz_row_data_dividers_msg
 	!ifndef c128 {
 		!fill 10,RIGHT
 		!byte LGRY,$01
@@ -485,14 +357,5 @@ viz_dividers_msg
 		!byte $7d
 		!fill 8,RIGHT
 		!byte $7d,RETURN
-		!byte 0
-	}
-
-viz_row_position
-	!ifndef c128 {
-		!byte UP,RETURN,0
-	} else {
-		!fill 6,UP
-		!byte RETURN
 		!byte 0
 	}

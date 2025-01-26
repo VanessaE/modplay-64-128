@@ -167,9 +167,9 @@ next_row_no_scroll
 	cpx #61
 	bcs +
 
-	lda #<viz_line_6
+	lda #<visualizer_line_6
 	sta utility_pointer 
-	lda #>viz_line_6
+	lda #>visualizer_line_6
 	sta utility_pointer+1
 
 	inx
@@ -1369,7 +1369,7 @@ toggle_enable_track
 		bpl exit_player_keyscan
 	}
 
-	jsr viz_show_track_mute
+	jsr viz_row_data_show_track_mute
 
 exit_player_keyscan
 	lda #0

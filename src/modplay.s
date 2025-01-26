@@ -81,6 +81,7 @@ start
 
 !source "src/player.s"
 !source "src/sequencer.s"
+!source "src/viz-common.s"
 !source "src/viz-row-data.s"
 
 !source "src/screen-fx.s"

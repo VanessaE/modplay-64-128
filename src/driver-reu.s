@@ -231,7 +231,7 @@ set_registers_AXY ; setup REU registers (used for both reading and writing in si
 	sty DMA_CMD
 rts
 
-; THE ACTUAL FETCH AND MIX ROUTINE
+; THE ACTUAL FETCH ROUTINE
 ; The hard work happens here 🙂
 
 reu_fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
