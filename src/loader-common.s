@@ -171,9 +171,6 @@ load_by_filename_entry
 	lda #4
 	sta stash_size+1
 
-	lda #0
-	sta loading_sample_data
-
 	lda CIA1_CRB	; ensure that the next few STA's reset the TOD clock
 	and #$7f
 	sta CIA1_CRB
@@ -187,6 +184,10 @@ load_by_filename_entry
 ; read-in the header
 
 	jsr load_mod_header		; returns .N = 0 on error or if header is bad
+
+	lda #4
+	sta stash_size+1
+
 	bit header_loaded		; or .C = 0 for 15 samples, .C = 1 for 31,
 	bmi +
 	jmp abort_load
@@ -194,41 +195,13 @@ load_by_filename_entry
 
 ; okay, at this point we can go ahead and load the rest of the file.
 
-load_next_chunk
-	lda #<load_buffer
-	sta load_pointer
-	lda #>load_buffer
-	sta load_pointer+1
-
-	ldy #0
--	jsr loader_get_1_byte
-
-	bit loading_sample_data
-	bpl +
-
-	clc					; mod samples are 2's-compliment signed
-	adc #$80			; this will translate the value to unsigned.
-
-+	sta (load_pointer),y
-	iny
-	bne -
-	inc load_pointer+1
-	lda load_pointer+1
-	cmp #>(load_buffer+$0400)
-	bne -
-
-	bit loading_sample_data
-	bmi stash_loaded_data
+load_next_pattern
+	jsr loader_get_1kb
+	jsr update_progress
 
 loaded_15
 	jsr reformat_pattern_data
-	inc pattern_conv_pat_counter
-	lda pattern_conv_pat_counter
-	cmp number_of_patterns
-	bcc stash_loaded_data
-	ror loading_sample_data
 
-stash_loaded_data
 	+JSR_INDIRECT (stash_block_vec)
 
 	clc
@@ -237,13 +210,40 @@ stash_loaded_data
 	sta expansion_memory_target_pointer+1
 	bcc +
 	inc expansion_memory_target_pointer+2
+
++	inc pattern_conv_pat_counter
+	lda pattern_conv_pat_counter
+	cmp number_of_patterns
+	bcc load_next_pattern
+
+	lda #1
+	sta stash_size+1
+
+load_next_sample_block
+	jsr loader_get_1_block
+	ldy #0
+
+-	lda load_buffer,y
 	clc
+	adc #$80
+	sta load_buffer,y
+	iny
+	bne -
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	inc expansion_memory_target_pointer+1
+	bne +
+	inc expansion_memory_target_pointer+2
 
 +	lda STATUS
 	bne .done
 
+	lda expansion_memory_target_pointer+1
+	and #$03
+	bne load_next_sample_block
 	jsr update_progress
-	jmp load_next_chunk
+	jmp load_next_sample_block
 
 .done
 	jsr close_file
@@ -619,10 +619,33 @@ loader_get_1_byte
 	jsr ACPTR
 rts
 
+loader_get_1_block
+	lda #<load_buffer
+	sta load_pointer
+	lda #>load_buffer
+	sta load_pointer+1
+
+loader_get_1_block_no_reset_ptr
+	ldy #0
+
+-	jsr ACPTR
+	sta (load_pointer),y
+	iny
+	bne -
+rts
+
+loader_get_1kb
+	jsr loader_get_1_block
+	inc load_pointer+1
+	jsr loader_get_1_block_no_reset_ptr
+	inc load_pointer+1
+	jsr loader_get_1_block_no_reset_ptr
+	inc load_pointer+1
+	jsr loader_get_1_block_no_reset_ptr
+rts
+
 kbs_fract_approx
 	!byte 0,0,1,1,2,3,3,4,5,5,6,6,7,8,8,9
 
 last_seconds_lsb
 	!byte 0
-
-loading_sample_data !byte 0
