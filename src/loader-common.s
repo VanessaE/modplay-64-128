@@ -229,9 +229,12 @@ load_next_sample
 	lda sample_lengths_lows,y			; if the length is 0, it's an empty
 	ora sample_lengths_mids,y			; sample slot (duh 🙂)
 	ora sample_lengths_highs,y
-	beq load_next_sample
+	bne +
+	jsr loader_get_1_byte				; skip two bytes of the file if the
+	jsr loader_get_1_byte				; sample is empty (mods always have this) 
+	jmp load_next_sample
 
-	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
++	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
 	sta utility_counter					; use the specified length
 	lda sample_lengths_mids,y
 	sta utility_counter+1
