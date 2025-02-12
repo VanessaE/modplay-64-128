@@ -234,7 +234,12 @@ load_next_sample
 	jsr loader_get_1_byte				; sample is empty (mods always have this) 
 	jmp load_next_sample
 
-+	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
++	lda sample_start_addresses_mids,y
+	sta expansion_memory_target_pointer+1
+	lda sample_start_addresses_highs,y
+	sta expansion_memory_target_pointer+2
+
+	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
 	sta utility_counter					; use the specified length
 	lda sample_lengths_mids,y
 	sta utility_counter+1
@@ -312,11 +317,7 @@ load_rest_of_sample						; if neither, load the exact number of remaining bytes
 
 	+JSR_INDIRECT (stash_block_vec)		; and tack it onto the end of the sample
 
-	inc expansion_memory_target_pointer+1
-	bne +
-	inc expansion_memory_target_pointer+2
-
-+	lda STATUS
+	lda STATUS
 	bne .done
 
 loader_check_for_more_samples
