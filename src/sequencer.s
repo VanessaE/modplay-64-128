@@ -1107,11 +1107,6 @@ mixer_do_selfmods_for_pitch_change
 	  }
 	}
 
-	!ifdef scpu {
-		lsr
-		lsr
-	}
-
 	adc #1
 rts
 

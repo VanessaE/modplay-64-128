@@ -72,7 +72,7 @@ reu_fetch_row
 			cli
 		}
 	} else {
-		; on SCPU, we split the transfer into smaller pieces to minimize
+		; on SCPU, we split the transfer into small pieces to minimize
 		; interference with the audio ISR's timing.
 		lda #4
 		sta DMA_DAL
@@ -359,19 +359,9 @@ reu_run_fetch_and_mixer
 				}
 
 				; N below will vary by pitch, on average it'll be around 32
-				; on C64, which is quite large, so we'll split it into smaller
-				; transfers.
+				; on C64
 
-				sty DMA_CMD									; 4 + N or N/4
-
-				!ifdef scpu {
-					sta DMA_DAL								; 4
-					sty DMA_CMD								; 4 + N/4
-					sta DMA_DAL								; 4
-					sty DMA_CMD								; 4 + N/4
-					sta DMA_DAL								; 4
-					sty DMA_CMD								; 4 + N/4
-				}
+				sty DMA_CMD									; 4 + N
 
 				!ifdef c128 {
 					!ifndef scpu {
