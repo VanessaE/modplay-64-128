@@ -326,37 +326,41 @@
 	sid_type_left						= $0c21 ; $80 = 8580, 0 = 6581.
 	sid_type_right						= $0c22
 
-	; free: $0c23 through $0d07
+	; free: $0c23 through $0ca7
 
 	; various program vectors
 
-	do_selfmod_pitch_vec				= $0d08 ; 2 bytes
-	do_selfmod_instrument_vec			= $0d0a ; 2 bytes
+	do_selfmod_pitch_vec				= $0ca8 ; 2 bytes
+	do_selfmod_instrument_vec			= $0caa ; 2 bytes
 
-	fetch_block_vec						= $0d0c ; 2 bytes
-	stash_block_vec						= $0d0e ; 2 bytes
+	fetch_block_vec						= $0cac ; 2 bytes
+	stash_block_vec						= $0cae ; 2 bytes
 
-	print_vec							= $0d10 ; 2 bytes
+	print_vec							= $0cb0 ; 2 bytes
 
-	audio_set_resolution_vec			= $0d12 ; 2 bytes
-	audio_driver_set_cycle_count_vec	= $0d14 ; 2 bytes
-	audio_start_vec						= $0d16 ; 2 bytes
-	audio_mute_vec						= $0d18 ; 2 bytes
-	audio_stop_vec						= $0d1a ; 2 bytes
-	audio_isr_vec						= $0d1c ; 2 bytes
+	audio_set_resolution_vec			= $0cb2 ; 2 bytes
+	audio_driver_set_cycle_count_vec	= $0cb4 ; 2 bytes
+	audio_start_vec						= $0cb6 ; 2 bytes
+	audio_mute_vec						= $0cb8 ; 2 bytes
+	audio_stop_vec						= $0cba ; 2 bytes
+	audio_isr_vec						= $0cbc ; 2 bytes
 
-	ram_driver_set_cycle_counts_vec		= $0d1e ; 2 bytes
+	ram_driver_set_cycle_counts_vec		= $0cbe ; 2 bytes
 
 	; mods' lengths are big-endian, but addrs and lengths here are little-
 	; endian. each of these is 32 bytes, except the first byte of each one is
 	; unused.
 
-	sample_start_addresses_lows			= $0d20
-	sample_start_addresses_mids			= $0d40
-	sample_start_addresses_highs		= $0d60
-	sample_end_addresses_lows			= $0d80
-	sample_end_addresses_mids			= $0da0
-	sample_end_addresses_highs			= $0dc0
+	; free: $0cc0 through $0cdf
+
+	sample_start_addresses_mids			= $0ce0
+	sample_start_addresses_highs		= $0d00
+	sample_end_addresses_lows			= $0d20
+	sample_end_addresses_mids			= $0d40
+	sample_end_addresses_highs			= $0d60
+	sample_lengths_lows					= $0d80
+	sample_lengths_mids					= $0da0
+	sample_lengths_highs				= $0dc0
 	sample_loop_start_addresses_lows	= $0de0
 	sample_loop_start_addresses_mids	= $0e00
 	sample_loop_start_addresses_highs	= $0e20

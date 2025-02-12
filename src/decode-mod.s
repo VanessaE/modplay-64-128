@@ -257,8 +257,7 @@ count_patterns
 parse_instruments
 	ldx #31
 	lda #0
--	sta sample_start_addresses_lows,x
-	sta sample_start_addresses_mids,x
+-	sta sample_start_addresses_mids,x
 	sta sample_start_addresses_highs,x
 	sta sample_end_addresses_lows,x
 	sta sample_end_addresses_mids,x
@@ -347,10 +346,8 @@ parse_instruments
 	cpy #22
 	bne -
 
-	lda parse_header_sample_pointer
-	sta sample_start_addresses_lows,x
-	lda parse_header_sample_pointer+1
-	sta sample_start_addresses_mids,x
+	lda parse_header_sample_pointer+1		; each sample starts at a 256 byte
+	sta sample_start_addresses_mids,x		; boundary (so _lows is always 0)
 	lda parse_header_sample_pointer+2
 	sta sample_start_addresses_highs,x
 
@@ -364,33 +361,55 @@ parse_instruments
 
 	asl
 	sta temp_counter						; double it:  # words to # bytes
+	sta sample_lengths_lows,x
 	rol temp_counter+1
 	rol temp_counter+2
 
+	lda temp_counter+1
+	sta sample_lengths_mids,x
+	lda temp_counter+2
+	sta sample_lengths_highs,x
+
 	clc
-	lda temp_counter
+	lda sample_lengths_lows,x
 	adc parse_header_sample_pointer			; preset for next sample address
-	sta parse_header_sample_pointer
 	sta sample_end_addresses_lows,x			; <--- this eliminates having to look
-	lda temp_counter+1						;      "forward" in the header to find
+	lda sample_lengths_mids,x				;      "forward" in the header to find
 	adc parse_header_sample_pointer+1		;      next sample start address to use
 	sta parse_header_sample_pointer+1		;      as this sample's end.
 	sta sample_end_addresses_mids,x
-	lda temp_counter+2
+	lda sample_lengths_highs,x
 	adc parse_header_sample_pointer+2
 	sta parse_header_sample_pointer+2
 	sta sample_end_addresses_highs,x
 
-	lda temp_counter+1						; if this sample's len < 2 words,
+	clc										; the next sample will start at
+	lda #0									; least 256 bytes past the end of
+	sta parse_header_sample_pointer			; this sample
+	lda parse_header_sample_pointer+1
+	adc #2
+	sta parse_header_sample_pointer+1
+	bcc +
+	inc parse_header_sample_pointer+2
+
++	lda temp_counter+1						; if this sample's len < 2 words,
 	bne +									; zero-out its start addrs and 
 	lda temp_counter						; skip setting any attribs, now
 	cmp #2									; that there's a valid addr to use
 	bcs +									; for the next sample's start addr
 
 	lda #0
-	sta sample_start_addresses_lows,x
 	sta sample_start_addresses_mids,x
 	sta sample_start_addresses_highs,x
+
+	sec										; if a sample is to be skipped, don't
+	lda parse_header_sample_pointer+1		; waste RAM on useless padding :)
+	sbc #2
+	sta parse_header_sample_pointer+1
+	lda parse_header_sample_pointer+2
+	sbc #0
+	sta parse_header_sample_pointer+2
+
 	jmp skip_sample
 
 +	iny ; 24
@@ -436,8 +455,7 @@ parse_instruments
 	rol temp_counter+2
 
 	clc										; convert to address
-	lda sample_start_addresses_lows,x
-	adc temp_counter
+	lda temp_counter
 	sta sample_loop_start_addresses_lows,x
 	lda sample_start_addresses_mids,x
 	adc temp_counter+1
@@ -499,13 +517,14 @@ skip_sample
 	beq ++
 	jmp .next_instr
 
-++	ldx #31
+++	dex
+	stx num_samples_to_load
+	ldx #31
 
 	; if a sample had a start addr of $0, then it's been declared as "empty",
 	; so reset its end to $000100, the middle of the silence block.
 
--	lda sample_start_addresses_lows,x
-	ora sample_start_addresses_mids,x
+-	lda sample_start_addresses_mids,x
 	ora sample_start_addresses_highs,x
 	bne +
 
@@ -628,3 +647,6 @@ rts
 		!text "8CHN" ; file type 8 _|
 		!byte 0
 }
+
+num_samples_to_load
+	!byte 0

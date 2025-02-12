@@ -219,13 +219,36 @@ loaded_15
 	lda #1
 	sta stash_size+1
 
+	lda #0
+	sta sample_number_count
+
+load_next_sample
+	inc sample_number_count
+	ldy sample_number_count
+
+	lda sample_lengths_lows,y			; if the length is 0, it's an empty
+	ora sample_lengths_mids,y			; sample slot (duh 🙂)
+	ora sample_lengths_highs,y
+	beq load_next_sample
+
+	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
+	sta utility_counter					; use the specified length
+	lda sample_lengths_mids,y
+	sta utility_counter+1
+	lda sample_lengths_highs,y
+	sta utility_counter+2
+
+	ora sample_lengths_mids,y			; if the top two bytes of len are 0,
+	beq load_rest_of_sample				; the sample is less than one page, so
+										; just use the load-remainder routine
+
 load_next_sample_block
 	jsr loader_get_1_block
-	ldy #0
 
+	ldy #0
 -	lda load_buffer,y
 	clc
-	adc #$80
+	adc #$80							; translate signed -> unsigned
 	sta load_buffer,y
 	iny
 	bne -
@@ -236,14 +259,69 @@ load_next_sample_block
 	bne +
 	inc expansion_memory_target_pointer+2
 
++	lda expansion_memory_target_pointer+1
+	and #$03
+	bne +
+	jsr update_progress
+
 +	lda STATUS
 	bne .done
 
-	lda expansion_memory_target_pointer+1
-	and #$03
-	bne load_next_sample_block
-	jsr update_progress
-	jmp load_next_sample_block
+	sec
+	lda utility_counter+1
+	sbc #1
+	sta utility_counter+1
+	bcs +
+	dec utility_counter+2
+
++	ora utility_counter+2				; are there less than 256 bytes left?
+	bne load_next_sample_block			; if not, keep loading...
+
+	lda utility_counter					; is the remainder just 0?  (e.g. sample
+	beq loader_check_for_more_samples	; is a multiple of 256 bytes)
+
+load_rest_of_sample						; if neither, load the exact number of remaining bytes
+	ldy #0
+-	jsr loader_get_1_byte
+	clc
+	adc #$80							; translate signed -> unsigned
+	sta load_buffer,y
+	iny
+	cpy utility_counter
+	bne -
+
+	lda #$80							; clear rest of load buf page
+-	sta load_buffer,y
+	iny
+	bne -
+
+	+JSR_INDIRECT (stash_block_vec)		; store the result
+
+	inc expansion_memory_target_pointer+1
+	bne +
+	inc expansion_memory_target_pointer+2
+
++	lda #$80							; create an entirely blank page
+	ldy #0
+-	sta load_buffer,y
+	iny
+	bne -
+
+	+JSR_INDIRECT (stash_block_vec)		; and tack it onto the end of the sample
+
+	inc expansion_memory_target_pointer+1
+	bne +
+	inc expansion_memory_target_pointer+2
+
++	lda STATUS
+	bne .done
+
+loader_check_for_more_samples
+	ldy num_samples_to_load
+	dey
+	cpy sample_number_count
+	bcc .done
+	jmp load_next_sample
 
 .done
 	jsr close_file
@@ -628,7 +706,7 @@ loader_get_1_block
 loader_get_1_block_no_reset_ptr
 	ldy #0
 
--	jsr ACPTR
+-	jsr loader_get_1_byte
 	sta (load_pointer),y
 	iny
 	bne -
@@ -648,4 +726,7 @@ kbs_fract_approx
 	!byte 0,0,1,1,2,3,3,4,5,5,6,6,7,8,8,9
 
 last_seconds_lsb
+	!byte 0
+
+sample_number_count
 	!byte 0

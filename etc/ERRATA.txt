@@ -36,11 +36,6 @@
 * Loader: need to check that file will fit before loading, else throw an
   appropriate error.
 
-* Loader: The disk read portion of the loader needs to be decoupled from the
-  part that actually stores the data into the expansion RAM, to allow for easy
-  manipulation of the data during loading, with predictable chunk sizes (most
-  likely, that'll be 256 bytes).
-
 * Fetch code:  There needs to be some kind of further mitigation for the REU
   512k wraparound glitch, for the benefit playback code, since it can grab
   up to 200 or so bytes in one go.  Not sure how to handle this.
@@ -69,11 +64,10 @@
   unneded bytes.  Think linear versus nearest neighbor in graphics scaling.
 
   The only negative side effect is mipmapping will require a bit under twice
-  as much expansion RAM, but even at the absolute maximum, counting the
-  padding mentioned below, and violating the mod file format by using 128 kB
-  samples, a mod can only be up to about 4.4 MB in size, so the most
-  mipmapping could possibly use is about 8.5 MB, and 16 MB REUs are commonly
-  available these days.
+  as much expansion RAM, but even at the absolute maximum, counting padding,
+  and violating the mod file format by using 128 kB samples, a mod can only be
+  up to about 4.4 MB in size, so the most mipmapping could possibly use is
+  about 8.5 MB, and 16 MB REUs are commonly available these days.
 
   That'll rule out using a few of the mods in my testing library on my C128,
   as my REU is just a puny little 1 MB unit.  🙂  Guess I have another reason
@@ -81,35 +75,19 @@
   
 * Loader: all instrument loops need to be unrolled to a minimum length of
   10 kB, which shall be appended to the end of the sample.  That shall then be
-  padded end with one last copy of the first 1 kB of the loop (or the
-  whole thing if it's shorter). If the loop was already over 10 kB, just pad
-  the end of the instrument with the first 1 kB bytes of the loop.  If the loop
-  had to be unrolled, its start and end points shall be set to the first and
-  last byte of the newly-unrolled data, excluding the padding, and ignoring
-  the original loop data entirely.  If not unrolled, the  start and end
-  points will remain at their original locations.
+  padded with one last copy of the first 1 kB of the loop (or the whole thing
+  if it's shorter). If the loop was already over 10 kB, don't do any
+  unrolling.  If the loop had to be unrolled, its start and end points shall
+  be set to the first and last byte of the newly-unrolled data, excluding that
+  last loop copy, and ignoring the original loop data entirely.  If not
+  unrolled, the start and end points will remain at their original locations.
 
-  If an instrument that have no looping, the loader needs to pad the end of
-  the instrument with silence, but the sample endpoint shall remain at its
-  original location.
-
-  The idea with all this unrolling and padding is to minimize the load on the
-  fetch code by requiring fewer loops per second (and hence fewer calls to
-  the code which resets the instrument sample pointer to the loop's start
-  point, which is a little expensive).  So-called "chip tunes" are especially
-  problematic here, owing to their minimal instrument data (sometimes only a
-  few hundreds of bytes, or even less).
-
-  The non-loop padding will also prevent the lookahead code from... well...
-  looking so far ahead that it finds either unallocated space or data that
-  belongs to the next instrument in the file.  In the case of loops, it
-  could potentially run across the instrument data that follows the loop,
-  which we don't want either, because that data isn't supposed to be part of
-  the loop.  Any of these would end up giving the mixer garbage sample bytes
-  on occasion, if left unchecked.
-
-  In any case, whatever is done to pad the sample, the next one needs to start
-  at an even 1 kB boundary to avoid wraparound issues.
+  The idea with all this unrolling is to minimize the load on the fetch code
+  by requiring fewer loops per second (and hence fewer calls to the code which
+  which resets the instrument sample pointer to the loop's start point, which
+  is a little expensive).  So-called "chip tunes" are especially problematic
+  here, owing to their minimal instrument data (sometimes only a few hundreds
+  of bytes, or even less).
 
 * C128: cursor-left in main menu triggers switch pages code
 
@@ -126,6 +104,9 @@
   loading, yet the file will still load just fine.
 
 * Loader: progress bar has a minor off-by-1 overflow glitch.
+
+* Loader: there's some sort of painting glitch, probably wrong bytes-per-
+  segment count caused by a change in the loader to use 256 byte chunks.
 
 * C64: there is some kind of slowdown happening relating to arpeggios and/or
   high pitches, but it only happens with one or two songs (Cybernoid 1 for

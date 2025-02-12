@@ -464,7 +464,7 @@ start_sample
 	sta current_pitch_slide_rates,y
 
 	sta sample_pointers_fracts,y
-	lda sample_start_addresses_lows,x
+	lda #0
 	sta sample_pointers_lows,y
 	lda sample_start_addresses_mids,x
 	sta sample_pointers_mids,y
