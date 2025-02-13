@@ -243,7 +243,36 @@ player_gen_tables
 	jsr isr_set_interval
 	lda #$80
 	sta allow_regen_msg
+
+	!ifndef c128 {
+		!ifdef scpu {
+			bit SCPU_PRESENT
+			bmi +
+
+			sta SCPU_TURBO_ON
+			sta SCPU_ENABLE_HW_REGS
+			lda #%10000100					; disable all local RAM echoing
+			sta SCPU_OPTIMIZATION_MODE
+			sta SCPU_DISABLE_HW_REGS
+		  +
+		}
+	}
+
 	jsr regen_all_tables
+
+	!ifndef c128 {
+		!ifdef scpu {
+			bit SCPU_PRESENT
+			bmi +
+
+			sta SCPU_TURBO_ON
+			sta SCPU_ENABLE_HW_REGS
+			lda #%01000100				; optimize:  only echo $c000-$ffff to 
+			sta SCPU_OPTIMIZATION_MODE	; local RAM
+			sta SCPU_DISABLE_HW_REGS
+		  +
+		}
+	}
 
 	!ifndef c128 {
 		bit enable_screen_on_playback

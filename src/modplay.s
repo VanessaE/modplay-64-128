@@ -40,6 +40,18 @@ start
 	jsr init
 
 	!ifndef c128 {
+		!ifdef scpu {
+			bit SCPU_PRESENT
+			bmi +
+
+			sta SCPU_TURBO_ON
+			sta SCPU_ENABLE_HW_REGS
+			lda #%01000100				; optimize:  only echo $c000-$ffff to 
+			sta SCPU_OPTIMIZATION_MODE	; local RAM
+			sta SCPU_DISABLE_HW_REGS
+		  +
+		}
+
 		jsr disable_screen
 		jsr erase_file_list
 		jsr set_normal_screen

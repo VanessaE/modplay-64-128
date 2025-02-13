@@ -25,26 +25,22 @@ init
 	jsr RESTOR ; this also undoes the "READY. trap"
 	jsr CLALL
 
+	lda #0
+	ldx #<initializing_msg
+	ldy #>initializing_msg
+	jsr print_msg
+
 	!ifdef scpu {
 		bit SCPU_PRESENT
 		bmi +
 
 		sta SCPU_TURBO_ON
 		sta SCPU_ENABLE_HW_REGS
-		!ifndef c128 {
-			lda #%01000100
-		} else {
-			lda #%10000100
-		}
+		lda #%10000100					; disable all local RAM echoing
 		sta SCPU_OPTIMIZATION_MODE
 		sta SCPU_DISABLE_HW_REGS
 	  +
 	}
-
-	lda #0
-	ldx #<initializing_msg
-	ldy #>initializing_msg
-	jsr print_msg
 
 	lda #0
 
