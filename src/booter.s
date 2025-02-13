@@ -32,6 +32,77 @@ boot_start
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
 
+; install the charsets
+	!ifndef c128 {
+		sei
+		jsr enable_char_rom_only
+
+		; park the ASCII charset in RAM at $d000, standard at $d800
+
+		lda #<charset_64
+		sta fill_copy_source
+		lda #>charset_64
+		sta fill_copy_source+1
+
+		lda #<VIC_CHARSETS
+		sta fill_copy_target
+		lda #>VIC_CHARSETS
+		sta fill_copy_target+1
+
+		ldy #0
+	-	lda (fill_copy_source),y
+		sta (fill_copy_target),y
+		inc fill_copy_source
+		bne +
+		inc fill_copy_source+1
+	+	inc fill_copy_target
+		bne -
+
+		inc fill_copy_target+1
+		lda fill_copy_target+1
+		cmp #>(VIC_CHARSETS+$1000)
+		bne -
+
+		jsr enable_kernal_only
+
+	} else {				; on the C128, upload it to the VDC
+		lda #<charset_128_alt
+		sta fill_copy_source
+		lda #>charset_128_alt
+		sta fill_copy_source+1
+
+		lda #<VDC_CHARSETS
+		sta fill_copy_target
+		lda #>VDC_CHARSETS
+		sta fill_copy_target+1
+
+		jsr vdc_write_ram_reg_31_select_only
+
+	.nextchar
+		ldy #0
+
+	-	lda (fill_copy_source),y
+		jsr vdc_continue_write_ram
+		iny
+		cpy #8
+		bne -
+
+		lda #0
+	-	jsr vdc_continue_write_ram
+		dey
+		bne -
+
+		clc
+		lda fill_copy_source
+		adc #8
+		sta fill_copy_source
+		bcc +
+		inc fill_copy_source+1
+	+	lda fill_copy_source+1
+		cmp #>(charset_128_alt+$0800)
+		bne .nextchar
+	}
+
 	!ifdef c128 {
 		jsr disable_screen
 		lda #1
@@ -61,13 +132,7 @@ boot_start
 		jsr enable_screen
 
 	} else {
-		lda CIA2_PORT_A				; select VIC-II bank 2
-		and #$fd
-		sta CIA2_PORT_A
-		lda #$04					; point VIC-II to $8000 for the screen
-		sta VIC_MEM_CTRL			; and use the char ROM image at $9000
-		lda #$80					; point the KERNAL appropriately
-		sta HIBASE
+		+C64_NORMAL_SCREEN
 		lda #$36					; disable BASIC, else it'll corrupt the
 		sta $01						; splash data
 		ldx #<splash_data
@@ -200,6 +265,8 @@ program_loader_origin
 +PRINT_MSG
 +SCREEN_ONOFF
 
+!source "src/misc-functions.s"
+
 !ifdef c128 {
 	wrong_screen_msg
 		!byte $80+3
@@ -227,4 +294,11 @@ build_no_msg
 		!text GRN,"[ Build #",0
 	}
 
-!source "src/misc-functions.s"
+!ifndef c128 {
+	charset_64
+		!binary "etc/charset-64a.bin"
+		!binary "etc/charset-64p.bin"
+} else {
+	charset_128_alt
+		!binary "etc/charset-128a.bin"
+}

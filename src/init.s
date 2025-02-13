@@ -352,8 +352,6 @@ init
 	ora pal_flag
 	sta CIA2_CRA
 
-	jsr charset_copy
-
 	!ifndef c128 {
 		jsr blur_table_copy
 		jsr window_edge_tables_copy
@@ -492,78 +490,6 @@ clear_main_memory_origin
 
 fmemtxt
 	!text "free memory start",0
-
-charset_copy
-	!ifndef c128 {
-		sei
-		jsr enable_char_rom_only
-
-		; park the ASCII charset in RAM at $d000, standard at $d800
-
-		lda #<charset_64
-		sta fill_copy_source
-		lda #>charset_64
-		sta fill_copy_source+1
-
-		lda #<VIC_CHARSETS
-		sta fill_copy_target
-		lda #>VIC_CHARSETS
-		sta fill_copy_target+1
-
-		ldy #0
-	-	lda (fill_copy_source),y
-		sta (fill_copy_target),y
-		inc fill_copy_source
-		bne +
-		inc fill_copy_source+1
-	+	inc fill_copy_target
-		bne -
-
-		inc fill_copy_target+1
-		lda fill_copy_target+1
-		cmp #>(VIC_CHARSETS+$1000)
-		bne -
-
-		jsr enable_kernal_only
-
-	} else {				; on the C128, upload it to the VDC
-		lda #<charset_128_alt
-		sta fill_copy_source
-		lda #>charset_128_alt
-		sta fill_copy_source+1
-
-		lda #<VDC_CHARSETS
-		sta fill_copy_target
-		lda #>VDC_CHARSETS
-		sta fill_copy_target+1
-
-		jsr vdc_write_ram_reg_31_select_only
-
-	.nextchar
-		ldy #0
-
-	-	lda (fill_copy_source),y
-		jsr vdc_continue_write_ram
-		iny
-		cpy #8
-		bne -
-
-		lda #0
-	-	jsr vdc_continue_write_ram
-		dey
-		bne -
-
-		clc
-		lda fill_copy_source
-		adc #8
-		sta fill_copy_source
-		bcc +
-		inc fill_copy_source+1
-	+	lda fill_copy_source+1
-		cmp #>(charset_128_alt+$0800)
-		bne .nextchar
-	}
-rts
 
 !ifndef c128 {
 	blur_table_copy
