@@ -84,6 +84,8 @@ start
 !source "src/viz-common.s"
 !source "src/viz-row-data.s"
 
+!source "src/mixer.s"
+
 !source "src/screen-fx.s"
 !source "src/windowing.s"
 

@@ -392,15 +392,3 @@ bval_cnt	!byte 0
 
 nybble_x10
 	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
-
-mixer_lookahead_code_read_byte_addr_idx
-	!byte 0
-	!byte mixer_rd_la_track_2 - mixer_rd_la_track_1
-	!byte mixer_rd_la_track_3 - mixer_rd_la_track_1
-	!byte mixer_rd_la_track_4 - mixer_rd_la_track_1
-
-mixer_lookahead_code_volume_addr_idx
-	!byte 0
-	!byte mixer_vol_addr_2 - mixer_vol_addr_1
-	!byte mixer_vol_addr_3 - mixer_vol_addr_1
-	!byte mixer_vol_addr_4 - mixer_vol_addr_1
