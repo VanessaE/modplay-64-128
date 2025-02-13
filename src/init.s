@@ -600,7 +600,7 @@ default_config
 	!byte 1					; default RAM driver (REU)
 	!byte $80				; default Stereo mode (on)
 	!byte 0					; default filter setting
-	!byte 0					; default resonance setting
+	!byte 0					; unused
 	!byte $0				; default dithering mode (off)
 	!byte $80				; default screen enable (on)
 	!byte $ff				; end of file marker

@@ -235,8 +235,6 @@ menu_text_stereo
 	!text RIGHT,GRN,"[",YEL,"S",GRN,"]",LGRY," Stereo",RETURN,0
 menu_text_filter
 	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filter",RETURN,0
-menu_text_resonance
-	!text RIGHT,GRN,"[",YEL,"R",GRN,"]",LGRY," Resonance",RETURN,0
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Dithering",RETURN,0
 menu_text_enable_screen

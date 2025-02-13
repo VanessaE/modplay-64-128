@@ -210,8 +210,6 @@ menu_text_stereo
 	!text RIGHT,GRN,"[",YEL,"S",GRN,"]",LGRY," Stereo output",RETURN,0
 menu_text_filter
 	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Change filter cutoff",RETURN,0
-menu_text_resonance
-	!text RIGHT,GRN,"[",YEL,"R",GRN,"]",LGRY," Change resonance setting",RETURN,0
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Enable Dithering",RETURN,0
 menu_text_save_config

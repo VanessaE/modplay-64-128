@@ -318,19 +318,6 @@ chk_key_a
 ;
 ;+	jmp main_loop
 ;
-;chk_key_r
-;	cmp #$52
-;	bne chk_key_t
-;	!ifdef c128 {
-;		jsr set_window_menu_pane
-;	}
-;
-;	lda audio_driver
-;	cmp #4 ; ?  idk yet
-;	bne +
-;	jsr change_resonance_setting
-;
-;+	jmp main_loop
 
 chk_key_t
 	cmp #$54
@@ -694,20 +681,6 @@ not_sid_menu
 		jsr print_menu_line
 	}
 
-; display filter and resonance or not
-;++	lda audio_driver
-;	cmp #4 ; ?  idk yet
-;	beq +
-;	jmp ++
-;
-;+	ldx #<menu_text_filter
-;	ldy #>menu_text_filter
-;	jsr print_menu_line
-;
-;	ldx #<menu_text_resonance
-;	ldy #>menu_text_resonance
-;	jsr print_menu_line
-
 ++	lda audio_driver
 	cmp #1
 	bne +
@@ -737,7 +710,6 @@ not_sid_menu
 	jsr show_dac_addr
 	jsr show_stereo_mode
 ;	jsr show_filter_setting
-;	jsr show_resonance_setting
 	jsr show_dithering_setting
 	!ifndef c128 {
 		jsr show_screen_enable

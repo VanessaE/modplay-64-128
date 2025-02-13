@@ -28,14 +28,14 @@ long_line_behaviour=1
 long_line_column=79
 
 [files]
-current_page=9
+current_page=41
 FILE_NAME_0=2517;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2Ftrim-whitespc.sh;0;4
 FILE_NAME_1=1119;Make;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FMakefile;0;4
 FILE_NAME_2=1610;Markdown;0;EUTF-8;1;1;1;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2FREADME.md;0;4
 FILE_NAME_3=18705;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fsequencer.s;0;4
 FILE_NAME_4=707;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2Fcompress-rle.sh;0;4
 FILE_NAME_5=35;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmixer-std.s;0;4
-FILE_NAME_6=16619;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fconstants-com.h;0;4
+FILE_NAME_6=6428;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fconstants-com.h;0;4
 FILE_NAME_7=856;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fconstants-64.h;0;4
 FILE_NAME_8=710;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fconstants-128.h;0;4
 FILE_NAME_9=2240;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fbooter.s;0;4
@@ -61,16 +61,16 @@ FILE_NAME_28=603;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodp
 FILE_NAME_29=1967;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdriver-sid-4b.s;0;4
 FILE_NAME_30=3523;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmodplay.s;0;4
 FILE_NAME_31=407;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fc128-boot-sect.s;0;4
-FILE_NAME_32=6274;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Finit.s;0;4
+FILE_NAME_32=10613;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Finit.s;0;4
 FILE_NAME_33=0;None;1;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FDocuments%2FACME%2FAllPOs.txt;0;4
-FILE_NAME_34=12255;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmain-menu.s;0;4
+FILE_NAME_34=11607;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fmain-menu.s;0;4
 FILE_NAME_35=1869;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fplaylist.s;0;4
 FILE_NAME_36=4822;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fplayer.s;0;4
 FILE_NAME_37=2119;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdriver-sid-d4b.s;0;4
-FILE_NAME_38=11656;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-64.s;0;4
-FILE_NAME_39=10144;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-128.s;0;4
+FILE_NAME_38=5744;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-64.s;0;4
+FILE_NAME_39=5652;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fstrings-128.s;0;4
 FILE_NAME_40=3317;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fdirectory.s;0;4
-FILE_NAME_41=9006;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fchange-show.s;0;4
+FILE_NAME_41=7457;ASM;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fsrc%2Fchange-show.s;0;4
 FILE_NAME_42=2441;None;0;EUTF-8;1;1;0;%2Fhome%2Fvanessa%2FCommodore-related%2Fmodplay-v2.0%2Fetc%2FERRATA.txt;0;4
 
 [VTE]

@@ -603,54 +603,6 @@ change_filter_setting
 	jsr show_filter_setting
 + rts
 
-show_resonance_setting
-	lda current_menu_page
-	cmp #2
-	beq +
-	rts
-
-+	clc
-	ldx #reson_row
-	ldy #reson_col
-	jsr PLOT
-	lda audio_driver
-	cmp #4 ; or maybe #3?  idk yet.
-	beq +
-	rts
-
-+	lda #GRN
-	jsr CHROUT
-	lda #"("
-	jsr CHROUT
-	lda #WHT
-	jsr CHROUT
-	ldx #9
-	cpx resonance_setting
-	bmi +
-	lda #$20	; print a leading space if 0-9
-	jsr CHROUT
-
-+	sec
-	ldx resonance_setting
-	ldy #0
-	jsr print_uint16
-	lda #GRN
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-rts
-
-change_resonance_setting
-	inc resonance_setting
-	lda resonance_setting
-	cmp #16
-	bne +
-	lda #0
-+	sta resonance_setting
-
-	jsr show_resonance_setting
-+ rts
-
 show_dithering_setting
 	lda current_menu_page
 	cmp #2

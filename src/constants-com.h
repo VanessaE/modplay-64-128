@@ -202,7 +202,7 @@
 	ram_driver							= $0b0b
 	stereo_enable						= $0b0c
 	filter_setting						= $0b0d
-	resonance_setting					= $0b0e
+	; unused: $0b0e
 	dither_enable						= $0b0f
 	enable_screen_on_playback			= $0b10
 
