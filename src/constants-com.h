@@ -473,6 +473,7 @@
 	CIA1_TOD_SECONDS					= $dc09
 	CIA1_TOD_MINUTES					= $dc0a
 	CIA1_TOD_HOURS						= $dc0b
+	CIA1_SDR							= $dc0c
 	CIA1_ICR							= $dc0d
 	CIA1_CRA							= $dc0e
 	CIA1_CRB							= $dc0f

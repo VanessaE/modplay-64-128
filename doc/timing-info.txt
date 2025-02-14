@@ -114,7 +114,7 @@ AUDIO DRIVER TIMINGS
 
 For the 4-bit SID driver:
 
-C64: each ISR call runs for 53 cycles.
+C64: each ISR call runs for 52 cycles.
 C128: each runs for 56 cycles including clock stretching, divide by 2 = 28 cycles
 
 SuperCPU:  treat each I/O access as a flat 20 turbo cycles, all other cycle
@@ -144,14 +144,14 @@ GRAND TOTALS
 Using the 4-bit SID driver in mono, with dithering turned off (also applies to
 8-bit DAC driver if it's running in mono)...
 
-Factoring-in the mixer/lookahead runtime of 46 cycles per byte, plus 53 cycles
+Factoring-in the mixer/lookahead runtime of 46 cycles per byte, plus 52 cycles
 per byte for the ISR, plus the "likely" code path in the fetch routine taking
 24 to 26 cycles, plus 20 cycles of fudge to give the sequencer enough time to
 run:
 
 The C64 should be run at about 7 kHz with the screen off:
 
-1022727 / (47 + 53 + 26 + 20) = ~7005
+1022727 / (47 + 52 + 26 + 20) = ~7053.3
 
 or about 5.2 KHz with the screen on, since ISR is always 3 rasters:
 

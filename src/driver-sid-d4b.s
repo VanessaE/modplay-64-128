@@ -62,15 +62,15 @@ sid_4bit_dithered_set_isr_cycle_count
 
 	!ifndef scpu {
 		!ifndef c128 {
-			lda #66
+			lda #65
 			bit stereo_enable
 			bpl +
-			lda #88
+			lda #87
 		} else {
-			lda #(69 + 1) / 2
+			lda #68 / 2
 			bit stereo_enable
 			bpl +
-			lda #92 / 2
+			lda #(91 + 1) / 2
 		}
 	} else {
 		lda #8
@@ -197,8 +197,12 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
+!ifndef scpu {
+	jmp CIA1_SDR				; 3+6 cycles to exit (does an implicit read of CIA1_ICR)
+} else {
 	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-rti								; 6 cycles to exit
+	rti							; 6 cycles to exit
+}
 
 
 sid_isr_4b_dithered_stereo		; 7 cycles coming in
@@ -235,7 +239,11 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 
 .ias lda #00					; 2
 .ixs ldx #00					; 2
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-rti								; 6 cycles to exit
+!ifndef scpu {
+	jmp CIA1_SDR				; 3+6
+} else {
+	bit CIA1_ICR				; 4
+	rti							; 6 cycles to exit
+}
 
 }

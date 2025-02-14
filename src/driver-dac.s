@@ -94,9 +94,9 @@ dac_set_isr_cycle_count
 		bmi .sicc_st
 
 		!ifndef c128 {
-			lda #51
+			lda #50
 		} else {
-			lda #(53 + 1) / 2
+			lda #52 / 2
 		}
 
 		jmp .sicc_out
@@ -107,9 +107,9 @@ dac_set_isr_cycle_count
 		beq .sicc_st_up
 
 		!ifndef c128 {
-			lda #53
+			lda #52
 		} else {
-			lda #56 / 2
+			lda #(55 + 1) / 2
 		}
 
 		jmp .sicc_out
@@ -117,9 +117,9 @@ dac_set_isr_cycle_count
 	.sicc_st_up
 
 		!ifndef c128 {
-			lda #65
+			lda #64
 		} else {
-			lda #70 / 2
+			lda #(69 + 1) / 2
 		}
 
 	} else {
@@ -181,8 +181,12 @@ dac_isr_mono					; 7 cycles coming in
 
 .iam lda #00					; 2
 .ixm ldx #00					; 2
+!ifndef scpu {
+	jmp CIA1_SDR				; 3+6 cycles to exit (does an implicit read of CIA1_ICR)
+} else {
 	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-rti								; 6 cycles to exit
+	rti							; 6 cycles to exit
+}
 
 
 dac_isr_stereo					; 7 cycles coming in
@@ -198,8 +202,12 @@ dac_isr_stereo					; 7 cycles coming in
 
 .ias lda #00					; 2
 .ixs ldx #00					; 2
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-rti								; 6 cycles to exit
+!ifndef scpu {
+	jmp CIA1_SDR				; 3+6 cycles to exit
+} else {
+	bit CIA1_ICR				; 4
+	rti							; 6 cycles to exit
+}
 
 
 dac_isr_stereo_user_port		; 7 cycles coming in
@@ -219,7 +227,11 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 
 .iasup lda #00					; 2
 .ixsup ldx #00					; 2
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-rti								; 6 cycles to exit
+!ifndef scpu {
+	jmp CIA1_SDR				; 3+6 cycles to exit
+} else {
+	bit CIA1_ICR				; 4
+	rti							; 6 cycles to exit
+}
 
 }

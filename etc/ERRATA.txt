@@ -131,6 +131,9 @@
   given song has shown it, it'll happen at the same places every time in that
   song.
 
+* C64: there's some kind of color painting glitch in the UI, a line being set
+  to white while another is black (should be dark gray and blue, resp.)
+
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 

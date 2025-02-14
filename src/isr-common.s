@@ -194,7 +194,17 @@ isr_startup
 		sta CIA1_CRB			; start CIA timer B
 	}
 
-++	cli
+; on stock machines, set up for quick IRQ exit.  saves one cycle in the ISR's
+
+++	!ifndef scpu {
+		lda CIA1_CRA			; set CIA1 serial register to output, so that
+		ora #%01000000			; we can store to it.
+		sta CIA1_CRA
+		lda #$40				; $40 is the opcode for "RTI"
+		sta CIA1_SDR
+	}
+
+	cli
 rts
 
 !ifndef c128 {
