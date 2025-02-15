@@ -250,13 +250,13 @@
 	old_STOP_vec						= $0bb1 ; 2 bytes
 	parse_header_sample_pointer			= $0bb3 ; 3 bytes
 
-	arpeggio_extra_note_first_fracts	= $0bb6 ; \___ 16 bytes
-	arpeggio_extra_note_first_ints		= $0bbe ; /
-	arpeggio_extra_note_second_fracts	= $0bc6 ; \___ 16 bytes
-	arpeggio_extra_note_second_ints		= $0bce ; /
-	retrigger_rates						= $0bd6 ; 8 bytes
+	highest_exp_addresss_used			= $0bb6 ; 3 bytes
 
-	utility_counter						= $0bde ; 3 bytes
+	arpeggio_extra_note_first_fracts	= $0bb9 ; \___ 16 bytes
+	arpeggio_extra_note_first_ints		= $0bc1 ; /
+	arpeggio_extra_note_second_fracts	= $0bc9 ; \___ 16 bytes
+	arpeggio_extra_note_second_ints		= $0bd1 ; /
+	retrigger_rates						= $0bd9 ; 8 bytes
 
 	progress_bar_row					= $0be1
 	progress_bar_column					= $0be2
@@ -311,22 +311,22 @@
 	temp_abs_y							= $0c11
 	temp_abs_y2							= $0c12
 	temp_counter						= $0c13 ; 3 bytes
+	utility_counter						= $0c16 ; 3 bytes
 
-	stash_size							= $0c16 ; 2 bytes
+	stash_size							= $0c19 ; 2 bytes
 
-	scroll_area_target_addr				= $0c18 ; 2 bytes
-	scroll_area_width					= $0c1a
-	scroll_area_height					= $0c1b
-	scroll_area_blank_last_line_flag	= $0c1c
+	scroll_area_target_addr				= $0c1b ; 2 bytes
+	scroll_area_width					= $0c1d
+	scroll_area_height					= $0c1e
+	scroll_area_blank_last_line_flag	= $0c1f
 
-	; free: $0c1d and $0c1e
-	number_of_song_positions			= $0c1f
-	number_of_patterns					= $0c20
+	number_of_song_positions			= $0c20
+	number_of_patterns					= $0c21
 
-	sid_type_left						= $0c21 ; $80 = 8580, 0 = 6581.
-	sid_type_right						= $0c22
+	sid_type_left						= $0c22 ; $80 = 8580, 0 = 6581.
+	sid_type_right						= $0c23
 
-	; free: $0c23 through $0ca7
+	; free: $0c24 through $0ca7
 
 	; various program vectors
 
@@ -352,7 +352,7 @@
 	; unused.
 
 	; free: $0cc0 through $0cdf
-
+	
 	sample_start_addresses_mids			= $0ce0
 	sample_start_addresses_highs		= $0d00
 	sample_end_addresses_lows			= $0d20

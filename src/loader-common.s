@@ -110,7 +110,7 @@ load_by_filename_entry
 	lsr file_size_in_kb+1
 	ror file_size_in_kb
 
-	jsr populate_loader_mini_popup
+	jsr loader_populate_mini_popup
 
 ; preset the divisor to be proportional to max number of progress bar segments
 ; 16 char long bar * 4 segments per = 64 segments on C64, 16 * 8 = 128 on C128
@@ -191,13 +191,16 @@ load_by_filename_entry
 	bit header_loaded		; or .C = 0 for 15 samples, .C = 1 for 31,
 	bmi +
 	jmp abort_load
-+	bcc loaded_15
++	php
+	jsr loader_add_progress_bar
+	plp
+	bcc loaded_15
 
 ; okay, at this point we can go ahead and load the rest of the file.
 
 load_next_pattern
 	jsr loader_get_1kb
-	jsr update_progress
+	jsr loader_update_progress
 
 loaded_15
 	jsr reformat_pattern_data
@@ -270,7 +273,7 @@ load_next_sample_block
 +	lda expansion_memory_target_pointer+1
 	and #$03
 	bne +
-	jsr update_progress
+	jsr loader_update_progress
 
 +	lda STATUS
 	bne .done
@@ -374,7 +377,7 @@ abort_load
 	jsr press_any_key
 rts
 
-populate_loader_mini_popup
+loader_populate_mini_popup
 	jsr gray_out
 	clc
 	jsr draw_mini_popup
@@ -484,19 +487,21 @@ populate_loader_mini_popup
 	} else {
 		jsr FULLW
 	}
+rts
 
-	lda #0					; file size in kB -> size in bytes
+loader_add_progress_bar
+
+; rather than use the file size, we use the end addr of the last sample, as
+; we're using the exp load pointer as the progress reference, and that address
+; will more or less represent the actual RAM usage anyway (since the start of
+; exp RAM won't be very large anyway)
+
+	lda highest_exp_addresss_used
 	sta dividend
-
-	lda file_size_in_kb+1
-	sta dividend+2
-
-	lda file_size_in_kb
-	asl
-	rol dividend+2
-	asl
-	rol dividend+2
+	lda highest_exp_addresss_used+1
 	sta dividend+1
+	lda highest_exp_addresss_used+2
+	sta dividend+2
 
 	lda #progbar_len
 	sta divisor
@@ -517,8 +522,8 @@ populate_loader_mini_popup
 	jsr draw_empty_progress_bar
 rts
 
-update_progress
-	jsr print_loading_speed
+loader_update_progress
+	jsr loader_print_loading_speed
 
 	sec
 	lda #0
@@ -542,7 +547,7 @@ update_progress
 	jsr update_progress_bar
 rts
 
-print_loading_speed
+loader_print_loading_speed
 	bit CIA1_TOD_HOURS; read hours to latch the time
 
 	lda CIA1_TOD_MINUTES ; minutes

@@ -103,11 +103,6 @@
 * Loader: sometimes, the filename displays as garbage in the mini popup when
   loading, yet the file will still load just fine.
 
-* Loader: progress bar has a minor off-by-1 overflow glitch.
-
-* Loader: there's some sort of painting glitch, probably wrong bytes-per-
-  segment count caused by a change in the loader to use 256 byte chunks.
-
 * C64: there is some kind of slowdown happening relating to arpeggios and/or
   high pitches, but it only happens with one or two songs (Cybernoid 1 for
   instance), and only on C64 + User Port DigiMAX, and only when playing in
@@ -130,9 +125,6 @@
   repeatable: it's the same duration from one song to another, and if any
   given song has shown it, it'll happen at the same places every time in that
   song.
-
-* C64: there's some kind of color painting glitch in the UI, a line being set
-  to white while another is black (should be dark gray and blue, resp.)
 
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:

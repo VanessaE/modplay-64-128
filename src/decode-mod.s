@@ -537,6 +537,13 @@ skip_sample
 +	dex
 	bpl -
 
+	lda parse_header_sample_pointer			; the progress bar code needs to
+	sta highest_exp_addresss_used			; know where the sample data ends
+	lda parse_header_sample_pointer+1
+	sta highest_exp_addresss_used+1
+	lda parse_header_sample_pointer+2
+	sta highest_exp_addresss_used+2
+
 	clc ; exit with carry clear to indicate successful parse, okay to load
 rts
 
