@@ -243,7 +243,7 @@
 	file_size_in_kb						= $0bab ; 2 bytes
 	header_loaded						= $0bad
 
-	reu_highest_bank					= $0bae
+	; free: $0bae
 	ramlink_detect						= $0baf
 	main_memory_free_pages				= $0bb0
 
@@ -273,9 +273,11 @@
 
 	expansion_memory_start_page			= $0bee
 	expansion_memory_start_bank			= $0bef
-	supercpu_last_free_page				= $0bf0
-	supercpu_last_free_bank				= $0bf1
-	; free; $0bf2
+
+	reu_highest_bank					= $0bf0
+
+	supercpu_last_free_page				= $0bf1
+	supercpu_last_free_bank				= $0bf2
 
 	char_table_select					= $0bf3 ; C64-only
 	print_msg_char_limit				= $0bf4

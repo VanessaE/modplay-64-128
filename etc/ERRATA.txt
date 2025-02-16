@@ -32,9 +32,6 @@
 ##  KNOWN ISSUES  ##
 ####################
 
-* Loader: need to check that file will fit before loading, else throw an
-  appropriate error.
-
 * Fetch code:  There needs to be some kind of further mitigation for the REU
   512k wraparound glitch, for the benefit playback code, since it can grab
   up to 200 or so bytes in one go.  Not sure how to handle this.

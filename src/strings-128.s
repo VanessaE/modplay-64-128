@@ -277,6 +277,18 @@ loading_msg
 	!fill 10,RIGHT
 	!text LGRN,"Loading...",0
 
+file_too_large_msg
+	!fill 7,RIGHT
+	!text RED,"This file needs",RETURN
+	!fill 6,RIGHT
+	!text "more expansion RAM",RETURN
+	!fill 6,RIGHT
+	!text "than is available.",RETURN,RETURN
+	!fill 8,RIGHT
+	!text "Load aborted.",RETURN,RETURN
+	!fill 8,RIGHT
+	!byte 0
+
 blocks_msg
 	!text " blocks / ",0
 

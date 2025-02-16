@@ -324,6 +324,17 @@ mini_popup_next_line
 loading_msg
 	!text LGRN,"    Loading...",0
 
+file_too_large_msg
+	!text RIGHT,RED,"This file needs",RETURN
+	!fill 11,RIGHT
+	!text "more expansion RAM",RETURN
+	!fill 11,RIGHT
+	!text "than is available.",RETURN,RETURN
+	!fill 13,RIGHT
+	!text "Load aborted.",RETURN,RETURN
+	!fill 13,RIGHT
+	!byte 0
+
 blocks_msg
 	!text " blocks/",0
 

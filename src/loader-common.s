@@ -184,16 +184,65 @@ load_by_filename_entry
 ; read-in the header
 
 	jsr load_mod_header		; returns .N = 0 on error or if header is bad
+							; or .C = 0 for 15 samples, .C = 1 for 31
+	lda #0
+	ror
+	sta reload_carry+1
 
 	lda #4
 	sta stash_size+1
 
-	bit header_loaded		; or .C = 0 for 15 samples, .C = 1 for 31,
+	bit header_loaded
 	bmi +
+
+	jsr close_file
+
+	jsr draw_mini_popup
+	lda #0
+	ldx #<unknown_file_msg
+	ldy #>unknown_file_msg
+
+	!ifndef c128 {
+		jsr print_msg
+		lda #0
+		ldx #<mini_popup_next_line
+		ldy #>mini_popup_next_line
+		jsr print_msg_rle
+		lda #RIGHT
+	} else {
+		jsr print_msg_rle
+		lda #RIGHT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+	}
+	jsr CHROUT
+	jsr CHROUT
+
 	jmp abort_load
-+	php
+
++	lda highest_exp_addresss_used+2
+	cmp reu_highest_bank
+	bcc reload_carry
+
+	jsr close_file
+
+	jsr draw_mini_popup
+
+	lda #0
+	ldx #<file_too_large_msg
+	ldy #>file_too_large_msg
+	jsr print_msg
+
+	jmp abort_load
+
+	reload_carry
+	  lda #0
+	rol
 	jsr loader_add_progress_bar
-	plp
 	bcc loaded_15
 
 ; okay, at this point we can go ahead and load the rest of the file.
@@ -349,31 +398,8 @@ acptr_exit
 rts
 
 abort_load
-	jsr close_file
-	jsr draw_mini_popup
 	lda #0
-	ldx #<unknown_file_msg
-	ldy #>unknown_file_msg
-
-	!ifndef c128 {
-		jsr print_msg
-		lda #0
-		ldx #<mini_popup_next_line
-		ldy #>mini_popup_next_line
-		jsr print_msg_rle
-		lda #RIGHT
-	} else {
-		jsr print_msg_rle
-		lda #RIGHT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-	}
-	jsr CHROUT
-	jsr CHROUT
+	sta current_file_type
 	jsr press_any_key
 rts
 
