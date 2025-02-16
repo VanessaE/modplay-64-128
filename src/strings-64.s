@@ -1,15 +1,19 @@
-program_title
+program_version
+	!text version_major+$30,".",version_minor+$30,0
+
 	!ifndef scpu {
-		!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v"
-		!text LRED,version_major+$30,".",version_minor+$30
-		!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
+		program_title
+			!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
 	} else {
-		!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v"
-		!text LRED,version_major+$30,".",version_minor+$30
-		!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player"
-		!text LRED,"[",PUR,"SCPU",LRED,"]"
-		!fill 6,LEFT
-		!byte INST,RETURN,0
+		program_title
+			!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player"
+			!text LRED,"[",PUR,"SCPU",LRED,"]"
+			!fill 6,LEFT
+			!byte INST,RETURN,0
 	}
 
 ; these are all RLE-encoded for the print_msg_rle* function
@@ -201,6 +205,9 @@ menu_text_dos_cmd
 menu_text_dos_cmd_b
 	!fill 9,RIGHT
 	!text "commands",RETURN,0
+menu_text_info_popup
+	!fill 4,RIGHT
+	!text RIGHT,GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
 
 menu_txt_home_clr_gray
 	!text DGRY,"[Hm/Clr] Top/bottom",RETURN,0
@@ -251,7 +258,37 @@ menu_text_sid_addr_gray_b
 	!fill 5,RIGHT
 	!text "address (N/A)",RETURN,0
 
-; ##### Menu etc.
+; ##### System info popup
+
+info_popup_msg
+	!fill 9,RIGHT
+	!text YEL,"System Information",RETURN,RETURN
+	!text RIGHT,RIGHT,RIGHT,"Platform:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"REU size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"SuperRAM size:",RETURN
+;	!text RIGHT,RIGHT,RIGHT,"geoRAM size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
+	!fill 4,DOWN
+	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
+
+info_popup_platform_computer
+	!text LGRN,"C64",0
+
+!ifdef scpu {
+	info_popup_plus_scpu_msg
+		!text " + SuperCPU ",0
+}
+
+info_popup_6581_msg
+	!text LGRN,"6581",0
+
+info_popup_8580_msg
+	!text LGRN,"8580",0
+
+; ##### Menu misc.
 
 mode_on_txt
 	!text GRN,"(",WHT,"On ",GRN,")",0
@@ -259,6 +296,10 @@ mode_off_txt
 	!text GRN,"(",LGRY,"Off",GRN,")",0
 na_msg
 	!text DGRY,"(N/A)",0
+not_present_msg
+	!text DGRY,"not present",0
+kb_msg
+	!text "kB",0
 
 ; others
 
@@ -317,9 +358,6 @@ user_msg
 
 pl_size_msg
 	!TEXT LGRN,"Size: ",0
-
-kb_msg
-	!text "kB",0
 
 erase_size_field_msg
 	!byte 16," "

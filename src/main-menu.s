@@ -20,6 +20,16 @@ show_main_menu
 	ldy #>program_title
 	jsr print_msg
 
+	lda #0
+	ldx #<program_version
+	ldy #>program_version
+	jsr print_msg
+
+	lda #0
+	ldx #<program_title_b
+	ldy #>program_title_b
+	jsr print_msg
+
 	ldy #0
 	sty temp_abs_y
 -	ldy temp_abs_y
@@ -254,10 +264,21 @@ chk_key_number
 
 chk_key_dollar
 	cmp #$24
-	bne chk_key_d
+	bne chk_key_at
 	jsr show_directory
 	jmp show_main_menu
 
+chk_key_at
+	cmp #$40
+	bne chk_key_i
+	jsr request_dos_command
+	jmp show_main_menu
+
+chk_key_i
+	cmp #$49
+	bne chk_key_d
+	jsr show_system_info_popup
+	jmp show_main_menu
 
 ; keys for page C start here
 
@@ -344,14 +365,8 @@ chk_key_e
 
 chk_key_leftarrow
 	cmp #$5f
-	bne chk_key_at
-	jsr save_config
-	jmp show_main_menu
-
-chk_key_at
-	cmp #$40
 	bne invalid_key
-	jsr request_dos_command
+	jsr save_config
 	jmp show_main_menu
 
 invalid_key
@@ -619,6 +634,10 @@ draw_menu_page_b
 		jsr print_menu_line
 	}
 
+	ldx #<menu_text_info_popup
+	ldy #>menu_text_info_popup
+	jsr print_menu_line
+
 	jsr show_input_device
 rts
 
@@ -714,38 +733,6 @@ not_sid_menu
 	!ifndef c128 {
 		jsr show_screen_enable
 	}
-
-	!ifndef c128 {
-		build_no_row = 16
-		build_no_col = 22
-	} else {
-		build_no_row = 14
-		build_no_col = 14
-	}
-
-	clc
-	ldx #build_no_row
-	ldy #build_no_col
-	jsr PLOT
-
-	lda #0
-	ldx #<build_no_msg
-	ldy #>build_no_msg
-	jsr print_msg
-
-	sec
-	ldx #<build_no
-	ldy #>build_no
-	jsr print_uint16
-
-	!ifdef c128 {
-		lda #" "
-		jsr CHROUT
-	}
-
-	lda #"]"
-	jsr CHROUT
-
 rts
 
 print_menu_line

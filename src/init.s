@@ -72,6 +72,15 @@ init
 		bmi +
 		lda #$80
 		sta supercpu_detected
+
+		sta SCPU_ENABLE_HW_REGS
+
+		lda SCPU_RAM_LAST_PAGE
+		sta supercpu_last_free_page
+		lda SCPU_RAM_LAST_BANK
+		sta supercpu_last_free_bank
+
+		sta SCPU_DISABLE_HW_REGS
 	  +
 	}
 

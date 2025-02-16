@@ -25,6 +25,26 @@
 	dith_en_col		= 33
 	scr_en_row		= 11
 	scr_en_col		= 30
+	info_anykey_row	= 20
+	info_anykey_col	= 14
+	info_plat_row	= 7
+	info_plat_col	= 13
+	info_reu_row	= 8
+	info_reu_col	= 13
+	info_supram_row	= 9
+	info_supram_col	= 18
+;	info_georam_row	=
+;	info_georam_col	= 
+	info_lsid_row	= 10
+	info_lsid_col	= 13
+	info_rsid_row	= 11
+	info_rsid_col	= 14
+	info_files_row	= 12
+	info_files_col	= 26
+	info_ram_use_row = 13
+	info_ram_use_col = 26
+	build_no_row	= 18
+	build_no_col	= 13
 } else {
 	rpt_row			= 6
 	rpt_col			= 31
@@ -46,6 +66,26 @@
 	reson_col		= 30
 	dith_en_row		= 6
 	dith_en_col		= 22
+	info_anykey_row	= 15
+	info_anykey_col	= 14
+	info_plat_row	= 2
+	info_plat_col	= 13
+	info_reu_row	= 3
+	info_reu_col	= 13
+	info_supram_row	= 4
+	info_supram_col	= 18
+;	info_georam_row	=
+;	info_georam_col	= 
+	info_lsid_row	= 5
+	info_lsid_col	= 13
+	info_rsid_row	= 6
+	info_rsid_col	= 14
+	info_files_row	= 7
+	info_files_col	= 26
+	info_ram_use_row = 8
+	info_ram_use_col = 26
+	build_no_row	= 13
+	build_no_col	= 13
 }
 
 show_repeat_mode
@@ -684,4 +724,237 @@ change_dithering_setting
 	rts
 }
 
+show_system_info_popup
+	clc
+	jsr draw_medium_popup
+	lda #0
+	ldx #<info_popup_msg
+	ldy #>info_popup_msg
+	jsr print_msg
 
+	clc
+	ldx #info_plat_row
+	ldy #info_plat_col
+	jsr PLOT
+	lda #0
+	ldx #<info_popup_platform_computer
+	ldy #>info_popup_platform_computer
+	jsr print_msg
+
+	!ifdef scpu {
+		bit supercpu_detected
+		bpl +
+
+		lda #0
+		ldx #<info_popup_plus_scpu_msg
+		ldy #>info_popup_plus_scpu_msg
+		jsr print_msg
+	  +
+	}
+
+	clc
+	ldx #info_reu_row
+	ldy #info_reu_col
+	jsr PLOT
+
+	clc
+	lda reu_highest_bank
+	adc #1
+	sta utility_pointer
+	lda #0
+	rol
+
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+
+	sec
+	ldx utility_pointer
+	tay
+	jsr print_uint16
+
+	!ifndef c128 {
+		lda #32
+		jsr CHROUT
+	}
+
+	lda #0
+	ldx #<kb_msg
+	ldy #>kb_msg
+	jsr print_msg
+
+		clc
+		ldx #info_supram_row
+		ldy #info_supram_col
+		jsr PLOT
+
+	!ifdef scpu {
+
+		lda supercpu_last_free_page
+		ora supercpu_last_free_bank
+		bne +
+
+		lda #0
+		ldx #<not_present_msg
+		ldy #>not_present_msg
+		jsr print_msg
+		jmp ++
+
+	+	clc
+		lda supercpu_last_free_bank
+		adc #1
+		sta utility_pointer
+		lda #0
+		rol
+
+		asl utility_pointer
+		rol 
+		asl utility_pointer
+		rol 
+		asl utility_pointer
+		rol 
+		asl utility_pointer
+		rol 
+		asl utility_pointer
+		rol 
+		asl utility_pointer
+		rol 
+
+		sec
+		ldx utility_pointer
+		tay
+		jsr print_uint16
+
+		!ifndef c128 {
+			lda #32
+			jsr CHROUT
+		}
+
+		lda #0
+		ldx #<kb_msg
+		ldy #>kb_msg
+		jsr print_msg
+
+	} else {
+		lda #0
+		ldx #<na_msg
+		ldy #>na_msg
+		jsr print_msg
+	}
+
+;	clc
+;	ldx #info_supram_row
+;	ldy #info_supram_col
+;	jsr PLOT
+;	lda #0
+;	ldx #<what
+;	ldy #>what
+;	jsr print the size
+
+	clc
+	ldx #info_lsid_row
+	ldy #info_lsid_col
+	jsr PLOT
+
+	bit sid_type_left
+	bmi + ; 8580
+	ldx #<info_popup_6581_msg
+	ldy #>info_popup_6581_msg
+	jmp ++
+
++	ldx #<info_popup_8580_msg
+	ldy #>info_popup_8580_msg
+
+++	lda #0
+	jsr print_msg
+
+	clc
+	ldx #info_rsid_row
+	ldy #info_rsid_col
+	jsr PLOT
+
+	bit sid_type_right
+	bmi +
+	ldx #<info_popup_6581_msg
+	ldy #>info_popup_6581_msg
+	jmp ++
+
++	ldx #<info_popup_8580_msg
+	ldy #>info_popup_8580_msg
+
+++	lda #0
+	jsr print_msg
+
+	clc
+	ldx #info_files_row
+	ldy #info_files_col
+	jsr PLOT
+
+	sec
+	ldx playlist_length
+	ldy #0
+	jsr print_uint16
+
+	lda highest_exp_addresss_used+1
+	sta utility_pointer
+	lda highest_exp_addresss_used+2
+	sta utility_pointer+1
+
+	lsr utility_pointer+1
+	ror utility_pointer
+	lsr utility_pointer+1
+	ror utility_pointer
+
+	clc
+	ldx #info_ram_use_row
+	ldy #info_ram_use_col
+	jsr PLOT
+
+	sec
+	ldx utility_pointer
+	ldy utility_pointer+1
+	jsr print_uint16
+
+	!ifndef c128 {
+		lda #32
+		jsr CHROUT
+	}
+
+	lda #0
+	ldx #<kb_msg
+	ldy #>kb_msg
+	jsr print_msg
+
+	clc
+	ldx #build_no_row
+	ldy #build_no_col
+	jsr PLOT
+
+	lda #0
+	ldx #<program_version
+	ldy #>program_version
+	jsr print_msg
+
+	lda #"-"
+	jsr CHROUT
+
+	sec
+	ldx #<build_no
+	ldy #>build_no
+	jsr print_uint16
+
+	clc
+	ldx #info_anykey_row
+	ldy #info_anykey_col
+	jsr PLOT
+	jsr press_any_key
+rts

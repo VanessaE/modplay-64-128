@@ -1,16 +1,20 @@
-program_title
+program_version
+	!text " ",version_major+$30,".",version_minor+$30,0
+
 	!ifndef scpu {
-		!text NOSHIFTCOM,HOME,TAB,TAB,RIGHT,YEL," Modplay"
-		!text LGRN," 128",RED," version"
-		!text LRED," ",version_major+$30,".",version_minor+$30
-		!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
+		program_title
+			!text NOSHIFTCOM,HOME,TAB,TAB,RIGHT,YEL," Modplay"
+			!text LGRN," 128",RED," version",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
 	} else {
-		!text NOSHIFTCOM,HOME
-		!fill 6,RIGHT
-		!text YEL," Modplay",LGRN," 128",RED," version"
-		!text LRED," ",version_major+$30,".",version_minor+$30
-		!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player"
-		!text LRED,"   [",PUR,"SuperCPU",DPUR," edition",LRED,"]",RETURN,0
+		program_title
+			!text NOSHIFTCOM,HOME
+			!fill 6,RIGHT
+			!text YEL," Modplay",LGRN," 128",RED," version",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player"
+			!text LRED,"   [",PUR,"SuperCPU",DPUR," edition",LRED,"]",RETURN,0
 	}
 
 ; these are all RLE-encoded for the print_msg_rle* functions
@@ -181,6 +185,9 @@ menu_text_view_dir
 menu_text_dos_cmd
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"@",GRN,"]",LGRY," Send DOS commands",RETURN,0
+menu_text_info_popup
+	!fill 8,RIGHT
+	!text GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
 
 menu_txt_home_clr_gray
 	!byte RIGHT
@@ -215,12 +222,40 @@ menu_text_dithering
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save configuration",RETURN,0  ; "🠜"
 
-
 menu_text_sid_addr_gray
 	!text RIGHT,DGRY,"[A] Change stereo SID address (N/A)",RETURN,0
 
+; ##### System info popup
 
-; ##### Menu etc.
+info_popup_msg
+	!fill 12,RIGHT
+	!text YEL,"System Information",RETURN,RETURN
+	!text RIGHT,RIGHT,RIGHT,"Platform:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"REU size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"SuperRAM size:",RETURN
+;	!text RIGHT,RIGHT,RIGHT,"geoRAM size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
+	!fill 4,DOWN
+	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
+
+info_popup_platform_computer
+	!text LGRN,"C128",0
+
+!ifdef scpu {
+	info_popup_plus_scpu_msg
+		!text " + SuperCPU ",0
+}
+
+info_popup_6581_msg
+	!text LGRN,"6581",0
+
+info_popup_8580_msg
+	!text LGRN,"8580",0
+
+; ##### Menu misc.
 
 mode_on_txt
 	!text GRN,"(",WHT,"On ",GRN,")",0
@@ -228,6 +263,10 @@ mode_off_txt
 	!text GRN,"(",LGRY,"Off",GRN,")",0
 na_msg
 	!text DGRY,"(N/A)",0
+not_present_msg
+	!text DGRY,"not present",0
+kb_msg
+	!text " kB",0
 
 ; others
 
@@ -273,9 +312,6 @@ erase_size_field_msg
 	!byte 16," "
 	!byte 16,LEFT
 	!byte 0
-
-kb_msg
-	!text " kB",0
 
 no_list_loaded_msg
 	!text DPUR,"[No list loaded yet]",0

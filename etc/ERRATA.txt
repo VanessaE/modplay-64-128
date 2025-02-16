@@ -2,9 +2,8 @@
 ##  TODO  ##
 ############
 
-* add option to choose RAM driver
-
-* add constants for GeoRAM, SCPU RAM, RAMLink DACC, and system RAM sizes
+* actually add the other RAM drivers, including a constant for GeoRAM size,
+  and make the selection option work :)
 
 * add a function to change directory: it shall read the current dir looking
   for items with "DIR" filetype, offer a list thereof along with a ".." item,

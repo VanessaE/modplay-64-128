@@ -273,9 +273,9 @@
 
 	expansion_memory_start_page			= $0bee
 	expansion_memory_start_bank			= $0bef
-	match_header						= $0bf0
-
-	disk_free_space						= $0bf1 ; 2 bytes
+	supercpu_last_free_page				= $0bf0
+	supercpu_last_free_bank				= $0bf1
+	; free; $0bf2
 
 	char_table_select					= $0bf3 ; C64-only
 	print_msg_char_limit				= $0bf4
@@ -326,7 +326,11 @@
 	sid_type_left						= $0c22 ; $80 = 8580, 0 = 6581.
 	sid_type_right						= $0c23
 
-	; free: $0c24 through $0ca7
+	match_header						= $0c24
+
+	disk_free_space						= $0c25 ; 2 bytes
+
+	; free: $0c27 through $0ca7
 
 	; various program vectors
 
