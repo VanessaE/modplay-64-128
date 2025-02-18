@@ -187,7 +187,7 @@ load_by_filename_entry
 							; or .C = 0 for 15 samples, .C = 1 for 31
 	lda #0
 	ror
-	sta reload_carry+1
+	sta temp_carry
 
 	lda #4
 	sta stash_size+1
@@ -226,7 +226,7 @@ load_by_filename_entry
 
 +	lda highest_exp_addresss_used+2
 	cmp reu_highest_bank
-	bcc reload_carry
+	bcc +
 
 	jsr close_file
 
@@ -239,11 +239,10 @@ load_by_filename_entry
 
 	jmp abort_load
 
-	reload_carry
-	  lda #0
-	rol
-	jsr loader_add_progress_bar
-	bcc loaded_15
++	jsr loader_add_progress_bar
+
+	bit temp_carry
+	bpl loaded_15
 
 ; okay, at this point we can go ahead and load the rest of the file.
 

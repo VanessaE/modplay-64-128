@@ -312,38 +312,39 @@
 	temp_abs_x							= $0c10
 	temp_abs_y							= $0c11
 	temp_abs_y2							= $0c12
-	temp_counter						= $0c13 ; 3 bytes
-	utility_counter						= $0c16 ; 3 bytes
+	temp_carry							= $0c13
+	temp_counter						= $0c14 ; 3 bytes
+	utility_counter						= $0c17 ; 3 bytes
 
-	stash_size							= $0c19 ; 2 bytes
+	stash_size							= $0c1a ; 2 bytes
 
-	scroll_area_target_addr				= $0c1b ; 2 bytes
-	scroll_area_width					= $0c1d
-	scroll_area_height					= $0c1e
-	scroll_area_blank_last_line_flag	= $0c1f
+	scroll_area_target_addr				= $0c1c ; 2 bytes
+	scroll_area_width					= $0c1e
+	scroll_area_height					= $0c1f
+	scroll_area_blank_last_line_flag	= $0c20
 
-	number_of_song_positions			= $0c20
-	number_of_patterns					= $0c21
+	number_of_song_positions			= $0c21
+	number_of_patterns					= $0c22
 
-	sid_type_left						= $0c22 ; $80 = 8580, 0 = 6581.
-	sid_type_right						= $0c23
+	sid_type_left						= $0c23 ; $80 = 8580, 0 = 6581.
+	sid_type_right						= $0c24
 
-	match_header						= $0c24
+	match_header						= $0c25
 
-	disk_free_space						= $0c25 ; 2 bytes
+	disk_free_space						= $0c26 ; 2 bytes
 
-	nybble_x10							= $0c27 ; 16 bytes
+	nybble_x10							= $0c28 ; 16 bytes
 
-	vol_cnt								= $0c37
-	bval_cnt							= $0c38
+	vol_cnt								= $0c38
+	bval_cnt							= $0c39
 
-	progress_bar_segments				= $0c39 ; 8 bytes
+	progress_bar_segments				= $0c3a ; 8 bytes
 
-	mod_magic_numbers					= $0c41 ; 29 bytes
+	mod_magic_numbers					= $0c42 ; 29 bytes
 
-	num_samples_to_load					= $0c5e
+	num_samples_to_load					= $0c5f
 
-	; free: $0c5f through $0ca7
+	; free: $0c60 through $0ca7
 
 	; various program vectors
 
