@@ -247,11 +247,3 @@ sid_isr_mahoney_stereo			; 7 cycles coming in
 }
 
 }
-
-!align 255,0
-
-mah_table_6581
-	!source "src/mah-table-6581.s"
-
-mah_table_8580
-	!source "src/mah-table-8580.s"

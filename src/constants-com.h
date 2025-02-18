@@ -2,7 +2,7 @@
 
 !addr {
 
-	program_start							= $1500
+	program_start							= $1700
 
 	; KERNAL zero-page variables
 
@@ -412,7 +412,10 @@
 
 	multab2hi							= $1300 ; 2 pages
 
-	; main program code starts here at $1500, followed by free mem
+	mah_table_6581						= $1500
+	mah_table_8580						= $1600
+
+	; main program code starts here at $1700, followed by free mem
 	; then comes all the "high-memory" stuff -- see constants-64/128.h
 
 	; Under-KERNAL-ROM stuff

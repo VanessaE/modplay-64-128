@@ -385,6 +385,14 @@ init
 	dex
 	bpl -
 
+	ldx #0
+-	lda mah_table_6581_origin,x
+	sta mah_table_6581,x
+	lda mah_table_8580_origin,x
+	sta mah_table_8580,x
+	inx
+	bne -
+
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
 	}
@@ -691,6 +699,12 @@ progress_bar_segments_origin
 		!text "B-1",0,"A#1",0,"A-1",0,"G#1",0,"G-1",0,"F#1",0,"F-1",0,"E-1",0,"D#1",0,"D-1",0,"C#1",0,"C-1",0
 		!text "B-0",0,"A#0",0,"A-0",0,"G#0",0,"G-0",0,"F#0",0,"F-0",0,"E-0",0,"D#0",0,"D-0",0,"C#0",0,"C-0",0
 }
+
+mah_table_6581_origin
+	!source "src/mah-table-6581.s"
+
+mah_table_8580_origin
+	!source "src/mah-table-8580.s"
 
 !align 255,0
 
