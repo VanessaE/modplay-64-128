@@ -462,10 +462,9 @@ start_sample
 	sta tremolo_rates,y
 	sta volume_slide_rates,y
 	sta current_pitch_slide_rates,y
-
 	sta sample_pointers_fracts,y
-	lda #0
 	sta sample_pointers_lows,y
+
 	lda sample_start_addresses_mids,x
 	sta sample_pointers_mids,y
 	lda sample_start_addresses_highs,x
