@@ -66,7 +66,13 @@ boot_start
 		jsr enable_kernal_only
 
 	} else {				; on the C128, upload it to the VDC
-		lda #<charset_128_alt
+		bit kernal_4080_mode
+		bpl +
+
+		lda #CLR
+		jsr CHROUT
+
+	+	lda #<charset_128_alt
 		sta fill_copy_source
 		lda #>charset_128_alt
 		sta fill_copy_source+1
