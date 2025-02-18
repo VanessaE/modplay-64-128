@@ -379,6 +379,12 @@ init
 	dex
 	bpl -
 
+	ldx #28
+-	lda mod_magic_numbers_origin,x
+	sta mod_magic_numbers,x
+	dex
+	bpl -
+
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
 	}
@@ -662,6 +668,18 @@ progress_bar_segments_origin
 	!byte $20, $65, $74, $75, $61, $f6, $ea, $e7
 } else {
 	!byte $20, $99, $9a, $9b, $9c, $9d, $9e, $9f
+}
+
+!ct raw {
+	mod_magic_numbers_origin ; type 1 is 15 samples e.g. Soundtracker
+		!text "M.K." ; file type 2 \___ Protracker
+		!text "M!K!" ;             /
+		!text "FLT4" ; file type 4 \___ StarTrekker
+		!text "FLT8" ;             /
+		!text "4CHN" ; file type 6 ¯|
+		!text "6CHN" ;              |-- FastTracker
+		!text "8CHN" ; file type 8 _|
+		!byte 0
 }
 
 !ct raw {

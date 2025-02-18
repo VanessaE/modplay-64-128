@@ -339,7 +339,11 @@
 
 	progress_bar_segments				= $0c39 ; 8 bytes
 
-	; free: $0c41 through $0ca7
+	mod_magic_numbers					= $0c41 ; 29 bytes
+
+	num_samples_to_load					= $0c5e
+
+	; free: $0c5f through $0ca7
 
 	; various program vectors
 

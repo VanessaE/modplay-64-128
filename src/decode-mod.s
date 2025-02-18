@@ -641,19 +641,3 @@ reformat_pattern_data
 +	jsr enable_kernal_only
 	plp
 rts
-
-
-!ct raw {
-	mod_magic_numbers ; type 1 is 15 samples e.g. Soundtracker
-		!text "M.K." ; file type 2 \___ Protracker
-		!text "M!K!" ;             /
-		!text "FLT4" ; file type 4 \___ StarTrekker
-		!text "FLT8" ;             /
-		!text "4CHN" ; file type 6 ¯|
-		!text "6CHN" ;              |-- FastTracker
-		!text "8CHN" ; file type 8 _|
-		!byte 0
-}
-
-num_samples_to_load
-	!byte 0
