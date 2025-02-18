@@ -153,8 +153,6 @@ dirname
 ; copied to another part of memory for runtime use, or which reserves memory
 ; via the program counter.
 
-!align 255,0
-
 main_mem_free_start
 
 !source "src/init.s"

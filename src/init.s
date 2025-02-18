@@ -467,12 +467,6 @@ final_clear_copy
 	lda #>clear_main_memory
 	sta fill_copy_target+1
 	jsr copy_code
-
-	ldy #$ff
--	iny
-	lda fmemtxt,y
-	sta clear_main_memory+$40,y
-	bne -
 rts
 
 clear_main_memory_origin
@@ -498,9 +492,6 @@ clear_main_memory_origin
 	rts
 
 	!byte 0,0,0
-
-fmemtxt
-	!text "free memory start",0
 
 !ifndef c128 {
 	blur_table_copy
