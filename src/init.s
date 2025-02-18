@@ -367,6 +367,12 @@ init
 
 	jsr control_code_flags_copy
 
+	ldx #15
+-	lda nybble_x10_origin,x
+	sta nybble_x10,x
+	dex
+	bpl -
+
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
 	}
@@ -650,6 +656,9 @@ initializing_msg
 		!byte 132,132		; "▘" and "▚"
 		!byte 0
 }
+
+nybble_x10_origin
+	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
 
 !ct raw {
 	note_names_table_origin

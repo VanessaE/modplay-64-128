@@ -332,7 +332,12 @@
 
 	disk_free_space						= $0c25 ; 2 bytes
 
-	; free: $0c27 through $0ca7
+	nybble_x10							= $0c27 ; 16 bytes
+
+	vol_cnt								= $0c37
+	bval_cnt							= $0c38
+
+	; free: $0c39 through $0ca7
 
 	; various program vectors
 
