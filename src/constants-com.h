@@ -337,7 +337,9 @@
 	vol_cnt								= $0c37
 	bval_cnt							= $0c38
 
-	; free: $0c39 through $0ca7
+	progress_bar_segments				= $0c39 ; 8 bytes
+
+	; free: $0c41 through $0ca7
 
 	; various program vectors
 

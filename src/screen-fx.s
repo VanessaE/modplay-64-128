@@ -384,10 +384,3 @@ nofill
 		jsr vdc_continue_write_ram
 	}
 rts
-
-progress_bar_segments
-!ifndef c128 {
-	!byte $20, $65, $74, $75, $61, $f6, $ea, $e7
-} else {
-	!byte $20, $99, $9a, $9b, $9c, $9d, $9e, $9f
-}

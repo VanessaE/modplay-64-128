@@ -373,6 +373,12 @@ init
 	dex
 	bpl -
 
+	ldx #7
+-	lda progress_bar_segments_origin,x
+	sta progress_bar_segments,x
+	dex
+	bpl -
+
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
 	}
@@ -650,6 +656,13 @@ initializing_msg
 
 nybble_x10_origin
 	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
+
+progress_bar_segments_origin
+!ifndef c128 {
+	!byte $20, $65, $74, $75, $61, $f6, $ea, $e7
+} else {
+	!byte $20, $99, $9a, $9b, $9c, $9d, $9e, $9f
+}
 
 !ct raw {
 	note_names_table_origin
