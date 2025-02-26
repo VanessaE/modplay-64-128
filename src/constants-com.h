@@ -26,7 +26,9 @@
 
 	track_current_loop_flags			= $11 ; 8 bytes
 
-	; free: $19 through $23
+	do_viz_plot							= $19
+
+	; free: $1a through $23
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -198,11 +200,11 @@
 	load_device							= $0b05
 	stereo_sid_addr						= $0b06 ; 2 bytes
 	dac_addr							= $0b08 ; 2 bytes
-	audio_driver						= $0b0a
+	audio_driver						= $0b0a ; 1=4-bit SID, 2=Mahoney, 3=DAC
 	ram_driver							= $0b0b
 	stereo_enable						= $0b0c
 	filter_setting						= $0b0d
-	; unused: $0b0e
+	visualizer_mode						= $0b0e ; 0=row data, 1=waveforms
 	dither_enable						= $0b0f
 	enable_screen_on_playback			= $0b10
 
@@ -264,8 +266,8 @@
 	progress_bar_segments_to_draw		= $0be4
 	progress_bar_bytes_per_segment		= $0be5 ; 3 bytes
 
-	visualizer_mode						= $0be8
-	visualizer_base_address				= $0be9 ; 2 bytes
+	visualizer_base_address				= $0be8 ; 2 bytes
+	viz_waveforms_shift_for_8_bit		= $0bea
 
 	pattern_conv_pat_counter			= $0beb
 	pattern_conv_row_counter			= $0bec

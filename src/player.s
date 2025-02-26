@@ -286,7 +286,13 @@ player_gen_tables
 	ldy #visualizer_screen_column
 	jsr PLOT
 
+	lda visualizer_mode
+	bne +
+
 	jsr viz_row_data_init
+	jmp ++
+
++	jsr viz_waveform_init
 
 ++	php
 	sei

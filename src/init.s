@@ -350,8 +350,6 @@ init
 	inx
 +	stx raster_len
 
-	lda #1
-	sta visualizer_mode
 	lda CIA2_CRA	; ensure that the TOD clock counts 50 or 60 ticks/sec
 	and #$7f		; depending on PAL or NTSC -- except this doesn't work on PAL SX64
 	ora pal_flag
@@ -557,7 +555,7 @@ note_names_table_copy
 -	lda note_names_table_origin,x
 	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #31
 	bne +
-	lda #31
+	lda #15
 
 +	sta note_names_table,x
 	inx
@@ -622,8 +620,8 @@ default_config
 	!byte 1					; default RAM driver (REU)
 	!byte $80				; default Stereo mode (on)
 	!byte 0					; default filter setting
-	!byte 0					; unused
-	!byte $0				; default dithering mode (off)
+	!byte 0					; default visualizer mode (row data)
+	!byte 0					; default dithering mode (off)
 	!byte $80				; default screen enable (on)
 	!byte $ff				; end of file marker
 configuration_data_end

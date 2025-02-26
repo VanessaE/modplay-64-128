@@ -133,6 +133,9 @@ nple
 
 	jsr print_song_pos_pat_num
 
+	lda visualizer_mode
+	bne next_row
+
 	jsr viz_row_data_pattern_preload
 	jmp next_row_no_scroll
 
@@ -150,6 +153,8 @@ nple
 
 
 next_row
+	lda visualizer_mode
+	bne next_row_no_scroll
 	jsr viz_row_data_scroll
 
 next_row_no_scroll
@@ -163,9 +168,12 @@ next_row_no_scroll
 	lda #0
 	sta pattern_break_target_row
 
-+	ldx seq_current_row
++	lda visualizer_mode
+	bne seq_fetch_row_data
+
+	ldx seq_current_row
 	cpx #61
-	bcs +
+	bcs seq_fetch_row_data
 
 	lda #<visualizer_line_6
 	sta utility_pointer 
@@ -177,13 +185,12 @@ next_row_no_scroll
 	inx
 	jsr viz_row_data_fetch_and_print
 
+seq_fetch_row_data
 	ldx seq_current_row
-
-+	jsr fetch_row_data
-
+	jsr fetch_row_data
 	jsr print_row_num
 
-	ldy #0
++	ldy #0
 	sty seq_current_track
 
 next_track_this_row
@@ -351,7 +358,19 @@ dont_run_pre_tick_command
 run_fetch_and_mixer_vec
 	jsr $1234
 
-	ldy #0
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+	}
+	lda visualizer_mode
+	beq +
+	lda do_viz_plot
+	eor #$80
+	sta do_viz_plot
+	bpl +
+	jsr viz_waveform_plot
+
++	ldy #0
 	sty seq_current_track
 
 next_track_post_tick
@@ -1215,6 +1234,8 @@ toggle_enable_track
 		bpl exit_player_keyscan
 	}
 
+	lda visualizer_mode
+	bne exit_player_keyscan
 	jsr viz_row_data_show_track_mute
 
 exit_player_keyscan
