@@ -30,31 +30,43 @@ viz_waveform_plot
 	!ifndef c128 {
 		viz_bytes_to_plot = 35
 
+		bit viz_waveforms_shift_for_8_bit
+		bpl viz_64_plot_for_4bit
+
 		ldx audio_in_buf_index
 		dex
 		ldy #viz_bytes_to_plot
 	-	lda audio_buffer_left,x
 		lsr
-		bit viz_waveforms_shift_for_8_bit
-		bpl +
 		lsr
 		lsr
-		lsr
-	+	ora #$10
 		sta visualizer_line_2,y
 		lda audio_buffer_right,x
 		lsr
-		bit viz_waveforms_shift_for_8_bit
-		bpl +
 		lsr
 		lsr
-		lsr
-	+	ora #$10
 		sta visualizer_line_5,y
 		dex
 		dex
 		dey
 		bpl -
+		rts
+
+	viz_64_plot_for_4bit
+		ldx audio_in_buf_index
+		dex
+		ldy #viz_bytes_to_plot
+	-	lda audio_buffer_left,x
+		asl
+		sta visualizer_line_2,y
+		lda audio_buffer_right,x
+		asl
+		sta visualizer_line_5,y
+		dex
+		dex
+		dey
+		bpl -
+		rts
 
 	} else {
 
@@ -80,17 +92,16 @@ viz_waveform_plot
 		lda audio_in_buf_index
 		sbc #(viz_bytes_to_plot*2 + 1)
 		sta temp_zpbk_a
-
 		tax
 		ldy #viz_bytes_to_plot
+
+		bit viz_waveforms_shift_for_8_bit
+		bpl viz_128_plot_for_4bit
+
 	--	lda audio_buffer_left,x
 		lsr
-		bit viz_waveforms_shift_for_8_bit
-		bpl +
 		lsr
 		lsr
-		lsr
-	+	ora #$10
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
@@ -119,12 +130,8 @@ viz_waveform_plot
 		ldy #viz_bytes_to_plot
 	--	lda audio_buffer_right,x
 		lsr
-		bit viz_waveforms_shift_for_8_bit
-		bpl +
 		lsr
 		lsr
-		lsr
-	+	ora #$10
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
@@ -132,8 +139,49 @@ viz_waveform_plot
 		inx
 		dey
 		bpl --
+		rts
+
+	viz_128_plot_for_4bit
+	--	lda audio_buffer_left,x
+		asl
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
+
+		lda #18
+		sta VDC_ADDR
+		lda #>visualizer_line_5
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda #<visualizer_line_5
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #31
+		sta VDC_ADDR
+
+		ldx temp_zpbk_a
+		ldy #viz_bytes_to_plot
+	--	lda audio_buffer_right,x
+		asl
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
+		rts
 	}
-rts
+
 
 ; set all colors to light green
 
