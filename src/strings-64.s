@@ -532,7 +532,7 @@ status_line_pos
 
 	main_player_hline_ascii
 		!fill 2,RIGHT
-		!fill 36,$02
+		!fill 36,$83
 		!byte RETURN
 		!byte 0
 

@@ -553,9 +553,9 @@ note_names_table_copy
 	ldx #0
 
 -	lda note_names_table_origin,x
-	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #31
+	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #129
 	bne +
-	lda #15
+	lda #129
 
 +	sta note_names_table,x
 	inx
@@ -595,14 +595,14 @@ control_code_flags_table_high_origin
 		!byte $7d ; left edge
 		!byte $7d ; right edge
 
-		!byte $08 ; same symbols, but using the ASCII font
-		!byte $09
-		!byte $0a
-		!byte $0b
-		!byte $02
-		!byte $02
-		!byte $01
-		!byte $01
+		!byte $88 ; same symbols, but using the ASCII font
+		!byte $89
+		!byte $8a
+		!byte $8b
+		!byte $83
+		!byte $83
+		!byte $82
+		!byte $82
 }
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
@@ -643,26 +643,26 @@ initializing_msg
 
 !ifndef c128 {
 	blur_table_origin
-		!fill 32,132		; "@" through "z", "[" through "🠜"
+		!fill 32,151		; "@" through "z", "[" through "🠜"
 		!byte 32			; space
-		!fill 31,132		; ' !"#... ' through "?"
-		!byte 134				;"━"
-		!fill 28,132		; "A" through "Z", "╋" and "🮌" 
-		!byte 133				; "┃"
-		!byte 132,132		; "🮕" and "🮘"
+		!fill 31,151		; ' !"#... ' through "?"
+		!byte 153				;"━"
+		!fill 28,151		; "A" through "Z", "╋" and "🮌" 
+		!byte 152				; "┃"
+		!byte 151,151		; "🮕" and "🮘"
 		!byte 32			; "shift space"
-		!fill 10,132		; "▌" thorugh the second "🮇"
-		!byte 139			; "┣"
-		!byte 132			; "▗"
-		!byte 137			; "┗"
-		!byte 136			; "┓"
-		!byte 132			; "▂"
-		!byte 135			; "┏"
-		!byte 132,132		; "┻" and "┳"
-		!byte 140			; "┫"
-		!fill 9,132			; "▎" through "▝"
-		!byte 138			; "┛"
-		!byte 132,132		; "▘" and "▚"
+		!fill 10,151		; "▌" thorugh the second "🮇"
+		!byte 158			; "┣"
+		!byte 151			; "▗"
+		!byte 156			; "┗"
+		!byte 155			; "┓"
+		!byte 151			; "▂"
+		!byte 154			; "┏"
+		!byte 151,151		; "┻" and "┳"
+		!byte 159			; "┫"
+		!fill 9,151			; "▎" through "▝"
+		!byte 157			; "┛"
+		!byte 151,151		; "▘" and "▚"
 		!byte 0
 }
 

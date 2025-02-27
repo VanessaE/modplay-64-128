@@ -42,7 +42,7 @@ rts
 	blur_out
 		ldy #0
 	-	!for .page, 0, 3 {
-			lda #132
+			lda #151
 			ldx VIC_SCREEN + .page*256,y
 			cpx #128
 			bcs +

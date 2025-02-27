@@ -342,11 +342,11 @@ viz_row_data_colors
 viz_row_data_dividers_msg
 	!ifndef c128 {
 		!fill 10,RIGHT
-		!byte LGRY,$01
+		!byte LGRY,$82
 		!fill 8,RIGHT
-		!byte $01
+		!byte $82
 		!fill 8,RIGHT
-		!byte $01,RETURN
+		!byte $82,RETURN
 		!byte 0
 	} else {
 		!fill 3,RIGHT
