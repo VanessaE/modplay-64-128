@@ -220,43 +220,26 @@ get_command								; ...and its parameters.
 	lda start_effect_command_jump_table+1,x
 	sta start_command_vec+2
 
-get_sample_number
-	ldx sequencer_temp_x
-	lda seq_current_row_data,x			; if sample number is 0, keep using
-	beq get_note_period					; the previous sample number
-
-	ldx seq_commands,y					; if slide-to-note is in effect, just
-	cpx #3								; ignore the sample number and don't
-	beq get_note_period					; re-start the sample
-	cpx #5								; ditto for pitch slide + volume slide
-	beq get_note_period
-
-	sta current_sample_numbers,y
-
-	jsr start_sample
-	ldy seq_current_track
-
 get_note_period
 	ldx sequencer_temp_x
 	lda seq_current_row_data+1,x
 	and #$0f
 	ora seq_current_row_data+2,x		; if period is 0, keep using the
-	beq run_command						; previous note/pitch
+	beq get_sample_number				; previous note/pitch
 
 	lda seq_commands,y					; for commands 3 and 5, the given
 	cmp #3								; period is a parameter to the
-	beq set_target_period				; command, to be used later.
+	beq use_target_period				; command, to be used later.
 	cmp #5
-	beq set_target_period
-	jmp use_given_period
+	bne use_given_period
 
-set_target_period
+use_target_period
 	lda seq_current_row_data+1,x
 	and #$0f
 	sta seq_pitch_slide_target_period_highs,y
 	lda seq_current_row_data+2,x
 	sta seq_pitch_slide_target_period_lows,y
-	jmp run_command
+	jmp set_new_period
 
 use_given_period
 	lda seq_current_row_data+1,x
@@ -265,10 +248,39 @@ use_given_period
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
 
-run_command
+set_new_period
 	jsr set_pitch
 	ldx sequencer_temp_x
 	ldy seq_current_track
+
+get_sample_number
+	lda seq_current_row_data,x			; if sample number is 0, keep using
+	beq +								; the previous sample number
+
+	sta current_sample_numbers,y
+
+	tax									; only change the channel's volume if
+	lda sample_default_volume_levels,x	; the sample number changes.
+	jsr set_volume
+	ldx sequencer_temp_x
+
++	lda seq_current_row_data+1,x		; if period is 0, don't restart
+	and #$0f							; the sample
+	ora seq_current_row_data+2,x
+	beq run_command
+
+	lda seq_commands,y					; if slide-to-note is in effect, just
+	cmp #3								; ignore the sample number and don't
+	beq run_command						; re-start the sample
+	cmp #5								; ditto for pitch slide + volume slide
+	beq run_command
+
+	lda current_sample_numbers,y
+	jsr start_sample
+	ldx sequencer_temp_x
+	ldy seq_current_track
+
+run_command
 
 	; if the command number is > 15 or the command is unimplemented, don't
 	; try to run anything.
@@ -508,8 +520,7 @@ start_sample
 
 	ldy seq_current_track
 	ldx current_sample_numbers,y
-	lda sample_default_volume_levels,x
-	jmp set_volume  ; just exit from there
+rts
 
 ; convert a note period into a sample stepper value
 ; enter with .Y = track number

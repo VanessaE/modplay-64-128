@@ -109,10 +109,6 @@
   Best guess, the REU code is simply fetching too much data and slowing
   everything down because there's no limiter.
 
-* BOTH: "Happy As Fish" omits some notes at one point late in the song,
-  probably new-note triggers being skipped when they shouldn't be due to
-  the newly-added pre-/post-tick behavior needed for pitch sliding.
-
 * BOTH:  setting vibrato to 00 repeatedly may be causing the sort of rapid
   ticking some songs are displaying....?  division error?
 
