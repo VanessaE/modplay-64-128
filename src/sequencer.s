@@ -227,7 +227,7 @@ get_sample_number
 
 	ldx seq_commands,y					; if slide-to-note is in effect, just
 	cpx #3								; ignore the sample number and don't
-	beq get_note_period					; re-trigger the sample
+	beq get_note_period					; re-start the sample
 	cpx #5								; ditto for pitch slide + volume slide
 	beq get_note_period
 
@@ -476,18 +476,23 @@ fetch_row_data
 
 start_sample
 	tax
-	lda #0
+
+	lda seq_commands,y
+	cmp #9	; let the set-sample-offset cmd handle the pointer, if applicable
+	beq +
+
+	lda sample_start_addresses_mids,x
+	sta sample_pointers_mids,y
+	lda sample_start_addresses_highs,x
+	sta sample_pointers_highs,y
+
++	lda #0
 	sta vibrato_rates,y
 	sta tremolo_rates,y
 	sta volume_slide_rates,y
 	sta current_pitch_slide_rates,y
 	sta sample_pointers_fracts,y
 	sta sample_pointers_lows,y
-
-	lda sample_start_addresses_mids,x
-	sta sample_pointers_mids,y
-	lda sample_start_addresses_highs,x
-	sta sample_pointers_highs,y
 
 	lda sample_end_addresses_lows,x
 	sta current_sample_end_addr_lows,y
@@ -548,7 +553,7 @@ start_effect_command_jump_table
 	!word 0 ; start_effect_vibrato_plus_volume_slide
 	!word 0
 	!word 0
-	!word 0 ; run_effect_set_sample_offset
+	!word run_effect_set_sample_offset
 	!word start_effect_volume_slide
 	!word 0 ; run_effect_position_jump
 	!word run_effect_set_volume
@@ -854,6 +859,23 @@ rts
 run_effect_pitch_slide_plus_volume_slide
 	jsr run_effect_pitch_slide_to_note
 	jsr run_effect_volume_slide
+rts
+
+; #### SET SAMPLE OFFSET
+
+run_effect_set_sample_offset
+	ldx current_sample_numbers,y
+	lda #0
+	sta temp_zpbk_a
+	lda seq_command_arguments,y
+	asl
+	rol temp_zpbk_a
+	clc
+	adc sample_start_addresses_mids,x
+	sta sample_pointers_mids,y
+	lda sample_start_addresses_highs,x
+	adc temp_zpbk_a
+	sta sample_pointers_highs,y
 rts
 
 ; #### SET VOLUME
