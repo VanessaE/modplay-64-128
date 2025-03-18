@@ -336,6 +336,7 @@ pre_tick_command
 	tax
 	lda run_effect_command_jump_table+1,x
 	beq dont_run_pre_tick_command
+
 	sta run_command_pre_tick_vec+2
 	lda run_effect_command_jump_table,x
 	sta run_command_pre_tick_vec+1
@@ -400,11 +401,13 @@ run_post_tick_command
 
 	asl
 	tax
+
+	lda run_effect_command_jump_table+1,x
+	beq dont_run_post_tick_command
+	sta run_command_post_tick_vec+2
+
 	lda run_effect_command_jump_table,x
 	sta run_command_post_tick_vec+1
-	lda run_effect_command_jump_table+1,x
-	sta run_command_post_tick_vec+2
-	beq dont_run_post_tick_command
 
 run_command_post_tick_vec
 	jsr $1234
