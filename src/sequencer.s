@@ -209,16 +209,8 @@ get_command								; ...and its parameters.
 	lsr
 	lsr
 	lsr
-	tax ; .X will need command no. * 2
 	lsr
 	sta seq_commands,y
-
-	; initialize/start the appropriate effect for this track
-
-	lda start_effect_command_jump_table,x
-	sta start_command_vec+1
-	lda start_effect_command_jump_table+1,x
-	sta start_command_vec+2
 
 get_note_period
 	ldx sequencer_temp_x
@@ -288,8 +280,14 @@ run_command
 	lda seq_commands,y
 	cmp #16
 	bcs no_command_this_row_this_track
-	lda start_command_vec+2
+
+	asl
+	tax								; we need command no. * 2
+	lda start_effect_command_jump_table+1,x
 	beq no_command_this_row_this_track
+	sta start_command_vec+2
+	lda start_effect_command_jump_table,x
+	sta start_command_vec+1
 
 start_command_vec					; start or initialize an effect command
 	jsr $1234						; (also for stuff that just runs once)
@@ -336,11 +334,11 @@ next_track_pre_tick
 pre_tick_command
 	asl
 	tax
+	lda run_effect_command_jump_table+1,x
+	beq dont_run_pre_tick_command
+	sta run_command_pre_tick_vec+2
 	lda run_effect_command_jump_table,x
 	sta run_command_pre_tick_vec+1
-	lda run_effect_command_jump_table+1,x
-	sta run_command_pre_tick_vec+2
-	beq dont_run_pre_tick_command
 
 run_command_pre_tick_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
