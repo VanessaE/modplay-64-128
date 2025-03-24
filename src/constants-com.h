@@ -49,11 +49,10 @@
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; free: $2a through $2c
+	; free: $2a through $2e
 
 	; $2a is available as an in/out-of-ZP-backup common addr
 
-	ram_drv_fetch_addr_table_pointer	= $2d
 	seq_key_debounce					= $2f
 	pattern_break_target_row			= $30
 	seq_current_pattern_number			= $31

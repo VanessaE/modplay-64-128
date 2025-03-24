@@ -62,15 +62,6 @@ start_sequencer
 	dex
 	bpl -
 
-; Relay the RAM driver's index table address from outside of the ZP backup
-
-fetch_routine_table_lsb
-	lda #0
-	sta ram_drv_fetch_addr_table_pointer
-fetch_routine_table_msb
-	lda #0
-	sta ram_drv_fetch_addr_table_pointer+1
-
 ; caution:  do not init more than 4 tracks here until the fetch and mixer
 ; loops have been expanded to handle it, will cause mem corruption
 

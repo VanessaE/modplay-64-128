@@ -7,16 +7,6 @@
 
 !zone reu_driver {
 
-reu_fetch_routine_index_table
-	!word reu_fetch_unroll_open
-	!byte reu_cur_steprate_f - reu_fetch_unroll_open + 1
-	!byte reu_cur_steprate_i - reu_fetch_unroll_open + 1
-	!byte reu_ckend_l - reu_fetch_unroll_open + 1
-	!byte reu_ckend_m - reu_fetch_unroll_open + 1
-	!byte reu_ckend_h - reu_fetch_unroll_open + 1
-	!byte reu_fetchlen - reu_fetch_unroll_open + 1
-	!byte reu_fetch_unroll_close - reu_fetch_unroll_open ; fetch loop segment length
-
 ; this is the average fetch time, in cycles, per final output sample pair
 ; see full details in doc/timing-info.txt.
 
@@ -383,7 +373,6 @@ reu_run_fetch_and_mixer
 +	stx audio_in_buf_index
 rts
 
-
 ; =========================================================
 ; === fetch loop self-mod setup routines ===
 ; =========================================================
@@ -396,18 +385,15 @@ rts
 reu_fetch_selfmods_init
 	ldx seq_current_track
 
-	ldy #8
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop code segment length
+	lda #(reu_fetch_unroll_close - reu_fetch_unroll_open)
 	jsr multiply_8x8
 
-	ldy #0
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch loop open code address LSB
 	clc
+	lda #<reu_fetch_unroll_open
 	adc product
 	sta utility_pointer
 
-	iny
-	lda (ram_drv_fetch_addr_table_pointer),y ; MSB
+	lda #>reu_fetch_unroll_open
 	adc product+1
 	sta utility_pointer+1
 rts
@@ -423,24 +409,19 @@ reu_do_selfmods_for_pitch_change
 	jsr mixer_do_selfmods_for_pitch_change
 	; returns the total lookahead distance in .A
 
-	pha
-	ldy #7
-	lda (ram_drv_fetch_addr_table_pointer),y ; fetch length addr
-	tay
-	pla
+	; fetch length addr
+	ldy #(reu_fetchlen - reu_fetch_unroll_open + 1)
 	sta (utility_pointer),y
 
 	ldx seq_current_track
 
-	ldy #2
-	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate fract offs
-	tay
+	; current steprate fract offset
+	ldy #(reu_cur_steprate_f - reu_fetch_unroll_open + 1)
 	lda current_steprates_fracts,x
 	sta (utility_pointer),y
 
-	ldy #3
-	lda (ram_drv_fetch_addr_table_pointer),y ; current steprate int offs
-	tay
+	; current steprate int offset
+	ldy #(reu_cur_steprate_i - reu_fetch_unroll_open + 1)
 	lda current_steprates_ints,x
 	sta (utility_pointer),y
 rts
@@ -453,21 +434,18 @@ rts
 reu_do_selfmods_for_instrument_change
 	jsr reu_fetch_selfmods_init
 
-	ldy #4
-	lda (ram_drv_fetch_addr_table_pointer),y ; sample pointer LSB end-check offs
-	tay
+	; sample pointer LSB end-check offset
+	ldy #(reu_ckend_l - reu_fetch_unroll_open + 1)
 	lda current_sample_end_addr_lows,x
 	sta (utility_pointer),y
 
-	ldy #5
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check mid byte
-	tay
+	; end-check mid byte
+	ldy #(reu_ckend_m - reu_fetch_unroll_open + 1)
 	lda current_sample_end_addr_mids,x
 	sta (utility_pointer),y
 
-	ldy #6
-	lda (ram_drv_fetch_addr_table_pointer),y ; end-check MSB
-	tay
+	; end-check MSB
+	ldy #(reu_ckend_h - reu_fetch_unroll_open + 1)
 	lda current_sample_end_addr_highs,x
 	sta (utility_pointer),y
 rts

@@ -233,11 +233,6 @@ init
 	lda #>reu_run_fetch_and_mixer
 	sta run_fetch_and_mixer_vec+2
 
-	lda #<reu_fetch_routine_index_table
-	sta fetch_routine_table_lsb+1
-	lda #>reu_fetch_routine_index_table
-	sta fetch_routine_table_msb+1
-
 	lda #<reu_do_selfmods_for_pitch_change
 	sta do_selfmod_pitch_vec
 	lda #>reu_do_selfmods_for_pitch_change
