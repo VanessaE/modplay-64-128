@@ -231,7 +231,7 @@ use_target_period
 	sta seq_pitch_slide_target_period_highs,y
 	lda seq_current_row_data+2,x
 	sta seq_pitch_slide_target_period_lows,y
-	jmp set_new_period
+	jmp get_sample_number
 
 use_given_period
 	lda seq_current_row_data+1,x
@@ -817,23 +817,14 @@ run_effect_pitch_slide_to_note
 	lda current_note_periods_highs,y
 	sbc #0
 	sta current_note_periods_highs,y
-	bcc stop_porta_up
 
 	lda current_note_periods_lows,y
 	cmp seq_pitch_slide_target_period_lows,y
 	lda current_note_periods_highs,y
 	sbc seq_pitch_slide_target_period_highs,y
-	bcs +
+	bcc stop_porta
 
-stop_porta_up
-	lda seq_pitch_slide_target_period_lows,y
-	sta current_note_periods_lows,y
-	lda seq_pitch_slide_target_period_highs,y
-	sta current_note_periods_highs,y
-	lda #0
-	sta current_pitch_slide_rates,y
-
-+	jmp set_pitch
+	jmp set_pitch
 
 slide_to_lower_note
 	clc
@@ -843,7 +834,6 @@ slide_to_lower_note
 	lda current_note_periods_highs,y
 	adc #0
 	sta current_note_periods_highs,y
-	bcs stop_porta_down
 
 	lda seq_pitch_slide_target_period_lows,y
 	cmp current_note_periods_lows,y
@@ -851,7 +841,7 @@ slide_to_lower_note
 	sbc current_note_periods_highs,y
 	bcs +
 
-stop_porta_down
+stop_porta
 	lda seq_pitch_slide_target_period_lows,y
 	sta current_note_periods_lows,y
 	lda seq_pitch_slide_target_period_highs,y
