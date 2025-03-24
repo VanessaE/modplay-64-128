@@ -36,6 +36,27 @@
   512k wraparound glitch, for the benefit playback code, since it can grab
   up to 200 or so bytes in one go.  Not sure how to handle this.
 
+* Fetch code:  due to lookahead behavior, really short loops tend to get
+  kinda "hard-synced" against the REU transfer window, causing pitch
+  distortion to the point of sometimes collapsing into just a few discrete
+  pitches that bear no relation to the actual requested pitch.
+
+  Possible solution, should be fairly CPU-cheap:
+
+  - in the loop check, calculate how far past the end of the loop the
+    lookahead transfer is about to go, and flag it thus (its value being the
+    amount of excess, or 0 if there is none).
+  - then in the transfer section, I could check that flag, and if necessary,
+    grab only the last piece of the sample loop data
+  - then fill the remainder of the originally-requested transfer with the data
+    from the start of the loop
+  - then just set the transfer pointer to the end of that second part, to be
+    used on the next go-round
+
+  This would *probably* eliminate the need for unrolling loops as mentioned
+  below, though this may still be needed if some random tune really abuses
+  the ability of the Paula chip to handle super-short loops.
+  
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is
   loaded, iterate through the instrument samples, creating downsampled
   versions of each, averaging the sample data at 2:1, 4:1, 8:1, and 16:1
