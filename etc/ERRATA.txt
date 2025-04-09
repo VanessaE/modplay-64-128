@@ -193,3 +193,12 @@
 	<algorithm> if you set the mappings this way 8bit->4bit, you should get
 				better results overall
 	<algorithm> but thats also dependant on the mod itself too
+
+* Some notes from groepaz about the makefile:
+
+	<groepaz> non portable makefile detected :)
+	<VanessaE> which part is non-portable?
+	<VanessaE> this is literally the first ever project in which I've used it :)
+	<groepaz> should be $(RM) not rm -f
+	<groepaz> and $(info for printing stuff, not echo
+	<groepaz> those are bashisms
