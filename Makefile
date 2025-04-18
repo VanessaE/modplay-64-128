@@ -19,17 +19,16 @@ all:
 
 	etc/trim-whitespc.sh 40 etc/splash-40.seq          $(TMPDIR)/splash-40-t.seq
 	etc/compress-rle.sh  40 $(TMPDIR)/splash-40-t.seq  etc/splash-40.rle   etc/splash-40.seq
-
-	$(MAKE) c64
-	$(MAKE) c64_scpu
-
 	etc/trim-whitespc.sh 80 etc/splash-80.seq   $(TMPDIR)/splash-80-t.seq
 	etc/compress-rle.sh  80 $(TMPDIR)/splash-80-t.seq etc/splash-80.rle etc/splash-80.seq
 
+	$(MAKE) c64
+	$(MAKE) c64_scpu
 	$(MAKE) c128
 	$(MAKE) c128_scpu
 
 	$(MAKE) gen_release_disk_image
+	$(MAKE) gen_release_disk_image MACHINE=128
 
 	$(MAKE) gen_mod_disks
 
@@ -37,9 +36,9 @@ all:
 
 	@echo "Launching VICE and auto-starting..."
 
-	$(X64) -warp -autostart ~/Commodore-related/modplay-v2.0/disk-images/modplay-v0.0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
+	$(X64) -warp -autostart ~/Commodore-related/modplay-v2.0/disk-images/modplay64v0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
 
-	$(X128) -warp -8 ~/Commodore-related/modplay-v2.0/disk-images/modplay-v0.0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
+	$(X128) -warp -8 ~/Commodore-related/modplay-v2.0/disk-images/modplay128v0.d71 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
 
 
 clean:
@@ -71,76 +70,101 @@ c128_scpu:
 	@echo -e '\nBuilding Modplay 128 (SuperCPU edition)...\n'
 	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -l etc/mp128-sym-scpu.txt -o bin/mp128.main-scpu src/modplay.s
 
-
 gen_release_disk_image:
-	$(eval C64INTLV  := -s 6)
-	$(eval C128INTLV := -s 4)
 
-	$(eval DISK_IMG := disk-images/modplay-v$(VERSION_STRING).d64)
+ifeq ($(MACHINE),128)
+	$(eval DISK_FORMAT := d71)
+	$(eval INTLV := 6)
+	$(eval PROGINTLV := 4)
+else
+	$(eval MACHINE := 64)
+	$(eval DISK_FORMAT := d64)
+	$(eval INTLV := 11)
+	$(eval PROGINTLV := 6)
+endif
+
+	$(eval DISK_IMG := disk-images/modplay$(MACHINE)v$(VERSION_MAJOR).$(DISK_FORMAT))
 
 	rm -f $(DISK_IMG)
 
 	export DISK_IMG
 
-	$(CC1541) -n 'modplay v$(VERSION_STRING)' -i '$(VERSION_ID)' $(DISK_IMG)
+	$(CC1541) -n 'modplay $(MACHINE) v$(VERSION_STRING)' -i '$(VERSION_ID)' \
+																		$(DISK_IMG)
+
+ifeq ($(MACHINE),128)
 
 	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)
 
-	$(CC1541) -t -r 18 -b 7 \
-		$(C64INTLV)  -r 18 -f 'mp64' 			-w 'bin/mp64'				\
+	$(CC1541) -t -r 18 -b 5 -s $(PROGINTLV) \
+				-f 'mp128' 					-w 'bin/mp128'					\
+																		$(DISK_IMG)
+	$(CC1541) -b 4 -r 19 -c -s $(PROGINTLV) \
+				-f 'mp128.main'				-w 'bin/mp128.main'				\
+																		$(DISK_IMG)
+	$(CC1541) -r 15 -c -s $(PROGINTLV) \
+				-f 'mp128.main-scpu'		-w 'bin/mp128.main-scpu'		\
 																		$(DISK_IMG)
 
-	$(CC1541) -t -r 18 -b 5 \
-		$(C128INTLV) -r 18 -f 'mp128' 			-w 'bin/mp128'				\
+	$(CC1541) -c -S $(INTLV) -v \
+				-f 'Acidbat II'				-w 'mods/Acidbat II.mod'		\
+				-f 'Fun Tune'				-w 'mods/Fun Tune.mod'			\
+				-f 'Dark Castle Pt.1'		-w 'mods/Dark Castle (Part 1).mod' \
+				-f 'Empty Spaces II'		-w 'mods/Empty Spaces II.mod'	\
+				-f 'Skate or Die'	\
+					-w 'mods/Skate or Die Intro (cover by Delorean).mod'	\
 																		$(DISK_IMG)
 
-	$(CC1541) -t -r 18 \
-		$(C64INTLV) -f 'mp64.main'		-w 'bin/mp64.main'			\
+else
+
+	$(CC1541) -t -r 18 -b 7 -s $(PROGINTLV) \
+				-f 'mp64' 					-w 'bin/mp64'					\
+																		$(DISK_IMG)
+	$(CC1541) -t -r 19 -s $(PROGINTLV) \
+				-f 'mp64.main'				-w 'bin/mp64.main'				\
+																		$(DISK_IMG)
+	$(CC1541) -r 13 -s $(PROGINTLV) \
+				-f 'mp64.main-scpu'			-w 'bin/mp64.main-scpu'			\
 																		$(DISK_IMG)
 
-	$(CC1541) -r 18 \
-			$(C64INTLV) -f 'mp64.main-scpu' -w 'bin/mp64.main-scpu'		\
+	$(CC1541) -S $(INTLV) -v \
+				-f 'Acidbat II'				-w 'mods/Acidbat II.mod'		\
+				-f 'Fun Tune'				-w 'mods/Fun Tune.mod'			\
 																		$(DISK_IMG)
-
-	$(CC1541) -b 4 \
-		$(C128INTLV) -f 'mp128.main'			-w 'bin/mp128.main'			\
-																		$(DISK_IMG)
-
-	$(CC1541) -v \
-		$(C128INTLV) -f 'mp128.main-scpu'		-w 'bin/mp128.main-scpu'	\
-																		$(DISK_IMG)
-
+endif
 
 gen_mod_disks:
 	$(eval DISK_IMG := disk-images/mods-1.d81)
 
-	$(CC1541) -n 'mods 1' -i m1												\
-				-f 'Acidbat II'			-w 'mods/Acidbat II.mod'			\
-				-f 'Cutie Pie'			-w 'mods/Cutie Pie.mod'				\
-				-f 'Fun Tune'			-w 'mods/Fun Tune.mod'				\
-				-f 'On the Telly'		-w 'mods/On the Telly.mod'			\
-				-f 'Cybernoid 1'		-w 'mods/Cybernoid 1.mod'			\
-				-f 'Cybernoid 2'		-w 'mods/Cybernoid 2.mod'			\
-				-f 'Bodveizer'			-w 'mods/Bodveizer.mod'				\
-				-f 'Dark Castle Pt.1'	-w 'mods/Dark Castle (Part 1).mod'	\
-				-f 'Empty Spaces II'	-w 'mods/Empty Spaces II.mod'		\
-				-f 'Laxity'				-w 'mods/Laxity.mod'				\
-				-f 'Skate or Die'	\
-					-w 'mods/Skate or Die Intro (cover by Delorean).mod'	$(DISK_IMG)
+	$(CC1541) -t -n 'mods 1' -i m1											\
+				-f 'Bodveizer'				-w 'mods/Bodveizer.mod'			\
+				-f 'Boesendorfer'			-w 'mods/Boesendorfer.mod'		\
+				-f 'Cybernoid 1'			-w 'mods/Cybernoid 1.mod'		\
+				-f 'Cybernoid 2'			-w 'mods/Cybernoid 2.mod'		\
+				-f 'Empty Spaces II'		-w 'mods/Empty Spaces II.mod'	\
+				-f 'Laxity'					-w 'mods/Laxity.mod'			\
+				-f 'Street Jungle'			-w 'mods/Street Jungle.mod'		\
+																		$(DISK_IMG)
 
 	$(eval DISK_IMG := disk-images/mods-2.d81)
 
-	$(CC1541) -n 'mods 2' -i m2												\
-				-f 'Happy as Fish'		-w 'mods/Happy As Fish.mod'			\
-				-f 'Hazy Day'			-w 'mods/Hazy Day.mod'				\
-				-f 'Amazed Endtune'		-w 'mods/Amazed (End Tune).mod'		\
-				-f 'Street Jungle'		-w 'mods/Street Jungle.mod'			\
-																			$(DISK_IMG)
+	$(CC1541) -t -n 'mods 2' -i m2											\
+				-f 'Ace II'					-w 'mods/Ace II.mod'			\
+				-f 'Airwolf (2)'			-w 'mods/Airwolf (2).mod'		\
+				-f 'Amazed Endtune'			-w 'mods/Amazed (End Tune).mod'	\
+				-f 'Cutie Pie'				-w 'mods/Cutie Pie.mod'			\
+				-f 'Dark Castle Pt.1'		-w 'mods/Dark Castle (Part 1).mod' \
+				-f 'Hazy Day'				-w 'mods/Hazy Day.mod'			\
+				-f 'Roadkill'				-w 'mods/Roadkill.mod'			\
+				-f "Molecule's Rvng"		-w "mods/Molecule's Revenge.mod" \
+				-f 'Skate or Die'	\
+					-w 'mods/Skate or Die Intro (cover by Delorean).mod'	\
+																		$(DISK_IMG)
 
 	$(eval DISK_IMG := disk-images/mods-3.d81)
 
-	$(CC1541) -n 'mods 3' -i m3												\
-				-f 'Hall of Hobbits'	-w 'mods/Hall of Hobbits (Remix).mod' \
-				-f "Molecule's Rvng"	-w "mods/Molecule's Revenge.mod"	\
-				-f 'Boesendorfer'		-w 'mods/Boesendorfer.mod'			\
+	$(CC1541) -t -n 'mods 3' -i m3												\
+				-f 'On the Telly'			-w 'mods/On the Telly.mod'		\
+				-f 'Hall of Hobbits'		-w 'mods/Hall of Hobbits (Remix).mod' \
+				-f 'Happy as Fish'			-w 'mods/Happy As Fish.mod'		\
 																			$(DISK_IMG)
