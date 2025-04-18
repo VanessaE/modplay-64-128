@@ -207,8 +207,6 @@ menu_text_sample_mode_gray
 
 menu_text_audio_driver
 	!text RIGHT,GRN,"[",YEL,"D",GRN,"]",LGRY," Change audio driver",RETURN,RETURN,0
-menu_text_ram_driver
-	!text RIGHT,GRN,"[",YEL,"M",GRN,"]",LGRY," Change RAM driver",RETURN,RETURN,0
 menu_text_sid_addr
 	!text RIGHT,GRN,"[",YEL,"A",GRN,"]",LGRY," Change stereo SID address",RETURN,0
 menu_text_dac_addr
@@ -231,14 +229,12 @@ info_popup_msg
 	!fill 12,RIGHT
 	!text YEL,"System Information",RETURN,RETURN
 	!text RIGHT,RIGHT,RIGHT,"Platform:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"REU size:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"SuperRAM size:",RETURN
-;	!text RIGHT,RIGHT,RIGHT,"geoRAM size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
-	!fill 4,DOWN
+	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
 info_popup_platform_computer
@@ -314,9 +310,6 @@ audio_driver_2_txt
 audio_driver_3_txt
 	!text "DAC/DigiMAX 8-bit",0
 
-ram_driver_0_txt
-	!text "Standard 17xx-style REU",0
-
 user_msg
 	!text "UserP",0
 
@@ -389,24 +382,13 @@ playlist_filename_background
 
 choose_audio_msg
 	!byte 5,RIGHT
-	!byte $80+23
-		!text CYAN,"Choose audio driver:",RETURN
-	!byte 0
-
-choose_memory_msg
-	!byte 5,RIGHT
 	!byte $80+24
-		!text CYAN,"Choose memory driver:",RETURN,RETURN
+		!text DOWN,CYAN,"Choose audio driver:",RETURN
 	!byte 0
 
 choose_aud_driver_pos
 	!byte RETURN
 	!fill 4,RIGHT
-	!byte 0
-
-choose_mem_driver_pos
-	!byte RETURN
-	!fill 5,RIGHT
 	!byte 0
 
 sample_player_msg
@@ -500,9 +482,6 @@ status_line_pos
 		!text "to the ON position"
 		!byte 0
 }
-
-build_no_msg
-	!text GRN,"[ Build #",0
 
 mm_lo
 	!byte <line_2

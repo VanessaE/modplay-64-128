@@ -226,8 +226,6 @@ menu_text_sample_mode_gray_b
 
 menu_text_audio_driver
 	!text RIGHT,GRN,"[",YEL,"D",GRN,"]",LGRY," Audio driver",RETURN,RETURN,0
-menu_text_ram_driver
-	!text RIGHT,GRN,"[",YEL,"M",GRN,"]",LGRY," RAM driver",RETURN,RETURN,0
 menu_text_sid_addr
 	!text RIGHT,GRN,"[",YEL,"A",GRN,"]",LGRY," Stereo SID",RETURN,0
 menu_text_sid_addr_b
@@ -264,14 +262,12 @@ info_popup_msg
 	!fill 9,RIGHT
 	!text YEL,"System Information",RETURN,RETURN
 	!text RIGHT,RIGHT,RIGHT,"Platform:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"REU size:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"SuperRAM size:",RETURN
-;	!text RIGHT,RIGHT,RIGHT,"geoRAM size:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
-	!fill 4,DOWN
+	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
 info_popup_platform_computer
@@ -436,7 +432,7 @@ dirname_background
 
 choose_audio_msg
 	!byte $81,HOME
-	!byte 10,DOWN
+	!byte 9,DOWN
 	!byte 14,RIGHT
 	!byte $80+14
 		!text CYAN,"Choose audio",RETURN
@@ -445,25 +441,9 @@ choose_audio_msg
 		!text "driver:",RETURN
 	!byte 0
 
-choose_memory_msg
-	!byte $81,HOME
-	!byte 10,DOWN
-	!byte 13,RIGHT
-	!byte $80+15
-		!text CYAN,"Choose memory",RETURN
-	!byte 17,RIGHT
-	!byte $89
-		!text "driver:",RETURN,RETURN
-	!byte 0
-
 choose_aud_driver_pos
 	!byte RETURN
 	!fill 13,RIGHT
-	!byte 0
-
-choose_mem_driver_pos
-	!byte RETURN
-	!fill 14,RIGHT
 	!byte 0
 
 between_songs_msg
@@ -600,9 +580,6 @@ main_player_regen_tables_msg
 	!text "the sample rate, re-generating",RETURN
 	!fill 8,RIGHT
 	!text "pitch and tempo tables...",RETURN,0
-
-build_no_msg
-	!text GRN,"[Build #",0
 
 mm_lo
 	!byte <line_2

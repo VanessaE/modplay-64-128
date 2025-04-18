@@ -284,15 +284,9 @@ chk_key_i
 
 chk_key_d
 	cmp #$44
-	bne chk_key_m
+	bne chk_key_s
 	jsr choose_audio_driver
 	jmp show_main_menu
-
-chk_key_m
-;	cmp #$4d
-;	bne chk_key_s
-;	jsr choose_memory_driver
-;	jmp show_main_menu
 
 chk_key_s
 	cmp #$53
@@ -653,10 +647,6 @@ draw_menu_page_c
 	ldy #>menu_text_audio_driver
 	jsr print_menu_line
 
-	ldx #<menu_text_ram_driver
-	ldy #>menu_text_ram_driver
-	jsr print_menu_line
-
 	; display stereo mode
 	ldx #<menu_text_stereo
 	ldy #>menu_text_stereo
@@ -724,7 +714,6 @@ not_sid_menu
 	jsr print_menu_line
 
 	jsr show_audio_driver
-	jsr show_ram_driver
 	jsr show_sid_addr
 	jsr show_dac_addr
 	jsr show_stereo_mode

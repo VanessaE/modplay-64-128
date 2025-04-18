@@ -9,39 +9,31 @@
 	dev_col			= 34
 	adrv_row		= 3
 	adrv_col		= 23
-	rdrv_row 		= 5
-	rdrv_col		= 23
-	stereo_row		= 6
+	stereo_row		= 4
 	stereo_col		= 30
-	sidaddr_row		= 8
+	sidaddr_row		= 6
 	sidaddr_col		= 31
-	dacaddr_row		= 8
+	dacaddr_row		= 6
 	dacaddr_col		= 31
-	filter_row		= 9
+	filter_row		= 7
 	filter_col		= 30
-	reson_row		= 10
-	reson_col		= 33
-	dith_en_row		= 9
+	dith_en_row		= 7
 	dith_en_col		= 33
-	scr_en_row		= 11
+	scr_en_row		= 9
 	scr_en_col		= 30
 	info_anykey_row	= 20
 	info_anykey_col	= 14
 	info_plat_row	= 7
 	info_plat_col	= 13
-	info_reu_row	= 8
-	info_reu_col	= 13
-	info_supram_row	= 9
-	info_supram_col	= 18
-;	info_georam_row	=
-;	info_georam_col	= 
-	info_lsid_row	= 10
+	info_expram_row	= 8
+	info_expram_col	= 23
+	info_lsid_row	= 9
 	info_lsid_col	= 13
-	info_rsid_row	= 11
+	info_rsid_row	= 10
 	info_rsid_col	= 14
-	info_files_row	= 12
+	info_files_row	= 11
 	info_files_col	= 26
-	info_ram_use_row = 13
+	info_ram_use_row = 12
 	info_ram_use_col = 26
 	build_no_row	= 18
 	build_no_col	= 13
@@ -52,37 +44,29 @@
 	dev_col			= 32
 	adrv_row		= 1
 	adrv_col		= 5
-	rdrv_row 		= 3
-	rdrv_col		= 5
-	stereo_row		= 4
+	stereo_row		= 2
 	stereo_col		= 19
-	sidaddr_row		= 5
+	sidaddr_row		= 3
 	sidaddr_col		= 31
-	dacaddr_row		= 5
+	dacaddr_row		= 3
 	dacaddr_col		= 32
-	filter_row		= 6
+	filter_row		= 4
 	filter_col		= 26
-	reson_row		= 7
-	reson_col		= 30
-	dith_en_row		= 6
+	dith_en_row		= 4
 	dith_en_col		= 22
 	info_anykey_row	= 15
 	info_anykey_col	= 14
 	info_plat_row	= 2
 	info_plat_col	= 13
-	info_reu_row	= 3
-	info_reu_col	= 13
-	info_supram_row	= 4
-	info_supram_col	= 18
-;	info_georam_row	=
-;	info_georam_col	= 
-	info_lsid_row	= 5
+	info_expram_row	= 3
+	info_expram_col	= 23
+	info_lsid_row	= 4
 	info_lsid_col	= 13
-	info_rsid_row	= 6
+	info_rsid_row	= 5
 	info_rsid_col	= 14
-	info_files_row	= 7
+	info_files_row	= 6
 	info_files_col	= 26
-	info_ram_use_row = 8
+	info_ram_use_row = 7
 	info_ram_use_col = 26
 	build_no_row	= 13
 	build_no_col	= 13
@@ -213,17 +197,6 @@ choose_audio_driver
 	sta audio_driver
 rts
 
-choose_memory_driver
-	jsr gray_out
-	clc
-	jsr draw_mini_popup
-	lda #0
-	ldx #<choose_memory_msg
-	ldy #>choose_memory_msg
-	jsr print_msg_rle
-	jsr press_any_key
-rts
-
 show_input_device
 	lda current_menu_page
 	cmp #1
@@ -313,32 +286,6 @@ show_audio_driver
 
 adrv_app
  	lda #GRN
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-rts
-
-show_ram_driver
-	lda current_menu_page
-	cmp #2
-	beq +
-	rts
-
-+	clc
-	ldx #rdrv_row
-	ldy #rdrv_col
-	jsr PLOT
-	lda #GRN
-	jsr CHROUT
-	lda #"("
-	jsr CHROUT
-	lda #WHT
-	jsr CHROUT
-	lda #0
-	ldx #<ram_driver_0_txt
-	ldy #>ram_driver_0_txt
-	jsr print_msg
-	lda #GRN
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
@@ -753,8 +700,8 @@ show_system_info_popup
 	}
 
 	clc
-	ldx #info_reu_row
-	ldy #info_reu_col
+	ldx #info_expram_row
+	ldy #info_expram_col
 	jsr PLOT
 
 	clc
@@ -792,73 +739,59 @@ show_system_info_popup
 	ldy #>kb_msg
 	jsr print_msg
 
-		clc
-		ldx #info_supram_row
-		ldy #info_supram_col
-		jsr PLOT
-
-	!ifdef scpu {
-
-		lda supercpu_last_free_page
-		ora supercpu_last_free_bank
-		bne +
-
-		lda #0
-		ldx #<not_present_msg
-		ldy #>not_present_msg
-		jsr print_msg
-		jmp ++
-
-	+	clc
-		lda supercpu_last_free_bank
-		adc #1
-		sta utility_pointer
-		lda #0
-		rol
-
-		asl utility_pointer
-		rol 
-		asl utility_pointer
-		rol 
-		asl utility_pointer
-		rol 
-		asl utility_pointer
-		rol 
-		asl utility_pointer
-		rol 
-		asl utility_pointer
-		rol 
-
-		sec
-		ldx utility_pointer
-		tay
-		jsr print_uint16
-
-		!ifndef c128 {
-			lda #32
-			jsr CHROUT
-		}
-
-		lda #0
-		ldx #<kb_msg
-		ldy #>kb_msg
-		jsr print_msg
-
-	} else {
-		lda #0
-		ldx #<na_msg
-		ldy #>na_msg
-		jsr print_msg
-	}
-
-;	clc
-;	ldx #info_supram_row
-;	ldy #info_supram_col
-;	jsr PLOT
-;	lda #0
-;	ldx #<what
-;	ldy #>what
-;	jsr print the size
+;	!ifdef scpu {
+;
+;		lda supercpu_last_free_page
+;		ora supercpu_last_free_bank
+;		bne +
+;
+;		lda #0
+;		ldx #<not_present_msg
+;		ldy #>not_present_msg
+;		jsr print_msg
+;		jmp ++
+;
+;	+	clc
+;		lda supercpu_last_free_bank
+;		adc #1
+;		sta utility_pointer
+;		lda #0
+;		rol
+;
+;		asl utility_pointer
+;		rol 
+;		asl utility_pointer
+;		rol 
+;		asl utility_pointer
+;		rol 
+;		asl utility_pointer
+;		rol 
+;		asl utility_pointer
+;		rol 
+;		asl utility_pointer
+;		rol 
+;
+;		sec
+;		ldx utility_pointer
+;		tay
+;		jsr print_uint16
+;
+;		!ifndef c128 {
+;			lda #32
+;			jsr CHROUT
+;		}
+;
+;		lda #0
+;		ldx #<kb_msg
+;		ldy #>kb_msg
+;		jsr print_msg
+;
+;	} else {
+;		lda #0
+;		ldx #<na_msg
+;		ldy #>na_msg
+;		jsr print_msg
+;	}
 
 	clc
 	ldx #info_lsid_row
