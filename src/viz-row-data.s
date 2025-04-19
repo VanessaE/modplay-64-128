@@ -120,7 +120,7 @@ viz_row_data_fetch_and_print
 	jsr fetch_row_data
 
 	!ifdef c128 { ; only display the row # on C128, C64 screen is too small
-		jsr vdc_write_ram_reg_31_select_only
+		jsr vdc_ram_rw_setup
 
 		txa
 		jsr display_byte_hex_direct

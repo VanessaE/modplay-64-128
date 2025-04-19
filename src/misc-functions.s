@@ -612,10 +612,15 @@ divide_32by24
 	bne .lp4
 rts
 
+; this expects the file entry number in the list in .X
+; set the carry to get the address of the PETSCII filename
+; or clear to get the address of the screen code version
 
-calc_filename_address ; expects .X to be a list scroll position
+calc_filename_address
 	lda #0
 	sta temp_abs_a
+	ror
+	sta temp_abs_b
 
 	txa
 	asl
@@ -626,12 +631,29 @@ calc_filename_address ; expects .X to be a list scroll position
 	rol temp_abs_a
 	asl
 	rol temp_abs_a
+	tax
+
+	bit temp_abs_b
+	bmi +
 
 	clc
-	adc #<playlist_filenames
-	tax
+
+	!ifndef c128 {
+		lda temp_abs_a
+		adc expansion_memory_start_page
+		adc #16 + 2
+	} else {
+		lda temp_abs_a
+		adc #>VDC_filename_cache
+	}
+
+	tay
+	rts
+
++	clc
 	lda temp_abs_a
-	adc #>playlist_filenames
+	adc expansion_memory_start_page
+	adc #2
 	tay
 rts
 
@@ -1023,7 +1045,7 @@ rts
 
 !ifdef c128 {
 
-	!macro VDC_WRITE_SETUP {
+	!macro VDC_RAM_ACC_SETUP {
 	-	bit VDC_ADDR
 		bpl -
 
@@ -1042,7 +1064,7 @@ rts
 	}
 
 	vdc_block_copy
-		+VDC_WRITE_SETUP
+		+VDC_RAM_ACC_SETUP
 
 		lda #24
 		sta VDC_ADDR
@@ -1070,7 +1092,7 @@ rts
 	vdc_block_fill
 		sta temp_abs_a
 
-		+VDC_WRITE_SETUP
+		+VDC_RAM_ACC_SETUP
 
 		lda #31
 		sta VDC_ADDR
@@ -1120,32 +1142,27 @@ rts
 
 	rts
 
-	; set fill_copy_target to the initial target address, .A holds the byte
-	; to write
+	vdc_ram_rw_setup
+		+VDC_RAM_ACC_SETUP
+
+		lda #31
+		sta VDC_ADDR
+	rts
+
 	vdc_write_ram
-		pha
-
-		+VDC_WRITE_SETUP
-
-		lda #31
-		sta VDC_ADDR
-		pla
-		sta VDC_DATA
-	rts
-
-	vdc_write_ram_reg_31_select_only
-		+VDC_WRITE_SETUP
-
-		lda #31
-		sta VDC_ADDR
-	rts
-
-	vdc_continue_write_ram
 	-	bit VDC_ADDR
 		bpl -
 
 		sta VDC_DATA
 	rts
+
+	vdc_read_ram
+	-	bit VDC_ADDR
+		bpl -
+
+		lda VDC_DATA
+	rts
+
 }
 
 ; translates a 0-15 value in .A into printable "0" to "f", returned in .A
@@ -1203,11 +1220,14 @@ display_byte_hex_direct
 		lsr
 		lsr
 		jsr to_hex
+		pha
+		jsr vdc_ram_rw_setup
+		pla
 		jsr vdc_write_ram
 
 		lda temp_abs_a
 		jsr to_hex
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 	}
 
 	ldy temp_abs_y

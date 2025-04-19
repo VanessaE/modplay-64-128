@@ -50,6 +50,10 @@ mini_popup_top_row					= (24 - mini_popup_height) / 2
 mini_popup_bottom_row				= (24 + mini_popup_height) / 2
 mini_popup_right_column				= mini_popup_left_column + mini_popup_width - 1
 
+!ifdef c128 {
+	mini_popup_left_col_real		= 39 - (mini_popup_width / 2)
+}
+
 medium_popup_top_row				= (24 - medium_popup_height) / 2
 medium_popup_bottom_row				= (24 + medium_popup_height) / 2
 medium_popup_right_column			= medium_popup_left_column + medium_popup_width - 1

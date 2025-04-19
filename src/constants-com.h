@@ -141,6 +141,8 @@
 	binsearch_high						= $28 ; and $29
 	binsearch_value						= $59 ; and $5a
 
+	utility_pointer_c					= $24 ; through $26
+
 	; these Zero Page variables have the same addresses both inside of and
 	; outside of the ZP-backup space, so they can be used in either mode, but
 	; when used inside of the backup, thier values can't be carried back out.
@@ -244,13 +246,13 @@
 	file_size_in_kb						= $0bab ; 2 bytes
 	header_loaded						= $0bad
 
-	; free: $0bae
-	ramlink_detect						= $0baf
-	main_memory_free_pages				= $0bb0
+	ramlink_detect						= $0bae
+	main_memory_free_pages				= $0baf
 
-	old_STOP_vec						= $0bb1 ; 2 bytes
-	parse_header_sample_pointer			= $0bb3 ; 3 bytes
+	old_STOP_vec						= $0bb0 ; 2 bytes
+	parse_header_sample_pointer			= $0bb2 ; 3 bytes
 
+	exp_load_offset_pages				= $0bb5
 	highest_exp_addresss_used			= $0bb6 ; 3 bytes
 
 	arpeggio_extra_note_first_fracts	= $0bb9 ; \___ 16 bytes
@@ -345,7 +347,10 @@
 
 	num_samples_to_load					= $0c5f
 
-	; free: $0c60 through $0ca7
+	filenames_cache_petscii				= $0c60 ; 3 bytes
+	filenames_cache_screencode			= $0c63 ; 3 bytes
+
+	; free: $0c66 through $0ca7
 
 	; various program vectors
 

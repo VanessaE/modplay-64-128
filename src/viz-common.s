@@ -100,7 +100,7 @@ visualizer_print_char
 		bit VDC_DATA
 		jmp ++
 
-	+	jsr vdc_continue_write_ram
+	+	jsr vdc_write_ram
 	}
 
 ++	lda temp_abs_b
@@ -117,7 +117,7 @@ visualizer_erase_row
 		lda utility_pointer+1
 		sta fill_copy_target+1
 
-		jsr vdc_write_ram_reg_31_select_only
+		jsr vdc_ram_rw_setup
 	}
 
 	ldy #0
@@ -139,7 +139,7 @@ visualizer_erase_row
 			bit VDC_DATA ; do a read to skip the byte, and it's guaranteed to be non-zero
 			jmp ++
 
-		+	jsr vdc_continue_write_ram
+		+	jsr vdc_write_ram
 		}
 
 	++	iny

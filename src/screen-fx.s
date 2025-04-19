@@ -343,7 +343,7 @@ update_progress_bar
 		lda progress_bar_char_pointer+1
 		sta fill_copy_target+1
 
-		jsr vdc_write_ram_reg_31_select_only
+		jsr vdc_ram_rw_setup
 	}
 
 	lda temp_abs_a
@@ -359,7 +359,7 @@ update_progress_bar
 -	!ifndef c128 {
 		sta (progress_bar_char_pointer),y
 	} else {
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 	}
 
 	dey
@@ -381,6 +381,6 @@ nofill
 		sta (progress_bar_char_pointer),y
 
 	} else {
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 	}
 rts

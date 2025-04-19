@@ -12,6 +12,8 @@ TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
 VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
 
+BASE_DIR=/home/vanessa/Commodore-related/Software/My Creations/modplay-v2.0
+
 all:
 	rm -f "$(TMPDIR)/*"
 
@@ -36,9 +38,9 @@ all:
 
 	@echo "Launching VICE and auto-starting..."
 
-	$(X64) -warp -autostart ~/Commodore-related/modplay-v2.0/disk-images/modplay64v0.d64 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
+	$(X64) -warp -autostart "$(BASE_DIR)/disk-images/modplay64v0.d64" -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
 
-	$(X128) -warp -8 ~/Commodore-related/modplay-v2.0/disk-images/modplay128v0.d71 -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
+	$(X128) -warp -8 "$(BASE_DIR)/disk-images/modplay128v0.d71" -11 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
 
 
 clean:

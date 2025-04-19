@@ -15,6 +15,8 @@
 
 	playlist_pane_base_addr = VIC_SCREEN + 3*40 + 1
 
+	mini_popup_lower_left_corner_addr = VIC_SCREEN + 1 + mini_popup_left_column + mini_popup_bottom_row * 40
+
 } else {
 	playlist_top_row			= 0
 	playlist_bottom_row			= 18
@@ -22,11 +24,14 @@
 	playlist_width				= 26
 	dirname_row					= 2
 	dirname_col					= 9
-	file_list_number_row		= 3
+	file_list_number_row		= 4
 	file_list_number_column		= 17
 	file_sizes_column			= 21
 
 	playlist_pane_base_addr = VDC_SCREEN + 3*80 + 5
+
+	mini_popup_lower_left_corner_addr = VDC_SCREEN + 1 + mini_popup_left_col_real + mini_popup_bottom_row * 80
+
 }
 
 playlist_pane_height = playlist_bottom_row - playlist_top_row + 1
@@ -35,11 +40,32 @@ playlist_bottom_row_addr = playlist_pane_base_addr + (playlist_pane_height - 1)*
 playlist_half_page_size = (playlist_pane_height - 1) / 2
 playlist_middle_row = (playlist_bottom_row + playlist_top_row) / 2
 
+; utility_pointer_b is for the screen code versions of the filenames
+; utility_pointer_c is used for the plain PETSCII versions
+
 load_directory
-	lda #<playlist_filenames
-	sta load_pointer
-	lda #>playlist_filenames
-	sta load_pointer+1
+	clc
+	lda expansion_memory_start_page
+	adc #2
+	sta utility_pointer_c+1
+
+	!ifndef c128 {
+		clc
+		lda expansion_memory_start_page
+		adc #16 + 2
+		sta utility_pointer_b+1
+	} else {
+		lda #<VDC_filename_cache
+		sta utility_pointer_b
+		lda #>VDC_filename_cache
+		sta utility_pointer_b+1
+	}
+
+	lda #0
+	sta utility_pointer_c
+	sta utility_pointer_c+2
+	sta utility_pointer_b
+	sta utility_pointer_b+2
 
 	lda #0
 	sta playlist_length
@@ -109,42 +135,141 @@ load_directory
 	jsr dir_file_unquote
 	bcs .next_entry			; carry set = no valid filename in the buffer
 
-	ldx #32					; otherwise, accept it
-	ldy #0
--	lda string_buffer,x
-	sta (load_pointer),y
-	inx
-	iny
-	cpy #16
-	bne -
+	clc
+	!ifndef c128 {
+		ldx #mini_popup_bottom_row
+		ldy #mini_popup_left_column+1
+	} else {
+		ldx #mini_popup_height
+		ldy #0
+	}
+	jsr PLOT
+
+	lda #BLK
+	jsr CHROUT
+
+	clc
+	ldx #mini_popup_bottom_row
+	ldy #mini_popup_left_column+1
+	jsr PLOT
+
+	!ifndef c128 {
+		ldy #16
+		lda #32
+	-	jsr CHROUT
+		dey
+		bne -
+	} else {
+		lda #ESC
+		jsr CHROUT
+		lda #"q"
+		jsr CHROUT
+	}
+
+	clc
+	ldx #mini_popup_bottom_row
+	ldy #mini_popup_left_column+1
+	jsr PLOT
+
+	lda #16
+	ldx #<string_buffer+32
+	ldy #>string_buffer+32
+	jsr print_msg
+
+	!ifndef c128 {
+		lda #<mini_popup_lower_left_corner_addr
+		sta expansion_transfer_local_addr
+		lda #>mini_popup_lower_left_corner_addr
+		sta expansion_transfer_local_addr+1
+
+		lda utility_pointer_b
+		sta expansion_memory_target_pointer
+		lda utility_pointer_b+1
+		sta expansion_memory_target_pointer+1
+		lda utility_pointer_b+2
+		sta expansion_memory_target_pointer+2
+
+		lda #16
+		sta stash_size
+		lda #0
+		sta stash_size+1
+
+		+JSR_INDIRECT (stash_block_vec)
+
+	} else {
+		lda #<mini_popup_lower_left_corner_addr
+		sta fill_copy_source
+		lda #>mini_popup_lower_left_corner_addr
+		sta fill_copy_source+1
+	
+		lda utility_pointer_b
+		sta fill_copy_target
+		lda utility_pointer_b+1
+		sta fill_copy_target+1
+
+		ldx #16
+		jsr vdc_block_copy
+	}
+
+	lda #<string_buffer+32
+	sta expansion_transfer_local_addr
+	lda #>string_buffer+32
+	sta expansion_transfer_local_addr+1
+
+	lda utility_pointer_c
+	sta expansion_memory_target_pointer
+	lda utility_pointer_c+1
+	sta expansion_memory_target_pointer+1
+	lda utility_pointer_c+2
+	sta expansion_memory_target_pointer+2
+
+	lda #16
+	sta stash_size
+	lda #0
+	sta stash_size+1
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	clc
+	lda utility_pointer_b
+	adc #16
+	sta utility_pointer_b
+	lda utility_pointer_b+1
+	adc #0
+	sta utility_pointer_b+1
+
+	lda utility_pointer_c
+	adc #16
+	sta utility_pointer_c
+	lda utility_pointer_c+1
+	adc #0
+	sta utility_pointer_c+1
 
 .more_files
 	ldy playlist_length
 	lda playlist_file_sizes_lows,y
 	cmp #7					; discard any file less than 7 disk blocks long,
-	bcc .next_entry			; it's all but impossible for a MOD to be that small.
+	bcs + 					; it's all but impossible for a MOD to be that small.
+	jmp .next_entry
 
-	inc playlist_length
++	inc playlist_length
 	lda playlist_length
 	cmp #193				; end of list space?
 	beq .fin
-
-	clc
-	lda load_pointer
-	adc #16
-	sta load_pointer
-	bcc +
-	inc load_pointer+1
 
 +	clc
 	ldx #file_list_number_row
 	ldy #file_list_number_column
 	jsr PLOT
 
+	lda #LGRN
+	jsr CHROUT
+
 	sec
 	ldx playlist_length
 	ldy #0
 	jsr print_uint16
+
 	jmp .next_entry
 
 .err
@@ -168,31 +293,9 @@ rts
 
 ; display the loaded file list in the left pane
 
-display_playlist
+display_disk_name
 	lda playlist_length
 	bne +
-
-	!ifdef c128 {
-		jsr set_window_playlist_pane
-	}
-
-	jsr erase_playlist_pane
-
-	!ifdef c128 {
-		clc
-		ldx #playlist_middle_row
-		ldy #playlist_left_column+2
-		jsr PLOT
-	}
-
-	lda #0
-	ldx #<no_list_loaded_msg
-	ldy #>no_list_loaded_msg
-	!ifndef c128 {
-		jsr print_msg_rle
-	} else {
-		jsr print_msg
-	}
 	rts
 
 +	!ifdef c128 {
@@ -219,14 +322,38 @@ display_playlist
 	ldy #>current_dir_name
 	jsr print_msg
 
+	lda #RVSOFF
+	jsr CHROUT
+rts
+
+display_playlist
+	lda playlist_length
+	bne +
+
 	!ifdef c128 {
+		jsr set_window_playlist_pane
+
+		clc
+		ldx #playlist_middle_row
+		ldy #playlist_left_column+2
+		jsr PLOT
+	}
+
+	lda #0
+	ldx #<no_list_loaded_msg
+	ldy #>no_list_loaded_msg
+	!ifndef c128 {
+		jsr print_msg_rle
+	} else {
+		jsr print_msg
+	}
+	rts
+
++	!ifdef c128 {
 		jsr set_window_playlist_pane
 	}
 
 	jsr erase_playlist_pane
-
-	lda #RVSOFF
-	jsr CHROUT
 
 	sec
 	lda #playlist_half_page_size
@@ -245,42 +372,16 @@ display_playlist
 	lda #playlist_top_row
 
 ++	sta screen_row_to_print_at
-	lda #BLK	 ; hide the list initially, until the colors are painted in
-	jsr CHROUT
 
 .pl_print_lp
-	ldx screen_row_to_print_at
-	ldy #playlist_left_column
-	clc
-	jsr PLOT
-
 	ldx playlist_print_file_counter
-	lda playlist_file_flags,x
-	bpl +
-
-	lda #RVSON
-	jsr CHROUT
-
-	!ifdef c128 {
-		lda #0
-		ldx #<playlist_filename_background
-		ldy #>playlist_filename_background
-		jsr print_msg_rle
-	}
-
-+	ldx playlist_print_file_counter
-	jsr calc_filename_address
-	lda #16
-	jsr print_msg
+	clc
+	jsr direct_print_single_entry
 
 	!ifdef c128 {
 		ldx playlist_print_file_counter
-		ldy screen_row_to_print_at
 		jsr append_file_size
 	}
-
-	lda #RVSOFF
-	jsr CHROUT
 
 	inc playlist_print_file_counter
 	inc screen_row_to_print_at
@@ -297,8 +398,6 @@ display_playlist
 +	!ifndef c128 {
 		jsr show_file_size ; on C64 this prints the size at the bottom of the list
 	}
-
-	jsr fill_playlist_colors
 rts
 
 ; NOTE:  "up" or "down" in these subroutines refer to the playlist pane's
@@ -386,88 +485,133 @@ scroll_add_row
 
 print_it
 	sta playlist_print_file_counter
-	tay
-	lda #DGRY
-	jsr CHROUT
-	lda playlist_file_flags,y
-	bpl +
-	lda #RVSON
-	jsr CHROUT
-
-+	!ifdef c128 {
-		lda #0
-		ldx #<playlist_filename_background
-		ldy #>playlist_filename_background
-		jsr print_msg_rle
-	}
-
-	ldx playlist_print_file_counter
-	jsr calc_filename_address
-	lda #16
-	jsr print_msg
+	tax
+	clc
+	jsr direct_print_single_entry
 
 	!ifdef c128 {
 		ldx playlist_print_file_counter
-		ldy screen_row_to_print_at
 		jsr append_file_size
-		lda #RVSOFF
-		jsr CHROUT
 	} else {
-		lda #RVSOFF
-		jsr CHROUT
 		jsr show_file_size
 	}
 rts
 
 erase_file_list
 	lda #0
-	ldy #0
--	sta playlist_file_sizes_lows,y
-	sta playlist_file_sizes_highs,y
-	sta playlist_file_flags,y
-	iny
+	ldx #0
+-	sta load_buffer,x
+	dex
 	bne -
-	sta playlist_length
-	lda #0
-	sta playlist_scroll_pos
 
-	lda #<playlist_filenames
-	sta fill_copy_target
-	lda #>playlist_filenames
-	sta fill_copy_target+1
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
 
-	ldy #0
--	lda #0
-	sta (fill_copy_target),y
-	inc fill_copy_target
-	bne +
-	inc fill_copy_target+1
+	sta stash_size
+	lda #1
+	sta stash_size+1
 
-+	lda fill_copy_target
-	cmp #<playlist_filenames_end
+	clc
+	lda expansion_memory_start_page
+	adc #2
+	sta expansion_memory_target_pointer+1
+
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+
+	!ifndef c128 {
+		ldx #32
+	} else {
+		ldx #16
+	}
+
+-	+JSR_INDIRECT (stash_block_vec)
+
+	inc expansion_memory_target_pointer+1
+
+	dex
 	bne -
-	lda fill_copy_target+1
-	cmp #>playlist_filenames_end
-	bne -
+
+	!ifdef c128 {
+		lda #<VDC_filename_cache
+		sta fill_copy_target
+		lda #>VDC_filename_cache
+		sta fill_copy_target+1
+
+		lda #0
+		ldx #15
+		jsr vdc_block_fill
+
+		ldy #255
+	-	lda #0
+		ldx #15
+		jsr vdc_block_fill_extend
+		dey
+		bne -
+	}
 rts
 
 erase_playlist_pane
 	!ifndef c128 {
-		ldx #15
-		lda #$20
-	-	!for .row, 3, 19 {
-			sta VIC_SCREEN+.row*40+1,x
-		}
-		dex
+
+		lda #<(VIC_SCREEN + 3*40 + 1)
+		sta fill_copy_target
+		lda #>(VIC_SCREEN + 3*40 + 1)
+		sta fill_copy_target+1
+
+		ldx #3
+
+	--	lda #32
+		ldy #15
+
+	-	sta (fill_copy_target),y
+		dey
 		bpl -
+
+		clc
+		lda fill_copy_target
+		adc #40
+		sta fill_copy_target
+		lda fill_copy_target+1
+		adc #0
+		sta fill_copy_target+1
+
+		inx
+		cpx #20
+		bne --
+
 	} else {
-		lda #CLR
-		jsr CHROUT
+		lda #<(VDC_SCREEN + 3*80 + 5)
+		sta fill_copy_target
+		lda #>(VDC_SCREEN + 3*80 + 5)
+		sta fill_copy_target+1
+
+		ldy #3
+
+	-	lda #32
+		ldx #26
+		jsr vdc_block_fill
+
+		clc
+		lda fill_copy_target
+		adc #80
+		sta fill_copy_target
+		lda fill_copy_target+1
+		adc #0
+		sta fill_copy_target+1
+
+		iny
+		cpy #22
+		bne -
+
 	}
+rts
 
 ; manually fill the colors so that the scroll code doesn't have to mess with them
 
-fill_playlist_colors
+prefill_playlist_colors
 	!ifndef c128 {
 
 		hl_color		= 1 ; white
@@ -524,7 +668,7 @@ fill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
 		sta fill_copy_target+1
 		lda #main_fade2
-		ldx #25
+		ldx #26
 		jsr vdc_block_fill
 
 		lda #<(VDC_ATTRIBUTES+ 4*80+5)
@@ -538,7 +682,7 @@ fill_playlist_colors
 		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
-		ldx #2
+		ldx #3
 		lda #kb_fade
 		jsr vdc_block_fill_extend
 
@@ -554,7 +698,7 @@ fill_playlist_colors
 			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
-			ldx #2
+			ldx #3
 			lda #kb_color
 			jsr vdc_block_fill_extend
 		}
@@ -564,7 +708,7 @@ fill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+12*80+5)
 		sta fill_copy_target+1
 		lda #hl_color
-		ldx #25
+		ldx #26
 		jsr vdc_block_fill
 
 		!for .row, 13, 19 {
@@ -579,7 +723,7 @@ fill_playlist_colors
 			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
-			ldx #2
+			ldx #3
 			lda #kb_color
 			jsr vdc_block_fill_extend
 		}
@@ -595,7 +739,7 @@ fill_playlist_colors
 		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
-		ldx #2
+		ldx #3
 		lda #kb_fade
 		jsr vdc_block_fill_extend
 
@@ -604,48 +748,21 @@ fill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+21*80+5)
 		sta fill_copy_target+1
 		lda #main_fade2
-		ldx #25
+		ldx #26
 		jsr vdc_block_fill
 	}
 rts
 
 enqueue_file
-	ldx #playlist_middle_row
-	ldy #playlist_left_column
-	clc
-	jsr PLOT
-
-	lda #WHT
-	jsr CHROUT
-
 	ldx playlist_scroll_pos
 	lda playlist_file_flags,x
 	eor #$80
 	sta playlist_file_flags,x
-	bpl +
-	lda #RVSON
-	jsr CHROUT
 
-+	!ifdef c128 {
-		lda #0
-		ldx #<playlist_filename_background
-		ldy #>playlist_filename_background
-		jsr print_msg_rle
-	}
-
-	ldx playlist_scroll_pos
-	jsr calc_filename_address
-	lda #16
-	jsr print_msg
-
-	!ifdef c128 {
-		ldx playlist_scroll_pos
-		ldy #playlist_middle_row
-		jsr append_file_size
-	}
-
-	lda #RVSOFF
-	jsr CHROUT
+	lda #playlist_middle_row
+	sta screen_row_to_print_at
+	clc
+	jsr direct_print_single_entry
 rts
 
 playlist_page_down
@@ -670,6 +787,139 @@ playlist_page_up
 	lda #0
 +	sta playlist_scroll_pos
 	jsr display_playlist
+rts
+
+; this expects the file entry number in the list in .X
+; and set screen_row_to_print_at to the line number to print on
+;
+; set the carry to get the address of the PETSCII filename
+; or clear to get the address of the screen code version
+
+direct_print_single_entry
+	stx temp_abs_x
+
+	jsr calc_filename_address
+
+	!ifndef c128 {
+		stx expansion_memory_target_pointer
+		sty expansion_memory_target_pointer+1
+		lda #0
+		sta expansion_memory_target_pointer+2
+		sta stash_size+1
+		lda #16
+		sta stash_size
+
+		ldx screen_row_to_print_at
+		lda #40
+		jsr multiply_8x8
+
+		clc
+		lda product
+		adc #<VIC_SCREEN + 1
+		sta fill_copy_target
+		lda product+1
+		adc #>VIC_SCREEN + 1
+		sta fill_copy_target+1
+
+	} else {
+		stx fill_copy_source
+		sty fill_copy_source+1
+
+		clc
+		lda screen_row_to_print_at
+		adc #3
+		ldx #80
+		jsr multiply_8x8
+
+		clc
+		lda product
+		adc #<VDC_SCREEN + 6
+		sta utility_pointer
+		lda product+1
+		adc #>VDC_SCREEN + 6
+		sta utility_pointer+1
+	}
+
+	ldx temp_abs_x
+	lda playlist_file_flags,x
+	bmi dp_is_enqueued
+
+		!ifndef c128 {
+			clc
+			lda product
+			adc #<VIC_SCREEN + 1
+			sta expansion_transfer_local_addr
+			lda product+1
+			adc #>VIC_SCREEN + 1
+			sta expansion_transfer_local_addr+1
+
+			+JSR_INDIRECT (fetch_block_vec)
+		} else {
+
+			lda utility_pointer
+			sta fill_copy_target
+			lda utility_pointer+1
+			sta fill_copy_target+1
+
+			ldx #16
+			jsr vdc_block_copy
+		}
+		rts
+
+	; if a file is enqued, we need to invert the text colors
+
+	dp_is_enqueued
+
+		!ifndef c128 {
+			lda #<string_buffer
+			sta expansion_transfer_local_addr
+			lda #>string_buffer
+			sta expansion_transfer_local_addr+1
+
+			+JSR_INDIRECT (fetch_block_vec)
+
+			lda #<string_buffer
+			sta fill_copy_source
+			lda #>string_buffer
+			sta fill_copy_source+1
+
+			ldy #15
+		-	lda (fill_copy_source),y
+			ora #$80
+			sta (fill_copy_target),y
+			dey
+			bpl -
+
+		} else {
+			lda fill_copy_source
+			sta fill_copy_target
+			lda fill_copy_source+1
+			sta fill_copy_target+1
+
+			jsr vdc_ram_rw_setup
+
+			ldy #0
+		-	jsr vdc_read_ram
+			sta string_buffer,y
+			iny
+			cpy #16
+			bne -
+
+			lda utility_pointer
+			sta fill_copy_target
+			lda utility_pointer+1
+			sta fill_copy_target+1
+
+			jsr vdc_ram_rw_setup
+
+			ldy #0
+		-	lda string_buffer,y
+			ora #$80
+			jsr vdc_write_ram
+			iny
+			cpy #16
+			bne -
+		}
 rts
 
 !ifndef c128 {
@@ -741,7 +991,6 @@ rts
 } else {
 
 	append_file_size
-		sty temp_abs_a
 		lda playlist_file_sizes_highs,x
 		sta file_size_in_kb+1
 		lda playlist_file_sizes_lows,x
@@ -753,28 +1002,27 @@ rts
 		sta file_size_in_kb
 
 		sec
-		tax
-		ldy file_size_in_kb+1
-		jsr get_num_length
-		sty temp_abs_b
-
-		sec
-		lda #file_sizes_column
-		sbc temp_abs_b
-		tay
-
-		ldx temp_abs_a
-		clc
-		jsr PLOT
-
-		sec
 		ldx file_size_in_kb
 		ldy file_size_in_kb+1
-		jsr print_uint16
+		jsr uint16_to_string
 
-		lda #0
-		ldx #<kb_msg
-		ldy #>kb_msg
-		jsr print_msg
+		lda #31
+		sta VDC_ADDR
+
+		ldx #1 ; ignore the first char, the num will always be 4 space-padded digits
+	-	lda uint16_string_buffer,x
+		jsr vdc_write_ram
+		inx
+		cpx #6
+		bne -
+
+		lda #32
+		jsr vdc_write_ram
+		!ct scr {
+			lda #"k"
+			jsr vdc_write_ram
+			lda #"B"
+			jsr vdc_write_ram
+		}
 	rts
 }

@@ -465,11 +465,12 @@ fetch_row_data
 	adc #0
 	sta utility_pointer_b+2
 
-	; add the $0400 offset since the pattern data sits 4 pages up from the start
+	; add exp_load_offset_pages*256 offsets since the pattern
+	; data sits quite some ways up from the start of exp RAM
 
 	clc
 	lda utility_pointer_b+1
-	adc #4
+	adc exp_load_offset_pages
 	sta utility_pointer_b+1
 
 	fetch_row_expansion_vec
@@ -1149,25 +1150,25 @@ print_elapsed_time
 		ldx CIA1_TOD_MINUTES
 		lda divide_by_16_table,x
 		ora #$30
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 
 		txa
 		and #$0f
 		ora #$30
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 
 		lda #":"
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 
 		ldx CIA1_TOD_SECONDS
 		lda divide_by_16_table,x
 		ora #$30
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 
 		txa
 		and #$0f
 		ora #$30
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 	}
 
 	bit CIA1_TOD_TENTHS; read tenths to un-latch the time

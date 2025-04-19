@@ -306,15 +306,16 @@ parse_instruments
 	bmi +
 	jmp -
 
-+	clc									; the first pattern is at start + $0400
-	lda #0
+; the first pattern is at start + exp_load_offset_pages*256
+
++	lda #0
 	sta parse_header_sample_pointer
-	lda expansion_memory_start_page
-	adc #4
-	sta parse_header_sample_pointer+1
-	lda expansion_memory_start_bank
-	adc #0
 	sta parse_header_sample_pointer+2
+
+	clc
+	lda expansion_memory_start_page
+	adc exp_load_offset_pages
+	sta parse_header_sample_pointer+1
 
 	lda number_of_patterns
 	asl

@@ -79,9 +79,24 @@ load_file_to_expansion
 load_from_playlist
 	ldy #0
 	ldx playlist_scroll_pos
+	sec
 	jsr calc_filename_address
-	stx filename_addr
-	sty filename_addr+1
+	stx expansion_memory_target_pointer
+	sty expansion_memory_target_pointer+1
+	lda #0
+	sta expansion_memory_target_pointer+2
+
+	sta stash_size+1
+	lda #16
+	sta stash_size
+
+	lda #<string_buffer
+	sta expansion_transfer_local_addr
+	lda #>string_buffer
+	sta expansion_transfer_local_addr+1
+
+
+	+JSR_INDIRECT (fetch_block_vec)
 
 	ldx playlist_scroll_pos
 	lda playlist_file_sizes_lows,x
@@ -95,8 +110,7 @@ load_from_playlist
 	sta file_size_in_kb+1
 
 	ldy #0
--	lda (filename_addr),y
-	sta string_buffer,y
+-	lda string_buffer,y
 	beq +
 	iny
 	cpy #16
@@ -151,20 +165,20 @@ load_by_filename_entry
 	sta expansion_transfer_local_addr
 	lda #>load_buffer
 	sta expansion_transfer_local_addr+1
+
 	lda #0
 	sta expansion_transfer_local_addr+2
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
 
 	jsr set_first_exp_pages_to_silence	; note: this trashes the target pointer and stash size.
 
-	clc							; actual music/sample data will go to start + $0400
-	lda #0
-	sta expansion_memory_target_pointer
+	; actual file go to start + exp_load_offset_pages*256
+
+	clc
 	lda expansion_memory_start_page
-	adc #4
+	adc exp_load_offset_pages
 	sta expansion_memory_target_pointer+1
-	lda expansion_memory_start_bank
-	adc #0
-	sta expansion_memory_target_pointer+2
 
 	lda #0
 	sta stash_size

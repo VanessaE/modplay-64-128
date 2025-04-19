@@ -266,7 +266,7 @@ info_popup_msg
 	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Expansion RAM usage:",RETURN
 	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 

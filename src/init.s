@@ -246,6 +246,21 @@ init
 +	lda #0
 	sta expansion_memory_start_page
 	sta expansion_memory_start_bank
+	sta highest_exp_addresss_used
+	sta highest_exp_addresss_used+1
+	sta highest_exp_addresss_used+2
+
+	; reserve 2 pages + (4 or 8) kB at the start of exp RAM
+	; for "silence" block and filename storage
+
+	!ifndef c128 {
+		lda #32 + 2
+	} else {
+		lda #16 + 2
+	}
+
+	sta exp_load_offset_pages
+	sta highest_exp_addresss_used+1
 
 	lda #0
 	sta ramlink_detect

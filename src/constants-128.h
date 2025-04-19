@@ -42,13 +42,11 @@
 
 	mod_instrument_names			= $9700 ; 32 * 31 bytes pls some waste
 
-	playlist_file_sizes_lows		= $9b00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $9c00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $9d00 ; 1 byte * 192
-											; (48 bytes unused but will be zeroed)
+	playlist_file_sizes_lows		= $9b00 ; \___ 2 bytes * 256 files
+	playlist_file_sizes_highs		= $9c00 ; /
+	playlist_file_flags				= $9d00 ; 1 byte * 256
 
-	playlist_filenames				= $9e00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $aa00
+	; free: $9e00 to $a9ff (3 kB)
 
 	volume_table_lower				= $aa00 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
@@ -65,6 +63,7 @@
 	indfetch_addr					= $bb
 
 	cursor_current_line				= $eb
+	cursor_current_column			= $ec
 
 	CHAR_COLOR						= $f1 ; current char color for KERNAL prints
 
@@ -83,6 +82,9 @@
 	VIC_SCREEN						= $0400
 	VDC_SCREEN						= $0000
 	VDC_ATTRIBUTES					= $0800
+
+	VDC_filename_cache				= $1000
+
 	VDC_CHARSETS					= $2000
 	VDC_VM3							= $0a2e ; base of VDC screen mem
 

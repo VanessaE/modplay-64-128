@@ -38,15 +38,13 @@
 
 	and_f0_table					= $7d00 ; 1 page
 
-	playlist_filenames				= $7e00 ; 16 bytes * 192 (3 kB)
-	playlist_filenames_end			= $8a00
+	; free: $7e00 to $89ff (3 kB)
 
 	mod_instrument_names			= $8a00 ; 32 * 31 bytes plus some waste
 
-	playlist_file_sizes_lows		= $8e00 ; \___ 2 bytes * 192 files
-	playlist_file_sizes_highs		= $8f00 ; /    (128 bytes unused but will be zeroed)
-	playlist_file_flags				= $9000 ; 1 byte * 192
-											; (48 bytes unused but will be zeroed)
+	playlist_file_sizes_lows		= $8e00 ; \___ 2 bytes * 256 files
+	playlist_file_sizes_highs		= $8f00 ; /
+	playlist_file_flags				= $9000 ; 1 byte * 256
 
 	viz_note_number_lookup_table	= $9100 ; 1712 bytes plus some waste
 
@@ -65,6 +63,7 @@
 	TIME							= $a0
 
 	cursor_current_line				= $d6
+	cursor_current_column			= $d3
 
 	FAC								= $61 ; BASIC floating accumulator area
 	LDTB1							= $d9 ; screen line link table

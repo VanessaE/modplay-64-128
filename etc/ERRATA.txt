@@ -15,8 +15,6 @@
 * Dir loader: the file list routine should filter-out the program's own
   binaries if present.
 
-* C128 (mainly): file list repaint is too slow.
-
 * Loader:  consider massaging the header and music data to normalize the
   volume levels, so that something like DJ Metune's "Axel-F" is as loud as
   "Fun Tune", while preserving the song's dynamic range.

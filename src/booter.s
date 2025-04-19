@@ -82,19 +82,19 @@ boot_start
 		lda #>VDC_CHARSETS
 		sta fill_copy_target+1
 
-		jsr vdc_write_ram_reg_31_select_only
+		jsr vdc_ram_rw_setup
 
 	.nextchar
 		ldy #0
 
 	-	lda (fill_copy_source),y
-		jsr vdc_continue_write_ram
+		jsr vdc_write_ram
 		iny
 		cpy #8
 		bne -
 
 		lda #0
-	-	jsr vdc_continue_write_ram
+	-	jsr vdc_write_ram
 		dey
 		bne -
 

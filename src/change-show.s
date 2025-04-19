@@ -34,7 +34,7 @@
 	info_files_row	= 11
 	info_files_col	= 26
 	info_ram_use_row = 12
-	info_ram_use_col = 26
+	info_ram_use_col = 24
 	build_no_row	= 18
 	build_no_col	= 13
 } else {
@@ -67,7 +67,7 @@
 	info_files_row	= 6
 	info_files_col	= 26
 	info_ram_use_row = 7
-	info_ram_use_col = 26
+	info_ram_use_col = 24
 	build_no_row	= 13
 	build_no_col	= 13
 }

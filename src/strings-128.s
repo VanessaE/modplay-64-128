@@ -233,7 +233,7 @@ info_popup_msg
 	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"Loaded file RAM usage:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Expansion RAM usage:",RETURN
 	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
@@ -297,7 +297,7 @@ filename_req_msg
 	!text CYAN,"Enter filename/pattern:",0
 
 scanning_dir_msg
-	!byte LGRN,RETURN
+	!byte LGRN,RETURN,RETURN
 	!fill 4,RIGHT
 	!text LGRN,"Scanning directory...",RETURN,RETURN
 	!fill 10,RIGHT

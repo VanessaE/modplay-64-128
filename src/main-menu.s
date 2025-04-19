@@ -52,6 +52,10 @@ show_main_menu
 	}
 
 	jsr populate_info_box
+
+	jsr display_disk_name
+	jsr erase_playlist_pane
+	jsr prefill_playlist_colors
 	jsr display_playlist
 
 redraw_menu
