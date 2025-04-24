@@ -252,8 +252,7 @@
 	old_STOP_vec						= $0bb0 ; 2 bytes
 	parse_header_sample_pointer			= $0bb2 ; 3 bytes
 
-	exp_load_offset_pages				= $0bb5
-	highest_exp_addresss_used			= $0bb6 ; 3 bytes
+	; free: $0bb5 to $0bb8
 
 	arpeggio_extra_note_first_fracts	= $0bb9 ; \___ 16 bytes
 	arpeggio_extra_note_first_ints		= $0bc1 ; /
@@ -274,13 +273,7 @@
 	pattern_conv_row_counter			= $0bec
 	pattern_conv_trk_counter			= $0bed
 
-	expansion_memory_start_page			= $0bee
-	expansion_memory_start_bank			= $0bef
-
-	reu_highest_bank					= $0bf0
-
-	supercpu_last_free_page				= $0bf1
-	supercpu_last_free_bank				= $0bf2
+	; free: $0bee through $0bf2
 
 	char_table_select					= $0bf3 ; C64-only
 	print_msg_char_limit				= $0bf4
@@ -347,10 +340,20 @@
 
 	num_samples_to_load					= $0c5f
 
-	filenames_cache_petscii				= $0c60 ; 3 bytes
-	filenames_cache_screencode			= $0c63 ; 3 bytes
+	reu_highest_bank					= $0c60
 
-	; free: $0c66 through $0ca7
+	supercpu_last_free_page				= $0c61
+	supercpu_last_free_bank				= $0c62
+
+	expansion_memory_start_page			= $0c63
+
+	exp_instr_names_start_page			= $0c64
+	exp_petscii_filenames_start_page	= $0c65
+	exp_screencode_filenames_start_page	= $0c66
+	exp_file_data_start_page			= $0c67
+	highest_exp_addresss_used			= $0c68 ; 3 bytes
+
+	; free: $0c6b through $0ca7
 
 	; various program vectors
 

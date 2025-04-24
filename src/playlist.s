@@ -44,15 +44,11 @@ playlist_middle_row = (playlist_bottom_row + playlist_top_row) / 2
 ; utility_pointer_c is used for the plain PETSCII versions
 
 load_directory
-	clc
-	lda expansion_memory_start_page
-	adc #2
+	lda exp_petscii_filenames_start_page
 	sta utility_pointer_c+1
 
 	!ifndef c128 {
-		clc
-		lda expansion_memory_start_page
-		adc #16 + 2
+		lda exp_screencode_filenames_start_page
 		sta utility_pointer_b+1
 	} else {
 		lda #<VDC_filename_cache
@@ -511,9 +507,7 @@ erase_file_list
 	lda #1
 	sta stash_size+1
 
-	clc
-	lda expansion_memory_start_page
-	adc #2
+	lda exp_petscii_filenames_start_page
 	sta expansion_memory_target_pointer+1
 
 	lda #<load_buffer
@@ -522,7 +516,7 @@ erase_file_list
 	sta expansion_transfer_local_addr+1
 
 	!ifndef c128 {
-		ldx #32
+		ldx #32 ; erase the screencode versions also on C64
 	} else {
 		ldx #16
 	}

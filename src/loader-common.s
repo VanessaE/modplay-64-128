@@ -95,7 +95,6 @@ load_from_playlist
 	lda #>string_buffer
 	sta expansion_transfer_local_addr+1
 
-
 	+JSR_INDIRECT (fetch_block_vec)
 
 	ldx playlist_scroll_pos
@@ -173,11 +172,9 @@ load_by_filename_entry
 
 	jsr set_first_exp_pages_to_silence	; note: this trashes the target pointer and stash size.
 
-	; actual file go to start + exp_load_offset_pages*256
+	; actual file go to start + exp_file_data_start_page*256
 
-	clc
-	lda expansion_memory_start_page
-	adc exp_load_offset_pages
+	lda exp_file_data_start_page
 	sta expansion_memory_target_pointer+1
 
 	lda #0
@@ -568,10 +565,10 @@ loader_update_progress
 	lda #0
 	sta dividend
 	lda expansion_memory_target_pointer+1
-	sbc expansion_memory_start_page
+	sbc exp_file_data_start_page
 	sta dividend+1
 	lda expansion_memory_target_pointer+2
-	sbc expansion_memory_start_bank
+	sbc #0
 	sta dividend+2
 
 	lda progress_bar_bytes_per_segment
@@ -643,10 +640,10 @@ loader_print_loading_speed
 	lda #0
 	sta dividend
 	lda expansion_memory_target_pointer+1
-	sbc expansion_memory_start_page
+	sbc exp_file_data_start_page
 	sta dividend+1
 	lda expansion_memory_target_pointer+2
-	sbc expansion_memory_start_bank
+	sbc #0
 	sta dividend+2
 
 	jsr divide_24by24
@@ -707,9 +704,10 @@ set_first_exp_pages_to_silence
 	dex
 	bne -
 
+	; the silence zone is always at the start of the exp RAM
 	lda expansion_memory_start_page
 	sta expansion_memory_target_pointer+1
-	lda expansion_memory_start_bank
+	lda #0
 	sta expansion_memory_target_pointer+2
 
 	+JSR_INDIRECT (stash_block_vec)

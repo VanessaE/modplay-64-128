@@ -38,9 +38,7 @@
 
 	and_f0_table					= $7d00 ; 1 page
 
-	; free: $7e00 to $89ff (3 kB)
-
-	mod_instrument_names			= $8a00 ; 32 * 31 bytes plus some waste
+	; free: $7e00 to $8dff (4 kB)
 
 	playlist_file_sizes_lows		= $8e00 ; \___ 2 bytes * 256 files
 	playlist_file_sizes_highs		= $8f00 ; /

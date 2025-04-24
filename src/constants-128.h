@@ -40,7 +40,7 @@
 
 	steprate_lookup_table			= $8900 ; 1712 * 2 bytes, plus some waste
 
-	mod_instrument_names			= $9700 ; 32 * 31 bytes pls some waste
+	; free:  $9700 to $9aff
 
 	playlist_file_sizes_lows		= $9b00 ; \___ 2 bytes * 256 files
 	playlist_file_sizes_highs		= $9c00 ; /

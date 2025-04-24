@@ -465,12 +465,12 @@ fetch_row_data
 	adc #0
 	sta utility_pointer_b+2
 
-	; add exp_load_offset_pages*256 offsets since the pattern
+	; add exp_file_data_start_page*256 offsets since the pattern
 	; data sits quite some ways up from the start of exp RAM
 
 	clc
 	lda utility_pointer_b+1
-	adc exp_load_offset_pages
+	adc exp_file_data_start_page
 	sta utility_pointer_b+1
 
 	fetch_row_expansion_vec

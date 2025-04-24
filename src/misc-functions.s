@@ -633,17 +633,14 @@ calc_filename_address
 	rol temp_abs_a
 	tax
 
+	clc
+	lda temp_abs_a
 	bit temp_abs_b
 	bmi +
 
-	clc
-
 	!ifndef c128 {
-		lda temp_abs_a
-		adc expansion_memory_start_page
-		adc #16 + 2
+		adc exp_screencode_filenames_start_page
 	} else {
-		lda temp_abs_a
 		adc #>VDC_filename_cache
 	}
 
@@ -652,8 +649,7 @@ calc_filename_address
 
 +	clc
 	lda temp_abs_a
-	adc expansion_memory_start_page
-	adc #2
+	adc exp_petscii_filenames_start_page
 	tay
 rts
 

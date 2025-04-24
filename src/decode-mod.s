@@ -271,50 +271,17 @@ parse_instruments
 	sta sample_default_loop_flags,x
 	sta sample_default_fine_tunes,x
 	sta sample_default_volume_levels,x
-	sta mod_instrument_names,x
-	sta mod_instrument_names+32,x
-	sta mod_instrument_names+32*2,x
-	sta mod_instrument_names+32*3,x
-	sta mod_instrument_names+32*4,x
-	sta mod_instrument_names+32*5,x
-	sta mod_instrument_names+32*6,x
-	sta mod_instrument_names+32*7,x
-	sta mod_instrument_names+32*8,x
-	sta mod_instrument_names+32*9,x
-	sta mod_instrument_names+32*10,x
-	sta mod_instrument_names+32*11,x
-	sta mod_instrument_names+32*12,x
-	sta mod_instrument_names+32*13,x
-	sta mod_instrument_names+32*14,x
-	sta mod_instrument_names+32*15,x
-	sta mod_instrument_names+32*16,x
-	sta mod_instrument_names+32*17,x
-	sta mod_instrument_names+32*18,x
-	sta mod_instrument_names+32*19,x
-	sta mod_instrument_names+32*20,x
-	sta mod_instrument_names+32*21,x
-	sta mod_instrument_names+32*22,x
-	sta mod_instrument_names+32*23,x
-	sta mod_instrument_names+32*24,x
-	sta mod_instrument_names+32*25,x
-	sta mod_instrument_names+32*26,x
-	sta mod_instrument_names+32*27,x
-	sta mod_instrument_names+32*28,x
-	sta mod_instrument_names+32*29,x
-	sta mod_instrument_names+32*30,x
 	dex
 	bmi +
 	jmp -
 
-; the first pattern is at start + exp_load_offset_pages*256
+; the first pattern is at start + exp_file_data_start_page*256
 
 +	lda #0
 	sta parse_header_sample_pointer
 	sta parse_header_sample_pointer+2
 
-	clc
-	lda expansion_memory_start_page
-	adc exp_load_offset_pages
+	lda exp_file_data_start_page
 	sta parse_header_sample_pointer+1
 
 	lda number_of_patterns
@@ -327,11 +294,6 @@ parse_instruments
 	adc #0
 	sta parse_header_sample_pointer+2
 
-	lda #<mod_instrument_names
-	sta fill_copy_target
-	lda #>mod_instrument_names
-	sta fill_copy_target+1
-
 	lda #<(load_buffer + header_first_inst_meta_offset)
 	sta fill_copy_source
 	lda #>(load_buffer + header_first_inst_meta_offset)
@@ -340,12 +302,7 @@ parse_instruments
 	ldx #1 ; the sample numbers in the pattern data start at 1, not 0.
 
 .next_instr
-	ldy #0								; copy instrument name
--	lda (fill_copy_source),y
-	sta (fill_copy_target),y
-	iny
-	cpy #22
-	bne -
+	ldy #22
 
 	lda parse_header_sample_pointer+1		; each sample starts at a 256 byte
 	sta sample_start_addresses_mids,x		; boundary (so _lows is always 0)
@@ -497,13 +454,6 @@ skip_sample
 	bcc +
 	inc fill_copy_source+1
 
-	clc
-+	lda fill_copy_target
-	adc #22
-	sta fill_copy_target
-	bcc +
-	inc fill_copy_target+1
-
 +	inx
 
 	lda current_file_type
@@ -545,7 +495,117 @@ skip_sample
 	lda parse_header_sample_pointer+2
 	sta highest_exp_addresss_used+2
 
-	clc ; exit with carry clear to indicate successful parse, okay to load
+; Transfer the instrument names to expansion RAM
+
+	; back-up the expansion pointers since we'll need to overwrite them
+
+	lda expansion_transfer_local_addr
+	sta utility_pointer
+	lda expansion_transfer_local_addr+1
+	sta utility_pointer+1
+
+	lda expansion_memory_target_pointer
+	sta utility_pointer_b
+	lda expansion_memory_target_pointer+1
+	sta utility_pointer_b+1
+	lda expansion_memory_target_pointer+2
+	sta utility_pointer_b+2
+
+	; use the two audio bufs for scratch space
+	; to erase the instrument names area
+
+	lda #0
+	ldy #0
+-	sta audio_buffer_left,y
+	sta audio_buffer_right,y
+	iny
+	bne -
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+
+	lda exp_instr_names_start_page
+	sta expansion_memory_target_pointer+1
+
+	lda #<audio_buffer_left
+	sta expansion_transfer_local_addr
+	lda #>audio_buffer_left
+	sta expansion_transfer_local_addr+1
+
+	lda #0
+	sta stash_size
+	lda #2
+	sta stash_size+1
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	clc
+	lda exp_instr_names_start_page
+	adc #2
+	sta expansion_memory_target_pointer+1
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+
+	lda exp_instr_names_start_page
+	sta expansion_memory_target_pointer+1
+
+	lda #<(load_buffer + header_first_inst_meta_offset)
+	sta expansion_transfer_local_addr
+	lda #>(load_buffer + header_first_inst_meta_offset)
+	sta expansion_transfer_local_addr+1
+
+	lda #22
+	sta stash_size
+	lda #0
+	sta stash_size+1
+
+	ldy num_samples_to_load
+
+.decode_mod_next_instr_name
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	clc
+	lda expansion_memory_target_pointer
+	adc #32
+	sta expansion_memory_target_pointer
+	lda expansion_memory_target_pointer+1
+	adc #0
+	sta expansion_memory_target_pointer+1
+	lda expansion_memory_target_pointer+2
+	adc #0
+	sta expansion_memory_target_pointer+2
+
+	lda expansion_transfer_local_addr
+	adc #30
+	sta expansion_transfer_local_addr
+	lda expansion_transfer_local_addr+1
+	adc #0
+	sta expansion_transfer_local_addr+1
+
+	dey
+	bne .decode_mod_next_instr_name
+
+	; restore the original exp pointers
+
+	lda utility_pointer
+	sta expansion_transfer_local_addr
+	lda utility_pointer+1
+	sta expansion_transfer_local_addr+1
+
+	lda utility_pointer_b
+	sta expansion_memory_target_pointer
+	lda utility_pointer_b+1
+	sta expansion_memory_target_pointer+1
+	lda utility_pointer_b+2
+	sta expansion_memory_target_pointer+2
+
+	clc ; and exit with carry clear to indicate successful parse, okay to load
 rts
 
 ; this routine rearranges the MOD's pattern data slightly, to reduce the
