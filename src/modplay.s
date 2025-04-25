@@ -149,11 +149,60 @@ dirname
 ; bit 7: set if this item is selected for the playlist
 ; bit 0: set if this file is 15-sample MOD, or is unrecognized
 
-; anything appended after this point will be wiped-out after program init,
-; and must either be one-time-use stuff, or must be something that'll be
-; copied to another part of memory for runtime use, or which reserves memory
-; via the program counter.
+; --------------------------------------------------------------------------
+; from here on down are transient tables and buffers and whatnot. the init
+; code takes about 2.1 kB, so anything placed in that first part of this zone
+; must remain untouched until after init exits to the main menu, otherwise
+; init will end up overwriting itself and crashing. 😛
 
-main_mem_free_start
+!align 255,0,$ea
 
+init_begin
 !source "src/init.s"
+init_end
+
+
+load_buffer							= init_begin	; 2 kB
+sample_data_buffer					= init_begin	; 2 kB, overlapped
+
+sample_start_addresses_mids			= load_buffer + 2048
+sample_start_addresses_highs		= sample_start_addresses_mids + 32
+sample_end_addresses_lows			= sample_start_addresses_highs + 32
+sample_end_addresses_mids			= sample_end_addresses_lows + 32
+sample_end_addresses_highs			= sample_end_addresses_mids + 32
+sample_lengths_lows					= sample_end_addresses_highs + 32
+sample_lengths_mids					= sample_lengths_lows + 32
+sample_lengths_highs				= sample_lengths_mids + 32
+sample_loop_start_addresses_lows	= sample_lengths_highs + 32
+sample_loop_start_addresses_mids	= sample_loop_start_addresses_lows + 32
+sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
+sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
+sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
+sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
+sample_default_loop_flags			= sample_loop_end_addresses_highs + 32
+sample_default_fine_tunes			= sample_default_loop_flags + 32
+sample_default_volume_levels		= sample_default_fine_tunes + 32
+
+; --------------------------------------------------------------------------
+; The init code ends a couple of pages prior to this point, so anything from
+; here on down can be stuff that init is responsible for generating.
+
+and_f0_table					= sample_default_volume_levels + 32
+
+; 1712 bytes, plus some waste
+viz_note_number_lookup_table	= and_f0_table + 256
+
+; 1712 * 2 bytes, plus some waste
+steprate_lookup_table			= viz_note_number_lookup_table + 7*256
+
+
+; ---------------------------------------------------------------------
+; anything below this point will be wiped clean just before init exits.
+
+end_of_mid_mem_tables			= steprate_lookup_table + 14*256
+
+
+; ----------------------------------------------------------------------
+; constants that depend on the addresses pointed to by the symbols above
+
+magic_number_location = load_buffer + header31_seek_to_pat_tbl + 128

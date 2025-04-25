@@ -140,12 +140,6 @@ init
 		sta clear_menu_screen_flag
 	}
 
-;	sec
-;	lda #>main_mem_free_end
-;	sbc #>expansion_memory_start_address
-;	sta main_memory_free_pages
-;	dec main_memory_free_pages
-
 	; test highest C128 bank number (normally it'll only return 1 or 3, unless
 	; the user's MMU hack is broken :-P)
 
@@ -513,9 +507,9 @@ final_clear_copy
 rts
 
 clear_main_memory_origin
-	lda #<main_mem_free_start
+	lda #<end_of_mid_mem_tables
 	sta fill_copy_target
-	lda #>main_mem_free_start
+	lda #>end_of_mid_mem_tables
 	sta fill_copy_target+1
 	lda #0
 	ldy #0
@@ -530,7 +524,7 @@ clear_main_memory_origin
 	ldy #$ff
 -	iny
 	lda clear_main_memory+$40,y
-	sta main_mem_free_start,y
+	sta end_of_mid_mem_tables,y
 	bne -
 	rts
 

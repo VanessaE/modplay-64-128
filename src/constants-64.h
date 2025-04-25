@@ -31,22 +31,7 @@
 
 	window_edge_tables				= $1000
 
-	main_mem_free_end				= $7d00 ; overlaps the load buffer intentionally
-
-	load_buffer						= $7500			; \__ 2 kB
-	sample_data_buffer				= load_buffer	; /
-
-	and_f0_table					= $7d00 ; 1 page
-
-	; free: $7e00 to $8dff (4 kB)
-
-	playlist_file_sizes_lows		= $8e00 ; \___ 2 bytes * 256 files
-	playlist_file_sizes_highs		= $8f00 ; /
-	playlist_file_flags				= $9000 ; 1 byte * 256
-
-	viz_note_number_lookup_table	= $9100 ; 1712 bytes plus some waste
-
-	steprate_lookup_table			= $9800 ; 1712 * 2 bytes, plus some waste
+	main_mem_free_end				= $a600
 
 	volume_table_lower				= $a600 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas

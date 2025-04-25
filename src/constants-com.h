@@ -1,9 +1,6 @@
 ; This file defines all of the non-machine-specific constants used througout the program.
 
 !addr {
-
-	program_start							= $1700
-
 	; KERNAL zero-page variables
 
 	STATUS								= $90
@@ -378,27 +375,11 @@
 	; endian. each of these is 32 bytes, except the first byte of each one is
 	; unused.
 
-	; free: $0cc0 through $0cdf
+	; free: $0cc0 through $0cff
 	
-	sample_start_addresses_mids			= $0ce0
-	sample_start_addresses_highs		= $0d00
-	sample_end_addresses_lows			= $0d20
-	sample_end_addresses_mids			= $0d40
-	sample_end_addresses_highs			= $0d60
-	sample_lengths_lows					= $0d80
-	sample_lengths_mids					= $0da0
-	sample_lengths_highs				= $0dc0
-	sample_loop_start_addresses_lows	= $0de0
-	sample_loop_start_addresses_mids	= $0e00
-	sample_loop_start_addresses_highs	= $0e20
-	sample_loop_end_addresses_lows		= $0e40
-	sample_loop_end_addresses_mids		= $0e60
-	sample_loop_end_addresses_highs		= $0e80
-	sample_default_loop_flags			= $0ea0
-	sample_default_fine_tunes			= $0ec0
-	sample_default_volume_levels		= $0ee0
-
-	zp_backup							= $0f00 ; 1 page (duh. 😛)
+	playlist_file_sizes_lows			= $0d00
+	playlist_file_sizes_highs			= $0e00
+	playlist_file_flags					= $0f00
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; C64, $1000-$101f holds a windowing.s table
@@ -425,8 +406,13 @@
 	mah_table_6581						= $1500
 	mah_table_8580						= $1600
 
-	; main program code starts here at $1700, followed by free mem
-	; then comes all the "high-memory" stuff -- see constants-64/128.h
+	zp_backup							= $1700
+
+	program_start						= $1800
+
+	; main program code starts here, followed by more tables and buffers,
+	; then comes all the "high-memory" stuff -- see below and
+	; constants-64/128.h
 
 	; Under-KERNAL-ROM stuff
 
@@ -623,11 +609,6 @@ header31_seek_to_pat_tbl		= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
 header15_seek_to_pat_data = header15_seek_to_pat_tbl + 128
 header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
 
-; if there's a tag at all, it'll always be here (because otherwise, it's a
-; 15 sample mod)
-
-magic_number_location = load_buffer + header31_seek_to_pat_tbl + 128
-
 one_ten_thou_pal = int(985248 / 10000) - 1
 one_ten_thou_ntsc = int(1022727 / 10000) - 1
 
@@ -636,4 +617,3 @@ one_ten_thou_ntsc = int(1022727 / 10000) - 1
 pitch_fine_adjust_constant = 57
 
 tempo_fine_adjust_constant = 159778
-

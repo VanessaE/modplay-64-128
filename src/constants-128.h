@@ -29,24 +29,7 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $8100 ; overlaps the load/sample buffers intentionally
-
-	load_buffer						= $7900			; \__  2 kB
-	sample_data_buffer				= load_buffer	; /
-
-	and_f0_table					= $8100 ; 1 page
-
-	viz_note_number_lookup_table	= $8200 ; 1712 bytes plus some waste
-
-	steprate_lookup_table			= $8900 ; 1712 * 2 bytes, plus some waste
-
-	; free:  $9700 to $9aff
-
-	playlist_file_sizes_lows		= $9b00 ; \___ 2 bytes * 256 files
-	playlist_file_sizes_highs		= $9c00 ; /
-	playlist_file_flags				= $9d00 ; 1 byte * 256
-
-	; free: $9e00 to $a9ff (3 kB)
+	main_mem_free_end				= $aa00
 
 	volume_table_lower				= $aa00 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
