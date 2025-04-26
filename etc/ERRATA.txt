@@ -113,11 +113,6 @@
   end), file sizes aren't shown properly at bottom when scrolling with cursor
   keys (but page up/down, top/bottom, and C128 are all fine).
 
-* C128: something's causing an off-by-1 error in storing file sizes when
-  loading a new list, causing all files after that point to show sizes that
-  belong to each respective, previous file.  Everything still seems to load
-  just fine, though.
-
 * C128: the displayed file name in infobox overwrites "Current".
 
 * Loader: sometimes, the filename displays as garbage in the mini popup when

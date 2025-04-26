@@ -226,7 +226,16 @@ load_directory
 
 	+JSR_INDIRECT (stash_block_vec)
 
-	clc
+.more_files
+	ldy playlist_length
+	lda playlist_file_sizes_highs,y
+	bne +
+	lda playlist_file_sizes_lows,y
+	cmp #7					; discard any file less than 7 disk blocks long,
+	bcs + 					; it's all but impossible for a MOD to be that small.
+	jmp .next_entry
+
++	clc
 	lda utility_pointer_b
 	adc #16
 	sta utility_pointer_b
@@ -241,16 +250,9 @@ load_directory
 	adc #0
 	sta utility_pointer_c+1
 
-.more_files
-	ldy playlist_length
-	lda playlist_file_sizes_lows,y
-	cmp #7					; discard any file less than 7 disk blocks long,
-	bcs + 					; it's all but impossible for a MOD to be that small.
-	jmp .next_entry
-
-+	inc playlist_length
+	inc playlist_length
 	lda playlist_length
-	cmp #193				; end of list space?
+	cmp #255				; end of list space?
 	beq .fin
 
 +	clc
