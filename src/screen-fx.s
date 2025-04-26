@@ -223,7 +223,7 @@ rts
 
 ; enter with .X/.Y = column and row of the progress bar itself (on C128, that
 ; that means the real row/column, not the position within whatever popup
-; might be open), .A = length of the progress bar in "segments" (8 per char).
+; might be open), .A = length of the progress bar in segments (8 per char).
 
 ; the frame will be drawn in the row above, the column to the left, and the
 ; row below the given coordinates (and of course, to the right of it)

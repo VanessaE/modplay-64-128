@@ -241,15 +241,16 @@
 	file_to_load_name_len				= $0ba8
 	file_to_load_size					= $0ba9 ; 2 bytes
 	file_size_in_kb						= $0bab ; 2 bytes
-	header_loaded						= $0bad
+	loaded_bytes_count					= $0bad ; 3 bytes
+	header_loaded						= $0bb0
 
-	ramlink_detect						= $0bae
-	main_memory_free_pages				= $0baf
+	ramlink_detect						= $0bb1
+	main_memory_free_pages				= $0bb2
 
-	old_STOP_vec						= $0bb0 ; 2 bytes
-	parse_header_sample_pointer			= $0bb2 ; 3 bytes
+	old_STOP_vec						= $0bb3 ; 2 bytes
+	parse_header_sample_pointer			= $0bb5 ; 3 bytes
 
-	; free: $0bb5 to $0bb8
+	; free: $0bb8
 
 	arpeggio_extra_note_first_fracts	= $0bb9 ; \___ 16 bytes
 	arpeggio_extra_note_first_ints		= $0bc1 ; /

@@ -9,14 +9,14 @@ load_file_to_expansion
 		size_text = 9
 		progbar_row			= 13
 		progbar_column		= 12
-		progbar_len			= 16*8
+		progbar_len			= 16
 		kbs_row				= 15
 		kbs_column			= 15
 	} else {
 		size_text = 12
 		progbar_row			= 13
 		progbar_column		= 27
-		progbar_len			= 26*8
+		progbar_len			= 26
 		kbs_row				= 15
 		kbs_column			= 35
 
@@ -24,6 +24,11 @@ load_file_to_expansion
 		jsr FULLW
 		plp
 	}
+
+	lda #0
+	sta loaded_bytes_count
+	sta loaded_bytes_count+1
+	sta loaded_bytes_count+2
 
 	sty file_to_load_name_len
 	bcc load_from_playlist
@@ -125,33 +130,6 @@ load_by_filename_entry
 
 	jsr loader_populate_mini_popup
 
-; preset the divisor to be proportional to max number of progress bar segments
-; 16 char long bar * 4 segments per = 64 segments on C64, 16 * 8 = 128 on C128
-
-	lda file_to_load_size		; turn blocks-to-load into bytes-to-load
-	sta divisor+1
-	lda file_to_load_size+1
-	sta divisor+2
-	lda #0
-	sta divisor
-
-	rol divisor+1	; multiply size by 2...
-	rol divisor+2
-	rol
-	!ifndef c128 {	; and again on C64, so x4
-		clc
-		rol divisor+1
-		rol divisor+2
-		rol
-	}
-	tax
-
-	lda divisor+1	; then displace by one byte, e.g. final is divide by 64
-	sta divisor		; or divide by 128
-	lda divisor+2
-	sta divisor+1
-	stx divisor+2	; divisor is now number of bytes per segment.
-
 	lda file_to_load_name_len
 	ldx #<string_buffer
 	ldy #>string_buffer+1
@@ -196,6 +174,7 @@ load_by_filename_entry
 
 	jsr load_mod_header		; returns .N = 0 on error or if header is bad
 							; or .C = 0 for 15 samples, .C = 1 for 31
+
 	lda #0
 	ror
 	sta temp_carry
@@ -235,7 +214,7 @@ load_by_filename_entry
 
 	jmp abort_load
 
-+	lda highest_exp_addresss_used+2
+	lda highest_exp_addresss_used+2
 	cmp reu_highest_bank
 	bcc +
 
@@ -527,19 +506,18 @@ rts
 
 loader_add_progress_bar
 
-; rather than use the file size, we use the end addr of the last sample, as
-; we're using the exp load pointer as the progress reference, and that address
-; will more or less represent the actual RAM usage anyway (since the start of
-; exp RAM won't be very large anyway)
+	; file size is in blocks, so displace by 1 byte in dividend to get bytes-to-load
 
-	lda highest_exp_addresss_used
+	lda #0
 	sta dividend
-	lda highest_exp_addresss_used+1
+	lda file_to_load_size
 	sta dividend+1
-	lda highest_exp_addresss_used+2
+	lda file_to_load_size+1
 	sta dividend+2
 
-	lda #progbar_len
+	; divide the size by the number of progress bar segments
+
+	lda #(progbar_len * 8)
 	sta divisor
 	lda #0
 	sta divisor+1
@@ -552,7 +530,8 @@ loader_add_progress_bar
 	sta progress_bar_bytes_per_segment+1
 	lda quotient+2
 	sta progress_bar_bytes_per_segment+2
-	lda #progbar_len
+
+	lda #(progbar_len * 8)
 	ldx #progbar_column
 	ldy #progbar_row
 	jsr draw_empty_progress_bar
@@ -561,14 +540,11 @@ rts
 loader_update_progress
 	jsr loader_print_loading_speed
 
-	sec
-	lda #0
+	lda loaded_bytes_count
 	sta dividend
-	lda expansion_memory_target_pointer+1
-	sbc exp_file_data_start_page
+	lda loaded_bytes_count+1
 	sta dividend+1
-	lda expansion_memory_target_pointer+2
-	sbc #0
+	lda loaded_bytes_count+2
 	sta dividend+2
 
 	lda progress_bar_bytes_per_segment
@@ -740,7 +716,13 @@ rts
 ; later when multiple loaders are available.
 
 loader_get_1_byte
-	jsr ACPTR
+	inc loaded_bytes_count
+	bne +
+	inc loaded_bytes_count+1
+	bne +
+	inc loaded_bytes_count+2
+
++	jsr ACPTR
 rts
 
 loader_get_1_block
