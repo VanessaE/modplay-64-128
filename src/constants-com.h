@@ -458,7 +458,7 @@
 		SCPU_RAM_LAST_BANK				= $d27f
 	}
 
-	SCPU_PRESENT						= $d0b7
+	SCPU_PRESENT						= $d0bc
 
 	SID									= $d400
 	SID_VOICE1_CR						= $d404
