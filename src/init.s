@@ -28,6 +28,7 @@ init
 	lda #0
 	ldx #<initializing_msg
 	ldy #>initializing_msg
+	sec
 	jsr print_msg
 
 	!ifdef scpu {

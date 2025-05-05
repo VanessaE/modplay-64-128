@@ -76,6 +76,7 @@ load_directory
 	lda #0
 	ldx #<scanning_dir_msg
 	ldy #>scanning_dir_msg
+	sec
 	jsr print_msg
 
 	jsr erase_file_list
@@ -170,6 +171,7 @@ load_directory
 	lda #16
 	ldx #<string_buffer+32
 	ldy #>string_buffer+32
+	sec
 	jsr print_msg
 
 	!ifndef c128 {
@@ -308,6 +310,7 @@ display_disk_name
 	lda #0
 	ldx #<dirname_background
 	ldy #>dirname_background
+	sec
 	jsr print_msg_rle
 
 	lda #16
@@ -318,6 +321,7 @@ display_disk_name
 	lda #16
 	ldx #<current_dir_name
 	ldy #>current_dir_name
+	sec
 	jsr print_msg
 
 	lda #RVSOFF
@@ -340,6 +344,7 @@ display_playlist
 	lda #0
 	ldx #<no_list_loaded_msg
 	ldy #>no_list_loaded_msg
+	sec
 	!ifndef c128 {
 		jsr print_msg_rle
 	} else {
@@ -928,6 +933,7 @@ rts
 		lda #0
 		ldx #<erase_size_field_msg
 		ldy #>erase_size_field_msg
+		sec
 		jsr print_msg_rle
 
 		ldx playlist_scroll_pos
@@ -963,6 +969,7 @@ rts
 		lda #0
 		ldx #<pl_size_msg
 		ldy #>pl_size_msg
+		sec
 		jsr print_msg
 
 		lda #CYAN
@@ -981,6 +988,7 @@ rts
 		lda #0
 		ldx #<kb_msg
 		ldy #>kb_msg
+		sec
 		jsr print_msg
 	rts
 

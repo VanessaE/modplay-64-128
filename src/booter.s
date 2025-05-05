@@ -121,6 +121,7 @@ boot_start
 		lda #0
 		ldx #<wrong_screen_msg
 		ldy #>wrong_screen_msg ; ends with "ESC x", which flips back to 80 cols
+		sec
 		jsr print_msg_rle
 
 	+	lda #36 ; reduce VDC refresh rate, speeds it up
@@ -129,6 +130,7 @@ boot_start
 		sta VDC_DATA
 		ldx #<splash_data
 		ldy #>splash_data
+		sec
 		jsr print_msg_rle
 
 		pla
@@ -143,6 +145,7 @@ boot_start
 		sta $01						; splash data
 		ldx #<splash_data
 		ldy #>splash_data
+		sec
 		jsr print_msg_rle
 		lda #$37
 		sta $01

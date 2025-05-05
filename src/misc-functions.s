@@ -145,12 +145,14 @@ print_uint16
 	lda #0
 	ldx #<uint16_string_buf_trim
 	ldy #>uint16_string_buf_trim
+	sec
 	jsr print_msg
 	rts
 
 +	lda #0
 	ldx #<uint16_string_buffer
 	ldy #>uint16_string_buffer
+	sec
 	jsr print_msg
 rts
 
@@ -672,6 +674,7 @@ press_any_key ; display "press key" message and wait for keypress
 	lda #0
 	ldx #<press_key_msg
 	ldy #>press_key_msg
+	sec
 	jsr print_msg
 
 -	jsr GETIN
@@ -683,6 +686,7 @@ rts
 		lda #0
 		ldx #<press_key_msg_ascii
 		ldy #>press_key_msg_ascii
+		sec
 		jsr print_msg_ascii
 
 	-	jsr GETIN
@@ -816,51 +820,6 @@ upd_cursor
 	}
 rts
 
-; this function just uses DISPLY to print the char it's given, as ASCII, and
-; uses CHROUT to handle control/color/cursor codes.  Call it just like CHROUT.
-; it's .Y-safe, too.
- 
-chrout_ascii
-	pha
-	tax
-	tya
-	pha
-
-	txa
-	cmp #$20
-	bcs +
-
-	lda control_code_flags_table_low,x
-	bne .pa
-	txa
-	jsr CHROUT
-	jmp .nc
-
-+	cmp #$80
-	bcc .pa
-	cmp #$a0
-	bcs .pa
-
-	lda control_code_flags_table_high-128,x
-	bne .pa
-	txa
-	jsr CHROUT
-	jmp .nc
-
-.pa
-	txa
-	ldx CHAR_COLOR
-	jsr DISPLY
-	lda #RIGHT
-	jsr CHROUT
-
-.nc
-	pla
-	tay
-	pla
-rts
-
-
 ; Binary search routine written by "atolle" on 6502 forums, reformatted to fit
 ; my code style.  Source: http://forum.6502.org/viewtopic.php?f=2&t=1199
 
@@ -956,7 +915,13 @@ binary_search
 ; usual text-to-screen-codes translation.
 
 print_msg_ascii
+	php
 	sta print_msg_char_limit
+
+	lda #0
+	ror
+	sta print_msg_colors_flag
+
 	dec print_msg_char_limit
 	stx print_msg_addr
 	sty print_msg_addr+1
@@ -965,6 +930,7 @@ print_msg_ascii
 -	lda (print_msg_addr),y
 	beq +
 
+	jsr check_color_flag
 	jsr chrout_ascii
 	cpy print_msg_char_limit
 	beq +
@@ -972,7 +938,71 @@ print_msg_ascii
 	bne -
 	inc print_msg_addr+1
 	bne -
-+ rts
++	plp
+rts
+
+; this function just uses DISPLY to print the char it's given, as ASCII, and
+; uses CHROUT to handle control/color/cursor codes.  Call it just like CHROUT.
+; it's .Y-safe, too.
+ 
+chrout_ascii
+	pha
+	tax
+	tya
+	pha
+
+	txa
+	cmp #$20
+	bcs +
+
+	lda control_code_flags_table_low,x
+	bne .pa
+	txa
+	jsr CHROUT
+	jmp .nc
+
++	cmp #$80
+	bcc .pa
+	cmp #$a0
+	bcs .pa
+
+	lda control_code_flags_table_high-128,x
+	bne .pa
+	txa
+	jsr CHROUT
+	jmp .nc
+
+.pa
+	txa
+	ldx CHAR_COLOR
+	jsr DISPLY
+	lda #RIGHT
+	jsr CHROUT
+
+.nc
+	pla
+	tay
+	pla
+rts
+
+; if print_msg_colors_flag is clear and the current char is found in the
+; KERNAL's color codes table, replace it with an unprintable null.
+
+check_color_flag
+	bit print_msg_colors_flag
+	bpl .sc
+	rts
+
+.sc
+	ldx #15
+-	cmp COLORS_TABLE,x
+	beq .np
+	dex
+	bpl -
+	rts
+
+.np	lda #0
+.ep	rts
 
 ; enter with fill_copy_target set to the start address of the block to
 ; be filled, .A holds the fill byte, .X holds the block length.

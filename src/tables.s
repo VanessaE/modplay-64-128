@@ -325,18 +325,21 @@ regen_all_tables
 			lda #0
 			ldx #<main_player_regen_tables_msg
 			ldy #>main_player_regen_tables_msg
+			sec
 			jsr print_msg
 			jmp ++
 
 		+	lda #0
 			ldx #<main_player_regen_tables_msg_ascii
 			ldy #>main_player_regen_tables_msg_ascii
+			sec
 			jsr print_msg_ascii
 		 ++
 		} else {
 			lda #0
 			ldx #<main_player_regen_tables_msg
 			ldy #>main_player_regen_tables_msg
+			sec
 			jsr print_msg
 		}
 	}
@@ -375,11 +378,13 @@ no_msgs1
 			lda #0
 			ldx #<main_player_regen_erase_tables_msg
 			ldy #>main_player_regen_erase_tables_msg
+			sec
 			jsr print_msg_rle
 		} else {
 			lda #0
 			ldx #<main_player_regen_erase_tables_msg
 			ldy #>main_player_regen_erase_tables_msg
+			sec
 			jsr print_msg
 		}
 	}

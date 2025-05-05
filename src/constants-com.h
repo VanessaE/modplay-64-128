@@ -208,8 +208,6 @@
 
 	cfg_data_end						= $0b11 ; one byte past the real end
 
-	; free: $0b12, $0b13
-
 	audio_driver_isr_cycle_count		= $0b12
 	ram_driver_fetch_cycle_count		= $0b13
 	isr_trigger_interval				= $0b14 ; 2 bytes
@@ -271,8 +269,9 @@
 	pattern_conv_row_counter			= $0bec
 	pattern_conv_trk_counter			= $0bed
 
-	; free: $0bee through $0bf2
+	; free: $0bee through $0bf1
 
+	print_msg_colors_flag				= $0bf2
 	char_table_select					= $0bf3 ; C64-only
 	print_msg_char_limit				= $0bf4
 

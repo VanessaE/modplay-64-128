@@ -82,6 +82,8 @@
 	FULLW							= $ca24
 	DISPLY							= $cc34
 
+	COLORS_TABLE					= $ce4c ; 16-byte PETSCII color code table
+
 	RESET							= $e000
 
 	SWAPPER							= $ff5f

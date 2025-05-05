@@ -19,6 +19,7 @@ start_main_player
 		lda #0
 		ldx #<turn_turbo_on_msg
 		ldy #>turn_turbo_on_msg
+		sec
 		jsr print_msg
 
 	-	bit SCPU_JD_TURBO_SWITCH
@@ -38,16 +39,19 @@ start_main_player
 		lda #0
 		ldx #<main_player_now_playing_msg
 		ldy #>main_player_now_playing_msg
+		sec
 		jsr print_msg
 
 		lda #0
 		ldx #<main_player_file_msg
 		ldy #>main_player_file_msg
+		sec
 		jsr print_msg
 
 		lda #0
 		ldx #<current_file_name
 		ldy #>current_file_name
+		sec
 		jsr print_msg
 
 		lda #RETURN
@@ -56,6 +60,7 @@ start_main_player
 		lda #0
 		ldx #<main_player_title_msg
 		ldy #>main_player_title_msg
+		sec
 		jsr print_msg
 
 		lda #UPPER
@@ -64,6 +69,7 @@ start_main_player
 		lda #0
 		ldx #<current_file_title
 		ldy #>current_file_title
+		sec
 		jsr print_msg_ascii
 
 		lda #RETURN
@@ -76,21 +82,25 @@ start_main_player
 		lda #0
 		ldx #<main_player_hline
 		ldy #>main_player_hline
+		sec
 		jsr print_msg_rle
 
 		lda #0
 		ldx #<main_player_song_pos_pat_msg
 		ldy #>main_player_song_pos_pat_msg
+		sec
 		jsr print_msg
 
 		lda #0
 		ldx #<main_player_row_speed_time
 		ldy #>main_player_row_speed_time
+		sec
 		jsr print_msg
 
 		lda #0
 		ldx #<main_player_hline
 		ldy #>main_player_hline
+		sec
 		jsr print_msg_rle
 
 		lda #DOWN
@@ -104,11 +114,13 @@ start_main_player
 		lda #0
 		ldx #<main_player_hline
 		ldy #>main_player_hline
+		sec
 		jsr print_msg_rle
 
 		lda #0
 		ldx #<main_player_keys_msg
 		ldy #>main_player_keys_msg
+		sec
 		jsr print_msg
 
 	} else {
@@ -122,16 +134,19 @@ start_main_player
 		lda #0
 		ldx #<main_player_now_playing_msg_ascii
 		ldy #>main_player_now_playing_msg_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<main_player_file_msg_ascii
 		ldy #>main_player_file_msg_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<current_file_name
 		ldy #>current_file_name
+		sec
 		jsr print_msg_ascii
 
 		lda #RETURN
@@ -140,11 +155,13 @@ start_main_player
 		lda #0
 		ldx #<main_player_title_msg_ascii
 		ldy #>main_player_title_msg_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<current_file_title
 		ldy #>current_file_title
+		sec
 		jsr print_msg_ascii
 
 		lda #RETURN
@@ -155,21 +172,25 @@ start_main_player
 		lda #0
 		ldx #<main_player_hline_ascii
 		ldy #>main_player_hline_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<main_player_song_pos_pat_msg_ascii
 		ldy #>main_player_song_pos_pat_msg_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<main_player_row_speed_time_ascii
 		ldy #>main_player_row_speed_time_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<main_player_hline_ascii
 		ldy #>main_player_hline_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #DOWN
@@ -183,11 +204,13 @@ start_main_player
 		lda #0
 		ldx #<main_player_hline_ascii
 		ldy #>main_player_hline_ascii
+		sec
 		jsr print_msg_ascii
 
 		lda #0
 		ldx #<main_player_keys_msg_ascii
 		ldy #>main_player_keys_msg_ascii
+		sec
 		jsr print_msg_ascii
 	}
 
@@ -335,6 +358,7 @@ single_sample_player
 
 	jsr draw_medium_popup
 
+	sec
 	!ifndef c128 {
 		lda #0
 		ldx #<sample_player_msg_ascii

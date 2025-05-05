@@ -18,16 +18,19 @@ show_main_menu
 	lda #0
 	ldx #<program_title
 	ldy #>program_title
+	sec
 	jsr print_msg
 
 	lda #0
 	ldx #<program_version
 	ldy #>program_version
+	sec
 	jsr print_msg
 
 	lda #0
 	ldx #<program_title_b
 	ldy #>program_title_b
+	sec
 	jsr print_msg
 
 	ldy #0
@@ -39,6 +42,7 @@ show_main_menu
 	lda mm_hi,y
 	tay
 	lda #0
+	sec
 	jsr print_msg_rle
 	inc temp_abs_y
 	bne -
@@ -386,144 +390,111 @@ draw_menu_page_a
 		lda #0
 		ldx #<prepend_top_margin
 		ldy #>prepend_top_margin
+		sec
 		jsr print_msg
 	}
 
 	lda playlist_length ; 2 or more items required
 	cmp #2
-	bcc +
+	; the carry will be clear if there's less than 2 items,
+	; which is also the print-in-color (or not) flag.
 
 	ldx #<menu_text_up_down
 	ldy #>menu_text_up_down
 	jsr print_menu_line
 	jmp ++
 
-+	ldx #<menu_text_up_down_gray
-	ldy #>menu_text_up_down_gray
-	jsr print_menu_line
-
-++	lda playlist_length ; 1 or more items required
+++	clc
+	lda playlist_length ; 1 or more items required
 	beq +
 
-	ldx #<menu_text_load_and_play
+	sec
++	ldx #<menu_text_load_and_play
 	ldy #>menu_text_load_and_play
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_text_load_gray
-	ldy #>menu_text_load_gray
-	jsr print_menu_line
-
-++	lda current_file_type ; type 0 means nothing is loaded.
+++	clc
+	lda current_file_type ; type 0 means nothing is loaded.
 	beq +
 
-	ldx #<menu_text_play_loaded
+	sec
++	ldx #<menu_text_play_loaded
 	ldy #>menu_text_play_loaded
 	jsr print_menu_line
+
 	!ifndef c128 {
 		ldx #<menu_text_play_loaded_b
 		ldy #>menu_text_play_loaded_b
 		jsr print_menu_line
 	}
-	jmp ++
 
-+	ldx #<menu_text_play_loaded_gray
-	ldy #>menu_text_play_loaded_gray
-	jsr print_menu_line
-	!ifndef c128 {
-		ldx #<menu_text_play_loaded_gray_b
-		ldy #>menu_text_play_loaded_gray_b
-		jsr print_menu_line
-	}
-
-++	lda playlist_length ; 1 or more items required
-	beq +
-
-	ldx #<menu_text_add_to_list
-	ldy #>menu_text_add_to_list
-	jsr print_menu_line
-
-;	ldx #<menu_text_play_list
-;	ldy #>menu_text_play_list
-;	jsr print_menu_line
-;
-;	ldx #<menu_text_play_all
-;	ldy #>menu_text_play_all
-;	jsr print_menu_line
-	jmp ++
-
-+	ldx #<menu_text_add_to_list_gray
-	ldy #>menu_text_add_to_list_gray
-	jsr print_menu_line
-
-++	ldx #<menu_text_play_list_gray
-	ldy #>menu_text_play_list_gray
-	jsr print_menu_line
-
-	ldx #<menu_text_play_all_gray
-	ldy #>menu_text_play_all_gray
-	jsr print_menu_line
-
-; ++
-
+	clc
 	lda playlist_length ; 1 or more items required
 	beq +
 
-	ldx #<menu_text_repeat
+	sec
++	ldx #<menu_text_add_to_list
+	ldy #>menu_text_add_to_list
+	jsr print_menu_line
+
+	ldx #<menu_text_play_list
+	ldy #>menu_text_play_list
+	clc
+	jsr print_menu_line
+
+	ldx #<menu_text_play_all
+	ldy #>menu_text_play_all
+	clc
+	jsr print_menu_line
+
+
+	clc
+	lda playlist_length ; 1 or more items required
+	beq +
+
+	sec
++	ldx #<menu_text_repeat
 	ldy #>menu_text_repeat
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_text_repeat_gray
-	ldy #>menu_text_repeat_gray
-	jsr print_menu_line
-
-++	ldx #<menu_text_read_dir
+	ldx #<menu_text_read_dir
 	ldy #>menu_text_read_dir
+	sec
 	jsr print_menu_line
+
 	!ifndef c128 {
 		ldx #<menu_text_read_dir_b
 		ldy #>menu_text_read_dir_b
 		jsr print_menu_line
 	}
 
+	clc
 	lda playlist_length ; 1 or more items required
 	beq +
 
-	ldx #<menu_text_clear_playlist
+	sec
++	ldx #<menu_text_clear_playlist
 	ldy #>menu_text_clear_playlist
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_text_clear_playlist_gray
-	ldy #>menu_text_clear_playlist_gray
-	jsr print_menu_line
-
-++ ;	lda playlist_length ;  2 or more items required
+;	lda playlist_length ;  2 or more items required
 ;	cmp #2
 ;	bcc +
-;
-;	ldx #<menu_text_play_from_here
-;	ldy #>menu_text_play_from_here
-;	jsr print_menu_line
-;	!ifndef c128 {
-;		ldx #<menu_text_play_from_here_b
-;		ldy #>menu_text_play_from_here_b
-;		jsr print_menu_line
-;	}
-;	jmp ++
 
-+	ldx #<menu_text_play_from_here_gray
-	ldy #>menu_text_play_from_here_gray
+	ldx #<menu_text_play_from_here
+	ldy #>menu_text_play_from_here
+	clc
 	jsr print_menu_line
+
 	!ifndef c128 {
-		ldx #<menu_text_play_from_here_gray_b
-		ldy #>menu_text_play_from_here_gray_b
+		ldx #<menu_text_play_from_here_b
+		ldy #>menu_text_play_from_here_b
 		jsr print_menu_line
 	}
 
-++	ldx #<menu_text_exit
+	ldx #<menu_text_exit
 	ldy #>menu_text_exit
+	sec
 	jsr print_menu_line
 
 	jsr show_repeat_mode
@@ -534,48 +505,38 @@ draw_menu_page_b
 		lda #0
 		ldx #<prepend_top_margin
 		ldy #>prepend_top_margin
+		sec
 		jsr print_msg
 	}
 
 	lda playlist_length ; 2 or more items required
 	cmp #2
-	bcc +
 
 	ldx #<menu_txt_home_clr
 	ldy #>menu_txt_home_clr
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_txt_home_clr_gray
-	ldy #>menu_txt_home_clr_gray
-	jsr print_menu_line
-
-++	lda playlist_length ; 1 or more items required
+	clc
+	lda playlist_length ; 1 or more items required
 	beq +
 
-	ldx #<menu_text_page_up_down
+	sec
++	ldx #<menu_text_page_up_down
 	ldy #>menu_text_page_up_down
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_text_page_up_down_gray
-	ldy #>menu_text_page_up_down_gray
-	jsr print_menu_line
-
-++	lda playlist_length ; 1 or more items required
+	clc
+	lda playlist_length ; 1 or more items required
 	beq +
 
-	ldx #<menu_text_load_only
+	sec
++	ldx #<menu_text_load_only
 	ldy #>menu_text_load_only
 	jsr print_menu_line
-	jmp ++
 
-+	ldx #<menu_text_load_only_gray
-	ldy #>menu_text_load_only_gray
-	jsr print_menu_line
-
-++	ldx #<menu_text_load_filename
+	ldx #<menu_text_load_filename
 	ldy #>menu_text_load_filename
+	sec
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_load_filename_b
@@ -585,28 +546,20 @@ draw_menu_page_b
 
 ;	lda current_file_type ; type 0 means nothing is loaded.
 ;	beq +
-;
-;	ldx #<menu_text_sample_mode
-;	ldy #>menu_text_sample_mode
-;	jsr print_menu_line
-;	!ifndef c128 {
-;		ldx #<menu_text_sample_mode_b
-;		ldy #>menu_text_sample_mode_b
-;		jsr print_menu_line
-;	}
-;	jmp ++
 
-+	ldx #<menu_text_sample_mode_gray
-	ldy #>menu_text_sample_mode_gray
+	ldx #<menu_text_sample_mode
+	ldy #>menu_text_sample_mode
+	clc
 	jsr print_menu_line
 	!ifndef c128 {
-		ldx #<menu_text_sample_mode_gray_b
-		ldy #>menu_text_sample_mode_gray_b
+		ldx #<menu_text_sample_mode_b
+		ldy #>menu_text_sample_mode_b
 		jsr print_menu_line
 	}
 
-++	ldx #<menu_text_device_number
+	ldx #<menu_text_device_number
 	ldy #>menu_text_device_number
+	sec
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_device_number_b
@@ -616,6 +569,7 @@ draw_menu_page_b
 
 	ldx #<menu_text_view_dir
 	ldy #>menu_text_view_dir
+	sec
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_view_dir_b
@@ -625,6 +579,7 @@ draw_menu_page_b
 
 	ldx #<menu_text_dos_cmd
 	ldy #>menu_text_dos_cmd
+	sec
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_dos_cmd_b
@@ -634,6 +589,7 @@ draw_menu_page_b
 
 	ldx #<menu_text_info_popup
 	ldy #>menu_text_info_popup
+	sec
 	jsr print_menu_line
 
 	jsr show_input_device
@@ -644,16 +600,19 @@ draw_menu_page_c
 		lda #0
 		ldx #<prepend_top_margin
 		ldy #>prepend_top_margin
+		sec
 		jsr print_msg
 	}
 
 	ldx #<menu_text_audio_driver
 	ldy #>menu_text_audio_driver
+	sec
 	jsr print_menu_line
 
 	; display stereo mode
 	ldx #<menu_text_stereo
 	ldy #>menu_text_stereo
+	sec
 	jsr print_menu_line
 
 	; display either SID or DAC address, if SID addr, only if stereo is on.
@@ -661,8 +620,8 @@ draw_menu_page_c
 	cmp #3
 	beq not_sid_menu
 
-	bit stereo_enable
-	bpl +
+	lda stereo_enable
+	rol
 
 	ldx #<menu_text_sid_addr
 	ldy #>menu_text_sid_addr
@@ -674,19 +633,10 @@ draw_menu_page_c
 	}
 	jmp ++
 
-+	ldx #<menu_text_sid_addr_gray
-	ldy #>menu_text_sid_addr_gray
-	jsr print_menu_line
-	!ifndef c128 {
-		ldx #<menu_text_sid_addr_gray_b
-		ldy #>menu_text_sid_addr_gray_b
-		jsr print_menu_line
-	}
-	jmp ++
-
 not_sid_menu
 	ldx #<menu_text_dac_addr
 	ldy #>menu_text_dac_addr
+	sec
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_dac_addr_b
@@ -700,11 +650,13 @@ not_sid_menu
 
 	ldx #<menu_text_dithering
 	ldy #>menu_text_dithering
+	sec
 	jsr print_menu_line
 
 +	!ifndef c128 {
 		ldx #<menu_text_enable_screen
 		ldy #>menu_text_enable_screen
+		sec
 		jsr print_menu_line
 
 		ldx #<menu_text_enable_screen_b
@@ -715,6 +667,7 @@ not_sid_menu
 	; display "save config"
 	ldx #<menu_text_save_config
 	ldy #>menu_text_save_config
+	sec
 	jsr print_menu_line
 
 	jsr show_audio_driver
@@ -729,6 +682,13 @@ not_sid_menu
 rts
 
 print_menu_line
+	php
+
+	lda #DGRY
+	jsr CHROUT
+
+	plp
+
 	!ifndef c128 {
 		stx temp_abs_x
 		sty temp_abs_y
@@ -739,7 +699,6 @@ print_menu_line
 		ldx temp_abs_x
 		ldy temp_abs_y
 	}
-	lda #0
 	jsr print_msg
 rts
 
@@ -768,6 +727,8 @@ populate_info_box
 	lda #0
 	ldx #<no_file_loaded_msg
 	ldy #>no_file_loaded_msg
+
+	sec
 	!ifndef c128 {
 		jsr print_msg_rle
 	} else {
@@ -783,6 +744,7 @@ populate_info_box
 	!ifdef c128 {
 		ldx #<current_file_msg
 		ldy #>current_file_msg
+		sec
 		jsr print_msg
 	}
 
@@ -800,6 +762,7 @@ populate_info_box
 	lda #16
 	ldx #<current_file_name
 	ldy #>current_file_name
+	sec
 	jsr print_msg
 
 	lda #$22 ; quote
@@ -819,6 +782,7 @@ populate_info_box
 		jsr print_filetype
 
 		lda #0
+		sec
 		jsr print_msg
 		lda #","
 		jsr CHROUT
@@ -836,6 +800,7 @@ populate_info_box
 	lda #0
 	ldx #<current_file_tracks_msg
 	ldy #>current_file_tracks_msg
+	sec
 	jsr print_msg
 
 	lda current_file_type
@@ -852,6 +817,7 @@ populate_info_box
 	lda #0
 	ldx #<current_file_samples_msg
 	ldy #>current_file_samples_msg
+	sec
 	jsr print_msg
 
 	lda #CYAN
@@ -882,10 +848,12 @@ populate_info_box
 		lda #0
 		ldx #<(uint16_string_buffer+3) ; +3 to skip the empty sign byte
 		ldy #>(uint16_string_buffer+3) ; and two of the leading zeroes
+		sec
 		jsr print_msg
 
 		ldx #<current_file_patterns_msg
 		ldy #>current_file_patterns_msg
+		sec
 		jsr print_msg
 	} else {
 		clc
@@ -905,11 +873,13 @@ populate_info_box
 	lda #0
 	ldx #<(uint16_string_buffer+3) ; +3 to skip the empty sign byte
 	ldy #>(uint16_string_buffer+3) ; and two of the leading zeroes
+	sec
 	jsr print_msg
 
 	lda #0
 	ldx #<current_file_song_pos_msg
 	ldy #>current_file_song_pos_msg
+	sec
 	jsr print_msg
 
 	sec
@@ -932,6 +902,7 @@ populate_info_box
 	lda #0
 	ldx #<kb_msg
 	ldy #>kb_msg
+	sec
 	jsr print_msg
 rts
 

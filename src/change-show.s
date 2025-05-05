@@ -100,7 +100,8 @@ show_repeat_mode
 +	ldx #<mode_off_txt
 	ldy #>mode_off_txt
 
-++	jsr print_msg
+++	sec
+	jsr print_msg
 rts
 
 toggle_repeat
@@ -117,11 +118,13 @@ choose_audio_driver
 	lda #0
 	ldx #<choose_audio_msg
 	ldy #>choose_audio_msg
+	sec
 	jsr print_msg_rle
 
 	lda #0
 	ldx #<choose_aud_driver_pos
 	ldy #>choose_aud_driver_pos
+	sec
 	jsr print_msg
 
 	lda #GRN
@@ -138,11 +141,13 @@ choose_audio_driver
 	lda #0
 	ldx #<audio_driver_1_txt
 	ldy #>audio_driver_1_txt
+	sec
 	jsr print_msg
 
 	lda #0
 	ldx #<choose_aud_driver_pos
 	ldy #>choose_aud_driver_pos
+	sec
 	jsr print_msg
 
 	jsr CHROUT
@@ -160,11 +165,13 @@ choose_audio_driver
 	lda #0
 	ldx #<audio_driver_2_txt
 	ldy #>audio_driver_2_txt
+	sec
 	jsr print_msg
 
 	lda #0
 	ldx #<choose_aud_driver_pos
 	ldy #>choose_aud_driver_pos
+	sec
 	jsr print_msg
 
 	jsr CHROUT
@@ -182,6 +189,7 @@ choose_audio_driver
 	lda #0
 	ldx #<audio_driver_3_txt
 	ldy #>audio_driver_3_txt
+	sec
 	jsr print_msg
 
 -	jsr GETIN
@@ -266,6 +274,7 @@ show_audio_driver
 	lda #0
 	ldx #<audio_driver_1_txt
 	ldy #>audio_driver_1_txt
+	sec
 	jsr print_msg
 	jmp adrv_app
 
@@ -274,6 +283,7 @@ show_audio_driver
 	lda #0
 	ldx #<audio_driver_2_txt
 	ldy #>audio_driver_2_txt
+	sec
 	jsr print_msg
 	jmp adrv_app
 
@@ -282,6 +292,7 @@ show_audio_driver
 	lda #0
 	ldx #<audio_driver_3_txt
 	ldy #>audio_driver_3_txt
+	sec
 	jsr print_msg
 
 adrv_app
@@ -307,12 +318,14 @@ show_stereo_mode
 	lda #0
 	ldx #<mode_on_txt
 	ldy #>mode_on_txt
+	sec
 	jsr print_msg
 	rts
 
 +	lda #0
 	ldx #<mode_off_txt
 	ldy #>mode_off_txt
+	sec
 	jsr print_msg
 rts
 
@@ -398,6 +411,7 @@ show_dac_addr
 	lda #0
 	ldx #<user_msg
 	ldy #>user_msg
+	sec
 	jsr print_msg
 	jmp ++
 
@@ -615,7 +629,8 @@ show_dithering_setting
 
 +	ldx #<mode_off_txt
 	ldy #>mode_off_txt
-++	jsr print_msg
+++	sec
+	jsr print_msg
 rts
 
 change_dithering_setting
@@ -667,7 +682,8 @@ change_dithering_setting
 	+	ldx #<mode_off_txt
 		ldy #>mode_off_txt
 
-	++	jsr print_msg
+	++	sec
+		jsr print_msg
 	rts
 }
 
@@ -677,6 +693,7 @@ show_system_info_popup
 	lda #0
 	ldx #<info_popup_msg
 	ldy #>info_popup_msg
+	sec
 	jsr print_msg
 
 	clc
@@ -686,6 +703,7 @@ show_system_info_popup
 	lda #0
 	ldx #<info_popup_platform_computer
 	ldy #>info_popup_platform_computer
+	sec
 	jsr print_msg
 
 	!ifdef scpu {
@@ -695,6 +713,7 @@ show_system_info_popup
 		lda #0
 		ldx #<info_popup_plus_scpu_msg
 		ldy #>info_popup_plus_scpu_msg
+		sec
 		jsr print_msg
 	  +
 	}
@@ -737,6 +756,7 @@ show_system_info_popup
 	lda #0
 	ldx #<kb_msg
 	ldy #>kb_msg
+	sec
 	jsr print_msg
 
 ;	!ifdef scpu {
@@ -748,6 +768,7 @@ show_system_info_popup
 ;		lda #0
 ;		ldx #<not_present_msg
 ;		ldy #>not_present_msg
+;		sec
 ;		jsr print_msg
 ;		jmp ++
 ;
@@ -784,12 +805,14 @@ show_system_info_popup
 ;		lda #0
 ;		ldx #<kb_msg
 ;		ldy #>kb_msg
+;		sec
 ;		jsr print_msg
 ;
 ;	} else {
 ;		lda #0
 ;		ldx #<na_msg
 ;		ldy #>na_msg
+;		sec
 ;		jsr print_msg
 ;	}
 
@@ -808,6 +831,7 @@ show_system_info_popup
 	ldy #>info_popup_8580_msg
 
 ++	lda #0
+	sec
 	jsr print_msg
 
 	clc
@@ -825,6 +849,7 @@ show_system_info_popup
 	ldy #>info_popup_8580_msg
 
 ++	lda #0
+	sec
 	jsr print_msg
 
 	clc
@@ -865,6 +890,7 @@ show_system_info_popup
 	lda #0
 	ldx #<kb_msg
 	ldy #>kb_msg
+	sec
 	jsr print_msg
 
 	clc
@@ -875,6 +901,7 @@ show_system_info_popup
 	lda #0
 	ldx #<program_version
 	ldy #>program_version
+	sec
 	jsr print_msg
 
 	lda #"-"

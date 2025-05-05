@@ -128,36 +128,6 @@ menu_text_exit
 	!fill 7,RIGHT
 	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Exit",0
 
-
-menu_text_up_down_gray
-	!byte RIGHT,RIGHT
-	!text DGRY,"[Up/Down] Scroll file list by 1 item",RETURN,0
-menu_text_load_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F1] Load and play file",RETURN,0
-menu_text_play_loaded_gray
-	!fill 8,RIGHT
-	!text DGRY,"[P] Play currently-loaded file",RETURN,0
-menu_text_add_to_list_gray
-	!fill 3,RIGHT
-	!text DGRY,"[Return] Add highlighted to playlist",RETURN,0
-menu_text_play_list_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F2] Play all items in playlist",RETURN,0
-menu_text_play_all_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F3] Play all items in directory",RETURN,0
-menu_text_repeat_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F4] Toggle song repeat",RETURN,0
-menu_text_clear_playlist_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F6] Clear selections/playlist",RETURN,0
-menu_text_play_from_here_gray
-	!fill 7,RIGHT
-	!text DGRY,"[F7] Play all from highlighted",RETURN,0
-
-
 ;##### Menu page B
 
 menu_txt_home_clr
@@ -189,20 +159,6 @@ menu_text_info_popup
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
 
-menu_txt_home_clr_gray
-	!byte RIGHT
-	!text DGRY,"[Home/Clr] Top/bottom of file list",RETURN,0
-menu_text_page_up_down_gray
-	!fill 6,RIGHT
-	!text DGRY,"[+/-] Scroll file list one page",RETURN,0
-menu_text_load_only_gray
-	!fill 8,RIGHT
-	!text DGRY,"[L] Load file (but do not play)",RETURN,0
-menu_text_sample_mode_gray
-	!fill 2,RIGHT
-	!text DGRY,"[Shift-P] Single-sample player mode",RETURN,0
-
-
 ;##### Menu page C
 
 menu_text_audio_driver
@@ -219,9 +175,6 @@ menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Enable Dithering",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save configuration",RETURN,0  ; "🠜"
-
-menu_text_sid_addr_gray
-	!text RIGHT,DGRY,"[A] Change stereo SID address (N/A)",RETURN,0
 
 ; ##### System info popup
 

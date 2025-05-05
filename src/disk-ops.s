@@ -61,6 +61,7 @@ request_dos_command
 	lda #0
 	ldx #<dos_command_msg
 	ldy #>dos_command_msg
+	sec
 	jsr print_msg
 
 	!ifndef c128 {
@@ -119,6 +120,7 @@ only_read_err_chan
 	lda #30
 	ldx #<string_buffer
 	ldy #>string_buffer
+	sec
 	jsr print_msg
 
 +	lda #YEL
@@ -145,6 +147,7 @@ request_filename
 	lda #0
 	ldx #<filename_req_msg
 	ldy #>filename_req_msg
+	sec
 	jsr print_msg
 
 	!ifndef c128 {
@@ -257,14 +260,17 @@ save_config
 	lda #0
 	ldx #<saving_msg
 	ldy #>saving_msg
+	sec
 	jsr print_msg
 	!ifndef c128 {
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
+		sec
 		jsr print_msg_rle
 		lda #0
 		ldx #<saving_msg_b
 		ldy #>saving_msg_b
+		sec
 		jsr print_msg
 	}
 

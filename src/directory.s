@@ -35,6 +35,7 @@ show_directory_cmd_prompt_entry
 	lda #0
 	ldx #<uint16_string_buf_trim
 	ldy #>uint16_string_buf_trim
+	sec
 	jsr print_msg
 
 	jsr dir_read_line		; first line is the dir/disk name
@@ -48,6 +49,7 @@ show_directory_cmd_prompt_entry
 	lda #0
 	ldx #<string_buffer
 	ldy #>string_buffer
+	sec
 	jsr print_msg
 
 	lda #RETURN
@@ -66,12 +68,14 @@ show_directory_cmd_prompt_entry
 		lda #0
 		ldx #<dir_window_left_margin
 		ldy #>dir_window_left_margin
-		jsr print_msg
+		sec
+	jsr print_msg
 	}
 
 	lda #0
 	ldx #<uint16_string_buf_trim
 	ldy #>uint16_string_buf_trim
+	sec
 	jsr print_msg
 
 	lda #" "
@@ -84,6 +88,7 @@ show_directory_cmd_prompt_entry
 	lda #0
 	ldx #<string_buffer
 	ldy #>string_buffer
+	sec
 	jsr print_msg
 
 	lda #RETURN
@@ -117,6 +122,7 @@ dir_err_check
 		lda #0
 		ldx #<dir_window_left_margin
 		ldy #>dir_window_left_margin
+		sec
 		jsr print_msg
 
 		jsr check_if_need_to_scroll
@@ -125,6 +131,7 @@ dir_err_check
 	lda #0
 	ldx #<default_error_message
 	ldy #>default_error_message
+	sec
 	jsr print_msg
 
 	sec
@@ -156,6 +163,7 @@ dir_finish
 		lda #0
 		ldx #<dir_window_left_margin
 		ldy #>dir_window_left_margin
+		sec
 		jsr print_msg
 	}
 

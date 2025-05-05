@@ -67,6 +67,8 @@
 
 	RESET							= $fce2
 
+	COLORS_TABLE					= $e8da ; 16-byte PETSCII color code table
+
 	DISPLY							= $ea1c
 }
 

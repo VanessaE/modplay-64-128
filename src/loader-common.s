@@ -192,11 +192,13 @@ load_by_filename_entry
 	ldx #<unknown_file_msg
 	ldy #>unknown_file_msg
 
+	sec
 	!ifndef c128 {
 		jsr print_msg
 		lda #0
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
+		sec
 		jsr print_msg_rle
 		lda #RIGHT
 	} else {
@@ -225,6 +227,7 @@ load_by_filename_entry
 	lda #0
 	ldx #<file_too_large_msg
 	ldy #>file_too_large_msg
+	sec
 	jsr print_msg
 
 	jmp abort_load
@@ -410,6 +413,7 @@ loader_populate_mini_popup
 	lda #16
 	ldx #<string_buffer
 	ldy #>string_buffer
+	sec
 	jsr print_msg
 
 	lda #$22 ; quote
@@ -419,6 +423,7 @@ loader_populate_mini_popup
 		lda #0
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
+		sec
 		jsr print_msg_rle
 	} else {
 		lda #RETURN
@@ -467,6 +472,7 @@ loader_populate_mini_popup
 	lda #0
 	ldx #<blocks_msg
 	ldy #>blocks_msg
+	sec
 	jsr print_msg
 
 	sec
@@ -477,12 +483,14 @@ loader_populate_mini_popup
 	lda #0
 	ldx #<kb_msg
 	ldy #>kb_msg
+	sec
 	jsr print_msg
 
 	!ifndef c128 {
 		lda #0
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
+		sec
 		jsr print_msg_rle
 	} else {
 		lda #RETURN
@@ -492,12 +500,14 @@ loader_populate_mini_popup
 	lda #0
 	ldx #<loading_msg
 	ldy #>loading_msg
+	sec
 	jsr print_msg
 
 	!ifndef c128 {
 		lda #0
 		ldx #<mini_popup_next_line
 		ldy #>mini_popup_next_line
+		sec
 		jsr print_msg_rle
 	} else {
 		jsr FULLW
@@ -639,6 +649,7 @@ loader_print_loading_speed
 	lda #0
 	ldx #<loader_erase_kbs_msg
 	ldy #>loader_erase_kbs_msg
+	sec
 	jsr print_msg
 
 	ldx quotient+1
@@ -664,6 +675,7 @@ loader_print_loading_speed
 	lda #0
 	ldx #<loader_kbs_msg
 	ldy #>loader_kbs_msg
+	sec
 	jsr print_msg
 rts
 

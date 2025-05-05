@@ -103,7 +103,7 @@ menu_text_play_loaded
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play current",RETURN,0
 menu_text_play_loaded_b
 	!fill 9,RIGHT
-	!text "loaded file",RETURN,0
+	!text LGRY,"loaded file",RETURN,0
 menu_text_add_to_list
 	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Add to list",RETURN,0
 menu_text_play_list
@@ -120,7 +120,7 @@ menu_text_read_dir
 	!text GRN,"[",YEL,"F5",GRN,"]",LGRY," Load new",RETURN,0
 menu_text_read_dir_b
 	!fill 9,RIGHT
-	!text "directory",RETURN,0
+	!text LGRY,"directory",RETURN,0
 menu_text_clear_playlist
 	!fill 4,RIGHT
 	!text GRN,"[",YEL,"F6",GRN,"]",LGRY," Clear list",RETURN,0
@@ -129,43 +129,10 @@ menu_text_play_from_here
 	!text GRN,"[",YEL,"F7",GRN,"]",LGRY," Play from",RETURN,0
 menu_text_play_from_here_b
 	!fill 9,RIGHT
-	!text "highlighted",RETURN,0
+	!text LGRY,"highlighted",RETURN,0
 menu_text_exit
 	!fill 4,RIGHT
 	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Exit",RETURN,0
-
-
-menu_text_up_down_gray
-	!text DGRY,RIGHT,"[Up/Dn] Scroll list",RETURN,0
-menu_text_load_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F1] Load & Play",RETURN,0
-menu_text_play_loaded_gray
-	!fill 5,RIGHT
-	!text DGRY,"[P] Play current",RETURN,0
-menu_text_play_loaded_gray_b
-	!fill 9,RIGHT
-	!text "loaded file",RETURN,0
-menu_text_add_to_list_gray
-	!text DGRY,"[Return] Add to list",RETURN,0
-menu_text_play_list_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F2] Play list",RETURN,0
-menu_text_play_all_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F3] Play all",RETURN,0
-menu_text_repeat_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F4] Repeat",RETURN,0
-menu_text_clear_playlist_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F6] Clear list",RETURN,0
-menu_text_play_from_here_gray
-	!fill 4,RIGHT
-	!text DGRY,"[F7] Play from",RETURN,0
-menu_text_play_from_here_gray_b
-	!fill 9,RIGHT
-	!text "highlighted",RETURN,0
 
 ;##### Menu page B
 
@@ -181,46 +148,33 @@ menu_text_load_filename
 	!text GRN,RIGHT,"[",YEL,"Shf-L",GRN,"]",LGRY," Load by file",RETURN,0
 menu_text_load_filename_b
 	!fill 9,RIGHT
-	!text "name/pattern",RETURN,0
+	!text LGRY,"name/pattern",RETURN,0
 menu_text_sample_mode
 	!text GRN,RIGHT,"[",YEL,"Shf-P",GRN,"]",LGRY," Sngl sample",RETURN,0
 menu_text_sample_mode_b
 	!fill 9,RIGHT
-	!text "player mode",RETURN,0
+	!text LGRY,"player mode",RETURN,0
 menu_text_device_number
 	!byte RIGHT,RIGHT
 	!text GRN,"   [",YEL,"#",GRN,"]",LGRY," Change input",RETURN,0
 menu_text_device_number_b
 	!fill 9,RIGHT
-	!text "device",RETURN,0
+	!text LGRY,"device",RETURN,0
 menu_text_view_dir
 	!byte RIGHT,RIGHT
 	!text GRN,"   [",YEL,"$",GRN,"]",LGRY," View disk",RETURN,0
 menu_text_view_dir_b
 	!fill 9,RIGHT
-	!text "directory",RETURN,0
+	!text LGRY,"directory",RETURN,0
 menu_text_dos_cmd
 	!byte RIGHT,RIGHT
 	!text GRN,"   [",YEL,"@",GRN,"]",LGRY," Send DOS",RETURN,0
 menu_text_dos_cmd_b
 	!fill 9,RIGHT
-	!text "commands",RETURN,0
+	!text LGRY,"commands",RETURN,0
 menu_text_info_popup
 	!fill 4,RIGHT
 	!text RIGHT,GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
-
-menu_txt_home_clr_gray
-	!text DGRY,"[Hm/Clr] Top/bottom",RETURN,0
-menu_text_page_up_down_gray
-	!text DGRY,"   [+/-] Page up/down",RETURN,0
-menu_text_load_only_gray
-	!fill 5,RIGHT
-	!text DGRY,"[L] Load only",RETURN,0
-menu_text_sample_mode_gray
-	!text DGRY,RIGHT,"[Shf-P] Sngl sample",RETURN,0
-menu_text_sample_mode_gray_b
-	!fill 8,RIGHT
-	!text DGRY,RIGHT,"player mode",RETURN,0
 
 ;##### Menu page C
 
@@ -230,12 +184,12 @@ menu_text_sid_addr
 	!text RIGHT,GRN,"[",YEL,"A",GRN,"]",LGRY," Stereo SID",RETURN,0
 menu_text_sid_addr_b
 	!fill 5,RIGHT
-	!text "address",RETURN,0
+	!text LGRY,"address",RETURN,0
 menu_text_dac_addr
 	!text RIGHT,GRN,"[",YEL,"A",GRN,"]",LGRY," DigiMAX/DAC",RETURN,0
 menu_text_dac_addr_b
 	!fill 5,RIGHT
-	!text "address",RETURN,0
+	!text LGRY,"address",RETURN,0
 menu_text_stereo
 	!text RIGHT,GRN,"[",YEL,"S",GRN,"]",LGRY," Stereo",RETURN,0
 menu_text_filter
@@ -246,15 +200,9 @@ menu_text_enable_screen
 	!text RIGHT,GRN,"[",YEL,"E",GRN,"]",LGRY," Enable player",RETURN,0
 menu_text_enable_screen_b
 	!fill 5,RIGHT
-	!text "screen",RETURN,0
+	!text LGRY,"screen",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
-
-menu_text_sid_addr_gray
-	!text RIGHT,DGRY,"[A] Stereo SID",RETURN,0
-menu_text_sid_addr_gray_b
-	!fill 5,RIGHT
-	!text "address (N/A)",RETURN,0
 
 ; ##### System info popup
 

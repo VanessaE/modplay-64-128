@@ -28,6 +28,7 @@ viz_row_data_init
 	lda #0
 	ldx #<visualizer_row_position
 	ldy #>visualizer_row_position
+	sec
 	jsr print_msg
 
 	vis_row_data_init_next_row
@@ -35,6 +36,7 @@ viz_row_data_init
 		ldx #<viz_row_data_dividers_msg
 		ldy #>viz_row_data_dividers_msg
 
+		sec
 		!ifndef c128 {
 			jsr print_msg_ascii
 		} else {

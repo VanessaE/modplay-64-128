@@ -4,13 +4,21 @@
 
 !macro PRINT_MSG {
 	print_msg
+		php
 		sta print_msg_char_limit
+
+		lda #0
+		ror
+		sta print_msg_colors_flag
+
 		dec print_msg_char_limit
 		stx print_msg_addr
 		sty print_msg_addr+1
 		ldy #0
 	-	lda (print_msg_addr),y
 		beq +
+
+		jsr check_color_flag
 		jsr CHROUT
 		cpy print_msg_char_limit
 		beq +
@@ -18,7 +26,8 @@
 		bne -
 		inc print_msg_addr+1
 		bne -
-	+	rts
+	+	plp
+	rts
 }
 
 	; print an RLE_encoded message
@@ -45,6 +54,11 @@
 
 !macro PRINT_MSG_RLE {
 	print_msg_rle
+		php
+		lda #0
+		ror
+		sta print_msg_colors_flag
+
 		stx print_msg_addr
 		sty print_msg_addr+1
 
@@ -62,7 +76,9 @@
 		sta rle_byte_count	; so set the new count
 		bne .next_byte
 
-	.pr	jsr CHROUT
+	.pr
+		jsr check_color_flag
+		jsr CHROUT
 
 		dec rle_byte_count
 
@@ -78,7 +94,8 @@
 		bne .lp
 
 	.done
-rts
+		plp
+	rts
 }
 
 !macro SCREEN_ONOFF {
