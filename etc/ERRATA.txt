@@ -139,6 +139,12 @@
   given song has shown it, it'll happen at the same places every time in that
   song.
 
+* C128:  (maybe both)  Listing a directory on the RAMLink crashes the
+  program, but that and all other functions seem fine when performed on other
+  devices while RL is enabled (loading over CMD HD parallel works too).
+  Probably just a ROM banking glitch -- maybe the banking scheme I'm using
+  just isn't compatible with RL?
+
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 
