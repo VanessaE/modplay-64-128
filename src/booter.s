@@ -1,6 +1,5 @@
 ; this stub serves to load the rest of the program
 
-!source "src/constants-com.h"
 !source "src/misc-macros.s"
 
 !ifndef c128 {

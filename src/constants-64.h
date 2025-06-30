@@ -1,5 +1,8 @@
 ; This file defines the C64-specific constants used througout the program.
 
+; Any zero-page addresses defined here are only usable when zero page is NOT
+; backed-up.
+
 !addr {
 
 	default_start					= $0801
@@ -14,16 +17,7 @@
 	expansion_transfer_local_addr	= $f7 ; through $f9
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
 
-	; low memory area -- duh 😛
-
-	; free: $02a7 through $02ff
-
 	; System vectors from $0300 to $0333
-
-	low_memory_area					= $0334
-
-	; the first $98 bytes are used by player vars - see constants-com.h
-	; free: $03cc through $03ff.
 
 	blurring_table					= $0a00 ; 128 bytes
 

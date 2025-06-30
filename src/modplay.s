@@ -17,18 +17,9 @@
 ;
 ; Look in 'bin/' for the final builds, or if you prefer, there are ready-to-
 ; use disk images in the 'disk-images/' directory (obviously ;-) ).
-;
-; Run with LOAD"<whatever>",x,1
 
 ; main program code
 
-!source "src/constants-com.h"
-
-!ifndef c128 {
-	!source "src/constants-64.h"
-} else {
-	!source "src/constants-128.h"
-}
 !convtab pet
 !cpu 6510
 
@@ -161,46 +152,45 @@ init_begin
 !source "src/init.s"
 init_end
 
-
 load_buffer							= init_begin	; 2 kB
 sample_data_buffer					= init_begin	; 2 kB, overlapped
 
-sample_start_addresses_mids			= load_buffer + 2048
-sample_start_addresses_highs		= sample_start_addresses_mids + 32
-sample_end_addresses_lows			= sample_start_addresses_highs + 32
-sample_end_addresses_mids			= sample_end_addresses_lows + 32
-sample_end_addresses_highs			= sample_end_addresses_mids + 32
-sample_lengths_lows					= sample_end_addresses_highs + 32
-sample_lengths_mids					= sample_lengths_lows + 32
-sample_lengths_highs				= sample_lengths_mids + 32
-sample_loop_start_addresses_lows	= sample_lengths_highs + 32
-sample_loop_start_addresses_mids	= sample_loop_start_addresses_lows + 32
-sample_loop_start_addresses_highs	= sample_loop_start_addresses_mids + 32
-sample_loop_end_addresses_lows		= sample_loop_start_addresses_highs + 32
-sample_loop_end_addresses_mids		= sample_loop_end_addresses_lows + 32
-sample_loop_end_addresses_highs		= sample_loop_end_addresses_mids + 32
-sample_default_loop_flags			= sample_loop_end_addresses_highs + 32
-sample_default_fine_tunes			= sample_default_loop_flags + 32
-sample_default_volume_levels		= sample_default_fine_tunes + 32
+sample_start_addresses_mids			!skip 32
+sample_start_addresses_highs		!skip 32
+sample_end_addresses_lows			!skip 32
+sample_end_addresses_mids			!skip 32
+sample_end_addresses_highs			!skip 32
+sample_lengths_lows					!skip 32
+sample_lengths_mids					!skip 32
+sample_lengths_highs				!skip 32
+sample_loop_start_addresses_lows	!skip 32
+sample_loop_start_addresses_mids	!skip 32
+sample_loop_start_addresses_highs	!skip 32
+sample_loop_end_addresses_lows		!skip 32
+sample_loop_end_addresses_mids		!skip 32
+sample_loop_end_addresses_highs		!skip 32
+sample_default_loop_flags			!skip 32
+sample_default_fine_tunes			!skip 32
+sample_default_volume_levels		!skip 32
 
-; --------------------------------------------------------------------------
-; The init code ends a couple of pages prior to this point, so anything from
-; here on down can be stuff that init is responsible for generating.
+; ----------------------------------------
+; anything from here on down can be stuff
+; that init is responsible for generating.
 
-and_f0_table					= sample_default_volume_levels + 32
+and_f0_table						!skip 256
 
-; 1712 bytes, plus some waste
-viz_note_number_lookup_table	= and_f0_table + 256
+viz_note_number_lookup_table		!skip 7*256
 
-; 1712 * 2 bytes, plus some waste
-steprate_lookup_table			= viz_note_number_lookup_table + 7*256
-
+steprate_lookup_table				!skip 14*256
 
 ; ---------------------------------------------------------------------
 ; anything below this point will be wiped clean just before init exits.
 
-end_of_mid_mem_tables			= steprate_lookup_table + 14*256
+end_of_mid_mem_tables = *
 
+!if init_end > and_f0_table {
+	!error "Init routines overlap init-writeable area (`and_f0_table`) by ", and_f0_table - init_end, " bytes!"
+}
 
 ; ----------------------------------------------------------------------
 ; constants that depend on the addresses pointed to by the symbols above

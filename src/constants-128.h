@@ -1,5 +1,8 @@
 ; This file defines the C128-specific constants used througout the program.
 
+; Any zero-page addresses defined here are only usable when zero page is NOT
+; backed-up.
+
 !addr {
 
 	default_start					= $1c01
@@ -13,13 +16,6 @@
 
 	expansion_transfer_local_addr	= $c9 ; through $cb
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
-
-	; low memory area -- duh 😛
-
-	low_memory_area					= $0200
-
-	; the first $98 bytes are used by player vars - see constants-com.h
-	; free: $0298 through $02a0
 
 	c128_highest_bank				= $02a1
 
