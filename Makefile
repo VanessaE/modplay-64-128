@@ -52,14 +52,14 @@ clean:
 
 c64:
 	@echo -e '\nBuilding Modplay 64...\n'
-	acme $(OPTIONS) -o bin/ignore.me -l etc/mp64-sym.txt src/constants-com.h
+	acme $(OPTIONS) -o /tmp/mp.ignore.me -l etc/mp64-sym.txt src/constants-com.h
 	acme $(OPTIONS) -o bin/mp64 etc/mp64-sym.txt src/booter.s
 	acme $(OPTIONS) -o bin/mp64.main etc/mp64-sym.txt src/modplay.s
 
 
 c128:
 	@echo -e '\nBuilding Modplay 128...\n'
-	acme $(OPTIONS) -Dc128=1 -o bin/ignore.me -l etc/mp128-sym.txt src/constants-com.h
+	acme $(OPTIONS) -Dc128=1 -o /tmp/mp.ignore.me -l etc/mp128-sym.txt src/constants-com.h
 	acme $(OPTIONS) -Dc128=1 -o bin/mp128 etc/mp128-sym.txt src/booter.s
 	acme $(OPTIONS) -Dc128=1 -o bin/mp128.main etc/mp128-sym.txt src/modplay.s
 	acme $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o etc/mp128-sym.txt src/c128-boot-sect.s
@@ -67,13 +67,13 @@ c128:
 
 c64_scpu:
 	@echo -e '\nBuilding Modplay 64 (SuperCPU edition)...\n'
-	acme $(OPTIONS) -Dscpu=1 -o bin/ignore.me -l etc/mp64-sym-scpu.txt src/constants-com.h
+	acme $(OPTIONS) -Dscpu=1 -o /tmp/mp.ignore.me -l etc/mp64-sym-scpu.txt src/constants-com.h
 	acme $(OPTIONS) -Dscpu=1 -o bin/mp64.main-scpu etc/mp64-sym-scpu.txt src/modplay.s
 
 
 c128_scpu:
 	@echo -e '\nBuilding Modplay 128 (SuperCPU edition)...\n'
-	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o bin/ignore.me -l etc/mp128-sym-scpu.txt src/constants-com.h
+	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o /tmp/mp.ignore.me -l etc/mp128-sym-scpu.txt src/constants-com.h
 	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o bin/mp128.main-scpu etc/mp128-sym-scpu.txt src/modplay.s
 
 gen_release_disk_image:
