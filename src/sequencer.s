@@ -906,7 +906,10 @@ voltab_use_upper
 	adc #(>volume_table_upper)-38
 
 set_vol_addrs_only
-	jmp mixer_set_lookahead_vol_addrs
+	bit filter_setting
+	bmi +
+	jmp mixer_standard_set_lookahead_vol_addrs
++	jmp mixer_lowpass_set_lookahead_vol_addrs
 
 ; #### VOLUME SLIDE
 

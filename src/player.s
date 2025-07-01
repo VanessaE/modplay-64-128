@@ -263,7 +263,17 @@ player_gen_tables
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
-	jsr isr_set_interval
+
+	jsr reu_set_selfmod_and_mixer_vectors
+
+	lda filter_setting
+	bmi +
+	jsr mixer_standard_set_cycle_count
+	jmp ++
+
++	jsr mixer_lowpass_set_cycle_count
+
+++	jsr isr_set_interval
 	lda #$80
 	sta allow_regen_msg
 

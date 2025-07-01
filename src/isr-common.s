@@ -20,17 +20,17 @@ isr_set_interval
 	sta isr_trigger_interval+1
 
 	clc
-	lda #mixer_cycle_count
+	lda mixer_cycle_count
 	adc audio_driver_isr_cycle_count
 	adc ram_driver_fetch_cycle_count
 
 	; on non-SCPU setups, add some fudge just to ensure the sequencer always
-	; has enough time to run - 10 cycles on C128, 20 on C64 when the screen is
+	; has enough time to run - 15 cycles on C128, 20 on C64 when the screen is
 	; off, 40 on C64 is the screen is turned on.
 
 	!ifndef scpu {
 		!ifdef c128 {
-			adc #10
+			adc #15
 		} else {
 			bit enable_screen_on_playback
 			bpl +

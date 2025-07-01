@@ -108,6 +108,9 @@ each loop:
 so per-sample, the mixer runtime is:
 (44 * 16 + 28) / 16 = ~46 cycles
 
+when using the lowpass filtering mixer, add 16 cycles per sample pair:
+
+((44 + 16) * 16 + 28) / 16 = ~62 cycles
 
 --------------------
 AUDIO DRIVER TIMINGS
@@ -146,36 +149,53 @@ Using the 4-bit SID driver in mono, with dithering turned off (also applies to
 
 Factoring-in the mixer/lookahead runtime of 46 cycles per byte, plus 52 cycles
 per byte for the ISR, plus the "likely" code path in the fetch routine taking
-24 to 26 cycles, plus 20 cycles of fudge to give the sequencer enough time to
-run:
+24 to 26 cycles, plus 20 or 40 cycles of fudge (depending if the screen is
+off or on, respectively), to give the sequencer enough time to run:
 
 The C64 should be run at about 7 kHz with the screen off:
 
 1022727 / (47 + 52 + 26 + 20) = ~7053.3
 
-or about 5.2 KHz with the screen on, since ISR is always 3 rasters:
+or about 5.2 KHz with the screen on, for both mixer modes, since that larger
+fudge amount will cause the ISR to round-up to 3 rasters either way:
 
 1022727 / (65 * 3) = ~5244.8
 
-With 24 (1 MHz) cycles for the mixer, 28 for the ISR, 19 for the fetch, and
-10 for the sequencer, the C128 should be able to run at about 12.6 kHz:
+With 24 (1 MHz) cycles for the standard mixer, 28 for the ISR, 19 for the
+fetch, and 15 cycles' of fudge for the sequencer, the C128 should be able to
+run at about 11.2 kHz:
 
-1022727 / (24 + 28 + 19 + 10) = ~12626.3
+1022727 / (24 + 28 + 19 + 15) = ~11238.8
 
-Dithering mode, on the other hand is... expensive 😕
+and with the lowpass filtering mixer, a C128 should do about 10.1 kHz:
+
+1022727 / (24 + 10 + 28 + 19 + 15) = ~10126.0
+
+As mentioned above, using the lowpass filtering mixer increases sample time,
+thus trading sample rate for a boost in mixing quality.  That's fine if you
+have the cycles to spare, but if all you have is a stock, non-accelerated
+C64, this mode is not, because it is so costly.
+
+While it only adds 16 cycles per sample pair, for a total of around 181
+cycles, having the screen turned on adds 20 extra cycles of fudge on top of
+that, for a total of 201 cycles.  Since this exceeds the 195-cycle maximum
+that allows for 3-raster timing, the ISR code is forced to round-up to four
+rasters per sample, for a measly 3.9 kHz.
+
+With the screen off, we don't need that extra fudge, so the above 181 cycles
+applies, and gives a sample rate of just over 5.6 kHz.  I suppose that's not
+too horrible for a stock breadbin.
+
+Also note that the SID 4-bit dithering driver is expensive as well.
 
 SID 4-bit mono with dithering needs 64-66 cycles in the ISR on C64, and 65-69
 cycles at 2 MHz (that is, ~33-35 at 1 MHz) on C128.  Stereo needs 86-92 cycles
 on C64, 90-96 at 2 MHz (45-48 at 1 MHz) on C128.
 
-Adding in the fudge and other stuff, the C64 just manages to eek-out a 5.2 kHz
-(3-raster-line) sample rate with dithering in mono, with the screen on.  With
-the screen off, it runs at just shy of 6.2 kHz.  The C128 manages a
-respectable 11.7 kHz in this mode.
-
-If all you've got is a stock C64 with only one SID, I highly recommend using
-dithering with the screen turned off.  Yes, it's more noise, but it's a much
-higher sample rate and a higher effective sample resolution.
+Adding in the fudge and other stuff, a stock C64 just manages to eek-out a
+5.2 kHz (3-raster-line) sample rate with dithering in mono, with the screen
+on, and not using the lowpass filtering mixer.  With the screen off, it runs
+at just shy of 6.2 kHz.  The C128 manages a respectable 11.7 kHz in this mode.
 
 
 ===============================

@@ -315,7 +315,7 @@ chk_key_s
 
 chk_key_a
 	cmp #$41
-	bne chk_key_t
+	bne chk_key_f
 
 	lda audio_driver
 	cmp #4
@@ -327,20 +327,14 @@ chk_key_a
 	jsr change_audio_addr
 +	jmp main_loop
 
-;chk_key_f
-;	cmp #$46
-;	bne chk_key_r
-;	!ifdef c128 {
-;		jsr set_window_menu_pane
-;	}
-;
-;	lda audio_driver
-;	cmp #4 ; ?  idk yet
-;	bne +
-;	jsr change_filter_setting
-;
-;+	jmp main_loop
-;
+chk_key_f
+	cmp #$46
+	bne chk_key_t
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+	jsr change_filter_setting
+	jmp main_loop
 
 chk_key_t
 	cmp #$54
@@ -664,7 +658,11 @@ not_sid_menu
 		jsr print_menu_line
 	}
 
-	; display "save config"
+	ldx #<menu_text_enable_filter
+	ldy #>menu_text_enable_filter
+	sec
+	jsr print_menu_line
+
 	ldx #<menu_text_save_config
 	ldy #>menu_text_save_config
 	sec
@@ -674,7 +672,7 @@ not_sid_menu
 	jsr show_sid_addr
 	jsr show_dac_addr
 	jsr show_stereo_mode
-;	jsr show_filter_setting
+	jsr show_filter_setting
 	jsr show_dithering_setting
 	!ifndef c128 {
 		jsr show_screen_enable

@@ -10,6 +10,32 @@
 ; this is the average fetch time, in cycles, per final output sample pair
 ; see full details in doc/timing-info.txt.
 
+reu_set_selfmod_and_mixer_vectors
+	lda filter_setting
+	bmi +
+
+	lda #<run_mixer_standard_lookahead
+	sta reu_mixer_call_vec+1
+	lda #>run_mixer_standard_lookahead
+	sta reu_mixer_call_vec+2
+
+	lda #<mixer_standard_do_selfmods_for_pitch_change
+	sta reu_selfmod_init_vec+1
+	lda #>mixer_standard_do_selfmods_for_pitch_change
+	sta reu_selfmod_init_vec+2
+	rts
+
++	lda #<run_mixer_lowpass_lookahead
+	sta reu_mixer_call_vec+1
+	lda #>run_mixer_lowpass_lookahead
+	sta reu_mixer_call_vec+2
+
+	lda #<mixer_lowpass_do_selfmods_for_pitch_change
+	sta reu_selfmod_init_vec+1
+	lda #>mixer_lowpass_do_selfmods_for_pitch_change
+	sta reu_selfmod_init_vec+2
+rts
+
 reu_set_cycle_counts
 	!ifndef scpu {
 		!ifndef c128 {
@@ -362,7 +388,9 @@ reu_run_fetch_and_mixer
 		!if reu_fetch_track = 0 { reu_fetch_unroll_close = * }
 		}
 
-	jsr run_mixer_lookahead									; 6
+	reu_mixer_call_vec
+	; this will be set to one of the mixer routines
+	  jsr $1234												; 6
 
 	dec mixer_countdown										; 5
 	beq +													; 3/2
@@ -404,7 +432,10 @@ rts
 
 reu_do_selfmods_for_pitch_change
 	jsr reu_fetch_selfmods_init
-	jsr mixer_do_selfmods_for_pitch_change
+
+	reu_selfmod_init_vec
+	  jsr $1234
+
 	; returns the total lookahead distance in .A
 
 	; fetch length addr

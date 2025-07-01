@@ -325,6 +325,7 @@ tempo_fine_adjust_constant = 159778
 
 	utility_zpbk_counter				!skip 3
 	temp_zpbk_a							!skip 3
+	temp_zpbk_b							!skip 1
 
 	track_current_enable_flags			!skip 8
 	track_current_loop_flags			!skip 8
@@ -492,13 +493,14 @@ tempo_fine_adjust_constant = 159778
 	audio_driver						!skip 1 ; 1=4-bit SID, 2=Mahoney, 3=DAC
 	ram_driver							!skip 1
 	stereo_enable						!skip 1
-	filter_setting						!skip 1
+	filter_setting						!skip 1 ; 0=none, $80=lowpass
 	visualizer_mode						!skip 1 ; 0=row data, 1=waveforms
 	dither_enable						!skip 1
 	enable_screen_on_playback			!skip 1
 
 	cfg_data_end						!skip 1 ; one byte past the real end
 
+	mixer_cycle_count					!skip 1
 	audio_driver_isr_cycle_count		!skip 1
 	ram_driver_fetch_cycle_count		!skip 1
 	isr_trigger_interval				!skip 2

@@ -15,8 +15,8 @@
 	sidaddr_col		= 31
 	dacaddr_row		= 6
 	dacaddr_col		= 31
-	filter_row		= 7
-	filter_col		= 30
+	filter_row		= 9
+	filter_col		= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9
@@ -51,7 +51,7 @@
 	dacaddr_row		= 3
 	dacaddr_col		= 32
 	filter_row		= 4
-	filter_col		= 26
+	filter_col		= 24
 	dith_en_row		= 4
 	dith_en_col		= 22
 	info_anykey_row	= 15
@@ -566,43 +566,31 @@ show_filter_setting
 	ldx #filter_row
 	ldy #filter_col
 	jsr PLOT
-	lda audio_driver
-	cmp #4 ; unknown actually, might end up being #3 and DAC moves to #4?  idk
-	beq +
+
+
++	bit filter_setting
+	bpl +
+
+	lda #0
+	ldx #<mode_on_txt
+	ldy #>mode_on_txt
+	sec
+	jsr print_msg
 	rts
 
-+	lda #GRN
-	jsr CHROUT
-	lda #"("
-	jsr CHROUT
-	lda #WHT
-	jsr CHROUT
-	ldx #9
-	cpx filter_setting
-	bmi +
-	lda #$20	; print a leading space if 0-9
-	jsr CHROUT
-
-+	sec
-	ldx filter_setting
-	ldy #0
-	jsr print_uint16
-	lda #GRN
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
++	lda #0
+	ldx #<mode_off_txt
+	ldy #>mode_off_txt
+	sec
+	jsr print_msg
 rts
 
 change_filter_setting
-	inc filter_setting
 	lda filter_setting
-	cmp #16
-	bne +
-	lda #0
-+	sta filter_setting
-
+	eor #$80
+	sta filter_setting
 	jsr show_filter_setting
-+ rts
+rts
 
 show_dithering_setting
 	lda current_menu_page

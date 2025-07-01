@@ -201,6 +201,8 @@ menu_text_enable_screen
 menu_text_enable_screen_b
 	!fill 5,RIGHT
 	!text LGRY,"screen",RETURN,0
+menu_text_enable_filter
+	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filtering",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
 
