@@ -215,29 +215,7 @@ start_main_player
 	}
 
 no_player_ui
-	bit stereo_enable
-	bpl +
-
-	!ifdef scpu {
-		sta SCPU_TURBO_OFF
-	}
-
-	!ifdef c128 {
-		lda #0
-		sta VIC_2_MHZ
-	}
-
-	jsr check_sid_type_right
-
-	!ifdef scpu {
-		sta SCPU_TURBO_ON
-	}
-
-	!ifdef c128 {
-		inc VIC_2_MHZ
-	}
-
-+	lda audio_driver
+	lda audio_driver
 	cmp #1
 	bne ns4ip
 

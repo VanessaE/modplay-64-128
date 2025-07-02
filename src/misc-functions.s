@@ -1274,6 +1274,16 @@ check_sid_type_left
 	bne -
 
 	;Detection itself starts here
+
+	!ifdef scpu {
+		sta SCPU_TURBO_OFF
+	}
+
+	!ifdef c128 {
+		lda #0
+		sta VIC_2_MHZ
+	}
+
 	lda #$ff				;Set frequency in voice 3 to $ffff 
 	sta SID_VOICE3_CR		;...and set testbit (other bits don't matter) in VCREG3 ($d412) to disable oscillator
 	sta SID_VOICE3_FREQ_LOW
@@ -1281,6 +1291,15 @@ check_sid_type_left
 	lda #$20				;Sawtooth wave and gatebit OFF to start oscillator again.
 	sta SID_VOICE3_CR
 	lda SID_VOICE3_OSC_OUT	;Accu now has different value depending on sid model (6581=3/8580=2)
+
+	!ifdef scpu {
+		sta SCPU_TURBO_ON
+	}
+
+	!ifdef c128 {
+		inc VIC_2_MHZ
+	}
+
 	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
 	lda #0
 	ror
@@ -1297,6 +1316,15 @@ check_sid_type_right
 	sta utility_pointer
 	lda stereo_sid_addr+1
 	sta utility_pointer+1
+
+	!ifdef scpu {
+		sta SCPU_TURBO_OFF
+	}
+
+	!ifdef c128 {
+		lda #0
+		sta VIC_2_MHZ
+	}
 
 	lda #$ff
 	ldy #$12
@@ -1316,6 +1344,14 @@ check_sid_type_right
 	; because those instructions take longer than a regular STA:LDA pair
 	; the value returned from the SID will be from a couple of cycles later in
 	; the oscillator run than normal:  6 for 6581, 5 for 8580.
+
+	!ifdef scpu {
+		sta SCPU_TURBO_ON
+	}
+
+	!ifdef c128 {
+		inc VIC_2_MHZ
+	}
 
 	lsr
 	lda #0

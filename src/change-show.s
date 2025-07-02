@@ -447,6 +447,7 @@ change_audio_addr
 	cmp #3
 	beq +
 	jsr change_sid_addr
+	jsr check_sid_type_right
 	rts
 
 +	jsr change_dac_addr
