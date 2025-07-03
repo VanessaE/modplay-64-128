@@ -96,6 +96,13 @@ finish_menu
 		jsr set_window_playlist_pane
 	}
 
+	bit initial_playlist_loaded
+	bmi main_loop
+	jsr load_directory
+	lda #$80
+	sta initial_playlist_loaded
+	jmp show_main_menu
+
 main_loop
 	jsr GETIN	; returns $0 if nothing is pressed/buf empty
 	bne chk_key_up

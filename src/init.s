@@ -60,11 +60,11 @@ init
 	sta main_variables_zone+$0100,y
 	sta main_variables_zone+$0200,y
 	sta main_variables_zone+$0300,y
-	sta main_variables_zone+$0400,y
-	sta main_variables_zone+$0500,y
-	sta main_variables_zone+$0600,y
-	sta main_variables_zone+$0700,y
-	sta main_variables_zone+$0800,y
+	sta main_variables_zone+$0400,y ; main vars end at $0fff
+
+	sta main_variables_zone+$0500,y ; a few random small tables
+	sta main_variables_zone+$0600,y ; audio buf left
+	sta main_variables_zone+$0700,y ; audio buf right
 	iny
 	bne -
 

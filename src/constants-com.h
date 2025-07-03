@@ -505,10 +505,6 @@ tempo_fine_adjust_constant = 159778
 	ram_driver_fetch_cycle_count		!skip 1
 	isr_trigger_interval				!skip 2
 	last_isr_trigger_interval			!skip 2
-	playlist_length						!skip 1
-	playlist_scroll_pos					!skip 1
-	playlist_print_file_counter			!skip 1
-	screen_row_to_print_at				!skip 1
 
 	raster_len							!skip 1
 	pal_flag							!skip 1
@@ -658,6 +654,11 @@ tempo_fine_adjust_constant = 159778
 
 	ram_driver_set_cycle_counts_vec		!skip 2
 
+	initial_playlist_loaded				!skip 1
+	playlist_length						!skip 1
+	playlist_scroll_pos					!skip 1
+	playlist_print_file_counter			!skip 1
+	screen_row_to_print_at				!skip 1
 	playlist_file_sizes_lows			!skip 256
 	playlist_file_sizes_highs			!skip 256
 	playlist_file_flags					!skip 256
