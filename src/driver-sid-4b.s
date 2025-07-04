@@ -75,7 +75,7 @@ sid_4bit_set_isr_cycle_count
 			lda #(55 + 1) / 2
 		}
 	} else {
-		lda #8
+		lda #7
 	}
 
 	sta audio_driver_isr_cycle_count

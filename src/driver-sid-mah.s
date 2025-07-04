@@ -72,7 +72,7 @@ sid_mahoney_set_isr_cycle_count
 		  +
 		}
 	} else {
-		lda #8
+		lda #7
 	}
 
 	sta audio_driver_isr_cycle_count

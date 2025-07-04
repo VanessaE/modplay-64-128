@@ -217,26 +217,44 @@ So IN THEORY, such a machine should be able to break 39 kHz as long as VIC-II
 screen is turned off, and top out somewhere in the 73 kHz range with the
 fastest audio driver and best fetch case....
 
-But in reality? LOL, NOPE!
+But in reality? Nah, not quite.
 
 Not only does none of this account for unexpected slowdowns and cache misses
 that I haven't thought of yet, we also have to limit the engine to around 50
 kHz or so or certain variables (like the tempo loop counter) will overflow and
 others will not be precise enough (like the steprate variables).
 
-Easiest way to limit it here is to use all of the aforementioned worst-case
-timings, and round each of the three code sections' timings up to the next
-20-turbo-cycle count, and add 20 cycles' worth of fudge:
+The easiest way to limit it here is to use all of the aforementioned worst-
+case timings, and round each of the three code sections' timings up to the
+next 20-turbo-cycle count, and then add 20 turbo cycles' worth of fudge:
 
 So (46 + 141 + 305) becomes (60 + 160 + 320 + 20)
 
-Divide by 20 gives (3 + 8 + 16 + 1) in 1 MHz equivalents, values we can use
-for the system's timers.
+Divide that all by 20 gives (3 + 8 + 16 + 1) in 1 MHz equivalents, values we
+can use for the system's timers -- almost.  This actually overestimates SID
+drivers' cycle counts ever so slightly, so we'll take off one cycle on just
+those (but leaving the DAC driver at 8), bringing them down to 7.  That puts
+us at:
 
-1022727 / (3 + 8 + 16 + 1) = ~36526.0
+1022727 / (3 + 7 + 16 + 1) = ~37878.8
 
-So about 36.5 kHz, and that's with a really course, conservative limit.  It
-may be possible to go even faster, but let's not get greedy... yet. 😛
+So about 37.9 kHz, and that's with the low-pass filter enabled.  That's not
+too shabby.
+
+It could go faster still if/when I implement the mip-map idea, wherein I'd
+cap the fetch length at some reasonable value, 8 for instance, and then
+"simply" choose the right mip-map level to keep any given channel within that
+limit.  That'll double the expansion RAM usage, but in exchange, the total
+cycle count would never exceed 20 or so (3+7+10), giving a sample rate
+somewhere in the 50 kHz range (though again this might be too fast for some
+of the program's counters/timers).
+
+The "Super RAM" driver will have this limitation as well, but since it
+wouldn't need slow-I/O-bound register writes or a "slow" 1 MB/sec DMA rate,
+it would almost certainly truck along at higher sample rate before hitting
+any limit.  Come to think of it, that driver probably wouldn't need the
+lookahead cache at all (just direct reads using ordinary pointers), so all
+pitches, both high and low, would have the same total cycle count.
 
 
 ====
