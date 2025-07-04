@@ -88,11 +88,7 @@ reu_fetch_row
 	} else {
 		; on SCPU, we split the transfer into small pieces to minimize
 		; interference with the audio ISR's timing.
-		lda #4
-		sta DMA_DAL
-		sty DMA_CMD
-		sta DMA_DAL
-		sty DMA_CMD
+		lda #8
 		sta DMA_DAL
 		sty DMA_CMD
 		sta DMA_DAL
