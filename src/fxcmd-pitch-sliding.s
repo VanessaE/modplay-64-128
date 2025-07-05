@@ -1,9 +1,6 @@
 ; PITCH SLIDING
 
 start_effect_pitch_slide
-	lda seq_command_arguments,y
-	sta current_pitch_slide_rates,y
-
 	lda seq_commands,y
 	cmp #1 ; is it a slide up?
 	beq set_slide_up
@@ -25,6 +22,8 @@ set_slide_up ; that is, decreasing the note period
 	sta seq_pitch_slide_target_period_lows,y
 	lda #0
 	sta seq_pitch_slide_target_period_highs,y
+	lda seq_command_arguments,y
+	sta current_pitch_slide_rates,y
 	rts
 
 set_slide_down ; increase the note period
@@ -34,6 +33,8 @@ set_slide_down ; increase the note period
 	sta seq_pitch_slide_target_period_lows,y
 	lda #>1712
 	sta seq_pitch_slide_target_period_highs,y
+	lda seq_command_arguments,y
+	sta current_pitch_slide_rates,y
 	rts
 
 set_slide_to_note
@@ -43,17 +44,27 @@ set_slide_to_note
 	tax
 	lda seq_current_row_data+1,x
 	and #$0f
+	ora seq_current_row_data+2,x
+	beq +
+
+	lda seq_current_row_data+1,x
+	and #$0f
 	sta seq_pitch_slide_target_period_highs,y
 	lda seq_current_row_data+2,x
 	sta seq_pitch_slide_target_period_lows,y
 
-	lda current_note_periods_lows,y
++	lda current_note_periods_lows,y
 	cmp seq_pitch_slide_target_period_lows,y
 	lda current_note_periods_highs,y
 	sbc seq_pitch_slide_target_period_highs,y
 	lda #0
 	ror
 	sta current_pitch_slide_dirs,y
+
+	lda seq_command_arguments,y
+	beq +
+	sta current_pitch_slide_rates,y
+  +
 rts
 
 run_effect_pitch_slide
