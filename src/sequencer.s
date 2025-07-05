@@ -547,458 +547,6 @@ set_pitch
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
 
-start_effect_command_jump_table
-	!word start_effect_arpeggio
-	!word start_effect_pitch_slide
-	!word start_effect_pitch_slide
-	!word start_effect_pitch_slide_to_note
-	!word 0 ; start_effect_vibrato
-	!word start_effect_pitch_slide_plus_volume_slide
-	!word 0 ; start_effect_vibrato_plus_volume_slide
-	!word 0
-	!word 0
-	!word run_effect_set_sample_offset
-	!word start_effect_volume_slide
-	!word 0 ; run_effect_position_jump
-	!word run_effect_set_volume
-	!word run_effect_pattern_break
-	!word 0
-	!word run_effect_set_speed
-
-run_effect_command_jump_table
-	!word run_effect_arpeggio
-	!word run_effect_pitch_slide_up
-	!word run_effect_pitch_slide_down
-	!word run_effect_pitch_slide_to_note
-	!word 0 ; run_effect_vibrato
-	!word run_effect_pitch_slide_plus_volume_slide
-	!word 0 ; run_effect_vibrato_plus_volume_slide
-	!word 0
-	!word 0
-	!word 0
-	!word run_effect_volume_slide
-	!word 0
-	!word 0
-	!word 0
-	!word 0
-	!word 0
-
-; effect command decoders -- start-of-row/init routines
-; enter each one with .Y = track number
-
-; #### ARPEGGIO
-
-start_effect_arpeggio
-	lda seq_command_arguments,y
-	bne +
-	rts
-
-+	tya
-	tax
-
-	lda current_note_periods_lows,x
-	sta utility_pointer
-	lda current_note_periods_highs,x
-	asl utility_pointer
-	rol
-	sta utility_pointer+1
-
-	clc
-	lda utility_pointer
-	adc #<steprate_lookup_table
-	sta utility_pointer
-	lda utility_pointer+1
-	adc #>steprate_lookup_table
-	sta utility_pointer+1
-
-	ldy #0
-	lda (utility_pointer),y
-	sta multiplicand_a
-	iny
-	lda (utility_pointer),y
-	sta multiplicand_a+1
-
-	ldy seq_current_track
-
-	lda seq_command_arguments,y
-	lsr
-	lsr
-	lsr
-	and #$0e ; we want the note offset * 2
-	tax
-	lda semitones_table,x
-	sta multiplicand_b
-	inx
-	lda semitones_table,x
-	sta multiplicand_b+1
-
-	sec
-	jsr multiply_16x16
-
-	; for precision sake, the semitones table is 256x higher than "normal", so
-	; use the middle two bytes of the product to divide it back down.
-
-	lda product+1
-	sta arpeggio_extra_note_first_fracts,y
-	lda product+2
-	sta arpeggio_extra_note_first_ints,y
-
-	lda seq_command_arguments,y
-	and #$0f
-	asl
-	tax
-	lda semitones_table,x
-	sta multiplicand_b
-	inx
-	lda semitones_table,x
-	sta multiplicand_b+1
-
-	clc ; reuse the previous multiplicand_a preset
-	jsr multiply_16x16
-
-	lda product+1
-	sta arpeggio_extra_note_second_fracts,y
-	lda product+2
-	sta arpeggio_extra_note_second_ints,y
-
-	lda #2
-	sta arpeggio_counters,y
-rts
-
-run_effect_arpeggio
-	lda seq_command_arguments,y
-	bne +
-	rts
-
-+	stx sequencer_temp_x
-	ldx arpeggio_counters,y
-	inx
-
-	cpx #1
-	bne +
-
-	lda arpeggio_extra_note_first_fracts,y
-	sta current_steprates_fracts,y
-	lda arpeggio_extra_note_first_ints,y
-	sta current_steprates_ints,y
-	jmp set_arp_pitch_2_3
-
-+	cpx #2
-	bne +
-	lda arpeggio_extra_note_second_fracts,y
-	sta current_steprates_fracts,y
-	lda arpeggio_extra_note_second_ints,y
-	sta current_steprates_ints,y
-	jmp set_arp_pitch_2_3
-
-+	ldx #0
-	stx arpeggio_counters,y
-	jsr set_pitch
-
-	ldx sequencer_temp_x
-	rts
-
-set_arp_pitch_2_3
-	stx arpeggio_counters,y
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
-
-	ldx sequencer_temp_x
-rts
-
-; #### PITCH SLIDING
-
-start_effect_pitch_slide
-	lda seq_command_arguments,y
-	sta current_pitch_slide_rates,y
-rts
-
-; slide up
-
-run_effect_pitch_slide_up
-	lda current_pitch_slide_rates,y
-	bne +
-	rts
-
-+	sec
-	lda current_note_periods_lows,y
-	sbc current_pitch_slide_rates,y
-	sta current_note_periods_lows,y
-	lda current_note_periods_highs,y
-	sbc #0
-	sta current_note_periods_highs,y
-	bcc stop_slide_up
-
-	lda current_note_periods_lows,y
-	cmp #57
-	lda current_note_periods_highs,y
-	sbc #0
-	bcs +
-
-stop_slide_up
-	lda #57
-	sta current_note_periods_lows,y
-	lda #0
-	sta current_note_periods_highs,y
-	sta current_pitch_slide_rates,y
-
-+	jmp set_pitch
-
-; slide down
-
-run_effect_pitch_slide_down
-	lda current_pitch_slide_rates,y
-	bne +
-	rts
-
-+	clc
-	lda current_note_periods_lows,y
-	adc current_pitch_slide_rates,y
-	sta current_note_periods_lows,y
-	lda current_note_periods_highs,y
-	adc #0
-	sta current_note_periods_highs,y
-	bcs stop_slide_down
-
-	lda current_note_periods_lows,y
-	cmp #<1712
-	lda current_note_periods_highs,y
-	sbc #>1712
-	bcc +
-
-stop_slide_down
-	lda #<1712
-	sta current_note_periods_lows,y
-	lda #>1712
-	sta current_note_periods_highs,y
-	lda #0
-	sta current_pitch_slide_rates,y
-
-+	jmp set_pitch
-
-; slide/portamento to note
-
-start_effect_pitch_slide_to_note
-	lda seq_command_arguments,y
-	sta current_pitch_slide_rates,y
-
-	lda current_note_periods_lows,y
-	cmp seq_pitch_slide_target_period_lows,y
-	lda current_note_periods_highs,y
-	sbc seq_pitch_slide_target_period_highs,y
-	bcs +
-	lda #0
-	sta current_slide_to_note_dir,y
-	rts
-
-+	lda #$80
-	sta current_slide_to_note_dir,y
-rts
-
-run_effect_pitch_slide_to_note
-	lda current_pitch_slide_rates,y
-	bne +
-	rts
-
-+	lda current_slide_to_note_dir,y
-	bpl slide_to_lower_note
-
-	sec
-	lda current_note_periods_lows,y
-	sbc current_pitch_slide_rates,y
-	sta current_note_periods_lows,y
-	lda current_note_periods_highs,y
-	sbc #0
-	sta current_note_periods_highs,y
-
-	lda current_note_periods_lows,y
-	cmp seq_pitch_slide_target_period_lows,y
-	lda current_note_periods_highs,y
-	sbc seq_pitch_slide_target_period_highs,y
-	bcc stop_porta
-
-	jmp set_pitch
-
-slide_to_lower_note
-	clc
-	lda current_note_periods_lows,y
-	adc current_pitch_slide_rates,y
-	sta current_note_periods_lows,y
-	lda current_note_periods_highs,y
-	adc #0
-	sta current_note_periods_highs,y
-
-	lda seq_pitch_slide_target_period_lows,y
-	cmp current_note_periods_lows,y
-	lda seq_pitch_slide_target_period_highs,y
-	sbc current_note_periods_highs,y
-	bcs +
-
-stop_porta
-	lda seq_pitch_slide_target_period_lows,y
-	sta current_note_periods_lows,y
-	lda seq_pitch_slide_target_period_highs,y
-	sta current_note_periods_highs,y
-	lda #0
-	sta current_pitch_slide_rates,y
-
-+	jmp set_pitch
-
-; continue pitch slide and add volume slide
-
-start_effect_pitch_slide_plus_volume_slide
-	jsr start_effect_pitch_slide_to_note
-	jsr start_effect_volume_slide
-rts
-
-run_effect_pitch_slide_plus_volume_slide
-	jsr run_effect_pitch_slide_to_note
-	jsr run_effect_volume_slide
-rts
-
-; #### SET SAMPLE OFFSET
-
-run_effect_set_sample_offset
-	ldx current_sample_numbers,y
-	lda #0
-	sta temp_zpbk_a
-	lda seq_command_arguments,y
-	asl
-	rol temp_zpbk_a
-	clc
-	adc sample_start_addresses_mids,x
-	sta sample_pointers_mids,y
-	lda sample_start_addresses_highs,x
-	adc temp_zpbk_a
-	sta sample_pointers_highs,y
-rts
-
-; #### SET VOLUME
-
-; sets a sample's volume, either by way of an effect command, or by a new
-; sample being started, or by unmuting a track.  sets the address targets in
-; the mixer also.
-
-; enter run_effect_set_volume with .Y = track, the latter set_volume needs
-; that along with .A = new volume level.
-
-run_effect_set_volume
-	lda seq_command_arguments,y
-
-set_volume
-	sta current_sample_volume_levels,y
-	ldx track_current_enable_flags,y
-	bmi +
-	rts
-
-+	cmp #64
-	bcc +
-	lda #63
-	bne voltab_use_upper
-
-+	cmp #38
-	bcs voltab_use_upper
-
-	adc #>volume_table_lower
-	jmp set_vol_addrs_only
-
-voltab_use_upper
-	clc
-	adc #(>volume_table_upper)-38
-
-set_vol_addrs_only
-	bit filter_setting
-	bmi +
-	jmp mixer_standard_set_lookahead_vol_addrs
-+	jmp mixer_lowpass_set_lookahead_vol_addrs
-
-; #### VOLUME SLIDE
-
-start_effect_volume_slide
-	lda seq_command_arguments,y
-	sta volume_slide_rates,y
-rts
-
-run_effect_volume_slide
-	lda volume_slide_rates,y
-	and #$f0
-	beq vsdown
-	lsr
-	lsr
-	lsr
-	lsr
-	clc
-	adc current_sample_volume_levels,y
-	cmp #64
-	bcc +
-	lda #64
-+	sta current_sample_volume_levels,y
-	jmp set_volume
-
-
-vsdown
-	lda volume_slide_rates,y
-	and #$0f
-	bne +
-	rts
-
-+	sta temp_zpbk_a
-	sec
-	lda current_sample_volume_levels,y
-	sbc temp_zpbk_a
-	bcs +
-	lda #0
-+	sta current_sample_volume_levels,y
-	jmp set_volume
-
-; #### PATTERN BREAK
-
-run_effect_pattern_break
-	stx temp_zpbk_a+1
-
-	lda seq_command_arguments,y
-	and #$0f
-	sta temp_zpbk_a
-	lda seq_command_arguments,y
-	lsr
-	lsr
-	lsr
-	lsr
-	clc
-	tax
-	lda nybble_x10,x
-	adc temp_zpbk_a
-	ora #$80
-	sta pattern_break_target_row
-
-	ldx temp_zpbk_a+1
-rts
-
-; #### SET SPEED
-
-; Note we're setting the values to 256x the actual amounts temporarily, so
-; that the quotient low byte can act as a fraction.
-
-run_effect_set_speed
-	lda seq_command_arguments,y
-	cmp #33
-	bcc +
-	sta seq_tempo_bpm
-	bcs set_mixer_loops_per_tick
-
-+	sta seq_ticks_per_division
-
-set_mixer_loops_per_tick
-	ldx seq_tempo_bpm
-	lda tempo_table_fracts,x
-	sta mixer_loops_per_tick_fract
-	lda tempo_table_lows,x
-	sta mixer_loops_per_tick
-
-	jsr print_song_speed
-
-	elpt
-rts
-
 ; ===========================
 ; === In-player UI stuff  ===
 ; ===========================
@@ -1260,3 +808,52 @@ toggle_enable_track
 exit_player_keyscan
 	lda #0
 rts
+
+; #######################
+; EFFECT COMMAND DECODING
+;
+; enter each one with .Y = track number
+
+!source "src/fxcmd-arpeggio.s"
+!source "src/fxcmd-pitch-sliding.s"
+!source "src/fxcmd-set-sample-offset.s"
+!source "src/fxcmd-volume-sliding.s"
+!source "src/fxcmd-set-volume.s"
+!source "src/fxcmd-pattern-break.s"
+!source "src/fxcmd-set-speed.s"
+
+start_effect_command_jump_table
+	!word start_effect_arpeggio
+	!word start_effect_pitch_slide
+	!word start_effect_pitch_slide
+	!word start_effect_pitch_slide_to_note
+	!word 0 ; start_effect_vibrato
+	!word start_effect_pitch_slide_plus_volume_slide
+	!word 0 ; start_effect_vibrato_plus_volume_slide
+	!word 0
+	!word 0
+	!word run_effect_set_sample_offset
+	!word start_effect_volume_slide
+	!word 0 ; run_effect_position_jump
+	!word run_effect_set_volume
+	!word run_effect_pattern_break
+	!word 0
+	!word run_effect_set_speed
+
+run_effect_command_jump_table
+	!word run_effect_arpeggio
+	!word run_effect_pitch_slide_up
+	!word run_effect_pitch_slide_down
+	!word run_effect_pitch_slide_to_note
+	!word 0 ; run_effect_vibrato
+	!word run_effect_pitch_slide_plus_volume_slide
+	!word 0 ; run_effect_vibrato_plus_volume_slide
+	!word 0
+	!word 0
+	!word 0
+	!word run_effect_volume_slide
+	!word 0
+	!word 0
+	!word 0
+	!word 0
+	!word 0
