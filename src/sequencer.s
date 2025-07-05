@@ -212,26 +212,15 @@ get_note_period
 
 	lda seq_commands,y					; for commands 3 and 5, the given
 	cmp #3								; period is a parameter to the
-	beq use_target_period				; command, to be used later.
+	beq get_sample_number				; command, to be used later.
 	cmp #5
-	bne use_given_period
+	beq get_sample_number
 
-use_target_period
-	lda seq_current_row_data+1,x
-	and #$0f
-	sta seq_pitch_slide_target_period_highs,y
-	lda seq_current_row_data+2,x
-	sta seq_pitch_slide_target_period_lows,y
-	jmp get_sample_number
-
-use_given_period
 	lda seq_current_row_data+1,x
 	and #$0f
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
-
-set_new_period
 	jsr set_pitch
 	ldx sequencer_temp_x
 	ldy seq_current_track
@@ -381,7 +370,7 @@ next_track_post_tick
 	cmp #5
 	beq run_post_tick_command
 	cmp #4
-	bcs dont_run_post_tick_command
+	bcc run_post_tick_command
 	cmp #16
 	bcs dont_run_post_tick_command
 
@@ -824,9 +813,9 @@ rts
 
 start_effect_command_jump_table
 	!word start_effect_arpeggio
-	!word start_effect_pitch_slide
-	!word start_effect_pitch_slide
-	!word start_effect_pitch_slide_to_note
+	!word start_effect_pitch_slide ; up
+	!word start_effect_pitch_slide ; down
+	!word start_effect_pitch_slide ; portamento to note
 	!word 0 ; start_effect_vibrato
 	!word start_effect_pitch_slide_plus_volume_slide
 	!word 0 ; start_effect_vibrato_plus_volume_slide
@@ -842,9 +831,9 @@ start_effect_command_jump_table
 
 run_effect_command_jump_table
 	!word run_effect_arpeggio
-	!word run_effect_pitch_slide_up
-	!word run_effect_pitch_slide_down
-	!word run_effect_pitch_slide_to_note
+	!word run_effect_pitch_slide
+	!word run_effect_pitch_slide
+	!word run_effect_pitch_slide
 	!word 0 ; run_effect_vibrato
 	!word run_effect_pitch_slide_plus_volume_slide
 	!word 0 ; run_effect_vibrato_plus_volume_slide

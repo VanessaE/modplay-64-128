@@ -413,7 +413,7 @@ tempo_fine_adjust_constant = 159778
 	* = $60
 
 	current_pitch_slide_rates			!skip 8
-	current_slide_to_note_dir			!skip 8
+	current_pitch_slide_dirs			!skip 8 ; 0=pitching down, $80=pitching up
 	arpeggio_counters					!skip 8 ; zero page is mandatory (STX $ZP,Y)
 	fine_tune_values					!skip 8
 	cut_sample_ticks					!skip 8

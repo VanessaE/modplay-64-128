@@ -139,30 +139,6 @@
   Probably just a ROM banking glitch -- maybe the banking scheme I'm using
   just isn't compatible with RL?
 
-* BOTH: pitch-slide-to-note does not stop at the correct pitch in some songs,
-  Might be that the target pitch isn't being set right, or the bit of code
-  that stops the slide at the target is not working right.  Seems to only
-  happen if it's a very high-rate slide applied to a very high target pitch.
-
-	examples from "Molecule's Revenge":
-	A-3, 0B, 3, F0
-	G-3, 0B, 3, F0
-	E-3, 05, 3, F0
-
-  "Happy as Fish" does a progression of fast slides (pattern $0E at
-  song pos $11, around row $25) that actually triggers a many-kilobytes-long
-  REU fetch that wipes memory, even into the I/O devices, and crashes the
-  program.
-
-	this is the progression:
-
-	F#3, 05, 3, F0
-	E-3, 05, 3, F0
-	D-3, 05, 3, F0
-	G-3, 05, 3, F0
-	F#3, 05, 3, F0
-	E-3, 05, 3, F0
-
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 
