@@ -84,6 +84,14 @@ start
 
 !source "src/player.s"
 !source "src/sequencer.s"
+!source "src/sequencer-ui.s"
+!source "src/fxcmd-arpeggio.s"
+!source "src/fxcmd-pitch-sliding.s"
+!source "src/fxcmd-set-sample-offset.s"
+!source "src/fxcmd-volume-sliding.s"
+!source "src/fxcmd-set-volume.s"
+!source "src/fxcmd-pattern-break.s"
+!source "src/fxcmd-set-speed.s"
 !source "src/mixer-standard.s"
 !source "src/mixer-lowpass.s"
 
