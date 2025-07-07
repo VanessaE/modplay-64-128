@@ -203,29 +203,8 @@ get_command								; ...and its parameters.
 	lsr
 	sta seq_commands,y
 
-get_note_period
-	ldx sequencer_temp_x
-	lda seq_current_row_data+1,x
-	and #$0f
-	ora seq_current_row_data+2,x		; if period is 0, keep using the
-	beq get_sample_number				; previous note/pitch
-
-	lda seq_commands,y					; for commands 3 and 5, the given
-	cmp #3								; period is a parameter to the
-	beq get_sample_number				; command, to be used later.
-	cmp #5
-	beq get_sample_number
-
-	lda seq_current_row_data+1,x
-	and #$0f
-	sta current_note_periods_highs,y
-	lda seq_current_row_data+2,x
-	sta current_note_periods_lows,y
-	jsr set_pitch
-	ldx sequencer_temp_x
-	ldy seq_current_track
-
 get_sample_number
+	ldx sequencer_temp_x
 	lda seq_current_row_data,x			; if sample number is 0, keep using
 	beq +								; the previous sample number
 
@@ -243,12 +222,33 @@ get_sample_number
 
 	lda seq_commands,y					; if slide-to-note is in effect, just
 	cmp #3								; ignore the sample number and don't
-	beq run_command						; re-start the sample
+	beq get_note_period					; re-start the sample
 	cmp #5								; ditto for pitch slide + volume slide
-	beq run_command
+	beq get_note_period
 
 	lda current_sample_numbers,y
 	jsr start_sample
+	ldx sequencer_temp_x
+	ldy seq_current_track
+
+get_note_period
+	lda seq_current_row_data+1,x
+	and #$0f
+	ora seq_current_row_data+2,x		; if period is 0, keep using the
+	beq run_command						; previous note/pitch
+
+	lda seq_commands,y					; for commands 3 and 5, the given
+	cmp #3								; period is a parameter to the
+	beq run_command						; command, to be used later.
+	cmp #5
+	beq run_command
+
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta current_note_periods_highs,y
+	lda seq_current_row_data+2,x
+	sta current_note_periods_lows,y
+	jsr set_pitch
 	ldx sequencer_temp_x
 	ldy seq_current_track
 
