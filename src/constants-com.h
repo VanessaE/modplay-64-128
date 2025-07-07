@@ -657,6 +657,7 @@ tempo_fine_adjust_constant = 159778
 	initial_playlist_loaded				!skip 1
 	playlist_length						!skip 1
 	playlist_scroll_pos					!skip 1
+	playlist_iterate_mode				!skip 1 ; 0=play everything, $80=play selected
 	playlist_print_file_counter			!skip 1
 	screen_row_to_print_at				!skip 1
 	playlist_file_sizes_lows			!skip 256

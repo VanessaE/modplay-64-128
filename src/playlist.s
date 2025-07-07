@@ -1032,3 +1032,42 @@ rts
 		}
 	rts
 }
+
+; this little subroutine iterates through the playlist, playing whatever
+; is found, or is selected, as appropriate.
+
+playlist_iterate
+	bit playlist_iterate_mode		; play all files?
+	bpl playlist_load_next_file
+
+	ldx playlist_scroll_pos			; okay, selected-only.
+	lda playlist_file_flags,x		; is the file selected?
+	bpl playlist_next_file
+
+playlist_load_next_file
+	lda #0
+	sta current_file_type
+	clc
+	jsr load_file_to_expansion
+	lda current_file_type
+	beq playlist_next_file			; did the file load?
+	jsr start_main_player
+
+	bit seq_abort_flag				; if the song exited with $80 here,
+	bpl playlist_next_file			; the user pressed F7 to bail-out
+
+	lda #0							; drive all columns low
+	sta CIA1_PORT_A
+-	lda CIA1_PORT_B
+	cmp #$ff						; is any row low?
+	bne -							; if so, wait for release
+	rts
+
+playlist_next_file
+	inc playlist_scroll_pos
+	lda playlist_scroll_pos
+	cmp playlist_length
+	bne playlist_iterate
+
+	dec playlist_scroll_pos
+rts

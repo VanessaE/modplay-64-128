@@ -113,7 +113,6 @@ next_pattern
 	lda current_song_pos
 	cmp number_of_song_positions
 	bne nple
-
 	jmp stop_song
 
 nple

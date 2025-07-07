@@ -200,7 +200,8 @@ key_pressed
 	lda CIA1_PORT_B
 	cmp #%11110111			; look for row 3, F7 key
 	bne +
-	lda #1
+	lda #$80
+	sta seq_abort_flag
 	rts
 
 +	lda #%01111111			; column 7 low
@@ -209,6 +210,7 @@ key_pressed
 	cmp #%11101111			; look for row 4, spacebar
 	bne +
 	lda #1
+	sta seq_abort_flag
 	rts
 
 +	cmp #%11111110			; row 0, the "1" key

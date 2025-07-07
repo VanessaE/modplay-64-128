@@ -104,10 +104,13 @@ finish_menu
 	jmp show_main_menu
 
 main_loop
-	; exit status: .A = 0, do nothing; $80=just re-print/redraw the menu text
-	; anything else = show main menu from start
+-	jsr GETIN	; debounce in case of player exit via any key
+	bne -		; common between both player UI and main menu
 
 	jsr get_menu_key
+	; exit status: .A = 0, do nothing; $80=just re-print/redraw
+	; the menu text, anything else = show main menu from start
+
 	beq main_loop
 	bmi redraw_menu
 	jmp show_main_menu
@@ -166,32 +169,23 @@ draw_menu_page_a
 		jsr print_menu_line
 	}
 
-	clc
 	lda playlist_length ; 1 or more items required
-	beq +
+	cmp #1
 
-	sec
-+	ldx #<menu_text_add_to_list
+	ldx #<menu_text_add_to_list
 	ldy #>menu_text_add_to_list
 	jsr print_menu_line
 
 	ldx #<menu_text_play_list
 	ldy #>menu_text_play_list
-	clc
 	jsr print_menu_line
 
 	ldx #<menu_text_play_all
 	ldy #>menu_text_play_all
-	clc
 	jsr print_menu_line
 
-
-	clc
-	lda playlist_length ; 1 or more items required
-	beq +
-
 	sec
-+	ldx #<menu_text_repeat
+	ldx #<menu_text_repeat
 	ldy #>menu_text_repeat
 	jsr print_menu_line
 
@@ -215,13 +209,11 @@ draw_menu_page_a
 	ldy #>menu_text_clear_playlist
 	jsr print_menu_line
 
-;	lda playlist_length ;  2 or more items required
-;	cmp #2
-;	bcc +
+	lda playlist_length ; 1 or more items required
+	cmp #1
 
 	ldx #<menu_text_play_from_here
 	ldy #>menu_text_play_from_here
-	clc
 	jsr print_menu_line
 
 	!ifndef c128 {
