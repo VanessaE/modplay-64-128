@@ -44,6 +44,8 @@ playlist_middle_row = (playlist_bottom_row + playlist_top_row) / 2
 ; utility_pointer_c is used for the plain PETSCII versions
 
 load_directory
+	lda #0
+	sta playlist_scroll_pos
 	lda exp_petscii_filenames_start_page
 	sta utility_pointer_c+1
 
