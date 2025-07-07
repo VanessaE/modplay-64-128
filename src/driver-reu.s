@@ -41,7 +41,7 @@ reu_set_cycle_counts
 		!ifndef c128 {
 			lda #31 + 2
 		} else {
-			lda #38 / 2 ; equivalent 1 MHz cycles
+			lda #48 / 2 ; equivalent 1 MHz cycles
 		}
 	} else {
 		lda #16 + 1 ; equivalent 1 MHz cycles

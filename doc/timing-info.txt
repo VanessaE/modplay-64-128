@@ -88,7 +88,7 @@ C64:
 	worst:  (10 + 272 + 692 + 13) / 16 = ~62 cycles
 
 C128:
-	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles
+	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles - but this is a little too fast
 	worst:  (10 + 272 + 704 + 11) / 16 = ~63 cycles
 
 SCPU:
@@ -161,15 +161,15 @@ fudge amount will cause the ISR to round-up to 3 rasters either way:
 
 1022727 / (65 * 3) = ~5244.8
 
-With 24 (1 MHz) cycles for the standard mixer, 28 for the ISR, 19 for the
+With 24 (1 MHz) cycles for the standard mixer, 28 for the ISR, 24 for the
 fetch, and 15 cycles' of fudge for the sequencer, the C128 should be able to
 run at about 11.2 kHz:
 
-1022727 / (24 + 28 + 19 + 15) = ~11238.8
+1022727 / (24 + 28 + 24 + 15) = ~11238.8
 
 and with the lowpass filtering mixer, a C128 should do about 10.1 kHz:
 
-1022727 / (24 + 10 + 28 + 19 + 15) = ~10126.0
+1022727 / (24 + 10 + 28 + 24 + 15) = ~10126.0
 
 As mentioned above, using the lowpass filtering mixer increases sample time,
 thus trading sample rate for a boost in mixing quality.  That's fine if you
