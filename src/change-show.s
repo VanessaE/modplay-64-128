@@ -5,7 +5,7 @@
 !ifndef c128 {
 	rpt_row			= 9
 	rpt_col			= 34
-	dev_row			= 10
+	dev_row			= 8
 	dev_col			= 34
 	adrv_row		= 3
 	adrv_col		= 23
@@ -40,7 +40,7 @@
 } else {
 	rpt_row			= 6
 	rpt_col			= 31
-	dev_row			= 5
+	dev_row			= 4
 	dev_col			= 32
 	adrv_row		= 1
 	adrv_col		= 5

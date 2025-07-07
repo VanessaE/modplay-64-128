@@ -149,11 +149,6 @@ menu_text_load_filename
 menu_text_load_filename_b
 	!fill 9,RIGHT
 	!text LGRY,"name/pattern",RETURN,0
-menu_text_sample_mode
-	!text GRN,RIGHT,"[",YEL,"Shf-P",GRN,"]",LGRY," Sngl sample",RETURN,0
-menu_text_sample_mode_b
-	!fill 9,RIGHT
-	!text LGRY,"player mode",RETURN,0
 menu_text_device_number
 	!byte RIGHT,RIGHT
 	!text GRN,"   [",YEL,"#",GRN,"]",LGRY," Change input",RETURN,0

@@ -143,9 +143,6 @@ menu_text_load_only
 menu_text_load_filename
 	!fill 2,RIGHT
 	!text GRN,"[",YEL,"Shift-L",GRN,"]",LGRY," Load by filename/pattern",RETURN,0
-menu_text_sample_mode
-	!fill 2,RIGHT
-	!text GRN,"[",YEL,"Shift-P",GRN,"]",LGRY," Single-sample player mode",RETURN,0
 menu_text_device_number
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"#",GRN,"]",LGRY," Change input device",RETURN,0

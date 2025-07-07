@@ -282,19 +282,6 @@ draw_menu_page_b
 		jsr print_menu_line
 	}
 
-;	lda current_file_type ; type 0 means nothing is loaded.
-;	beq +
-
-	ldx #<menu_text_sample_mode
-	ldy #>menu_text_sample_mode
-	clc
-	jsr print_menu_line
-	!ifndef c128 {
-		ldx #<menu_text_sample_mode_b
-		ldy #>menu_text_sample_mode_b
-		jsr print_menu_line
-	}
-
 	ldx #<menu_text_device_number
 	ldy #>menu_text_device_number
 	sec

@@ -334,33 +334,3 @@ player_gen_tables
 +	jsr clear_screen_early
 	jsr set_normal_screen
 rts
-
-single_sample_player
-	!ifndef c128 {
-		jsr gray_out_blur_out
-		sec
-	} else {
-		jsr gray_out
-		clc
-	}
-
-	jsr draw_medium_popup
-
-	sec
-	!ifndef c128 {
-		lda #0
-		ldx #<sample_player_msg_ascii
-		ldy #>sample_player_msg_ascii
-		jsr print_msg_ascii
-		jsr press_any_key_ascii
-	} else {
-		lda #0
-		ldx #<sample_player_msg
-		ldy #>sample_player_msg
-		jsr print_msg
-		jsr press_any_key
-	}
-
-	jsr clear_screen_early
-	jsr set_normal_screen
-rts
