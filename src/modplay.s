@@ -72,6 +72,7 @@ start
 !source "src/directory.s"
 
 !source "src/main-menu.s"
+!source "src/main-menu-keys.s"
 !source "src/change-show.s"
 !source "src/playlist.s"
 
