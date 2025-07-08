@@ -4,6 +4,23 @@
 
 !text "windowing",0
 
+corner_tl_char				= $ac
+corner_tr_char				= $bb
+corner_bl_char				= $bc
+corner_br_char				= $be
+top_edge_char				= $60
+bottom_edge_char			= $60
+
+!ifndef c128 {
+	left_edge_char				= $7d
+	right_edge_char				= $7d
+	fill_char					= " "
+} else {
+	left_edge_char				= $a1
+	right_edge_char				= $a1
+	fill_char					= RIGHT
+}
+
 !ifndef c128 {
 	mini_popup_left_column			= 10
 	mini_popup_width				= 18
@@ -132,69 +149,9 @@ calculate_corners
 	sta right_column_pos
 rts
 
-; all this bullshit here :-) decides how to actually call the print function
-; On C128, we just use lda #immediate's and call CHROUT like normal, because
-; there's no need to separate PETSCII and ASCII.
-;
-; On C64, use lda absolute,x to get the char values from the tables, and route
-; the print calls through either the ASCII print or CHROUT, via a vector
-
-!ifndef c128 {
-
-	fill_char					= " "
-	screen_width				= 40
-
-	!macro PRINT_CHAR		{ jsr print_char }
-
-	!macro LDA_TL_CORNER	{ ldx char_table_select
-							  lda window_edge_tables,x }
-	!macro LDA_TR_CORNER	{ ldx char_table_select
-							  lda window_edge_tables+1,x }
-	!macro LDA_BL_CORNER	{ ldx char_table_select
-							  lda window_edge_tables+2,x }
-	!macro LDA_BR_CORNER	{ ldx char_table_select
-							  lda window_edge_tables+3,x }
-	!macro LDA_TOP_EDGE		{ ldx char_table_select
-							  lda window_edge_tables+4,x }
-	!macro LDA_BOT_EDGE		{ ldx char_table_select
-							  lda window_edge_tables+5,x }
-	!macro LDA_LEFT_EDGE	{ ldx char_table_select
-							  lda window_edge_tables+6,x }
-	!macro LDA_RIGHT_EDGE	{ ldx char_table_select
-							  lda window_edge_tables+6,x }
-
-	print_char				; let the RTS at the end of the actual print
-		jmp (print_vec)		; code return to calling routine directly
-
-} else {
-
-	corner_tl_char				= $ac
-	corner_tr_char				= $bb
-	corner_bl_char				= $bc
-	corner_br_char				= $be
-	top_edge_char				= $60
-	bottom_edge_char			= $60
-	left_edge_char				= $a1
-	right_edge_char				= $a1
-
-	fill_char					= RIGHT
-	screen_width				= 80
-
-	!macro PRINT_CHAR     { jsr CHROUT }
-	!macro LDA_TL_CORNER  { lda #corner_tl_char }
-	!macro LDA_TR_CORNER  { lda #corner_tr_char }
-	!macro LDA_BL_CORNER  { lda #corner_bl_char }
-	!macro LDA_BR_CORNER  { lda #corner_br_char }
-	!macro LDA_TOP_EDGE   { lda #top_edge_char }
-	!macro LDA_BOT_EDGE   { lda #bottom_edge_char }
-	!macro LDA_LEFT_EDGE  { lda #left_edge_char }
-	!macro LDA_RIGHT_EDGE { lda #right_edge_char }
-}
-
 !text "draw"
 ; draw a window/popup, centered on the screen
-; enter with .X/.Y = the window dimensions,
-; and with carry set to use ASCII (only on C64 -- C128 doesn't need it)
+; enter with .X/.Y = the window dimensions
 
 !ifndef c128 {
 	bl_color = MGRY
@@ -207,26 +164,12 @@ draw_window
 	jsr calculate_corners
 	plp
 
-	!ifndef c128 {
-		bcc +
-		lda #<chrout_ascii
-		sta print_vec
-		lda #>chrout_ascii
-		sta print_vec+1
-		lda #8
-		sta char_table_select
+	lda #<CHROUT
+	sta print_vec
+	lda #>CHROUT
+	sta print_vec+1
 
-		jmp ++
-
-	+	lda #<CHROUT
-		sta print_vec
-		lda #>CHROUT
-		sta print_vec+1
-		lda #0
-		sta char_table_select
-	}
-
-++	lda num_rows
+	lda num_rows
 	sta temp_abs_a
 
 	!ifdef c128 {
@@ -242,17 +185,17 @@ draw_window
 
 	lda #WHT			; print top-left corner
 	jsr CHROUT
-	+LDA_TL_CORNER
-	+PRINT_CHAR
+	lda #corner_tl_char
+	jsr CHROUT
 
 	ldy num_columns		; print top edge
-	+LDA_TOP_EDGE
--	+PRINT_CHAR
+	lda #top_edge_char
+-	jsr CHROUT
 	dey
 	bne -
 
-	+LDA_TR_CORNER		; and follow it with the top-right corner
-	+PRINT_CHAR
+	lda #corner_tr_char		; and follow it with the top-right corner
+	jsr CHROUT
 
 .nl
 	lda #RETURN			; next line
@@ -261,12 +204,12 @@ draw_window
 	lda #WHT			; position and print the left edge
 	jsr CHROUT
 	jsr draw_win_seek_to_left_edge
-	+LDA_LEFT_EDGE
-	+PRINT_CHAR
+	lda #left_edge_char
+	jsr CHROUT
 
 	ldy num_columns		; fill the body of the window
 	lda #fill_char
--	+PRINT_CHAR
+-	jsr CHROUT
 	dey
 	bne -
 
@@ -276,8 +219,8 @@ draw_window
 		lda #RVSON
 		jsr CHROUT
 	}
-	+LDA_RIGHT_EDGE
-	+PRINT_CHAR
+	lda #right_edge_char
+	jsr CHROUT
 	!ifdef c128 {
 		lda #RVSOFF
 		jsr CHROUT
@@ -291,18 +234,18 @@ draw_window
 	lda #WHT
 	jsr CHROUT
 	jsr draw_win_seek_to_left_edge
-	+LDA_BL_CORNER
-	+PRINT_CHAR
+	lda #corner_bl_char
+	jsr CHROUT
 
 	lda #bl_color			; print bottom edge
 	jsr CHROUT
 	ldy num_columns
-	+LDA_BOT_EDGE
--	+PRINT_CHAR
+	lda #bottom_edge_char
+-	jsr CHROUT
 	dey
 	bne -
-	+LDA_BR_CORNER		; and follow it with the bottom-right corner
-	+PRINT_CHAR
+	lda #corner_br_char		; and follow it with the bottom-right corner
+	jsr CHROUT
 
 	!ifdef c128 {
 		jsr FULLW

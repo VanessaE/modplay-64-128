@@ -58,13 +58,13 @@
 	multabhi							= $0600 ; 2 pages
 	multab2lo							= $0800 ; 2 pages
 
-	; C64 has the blurring table at $0a00 through $0a7f, free through $0aff
+	; C64 has the ASCII translation table at $0a00 through $0aff
 	; C128 has system variables and such in that space
 
 }
 
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
-	; C64, $1000-$101f holds a windowing.s table
+	; on C64, $1000-$101f is free space
 
 !addr {
 	semitones_table						= $1020

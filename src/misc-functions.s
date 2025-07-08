@@ -48,6 +48,29 @@
 ;# STRING OPERATIONS #
 ;#####################
 
+; this simply translates an ASCII string into somewhat-close PETSCII and
+; prints the result.  Color/cursor/control codes are not supported.
+
+print_msg_ascii
+	sta print_msg_char_limit
+
+	dec print_msg_char_limit
+	stx print_msg_addr
+	sty print_msg_addr+1
+	ldy #0
+-	lda (print_msg_addr),y
+	beq +
+
+	tax
+	lda ascii_to_petscii_table,x
+	jsr CHROUT
+	cpy print_msg_char_limit
+	beq +
+	iny
+	bne -
+  +
+rts
+
 get_string_length
 	stx utility_pointer_b
 	sty utility_pointer_b+1
@@ -681,19 +704,6 @@ press_any_key ; display "press key" message and wait for keypress
 	beq -
 rts
 
-!ifndef c128 {
-	press_any_key_ascii ; display "press key" message and wait for keypress
-		lda #0
-		ldx #<press_key_msg_ascii
-		ldy #>press_key_msg_ascii
-		sec
-		jsr print_msg_ascii
-
-	-	jsr GETIN
-		beq -
-	rts
-}
-
 clear_string_buffer
 	ldy #47
 	lda #0
@@ -908,82 +918,6 @@ binary_search
 ;##########
 ;#  MISC  #
 ;##########
-
-; this one uses the above function to print an ASCII string, and works like
-; print_msg: .X/.Y holds the message address, .A = max length or 0, but
-; with a variation.  Effectively it just prints the string raw, without the
-; usual text-to-screen-codes translation.
-
-print_msg_ascii
-	php
-	sta print_msg_char_limit
-
-	lda #0
-	ror
-	sta print_msg_colors_flag
-
-	dec print_msg_char_limit
-	stx print_msg_addr
-	sty print_msg_addr+1
-	ldy #0
-
--	lda (print_msg_addr),y
-	beq +
-
-	jsr check_color_flag
-	jsr chrout_ascii
-	cpy print_msg_char_limit
-	beq +
-	iny
-	bne -
-	inc print_msg_addr+1
-	bne -
-+	plp
-rts
-
-; this function just uses DISPLY to print the char it's given, as ASCII, and
-; uses CHROUT to handle control/color/cursor codes.  Call it just like CHROUT.
-; it's .Y-safe, too.
- 
-chrout_ascii
-	pha
-	tax
-	tya
-	pha
-
-	txa
-	cmp #$20
-	bcs +
-
-	lda control_code_flags_table_low,x
-	bne .pa
-	txa
-	jsr CHROUT
-	jmp .nc
-
-+	cmp #$80
-	bcc .pa
-	cmp #$a0
-	bcs .pa
-
-	lda control_code_flags_table_high-128,x
-	bne .pa
-	txa
-	jsr CHROUT
-	jmp .nc
-
-.pa
-	txa
-	ldx CHAR_COLOR
-	jsr DISPLY
-	lda #RIGHT
-	jsr CHROUT
-
-.nc
-	pla
-	tay
-	pla
-rts
 
 ; if print_msg_colors_flag is clear and the current char is found in the
 ; KERNAL's color codes table, replace it with an unprintable null.
@@ -1359,6 +1293,5 @@ check_sid_type_right
 	sta sid_type_right
 rts
 
-press_key_msg_ascii
 press_key_msg
 	!text "Press any key",0

@@ -375,15 +375,8 @@ init
 	ora pal_flag
 	sta CIA2_CRA
 
-	!ifndef c128 {
-		jsr blur_table_copy
-		jsr window_edge_tables_copy
-	}
-
 	jsr semitones_table_copy
 	jsr note_names_table_copy
-
-	jsr control_code_flags_copy
 
 	ldx #15
 -	lda nybble_x10_origin,x
@@ -450,6 +443,8 @@ init_tables_gen
 		jsr erase_file_list
 	}
 
+	jsr ascii_table_copy
+
 	jsr final_clear_copy
 	jmp clear_main_memory
 
@@ -515,17 +510,6 @@ clear_main_memory_origin
 
 	!byte 0,0,0
 
-!ifndef c128 {
-	blur_table_copy
-		ldy #0
-	-	lda blur_table_origin,y
-		beq +
-		sta blurring_table,y
-		iny
-		bne -
-	+ rts
-}
-
 semitones_table_copy
 	ldx #31
 -	lda semitones_table_origin,x
@@ -543,23 +527,13 @@ semitones_table_origin
 		}
 	}
 
-control_code_flags_copy
-	ldx #31
--	lda control_code_flags_table_low_origin,x
-	sta control_code_flags_table_low,x
-	lda control_code_flags_table_high_origin,x
-	sta control_code_flags_table_high,x
-	dex
-	bpl -
-rts
-
 note_names_table_copy
 	ldx #0
 
 -	lda note_names_table_origin,x
-	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #129
+	cmp #"#" ; if it's a pound, replace it with a sharp accidental, char #95
 	bne +
-	lda #129
+	lda #95
 
 +	sta note_names_table,x
 	inx
@@ -568,46 +542,13 @@ note_names_table_copy
   +
 rts
 
-; if the byte equals its PETSCII value in that pos, it can hold a new char to
-; print in ASCII mode.  If there's a 0, it's a control code that we need to
-; pass to CHROUT, e.g. colors, cursor moves, etc.
-
-control_code_flags_table_low_origin
-	!byte 0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1
-	!byte 1,0,1,0,0,1,1,1,1,1,1,1,0,0,0,0
-
-control_code_flags_table_high_origin
-	!byte 1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-	!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
-!ifndef c128 {
-	window_edge_tables_copy
-		ldx #15
-	-	lda window_edge_tables_origin,x
-		sta window_edge_tables,x
-		dex
-		bpl -
-	rts
-
-	window_edge_tables_origin
-		!byte $ac ; top-left corner
-		!byte $bb ; top-right corner
-		!byte $bc ; bottom-left corner
-		!byte $be ; bottom-right corner
-		!byte $60 ; top edge
-		!byte $60 ; bottom edge
-		!byte $7d ; left edge
-		!byte $7d ; right edge
-
-		!byte $88 ; same symbols, but using the ASCII font
-		!byte $89
-		!byte $8a
-		!byte $8b
-		!byte $83
-		!byte $83
-		!byte $82
-		!byte $82
-}
+ascii_table_copy
+	ldx #0
+-	lda ascii_to_petscii_table_origin,x
+	sta ascii_to_petscii_table,x
+	inx
+	bne -
+rts
 
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
@@ -645,40 +586,11 @@ initializing_msg
 		!byte 0
 }
 
-!ifndef c128 {
-	blur_table_origin
-		!fill 32,151		; "@" through "z", "[" through "🠜"
-		!byte 32			; space
-		!fill 31,151		; ' !"#... ' through "?"
-		!byte 153				;"━"
-		!fill 28,151		; "A" through "Z", "╋" and "🮌" 
-		!byte 152				; "┃"
-		!byte 151,151		; "🮕" and "🮘"
-		!byte 32			; "shift space"
-		!fill 10,151		; "▌" thorugh the second "🮇"
-		!byte 158			; "┣"
-		!byte 151			; "▗"
-		!byte 156			; "┗"
-		!byte 155			; "┓"
-		!byte 151			; "▂"
-		!byte 154			; "┏"
-		!byte 151,151		; "┻" and "┳"
-		!byte 159			; "┫"
-		!fill 9,151			; "▎" through "▝"
-		!byte 157			; "┛"
-		!byte 151,151		; "▘" and "▚"
-		!byte 0
-}
-
 nybble_x10_origin
 	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150
 
 progress_bar_segments_origin
-!ifndef c128 {
 	!byte $20, $65, $74, $75, $61, $f6, $ea, $e7
-} else {
-	!byte $20, $99, $9a, $9b, $9c, $9d, $9e, $9f
-}
 
 !ct raw {
 	mod_magic_numbers_origin ; type 1 is 15 samples e.g. Soundtracker
@@ -692,14 +604,14 @@ progress_bar_segments_origin
 		!byte 0
 }
 
-!ct raw {
-	note_names_table_origin
-		!text "???",0
-		!text "B-4",0,"A#4",0,"A-4",0,"G#4",0,"G-4",0,"F#4",0,"F-4",0,"E-4",0,"D#4",0,"D-4",0,"C#4",0,"C-4",0
-		!text "B-3",0,"A#3",0,"A-3",0,"G#3",0,"G-3",0,"F#3",0,"F-3",0,"E-3",0,"D#3",0,"D-3",0,"C#3",0,"C-3",0
-		!text "B-2",0,"A#2",0,"A-2",0,"G#2",0,"G-2",0,"F#2",0,"F-2",0,"E-2",0,"D#2",0,"D-2",0,"C#2",0,"C-2",0
-		!text "B-1",0,"A#1",0,"A-1",0,"G#1",0,"G-1",0,"F#1",0,"F-1",0,"E-1",0,"D#1",0,"D-1",0,"C#1",0,"C-1",0
-		!text "B-0",0,"A#0",0,"A-0",0,"G#0",0,"G-0",0,"F#0",0,"F-0",0,"E-0",0,"D#0",0,"D-0",0,"C#0",0,"C-0",0
+note_names_table_origin
+!ct scr {
+	!text "???",0
+	!text "B-4",0,"A#4",0,"A-4",0,"G#4",0,"G-4",0,"F#4",0,"F-4",0,"E-4",0,"D#4",0,"D-4",0,"C#4",0,"C-4",0
+	!text "B-3",0,"A#3",0,"A-3",0,"G#3",0,"G-3",0,"F#3",0,"F-3",0,"E-3",0,"D#3",0,"D-3",0,"C#3",0,"C-3",0
+	!text "B-2",0,"A#2",0,"A-2",0,"G#2",0,"G-2",0,"F#2",0,"F-2",0,"E-2",0,"D#2",0,"D-2",0,"C#2",0,"C-2",0
+	!text "B-1",0,"A#1",0,"A-1",0,"G#1",0,"G-1",0,"F#1",0,"F-1",0,"E-1",0,"D#1",0,"D-1",0,"C#1",0,"C-1",0
+	!text "B-0",0,"A#0",0,"A-0",0,"G#0",0,"G-0",0,"F#0",0,"F-0",0,"E-0",0,"D#0",0,"D-0",0,"C#0",0,"C-0",0
 }
 
 mah_table_6581_origin
@@ -716,3 +628,21 @@ binsearch_note_period_table
 	!word 226, 240,  254,  269,  285,  302,  320,  339,  360,  381,  404,  428
 	!word 453, 480,  508,  538,  570,  604,  640,  678,  720,  762,  808,  856
 	!word 907, 961, 1017, 1077, 1141, 1209, 1281, 1357, 1440, 1525, 1616, 1712
+
+ascii_to_petscii_table_origin
+	!byte $60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60 ; $00
+	!byte $60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60 ; $10
+	!byte $20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$2a,$2b,$2c,$2d,$2e,$2f ; $20
+	!byte $30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$3a,$3b,$3c,$3d,$3e,$3f ; $30
+	!byte $40,$61,$62,$63,$64,$65,$66,$67,$68,$69,$6a,$6b,$6c,$6d,$6e,$6f ; $40
+	!byte $70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$7a,$5b,$60,$5d,$5e,$a4 ; $50
+	!byte $27,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4a,$4b,$4c,$4d,$4e,$4f ; $60
+	!byte $50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5a,$28,$7d,$29,$27,$60 ; $70
+	!byte $60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60 ; $80
+	!byte $60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60,$60 ; $90
+	!byte $20,$21,$43,$5c,$4f,$79,$7d,$73,$22,$63,$41,$3c,$2d,$2d,$72,$a3 ; $a0
+	!byte $4f,$2b,$32,$33,$27,$55,$70,$2e,$2c,$31,$4f,$3e,$60,$60,$60,$3f ; $b0
+	!byte $61,$61,$61,$61,$61,$61,$61,$63,$65,$65,$65,$65,$69,$69,$69,$69 ; $c0
+	!byte $64,$6e,$6f,$6f,$6f,$6f,$6f,$58,$30,$75,$75,$75,$75,$79,$60,$62 ; $d0
+	!byte $41,$41,$41,$41,$41,$41,$41,$43,$45,$45,$45,$45,$49,$49,$49,$49 ; $e0
+	!byte $44,$4e,$4f,$4f,$4f,$4f,$4f,$2f,$4f,$55,$55,$55,$55,$59,$60,$59 ; $f0

@@ -2,14 +2,6 @@
 
 !text "screen fx",0
 
-!ifndef c128 {
-	gray_out_blur_out
-		jsr gray_out
-		jsr blur_out
-		jsr set_ascii_screen
-	rts
-}
-
 gray_out
 	!ifndef c128 {
 		lda #11
@@ -38,23 +30,27 @@ gray_out
 	}
 rts
 
+; we only need the checkerboard graphic in the blur-out routine, because
+; everything to be translated is a reverse char, hence nearly-full-cell glyph
+
 !ifndef c128 {
 	blur_out
 		ldy #0
 	-	!for .page, 0, 3 {
 			lda #151
-			ldx VIC_SCREEN + .page*256,y
-			cpx #128
-			bcs +
-			lda blurring_table,x
-		+	sta VIC_SCREEN + .page*256,y
+			lda VIC_SCREEN + .page*256,y
+			cmp #128
+			bcc +
+			lda #102
+			sta VIC_SCREEN + .page*256,y 
+		  +
 		}
 		dey
 		bne -
 	rts
 }
 
-set_normal_screen ; also switches back to the PETSCII charset on C64
+set_standard_charset
 	!ifndef c128 {
 		+C64_NORMAL_SCREEN
 	} else {
@@ -71,7 +67,7 @@ set_normal_screen ; also switches back to the PETSCII charset on C64
 rts
 
 !ifndef c128 {
-	set_ascii_screen
+	set_alt_charset
 		lda #$34
 		sta VIC_MEM_CTRL
 	rts

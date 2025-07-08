@@ -36,7 +36,7 @@ boot_start
 		sei
 		jsr enable_char_rom_only
 
-		; park the ASCII charset in RAM at $d000, standard at $d800
+		; park the alternate charset in RAM at $d000
 
 		lda #<charset_64
 		sta fill_copy_source
@@ -59,12 +59,38 @@ boot_start
 
 		inc fill_copy_target+1
 		lda fill_copy_target+1
+		cmp #>(VIC_CHARSETS+$0800)
+		bne -
+
+		; download the standard charset from ROM into RAM underneath
+
+		lda #<(VIC_CHARSETS+$0800)
+		sta fill_copy_source
+		lda #>(VIC_CHARSETS+$0800)
+		sta fill_copy_source+1
+
+		lda #<(VIC_CHARSETS+$0800)
+		sta fill_copy_target
+		lda #>(VIC_CHARSETS+$0800)
+		sta fill_copy_target+1
+
+		ldy #0
+	-	lda (fill_copy_source),y
+		sta (fill_copy_target),y
+		inc fill_copy_source
+		bne +
+		inc fill_copy_source+1
+	+	inc fill_copy_target
+		bne -
+
+		inc fill_copy_target+1
+		lda fill_copy_target+1
 		cmp #>(VIC_CHARSETS+$1000)
 		bne -
 
 		jsr enable_kernal_only
 
-	} else {				; on the C128, upload it to the VDC
+	} else {				; on the C128, upload alt charset to the VDC
 		bit kernal_4080_mode
 		bpl +
 
@@ -267,7 +293,6 @@ splash_data
 !ifndef c128 {
 	charset_64
 		!binary "etc/charset-64a.bin"
-		!binary "etc/charset-64p.bin"
 } else {
 	charset_128_alt
 		!binary "etc/charset-128a.bin"

@@ -416,82 +416,63 @@ status_line_pos
 	!fill 24,DOWN
 	!byte 0
 
-!ct raw {
-	sample_player_msg_ascii
-		!fill 3,RIGHT
-		!text CYAN,"Sample player goes here",RETURN,RETURN
-		!fill 13,RIGHT
-		!byte 0
+sample_player_msg
+	!fill 3,RIGHT
+	!text CYAN,"Sample player goes here",RETURN,RETURN
+	!fill 13,RIGHT
+	!byte 0
 
-	between_songs_msg_ascii
-		!text CYAN,"Loader here",RETURN,RETURN
-		!fill 20,RIGHT
-		!byte 0
+main_player_now_playing_msg
+	!fill 10,RIGHT
+	!text CYAN,"Now playing:",RETURN,RETURN
+	!byte 0
 
-	main_player_now_playing_msg_ascii
-		!fill 10,RIGHT
-		!text CYAN,"Now playing:",RETURN,RETURN
-		!byte 0
+main_player_file_msg
+	!fill 6,RIGHT
+	!text "Filename: ",LBLU
+	!byte 0
 
-	main_player_file_msg_ascii
-		!fill 6,RIGHT
-		!text "Filename: ",LBLU
-		!byte 0
+main_player_title_msg
+	!fill 9,RIGHT
+	!text CYAN,"Title: ",LBLU
+	!byte 0
 
-	main_player_title_msg_ascii
-		!fill 9,RIGHT
-		!text CYAN,"Title: ",LBLU
-		!byte 0
+main_player_hline
+	!fill 2,RIGHT
+	!fill 36,$60
+	!byte RETURN
+	!byte 0
 
-	tracker_name_msg_soundtracker_ascii
-		!text "Soundtracker",0
+main_player_song_pos_pat_msg
+	!fill 5,RIGHT
+	!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
+	!text BLUE," -- "
+	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
+	!byte 0
 
-	tracker_name_msg_protracker_ascii
-		!text "Protracker",0
+main_player_row_speed_time
+	!fill 2,RIGHT
+	!text CYAN,"Row: ",LBLU,"   ",BLUE,"- "
+	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",BLUE,"- "
+	!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
+	!byte 0
 
-	tracker_name_msg_startrekker_ascii
-		!text "StarTrekker",0
+main_player_regen_tables_msg
+	!byte HOME
+	!fill 14,DOWN
+	!fill 8,RIGHT
+	!text YEL,"A player setting altered",RETURN
+	!fill 5,RIGHT
+	!text "the sample rate, re-generating",RETURN
+	!fill 8,RIGHT
+	!text "pitch and tempo tables...",RETURN,0
 
-	tracker_name_msg_fasttracker_ascii
-		!text "FastTracker",0
-
-	main_player_hline_ascii
-		!fill 2,RIGHT
-		!fill 36,$83
-		!byte RETURN
-		!byte 0
-
-	main_player_song_pos_pat_msg_ascii
-		!fill 5,RIGHT
-		!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
-		!text BLUE," -- "
-		!text CYAN,"Pattern: ",LBLU,"  ",RETURN
-		!byte 0
-
-	main_player_row_speed_time_ascii
-		!fill 2,RIGHT
-		!text CYAN,"Row: ",LBLU,"   ",BLUE,"- "
-		!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",BLUE,"- "
-		!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
-		!byte 0
-
-	main_player_regen_tables_msg_ascii
-		!byte HOME
-		!fill 14,DOWN
-		!fill 8,RIGHT
-		!text YEL,"A player setting altered",RETURN
-		!fill 5,RIGHT
-		!text "the sample rate, re-generating",RETURN
-		!fill 8,RIGHT
-		!text "pitch and tempo tables...",RETURN,0
-
-	main_player_keys_msg_ascii
-		!fill 3,RIGHT
-		!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
-		!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
-		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
-		!byte 0
-}
+main_player_keys_msg
+	!fill 3,RIGHT
+	!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
+	!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
+	!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
+	!byte 0
 
 main_player_regen_erase_tables_msg
 	!byte 3,UP
@@ -516,15 +497,6 @@ main_player_regen_erase_tables_msg
 		!text "to the ON position"
 		!byte 0
 }
-
-main_player_regen_tables_msg
-	!byte RETURN
-	!fill 8,RIGHT
-	!text YEL,"A player setting altered",RETURN
-	!fill 5,RIGHT
-	!text "the sample rate, re-generating",RETURN
-	!fill 8,RIGHT
-	!text "pitch and tempo tables...",RETURN,0
 
 mm_lo
 	!byte <line_2

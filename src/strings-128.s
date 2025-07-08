@@ -371,8 +371,8 @@ main_player_title_msg
 	!byte 0
 
 main_player_hline
-	!byte 40,$60
-	!byte $81,RETURN
+	!fill 40,$60
+	!byte RETURN
 	!byte 0
 
 main_player_song_pos_pat_msg

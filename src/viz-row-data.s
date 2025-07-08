@@ -37,11 +37,7 @@ viz_row_data_init
 		ldy #>viz_row_data_dividers_msg
 
 		sec
-		!ifndef c128 {
-			jsr print_msg_ascii
-		} else {
-			jsr print_msg
-		}
+		jsr print_msg
 
 		inc temp_abs_b
 		lda temp_abs_b
@@ -344,11 +340,11 @@ viz_row_data_colors
 viz_row_data_dividers_msg
 	!ifndef c128 {
 		!fill 10,RIGHT
-		!byte LGRY,$82
+		!byte LGRY,$7d
 		!fill 8,RIGHT
-		!byte $82
+		!byte $7d
 		!fill 8,RIGHT
-		!byte $82,RETURN
+		!byte $7d,RETURN
 		!byte 0
 	} else {
 		!fill 3,RIGHT

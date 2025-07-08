@@ -19,11 +19,7 @@
 
 	; System vectors from $0300 to $0333
 
-	blurring_table					= $0a00 ; 128 bytes
-
-	; free: $0a80 through $0aff
-
-	window_edge_tables				= $1000
+	ascii_to_petscii_table			= $0a00 ; 1 page
 
 	main_mem_free_end				= $a600
 

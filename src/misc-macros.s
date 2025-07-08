@@ -24,8 +24,6 @@
 		beq +
 		iny
 		bne -
-		inc print_msg_addr+1
-		bne -
 	+	plp
 	rts
 }

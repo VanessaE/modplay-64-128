@@ -317,8 +317,8 @@ regen_all_tables
 		bpl no_msgs1
 
 		!ifndef c128 {
-			bit enable_screen_on_playback ; because if it's enabled, the display will
-			bmi +						; have switched to ASCII mode by this point.
+			bit enable_screen_on_playback	; because if it's enabled, the display will
+			bmi +							; have switched to the alt charset by this point.
 
 			jsr gray_out
 			jsr draw_short_popup
@@ -330,10 +330,10 @@ regen_all_tables
 			jmp ++
 
 		+	lda #0
-			ldx #<main_player_regen_tables_msg_ascii
-			ldy #>main_player_regen_tables_msg_ascii
+			ldx #<main_player_regen_tables_msg
+			ldy #>main_player_regen_tables_msg
 			sec
-			jsr print_msg_ascii
+			jsr print_msg
 		 ++
 		} else {
 			lda #0

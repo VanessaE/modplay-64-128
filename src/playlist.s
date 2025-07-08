@@ -1053,7 +1053,15 @@ playlist_load_next_file
 	beq playlist_next_file			; did the file load?
 	jsr start_main_player
 
-	bit seq_abort_flag				; if the song exited with $80 here,
+	!ifndef c128 {
+		bit enable_screen_on_playback
+		bpl +
+	}
+
+	sec
+	jsr draw_medium_popup
+
++	bit seq_abort_flag				; if the song exited with $80 here,
 	bpl playlist_next_file			; the user pressed F7 to bail-out
 
 	lda #0							; drive all columns low

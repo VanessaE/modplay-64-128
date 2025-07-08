@@ -650,29 +650,3 @@ print_filetype
 +	ldx #<tracker_name_msg_fasttracker
 	ldy #>tracker_name_msg_fasttracker
 ++ rts
-
-!ifndef c128 {
-	print_filetype_ascii
-		lda current_file_type
-		cmp #1
-		bne +
-		ldx #<tracker_name_msg_soundtracker_ascii
-		ldy #>tracker_name_msg_soundtracker_ascii
-		jmp ++
-
-	+	cmp #4
-		bcs +
-		ldx #<tracker_name_msg_protracker_ascii
-		ldy #>tracker_name_msg_protracker_ascii
-		jmp ++
-
-	+	cmp #6
-		bcs +
-		ldx #<tracker_name_msg_startrekker_ascii
-		ldy #>tracker_name_msg_startrekker_ascii
-		jmp ++
-
-	+	ldx #<tracker_name_msg_fasttracker_ascii
-		ldy #>tracker_name_msg_fasttracker_ascii
-	++ rts
-}

@@ -30,189 +30,101 @@ start_main_player
 	  +
 	}
 
-	!ifdef c128 {
-		jsr gray_out
-
-		clc
-		jsr draw_medium_popup
-
-		lda #0
-		ldx #<main_player_now_playing_msg
-		ldy #>main_player_now_playing_msg
-		sec
-		jsr print_msg
-
-		lda #0
-		ldx #<main_player_file_msg
-		ldy #>main_player_file_msg
-		sec
-		jsr print_msg
-
-		lda #0
-		ldx #<current_file_name
-		ldy #>current_file_name
-		sec
-		jsr print_msg
-
-		lda #RETURN
-		jsr CHROUT
-
-		lda #0
-		ldx #<main_player_title_msg
-		ldy #>main_player_title_msg
-		sec
-		jsr print_msg
-
-		lda #UPPER
-		jsr CHROUT
-
-		lda #0
-		ldx #<current_file_title
-		ldy #>current_file_title
-		sec
-		jsr print_msg_ascii
-
-		lda #RETURN
-		jsr CHROUT
-		lda #LOWER
-		jsr CHROUT
-
-		jsr print_filetype
-
-		lda #0
-		ldx #<main_player_hline
-		ldy #>main_player_hline
-		sec
-		jsr print_msg_rle
-
-		lda #0
-		ldx #<main_player_song_pos_pat_msg
-		ldy #>main_player_song_pos_pat_msg
-		sec
-		jsr print_msg
-
-		lda #0
-		ldx #<main_player_row_speed_time
-		ldy #>main_player_row_speed_time
-		sec
-		jsr print_msg
-
-		lda #0
-		ldx #<main_player_hline
-		ldy #>main_player_hline
-		sec
-		jsr print_msg_rle
-
-		lda #DOWN
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-
-		lda #0
-		ldx #<main_player_hline
-		ldy #>main_player_hline
-		sec
-		jsr print_msg_rle
-
-		lda #0
-		ldx #<main_player_keys_msg
-		ldy #>main_player_keys_msg
-		sec
-		jsr print_msg
-
-	} else {
+	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
 		jmp no_player_ui
 
-	+	jsr gray_out_blur_out
-		sec
-		jsr draw_medium_popup
-		lda #0
-		ldx #<main_player_now_playing_msg_ascii
-		ldy #>main_player_now_playing_msg_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_file_msg_ascii
-		ldy #>main_player_file_msg_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<current_file_name
-		ldy #>current_file_name
-		sec
-		jsr print_msg_ascii
-
-		lda #RETURN
-		jsr CHROUT
-
-		lda #0
-		ldx #<main_player_title_msg_ascii
-		ldy #>main_player_title_msg_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<current_file_title
-		ldy #>current_file_title
-		sec
-		jsr print_msg_ascii
-
-		lda #RETURN
-		jsr CHROUT
-
-		jsr print_filetype_ascii
-
-		lda #0
-		ldx #<main_player_hline_ascii
-		ldy #>main_player_hline_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_song_pos_pat_msg_ascii
-		ldy #>main_player_song_pos_pat_msg_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_row_speed_time_ascii
-		ldy #>main_player_row_speed_time_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_hline_ascii
-		ldy #>main_player_hline_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #DOWN
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-
-		lda #0
-		ldx #<main_player_hline_ascii
-		ldy #>main_player_hline_ascii
-		sec
-		jsr print_msg_ascii
-
-		lda #0
-		ldx #<main_player_keys_msg_ascii
-		ldy #>main_player_keys_msg_ascii
-		sec
-		jsr print_msg_ascii
+	+	jsr set_alt_charset
+		jsr gray_out
+		jsr blur_out
+	} else {
+		jsr gray_out
 	}
+
+	sec
+	jsr draw_medium_popup
+	lda #0
+	ldx #<main_player_now_playing_msg
+	ldy #>main_player_now_playing_msg
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<main_player_file_msg
+	ldy #>main_player_file_msg
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<current_file_name
+	ldy #>current_file_name
+	sec
+	jsr print_msg
+
+	lda #RETURN
+	jsr CHROUT
+
+	lda #0
+	ldx #<main_player_title_msg
+	ldy #>main_player_title_msg
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<current_file_title
+	ldy #>current_file_title
+	sec
+	jsr print_msg_ascii
+
+	lda #RETURN
+	jsr CHROUT
+
+	jsr print_filetype
+
+	lda #0
+	ldx #<main_player_hline
+	ldy #>main_player_hline
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<main_player_song_pos_pat_msg
+	ldy #>main_player_song_pos_pat_msg
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<main_player_row_speed_time
+	ldy #>main_player_row_speed_time
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<main_player_hline
+	ldy #>main_player_hline
+	sec
+	jsr print_msg
+
+	lda #DOWN
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+
+	lda #0
+	ldx #<main_player_hline
+	ldy #>main_player_hline
+	sec
+	jsr print_msg
+
+	lda #0
+	ldx #<main_player_keys_msg
+	ldy #>main_player_keys_msg
+	sec
+	jsr print_msg
 
 no_player_ui
 	lda audio_driver
@@ -324,13 +236,10 @@ player_gen_tables
 	plp
 
 	!ifndef c128 {
+		jsr set_standard_charset
 		bit enable_screen_on_playback
 		bmi +
-		jsr set_normal_screen
 		jsr enable_screen
-		rts
+	  +
 	}
-
-+	jsr clear_screen_early
-	jsr set_normal_screen
 rts

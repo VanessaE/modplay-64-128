@@ -45,7 +45,7 @@ start
 
 		jsr disable_screen
 		jsr erase_file_list
-		jsr set_normal_screen
+		jsr set_standard_charset
 		lda #CLR
 		jsr CHROUT
 		jsr enable_screen

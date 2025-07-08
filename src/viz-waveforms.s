@@ -40,11 +40,13 @@ viz_waveform_plot
 		lsr
 		lsr
 		lsr
+		ora #$80
 		sta visualizer_line_2,y
 		lda audio_buffer_right,x
 		lsr
 		lsr
 		lsr
+		ora #$80
 		sta visualizer_line_5,y
 		dex
 		dex
@@ -58,9 +60,11 @@ viz_waveform_plot
 		ldy #viz_bytes_to_plot
 	-	lda audio_buffer_left,x
 		asl
+		ora #$80
 		sta visualizer_line_2,y
 		lda audio_buffer_right,x
 		asl
+		ora #$80
 		sta visualizer_line_5,y
 		dex
 		dex
@@ -102,6 +106,7 @@ viz_waveform_plot
 		lsr
 		lsr
 		lsr
+		ora #$80
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
@@ -132,6 +137,7 @@ viz_waveform_plot
 		lsr
 		lsr
 		lsr
+		ora #$80
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
@@ -144,6 +150,7 @@ viz_waveform_plot
 	viz_128_plot_for_4bit
 	--	lda audio_buffer_left,x
 		asl
+		ora #$80
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
@@ -172,6 +179,7 @@ viz_waveform_plot
 		ldy #viz_bytes_to_plot
 	--	lda audio_buffer_right,x
 		asl
+		ora #$80
 	-	bit VDC_ADDR
 		bpl -
 		sta VDC_DATA
