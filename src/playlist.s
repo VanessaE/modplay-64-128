@@ -1063,12 +1063,6 @@ playlist_load_next_file
 
 +	bit seq_abort_flag				; if the song exited with $80 here,
 	bpl playlist_next_file			; the user pressed F7 to bail-out
-
-	lda #0							; drive all columns low
-	sta CIA1_PORT_A
--	lda CIA1_PORT_B
-	cmp #$ff						; is any row low?
-	bne -							; if so, wait for release
 	rts
 
 playlist_next_file
