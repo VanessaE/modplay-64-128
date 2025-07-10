@@ -12,11 +12,6 @@
 		sta MMU_CR1
 	rts
 
-	enable_kernal_only
-		lda #%00001110
-		sta MMU_CR1
-	rts
-
 	enable_roms
 		lda #0
 		sta MMU_CR1
@@ -28,21 +23,15 @@
 		sta $01
 	rts
 
-	enable_char_rom_only ; really the only purpose is to bank-out I/O
-		lda #$31
-		sta $01
-	rts
-
-	enable_kernal_only
-		lda #$36
-		sta $01
-	rts
-
 	enable_roms
 		lda #$37
 		sta $01
 	rts
 }
+
+enable_kernal_only
+	+ENABLE_KERNAL_ONLY
+rts
 
 ;#####################
 ;# STRING OPERATIONS #
@@ -919,25 +908,6 @@ binary_search
 ;#  MISC  #
 ;##########
 
-; if print_msg_colors_flag is clear and the current char is found in the
-; KERNAL's color codes table, replace it with an unprintable null.
-
-check_color_flag
-	bit print_msg_colors_flag
-	bpl .sc
-	rts
-
-.sc
-	ldx #15
--	cmp COLORS_TABLE,x
-	beq .np
-	dex
-	bpl -
-	rts
-
-.np	lda #0
-.ep	rts
-
 ; enter with fill_copy_target set to the start address of the block to
 ; be filled, .A holds the fill byte, .X holds the block length.
 
@@ -1004,25 +974,6 @@ rts
 ; fill_copy_target is the target, and .X is the copy length
 
 !ifdef c128 {
-
-	!macro VDC_RAM_ACC_SETUP {
-	-	bit VDC_ADDR
-		bpl -
-
-		lda #18
-		sta VDC_ADDR
-		lda fill_copy_target+1
-		sta VDC_DATA
-
-		lda #19
-		sta VDC_ADDR
-		lda fill_copy_target
-		sta VDC_DATA
-
-	-	bit VDC_ADDR
-		bpl -
-	}
-
 	vdc_block_copy
 		+VDC_RAM_ACC_SETUP
 
@@ -1099,30 +1050,19 @@ rts
 		sta VDC_ADDR
 		stx VDC_DATA
 		lda temp_abs_a
-
 	rts
 
 	vdc_ram_rw_setup
-		+VDC_RAM_ACC_SETUP
-
-		lda #31
-		sta VDC_ADDR
+		+VDC_RAM_RW_SETUP
 	rts
 
 	vdc_write_ram
-	-	bit VDC_ADDR
-		bpl -
-
-		sta VDC_DATA
+		+VDC_WRITE_RAM
 	rts
 
 	vdc_read_ram
-	-	bit VDC_ADDR
-		bpl -
-
-		lda VDC_DATA
+		+VDC_READ_RAM
 	rts
-
 }
 
 ; translates a 0-15 value in .A into printable "0" to "f", returned in .A

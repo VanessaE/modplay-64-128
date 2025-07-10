@@ -26,8 +26,6 @@
 * = program_start
 
 start
-	sei
-	jsr enable_kernal_only
 	jsr init
 
 	!ifndef c128 {
@@ -43,12 +41,12 @@ start
 		  +
 		}
 
-		jsr disable_screen
+		jsr disable_vic_screen
 		jsr erase_file_list
 		jsr set_standard_charset
 		lda #CLR
 		jsr CHROUT
-		jsr enable_screen
+		jsr enable_vic_screen
 	}
 
 	jmp show_main_menu ; and away we go!
@@ -61,9 +59,25 @@ start
 !source "src/misc-macros.s"
 !source "src/misc-functions.s"
 
-+PRINT_MSG
-+PRINT_MSG_RLE
-+SCREEN_ONOFF
+check_color_flag
+	+CHECK_COLOR_FLAG
+rts
+
+print_msg
+	+PRINT_MSG
+rts
+
+print_msg_rle
+	+PRINT_MSG_RLE
+rts
+
+enable_vic_screen
+	+ENABLE_VIC_SCREEN
+rts
+
+disable_vic_screen
+	+DISABLE_VIC_SCREEN
+rts
 
 !source "src/loader-common.s"
 !source "src/decode-mod.s"

@@ -2,30 +2,48 @@
 ; enter with .X/.Y = address of message, .A = 0 if message is null-
 ; terminated, else it must be the message length (max 255 chars either way)
 
+!macro CHECK_COLOR_FLAG {
+		bit print_msg_colors_flag
+		bpl .sc
+		rts
+
+	.sc
+		ldx #15
+	-	cmp COLORS_TABLE,x
+		beq .np
+		dex
+		bpl -
+		rts
+
+	.np	lda #0
+	.ep
+}
+
+; if print_msg_colors_flag is clear and the current char is found in the
+; KERNAL's color codes table, replace it with an unprintable null.
+
 !macro PRINT_MSG {
-	print_msg
-		php
-		sta print_msg_char_limit
+	php
+	sta print_msg_char_limit
 
-		lda #0
-		ror
-		sta print_msg_colors_flag
+	lda #0
+	ror
+	sta print_msg_colors_flag
 
-		dec print_msg_char_limit
-		stx print_msg_addr
-		sty print_msg_addr+1
-		ldy #0
-	-	lda (print_msg_addr),y
-		beq +
+	dec print_msg_char_limit
+	stx print_msg_addr
+	sty print_msg_addr+1
+	ldy #0
+-	lda (print_msg_addr),y
+	beq +
 
-		jsr check_color_flag
-		jsr CHROUT
-		cpy print_msg_char_limit
-		beq +
-		iny
-		bne -
-	+	plp
-	rts
+	jsr check_color_flag
+	jsr CHROUT
+	cpy print_msg_char_limit
+	beq +
+	iny
+	bne -
++	plp
 }
 
 	; print an RLE_encoded message
@@ -51,63 +69,59 @@
 	; "64 🮖🮖🮖🮖🮖 hello world AAAAAABBBBBBBBB yeah!"
 
 !macro PRINT_MSG_RLE {
-	print_msg_rle
-		php
-		lda #0
-		ror
-		sta print_msg_colors_flag
+	php
+	lda #0
+	ror
+	sta print_msg_colors_flag
 
-		stx print_msg_addr
-		sty print_msg_addr+1
+	stx print_msg_addr
+	sty print_msg_addr+1
 
-		ldy #0
-		sty rle_byte_count
+	ldy #0
+	sty rle_byte_count
 
-	.lp	lda (print_msg_addr),y
-		beq .done			; a null is always the end of the msg
+.lp	lda (print_msg_addr),y
+	beq .done			; a null is always the end of the msg
 
-		ldx rle_byte_count	; if count is non-zero, just print what's in .A
-		bne .pr
+	ldx rle_byte_count	; if count is non-zero, just print what's in .A
+	bne .pr
 
-		sta rle_mode_flag	; else .A is a command
-		and #$7f
-		sta rle_byte_count	; so set the new count
-		bne .next_byte
+	sta rle_mode_flag	; else .A is a command
+	and #$7f
+	sta rle_byte_count	; so set the new count
+	bne .next_byte
 
-	.pr
-		jsr check_color_flag
-		jsr CHROUT
+.pr
+	jsr check_color_flag
+	jsr CHROUT
 
-		dec rle_byte_count
+	dec rle_byte_count
 
-		ldx rle_mode_flag	; if it's a data block, continue through stream
-		bmi .next_byte
-		ldx rle_byte_count	; if it's a run, keep looping back to reprint
-		bne .pr				; until count runs out.
+	ldx rle_mode_flag	; if it's a data block, continue through stream
+	bmi .next_byte
+	ldx rle_byte_count	; if it's a run, keep looping back to reprint
+	bne .pr				; until count runs out.
 
-	.next_byte
-		iny
-		bne .lp
-		inc print_msg_addr+1
-		bne .lp
+.next_byte
+	iny
+	bne .lp
+	inc print_msg_addr+1
+	bne .lp
 
-	.done
-		plp
-	rts
+.done
+	plp
 }
 
-!macro SCREEN_ONOFF {
-	disable_screen
-		lda VIC_CONTROL_A
-		and #%11101111
-		sta VIC_CONTROL_A
-	rts
+!macro DISABLE_VIC_SCREEN {
+	lda VIC_CONTROL_A
+	and #%11101111
+	sta VIC_CONTROL_A
+}
 
-	enable_screen
-		lda VIC_CONTROL_A
-		ora #%00010000
-		sta VIC_CONTROL_A
-	rts
+!macro ENABLE_VIC_SCREEN {
+	lda VIC_CONTROL_A
+	ora #%00010000
+	sta VIC_CONTROL_A
 }
 
 !ifndef c128 {
@@ -119,6 +133,63 @@
 		sta VIC_MEM_CTRL
 		lda #>VIC_SCREEN			; and point the KERNAL appropriately, for
 		sta HIBASE					; screen editor/CHROUT/etc.
+	}
+}
+
+!macro ENABLE_KERNAL_ONLY {
+	!ifdef c128 {
+		lda #%00001110
+		sta MMU_CR1
+	} else {
+		lda #$36
+		sta $01
+	}
+}
+
+!ifndef c128 {
+	!macro C64_ENABLE_CHAR_ROM_ONLY { ; really the only purpose is to bank-out I/O
+		lda #$31
+		sta $01
+	}
+}
+
+!ifdef c128 {
+	!macro VDC_RAM_ACC_SETUP {
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #18
+		sta VDC_ADDR
+		lda fill_copy_target+1
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda fill_copy_target
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+	}
+
+	!macro VDC_RAM_RW_SETUP {
+		+VDC_RAM_ACC_SETUP
+		lda #31
+		sta VDC_ADDR
+	}
+
+	!macro VDC_WRITE_RAM {
+	-	bit VDC_ADDR
+		bpl -
+
+		sta VDC_DATA
+	}
+
+	!macro VDC_READ_RAM {
+	-	bit VDC_ADDR
+		bpl -
+
+		lda VDC_DATA
 	}
 }
 

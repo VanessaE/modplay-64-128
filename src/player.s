@@ -200,7 +200,7 @@ player_gen_tables
 	!ifndef c128 {
 		bit enable_screen_on_playback
 		bmi +
-		jsr disable_screen
+		jsr disable_vic_screen
 		jmp ++
 	}
 
@@ -239,7 +239,7 @@ player_gen_tables
 		jsr set_standard_charset
 		bit enable_screen_on_playback
 		bmi +
-		jsr enable_screen
+		jsr enable_vic_screen
 	  +
 	}
 rts

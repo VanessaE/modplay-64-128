@@ -17,19 +17,12 @@ init
 	!ifdef c128 {
 		lda #1
 		sta VIC_2_MHZ
-		jsr disable_screen
+		jsr disable_vic_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete
 	}
 
-	jsr RESTOR ; this also undoes the "READY. trap"
 	jsr CLALL
-
-	lda #0
-	ldx #<initializing_msg
-	ldy #>initializing_msg
-	sec
-	jsr print_msg
 
 	!ifdef scpu {
 		bit SCPU_PRESENT
@@ -243,7 +236,8 @@ init
 	; all these commented-out ADC's are here as a reminder since they'd
 	; just be adding 0's, and real values will eventually be added later.
 
-+	lda #0
++	clc
+	lda #0
 	sta expansion_memory_start_page
 	sta highest_exp_addresss_used
 	sta highest_exp_addresss_used+2
@@ -570,21 +564,6 @@ default_config
 	!byte $80				; default screen enable (on)
 	!byte $ff				; end of file marker
 configuration_data_end
-
-initializing_msg
-!ifndef c128 {
-		!byte HOME
-		!fill 14,DOWN
-		!fill 12,RIGHT
-		!text CYAN,  "Initializing..."
-		!byte 0
-} else {
-		!byte HOME
-		!fill 14,DOWN
-		!fill 29,RIGHT
-		!text CYAN,  "   Initializing...    "
-		!byte 0
-}
 
 nybble_x10_origin
 	!byte 0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150

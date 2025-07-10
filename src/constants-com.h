@@ -80,7 +80,6 @@
 	audio_buffer_right					= $1200 ; 1 page
 
 	clear_main_memory					= audio_buffer_left
-	program_loader						= audio_buffer_left
 
 	; it's safe to reuse the audio bufs for this since it's only needed once.
 
@@ -90,6 +89,8 @@
 	mah_table_8580						= $1600
 
 	zp_backup							= $1700
+
+	program_load_decrunch_stub			= multab2hi
 
 	program_start						= $1800
 
@@ -632,6 +633,8 @@ tempo_fine_adjust_constant = 159778
 	exp_instr_names_start_page			!skip 1
 	exp_petscii_filenames_start_page	!skip 1
 	exp_screencode_filenames_start_page	!skip 1
+	exp_loader_bg_start_page			!skip 1
+	exp_player_bg_start_page			!skip 1
 	exp_file_data_start_page			!skip 1
 	highest_exp_addresss_used			!skip 3
 
