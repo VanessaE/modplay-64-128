@@ -27,7 +27,7 @@
 
 	main_mem_free_end				= $a900
 
-	ascii_to_petscii_table			= $aa00 ; 1 page
+	ascii_to_petscii_table			= $a900 ; 1 page
 
 	volume_table_lower				= $aa00 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
