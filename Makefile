@@ -134,10 +134,9 @@ ifeq ($(MACHINE),128)
 				-f 'Fun Tune'				-w 'mods/Fun Tune.mod'			\
 				-f 'Dark Castle Pt.1'		-w 'mods/Dark Castle (Part 1).mod' \
 				-f 'Empty Spaces II'		-w 'mods/Empty Spaces II.mod'	\
+				-f 'Skate or Die'	\
+					-w 'mods/Skate or Die Intro (cover by Delorean).mod'	\
 																		$(DISK_IMG)
-
-#				-f 'Skate or Die'	\
-#					-w 'mods/Skate or Die Intro (cover by Delorean).mod'	\
 
 else
 
