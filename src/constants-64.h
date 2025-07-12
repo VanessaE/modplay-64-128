@@ -5,8 +5,6 @@
 
 !addr {
 
-	default_start					= $0801
-
 	; Zero Page
 
 	progress_bar_char_pointer		= $22 ; and $23

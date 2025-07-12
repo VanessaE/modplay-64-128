@@ -5,7 +5,7 @@
 !ifndef c128 {
 	print_nsp_target = VIC_SCREEN + 10*40 + 18
 } else {
-	print_nsp_target = VDC_SCREEN + 10*80 + 38
+	print_nsp_target = VDC_SCREEN + 9*80 + 38
 }
 
 print_num_song_pos
@@ -29,8 +29,8 @@ rts
 	print_sp_target = VIC_SCREEN + 10*40 + 15
 	print_pn_target = VIC_SCREEN + 10*40 + 33
 } else {
-	print_sp_target = VDC_SCREEN + 10*80 + 35
-	print_pn_target = VDC_SCREEN + 10*80 + 53
+	print_sp_target = VDC_SCREEN + 9*80 + 35
+	print_pn_target = VDC_SCREEN + 9*80 + 53
 }
 
 print_song_pos_pat_num ; enter with .X = song position
@@ -58,7 +58,7 @@ rts
 !ifndef c128 {
 	print_rn_target = VIC_SCREEN + 11*40 + 7
 } else {
-	print_rn_target = VDC_SCREEN + 11*80 + 27
+	print_rn_target = VDC_SCREEN + 10*80 + 27
 }
 
 print_row_num
@@ -80,8 +80,8 @@ rts
 	print_sst_target = VIC_SCREEN + 11*40 + 19
 	print_ssb_target = VIC_SCREEN + 11*40 + 22
 } else {
-	print_sst_target = VDC_SCREEN + 11*80 + 39
-	print_ssb_target = VDC_SCREEN + 11*80 + 42
+	print_sst_target = VDC_SCREEN + 10*80 + 39
+	print_ssb_target = VDC_SCREEN + 10*80 + 42
 }
 
 print_song_speed
@@ -131,7 +131,7 @@ print_elapsed_time
 		ora #$30
 		sta print_et_target+4
 	} else {
-		print_et_target = VDC_SCREEN + 11*80 + 53
+		print_et_target = VDC_SCREEN + 10*80 + 53
 
 	-	bit VDC_ADDR
 		bpl -

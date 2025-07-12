@@ -220,40 +220,10 @@ init
 	lda #>reu_do_selfmods_for_instrument_change
 	sta do_selfmod_instrument_vec+1
 
-	; Set start of expansion RAM reserve 2 pages + (4 or 8) kB + 1 kB at the
-	; start for the "silence" block and filename and instrument name storage.
-	; all these commented-out ADC's are here as a reminder since they'd
-	; just be adding 0's, and real values will eventually be added later.
-
-+	clc
 	lda #0
 	sta expansion_memory_start_page
-	sta highest_exp_addresss_used
-	sta highest_exp_addresss_used+2
 
-	lda #2
-;	clc
-;	adc expansion_memory_start_page
-	sta exp_instr_names_start_page
-
-	lda #4 + 2
-;	adc expansion_memory_start_page
-	sta exp_petscii_filenames_start_page
-
-	!ifndef c128 {
-		lda #4 + 16 + 2
-	;	adc expansion_memory_start_page
-		sta exp_screencode_filenames_start_page
-
-		lda #4 + 32 + 2
-	} else {
-		; exp_screencode_filenames_start_page is unused on C128.
-		lda #4 + 16 + 2
-	}
-
-;	adc expansion_memory_start_page
-	sta exp_file_data_start_page
-	sta highest_exp_addresss_used+1
++	+SET_EXPANSION_ZONES
 
 	lda #0
 	sta ramlink_detect

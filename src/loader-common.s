@@ -126,7 +126,7 @@ load_by_filename_entry
 	lsr file_size_in_kb+1
 	ror file_size_in_kb
 
-	jsr loader_populate_mini_popup
+	jsr loader_paint_screen
 
 	lda file_to_load_name_len
 	ldx #<string_buffer
@@ -393,10 +393,29 @@ abort_load
 	jsr press_any_key
 rts
 
-loader_populate_mini_popup
-	jsr gray_out
-	clc
-	jsr draw_mini_popup
+loader_paint_screen
+	lda #CLR
+	jsr CHROUT
+	jsr retrieve_loader_bg
+
+	!ifndef c128 {
+		lda #0
+		ldx #<mini_popup_top_line
+		ldy #>mini_popup_top_line
+		sec
+		jsr print_msg_rle
+
+		lda #0
+		ldx #<mini_popup_next_line
+		ldy #>mini_popup_next_line
+		jsr print_msg_rle
+	} else {
+		jsr set_window_mini_popup
+		clc
+		ldx #0
+		ldy #0
+		jsr PLOT
+	}
 
 	lda #mini_popup_width
 	ldx #<string_buffer

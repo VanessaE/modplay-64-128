@@ -5,8 +5,6 @@
 
 !addr {
 
-	default_start					= $1c01
-
 	; Zero Page
 
 	progress_bar_char_pointer		= $2b ; and $2c
@@ -116,4 +114,4 @@ visualizer_area_width				= 38
 visualizer_area_height				= 6
 
 visualizer_screen_column			= 21
-visualizer_screen_row				= 13
+visualizer_screen_row				= 12

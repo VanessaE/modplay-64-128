@@ -161,7 +161,8 @@ visualizer_row_position
 	!ifndef c128 {
 		!byte UP,RETURN,0
 	} else {
-		!fill 6,UP
+		!byte HOME
+		!fill 7,DOWN
 		!byte RETURN
 		!byte 0
 	}

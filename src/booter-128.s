@@ -20,7 +20,7 @@
 !convtab pet
 !cpu 6510
 
-* = default_start
+* = program_start
 
 splash_text_begin = splash_data
 splash_text_end = splash_data + 2048
@@ -152,8 +152,73 @@ boot_start
 	lda #version_minor+$30
 	jsr CHROUT
 
-; we have to copy the program loader to somewhere below where the program
-; itself actually loads or it'll overwrite itself. 😛
+	lda #0
+	sta expansion_memory_start_page
+
+	+SET_EXPANSION_ZONES
+
+	lda #<2000
+	sta stash_size
+	lda #>2000
+	sta stash_size+1
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+
+	; loader background text
+
+	lda #<loader_background_data
+	sta expansion_transfer_local_addr
+	lda #>loader_background_data
+	sta expansion_transfer_local_addr+1
+
+	lda exp_loader_bg_start_page
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; loader background colors
+
+	lda #<loader_background_data+2000
+	sta expansion_transfer_local_addr
+	lda #>loader_background_data+2000
+	sta expansion_transfer_local_addr+1
+
+	lda exp_loader_bg_start_page
+	clc
+	adc #8
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; player background text
+
+	lda #<player_background_data
+	sta expansion_transfer_local_addr
+	lda #>player_background_data
+	sta expansion_transfer_local_addr+1
+
+	lda exp_player_bg_start_page
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; player background colors
+
+	lda #<player_background_data+2000
+	sta expansion_transfer_local_addr
+	lda #>player_background_data+2000
+	sta expansion_transfer_local_addr+1
+
+	lda exp_player_bg_start_page
+	adc #8
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; copy the program loader to somewhere below where the program
+	; itself actually loads or it'll overwrite itself. 😛
 
 	ldx #0
 -	lda program_load_decrunch_stub_origin,x
@@ -165,7 +230,7 @@ boot_start
 	inx
 	bne -
 
-; now call that stub to load and execute the main program file
+	; load and execute the main program file
 
 	jmp program_load_decrunch_stub
 
@@ -269,7 +334,7 @@ program_load_decrunch_stub_origin
 		!byte HOME
 		!fill 14,DOWN
 		!fill 29,RIGHT
-		!text CYAN,  "   Initializing...    "
+		!text CYAN,"   Initializing...    "
 		!byte 0
 	}
 
@@ -289,3 +354,9 @@ charset_alt_data
 
 splash_data
 	!binary "etc/splash-80.pet",,5 ; why 5?  because we don't need the .pet header 🙂
+
+loader_background_data
+	!binary "etc/loaderbg-128.pet",,5
+
+player_background_data
+	!binary "etc/playerbg-128.pet",,5

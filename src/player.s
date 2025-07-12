@@ -34,14 +34,32 @@ start_main_player
 		jmp no_player_ui
 
 	+	jsr set_alt_charset
-		jsr gray_out
-		jsr blur_out
-	} else {
-		jsr gray_out
 	}
 
-	sec
-	jsr draw_medium_popup
+	lda #CLR
+	jsr CHROUT
+
+	jsr retrieve_player_bg
+
+	!ifndef c128 {
+		lda #0
+		ldx #<medium_popup_top_line
+		ldy #>medium_popup_top_line
+		sec
+		jsr print_msg_rle
+
+		lda #0
+		ldx #<medium_popup_next_line
+		ldy #>medium_popup_next_line
+		jsr print_msg_rle
+	} else {
+		jsr set_window_medium_popup
+		clc
+		ldx #0
+		ldy #0
+		jsr PLOT
+	}
+
 	lda #0
 	ldx #<main_player_now_playing_msg
 	ldy #>main_player_now_playing_msg
@@ -77,8 +95,6 @@ start_main_player
 
 	lda #RETURN
 	jsr CHROUT
-
-	jsr print_filetype
 
 	lda #0
 	ldx #<main_player_hline

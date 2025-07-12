@@ -54,7 +54,7 @@ c64:
 	acme $(OPTIONS) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
 	acme $(OPTIONS) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
 
-	$(EXOMIZER) sfx 0x0801 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64 src/mp64.o
+	$(EXOMIZER) sfx 0x1800 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64 src/mp64.o
 	$(EXOMIZER) mem -o bin/mp64.main src/mp64.main.o
 
 	sort -dbf /tmp/mp64-symbols.txt > etc/mp64-symbols.txt
@@ -68,7 +68,7 @@ c128:
 
 	acme $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o src/c128-boot-sect.s
 
-	$(EXOMIZER) sfx 0x1c01 -t 128 -s '$(value PRE_DECRUNCH_128)' -o bin/mp128 src/mp128.o
+	$(EXOMIZER) sfx 0x1800 -t 128 -s '$(value PRE_DECRUNCH_128)' -o bin/mp128 src/mp128.o
 	$(EXOMIZER) mem -o bin/mp128.main src/mp128.main.o
 
 	sort -dbf /tmp/mp128-symbols.txt > etc/mp128-symbols.txt

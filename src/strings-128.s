@@ -372,7 +372,7 @@ main_player_title_msg
 
 main_player_hline
 	!fill 40,$60
-	!byte RETURN
+	!byte LEFT,RETURN
 	!byte 0
 
 main_player_song_pos_pat_msg

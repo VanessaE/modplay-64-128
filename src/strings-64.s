@@ -257,9 +257,24 @@ screen_line_link_table
 	!byte $86,$86,$86,$86,$86
 	!byte $87,$87,$87,$87,$87,$87
 
+mini_popup_top_line
+	!byte $81,HOME
+	!byte 8,DOWN
+	!byte 0
+
 mini_popup_next_line
 	!byte $81,RETURN
 	!byte 11,RIGHT
+	!byte 0
+
+medium_popup_top_line
+	!byte $81,HOME
+	!byte 4,DOWN
+	!byte 0
+
+medium_popup_next_line
+	!byte $81,RETURN
+	!byte 2,RIGHT
 	!byte 0
 
 loading_msg

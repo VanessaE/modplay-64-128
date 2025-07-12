@@ -69,7 +69,6 @@ load_directory
 	jsr dir_open
 	jsr .err
 
-	jsr gray_out
 	clc
 	jsr draw_mini_popup
 
@@ -195,9 +194,9 @@ load_directory
 		+JSR_INDIRECT (stash_block_vec)
 
 	} else {
-		lda #<mini_popup_lower_left_corner_addr
+		lda #<(mini_popup_lower_left_corner_addr-1)
 		sta fill_copy_source
-		lda #>mini_popup_lower_left_corner_addr
+		lda #>(mini_popup_lower_left_corner_addr-1)
 		sta fill_copy_source+1
 	
 		lda utility_pointer_b

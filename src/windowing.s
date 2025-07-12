@@ -66,12 +66,18 @@ mini_popup_bottom_row				= (24 + mini_popup_height) / 2
 mini_popup_right_column				= mini_popup_left_column + mini_popup_width - 1
 
 !ifdef c128 {
-	mini_popup_left_col_real		= 39 - (mini_popup_width / 2)
+	mini_popup_left_col_real		= 40 - (mini_popup_width / 2)
+	mini_popup_right_col_real		= 40 + (mini_popup_width / 2)
 }
 
 medium_popup_top_row				= (24 - medium_popup_height) / 2
 medium_popup_bottom_row				= (24 + medium_popup_height) / 2
 medium_popup_right_column			= medium_popup_left_column + medium_popup_width - 1
+
+!ifdef c128 {
+	medium_popup_left_col_real		= 40 - (medium_popup_width / 2)
+	medium_popup_right_col_real		= 40 + (medium_popup_width / 2)
+}
 
 tall_popup_top_row					= (24 - tall_popup_height) / 2 - 1
 tall_popup_bottom_row				= (24 + tall_popup_height) / 2 + 1
@@ -117,6 +123,31 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		ldx #74
 		jsr WINDOW
 	rts
+
+	set_window_mini_popup
+		jsr FULLW
+		clc
+		lda #mini_popup_top_row
+		ldx #mini_popup_left_col_real
+		jsr WINDOW
+		sec
+		lda #mini_popup_bottom_row
+		ldx #mini_popup_right_col_real
+		jsr WINDOW
+	rts
+
+	set_window_medium_popup
+		jsr FULLW
+		clc
+		lda #medium_popup_top_row
+		ldx #medium_popup_left_col_real
+		jsr WINDOW
+		sec
+		lda #medium_popup_bottom_row
+		ldx #medium_popup_right_col_real
+		jsr WINDOW
+	rts
+
 }
 
 ; enter with .X/.Y = rows/columns of the INTERIOR (analogous to the PLOT call)

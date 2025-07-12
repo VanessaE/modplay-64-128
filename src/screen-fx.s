@@ -378,3 +378,199 @@ nofill
 		jsr vdc_write_ram
 	}
 rts
+
+!ifndef c128 {
+	retrieve_loader_bg
+		jsr vic_set_copy_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; loader background colors
+
+		jsr vic_set_target_to_color_ram
+
+		lda exp_loader_bg_start_page
+		adc #4
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		; loader background text
+
+		jsr vic_set_target_to_text
+
+		lda exp_loader_bg_start_page
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+	rts
+
+	retrieve_player_bg
+		jsr vic_set_copy_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; player background colors
+
+		jsr vic_set_target_to_color_ram
+
+		lda exp_player_bg_start_page
+		adc #4
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		; player background text
+
+		jsr vic_set_target_to_text
+
+		lda exp_player_bg_start_page
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+	rts
+
+	vic_set_copy_size
+		lda #<1000
+		sta stash_size
+		lda #>1000
+		sta stash_size+1
+	rts
+
+	vic_set_target_to_color_ram
+		lda #<VIC_COLOR_RAM
+		sta expansion_transfer_local_addr
+		lda #>VIC_COLOR_RAM
+		sta expansion_transfer_local_addr+1
+	rts
+
+	vic_set_target_to_text
+		lda #<VIC_SCREEN
+		sta expansion_transfer_local_addr
+		lda #>VIC_SCREEN
+		sta expansion_transfer_local_addr+1
+	rts
+
+} else {
+	retrieve_loader_bg
+		jsr vdc_set_fetch_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; loader background colors
+
+		jsr vdc_set_load_buf_as_relay
+
+		clc
+		lda exp_loader_bg_start_page
+		adc #8
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		jsr vdc_bg_upload_attribs
+
+		; loader background text
+
+		jsr vdc_set_load_buf_as_relay
+
+		lda exp_loader_bg_start_page
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		jsr vdc_bg_upload_text
+	rts
+
+	retrieve_player_bg
+		jsr vdc_set_fetch_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; player background colors
+
+		jsr vdc_set_load_buf_as_relay
+
+		clc
+		lda exp_player_bg_start_page
+		adc #8
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		jsr vdc_bg_upload_attribs
+
+		; player background text
+
+		jsr vdc_set_load_buf_as_relay
+
+		lda exp_player_bg_start_page
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		jsr vdc_bg_upload_text
+	rts
+
+	vdc_set_fetch_size
+		lda #<2000
+		sta stash_size
+		lda #>2000
+		sta stash_size+1
+	rts
+
+	vdc_set_load_buf_as_relay
+		lda #<load_buffer
+		sta expansion_transfer_local_addr
+		sta fill_copy_source
+		lda #>load_buffer
+		sta expansion_transfer_local_addr+1
+		sta fill_copy_source+1
+	rts
+
+	vdc_bg_upload_attribs
+		lda #<VDC_ATTRIBUTES
+		sta fill_copy_target
+		lda #>VDC_ATTRIBUTES
+		sta fill_copy_target+1
+
+		jsr vdc_ram_rw_setup
+
+		ldy #0
+	-	lda (fill_copy_source),y
+		jsr vdc_write_ram
+		iny
+		bne -
+		inc fill_copy_source+1
+		lda fill_copy_source+1
+		cmp #>(load_buffer+$0800)
+		bne -
+	rts
+
+	vdc_bg_upload_text
+		lda #<VDC_SCREEN
+		sta fill_copy_target
+		lda #>VDC_SCREEN
+		sta fill_copy_target+1
+
+		jsr vdc_ram_rw_setup
+
+		ldy #0
+	-	lda (fill_copy_source),y
+		jsr vdc_write_ram
+		iny
+		bne -
+		inc fill_copy_source+1
+		lda fill_copy_source+1
+		cmp #>(load_buffer+$0800)
+		bne -
+	rts
+}

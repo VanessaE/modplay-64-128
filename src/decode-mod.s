@@ -540,7 +540,6 @@ skip_sample
 
 	clc
 	lda exp_instr_names_start_page
-	adc #2
 	sta expansion_memory_target_pointer+1
 
 	+JSR_INDIRECT (stash_block_vec)
