@@ -11,13 +11,13 @@
 
 	progress_bar_char_pointer		= $2b ; and $2c
 
-	; free: $54, $55
+	reu_highest_bank				= $54
+	c128_highest_bank				= $55
+
 	; free: $61, $62
 
 	expansion_transfer_local_addr	= $c9 ; through $cb
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
-
-	c128_highest_bank				= $02a1
 
 	; C128 KERNAL indirect routines from $02a2 to $02ff
 	; System vectors and variables from $0300 to $03ff
@@ -25,7 +25,9 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $a900
+	main_mem_free_end				= $a800
+
+	reu_driver						= $a800
 
 	ascii_to_petscii_table			= $a900 ; 1 page
 

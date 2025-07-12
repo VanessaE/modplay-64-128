@@ -28,7 +28,23 @@ splash_colors_begin = splash_data + 2000
 splash_colors_end = splash_colors_begin + 2048
 
 boot_start
-; first, show the splash screen
+
+	; copy the REU driver into its proper memory slot
+
+	+ENABLE_KERNAL_ONLY
+
+	ldx #0
+-	lda reu_driver_origin,x
+	sta reu_driver,x
+	inx
+	bne -
+
+	; check REU size/presence (duh 😛 )
+
+	jsr reu_get_size
+
+	; show the splash screen
+
 	lda #0
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
@@ -244,6 +260,11 @@ program_load_decrunch_stub_origin
 		!fill 29,RIGHT
 		!text CYAN,  "   Initializing...    "
 		!byte 0
+	}
+
+reu_driver_origin
+	!pseudopc reu_driver {
+		!source "src/drv-reu-blockops.s"
 	}
 
 wrong_screen_msg

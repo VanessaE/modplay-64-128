@@ -161,3 +161,5 @@ reu_banknum
 ; target buffer when reading signatures back from REU
 reu_sig_candidate_start
 	!text $ff,"icanhaz?"; same length as above
+
+!align 255,0,0

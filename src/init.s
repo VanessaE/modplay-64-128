@@ -185,8 +185,6 @@ init
 
 	}
 
-	jsr reu_get_size
-
 	lda #<reu_fetch_block
 	sta fetch_block_vec
 	lda #>reu_fetch_block

@@ -12,7 +12,8 @@
 	progress_bar_char_pointer		= $22 ; and $23
 
 	; free: $4e, $4f
-	; free: $57
+
+	reu_highest_bank				= $57
 
 	expansion_transfer_local_addr	= $f7 ; through $f9
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
@@ -21,7 +22,9 @@
 
 	ascii_to_petscii_table			= $0a00 ; 1 page
 
-	main_mem_free_end				= $a600
+	main_mem_free_end				= $a500
+
+	reu_driver						= $a500
 
 	volume_table_lower				= $a600 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas

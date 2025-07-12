@@ -628,8 +628,6 @@ tempo_fine_adjust_constant = 159778
 
 	num_samples_to_load					!skip 1
 
-	reu_highest_bank					!skip 1
-
 	supercpu_last_free_page				!skip 1
 	supercpu_last_free_bank				!skip 1
 
