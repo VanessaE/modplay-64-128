@@ -1,15 +1,6 @@
 ; this section is responsible for initializing everything at startup
 ; note that the first byte of this file is page-aligned from modplay.s
 
-; signature we write to REU banks, first byte is bank number
-reu_signature_start
-reu_banknum
-	!text 0,"reutest!"
-
-; target buffer when reading signatures back from REU
-reu_sig_candidate_start
-	!text $ff,"icanhaz?"; same length as above
-
 lockout_interrupts ; any interrupt that gets here exits unacknowledged
 rti
 

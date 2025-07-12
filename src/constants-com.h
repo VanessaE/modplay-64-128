@@ -1,4 +1,9 @@
-; This file defines all of the non-machine-specific constants used througout the program.
+; This file defines all of the non-machine-specific constants used througout
+; the program.
+
+; This file MUST be "assembled" separately, and exporting a symbol table
+
+; Then, use that symbol table to assemble the rest of the project.
 
 ; Now link-in the machine-specific constants
 

@@ -52,7 +52,7 @@ c64:
 	acme $(OPTIONS) -o /tmp/mp.ignore.me -l /tmp/mp64.sym.initial src/constants-com.h
 
 	acme $(OPTIONS) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
-	acme $(OPTIONS) -o src/mp64.o /tmp/mp64-symbols.txt src/booter-64.s
+	acme $(OPTIONS) -o src/mp64.o  /tmp/mp64.sym.initial src/booter-64.s
 
 	$(EXOMIZER) sfx 0x0801 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64 src/mp64.o
 	$(EXOMIZER) mem -o bin/mp64.main src/mp64.main.o
@@ -64,7 +64,7 @@ c128:
 	acme $(OPTIONS) -Dc128=1 -o /tmp/mp.ignore.me -l /tmp/mp128.sym.initial src/constants-com.h
 
 	acme $(OPTIONS) -Dc128=1 -o src/mp128.main.o -l /tmp/mp128-symbols.txt /tmp/mp128.sym.initial src/modplay.s
-	acme $(OPTIONS) -Dc128=1 -o src/mp128.o /tmp/mp128-symbols.txt src/booter-128.s
+	acme $(OPTIONS) -Dc128=1 -o src/mp128.o /tmp/mp128.sym.initial src/booter-128.s
 
 	acme $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o src/c128-boot-sect.s
 

@@ -91,11 +91,13 @@ rts
 !source "src/playlist.s"
 
 !source "src/isr-common.s"
-!source "src/drv-reu.s"
 !source "src/drv-sid-4b.s"
 !source "src/drv-sid-d4b.s"
 !source "src/drv-sid-mah.s"
 !source "src/drv-dac.s"
+
+!source "src/drv-reu-blockops.s"
+!source "src/drv-reu-musicops.s"
 
 !source "src/player.s"
 !source "src/sequencer.s"
