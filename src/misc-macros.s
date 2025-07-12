@@ -146,6 +146,16 @@
 	}
 }
 
+!macro ENABLE_ALL_ROMS {
+	!ifdef c128 {
+		lda #0
+		sta MMU_CR1
+	} else {
+		lda #$37
+		sta $01
+	}
+}
+
 !ifndef c128 {
 	!macro C64_ENABLE_CHAR_ROM_ONLY { ; really the only purpose is to bank-out I/O
 		lda #$31

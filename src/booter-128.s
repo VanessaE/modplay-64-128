@@ -42,10 +42,18 @@ boot_start
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
+	lda reu_highest_bank
+	bne +
+
+	ldx #<reu_not_found_msg
+	ldy #>reu_not_found_msg
+	jsr local_print_msg
+
+	- jmp -
 
 	; show the splash screen
 
-	lda #0
++	lda #0
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
 	lda #WHT ; FIXME -- this should be #BLK
@@ -67,10 +75,9 @@ boot_start
 	sta VIC_2_MHZ
 	jmp ++
 
-+	lda #0
-	ldx #<wrong_screen_msg
++	ldx #<wrong_screen_msg
 	ldy #>wrong_screen_msg ; ends with "ESC x", which flips back to 80 cols
-	+LOCAL_PRINT_MSG
+	jsr local_print_msg
 
 	; upload VDC alt charset
 
@@ -197,6 +204,10 @@ vdc_upload
 .vdc_end_page
 	cmp #0
 	bne .vdc_next_byte
+rts
+
+local_print_msg
+	+LOCAL_PRINT_MSG
 rts
 
 program_load_decrunch_stub_origin

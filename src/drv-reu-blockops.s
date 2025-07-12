@@ -1,7 +1,5 @@
 ; RAM driver for standard REU, block operations
 
-!text "reu driver, block ops",0,0,0
-
 ; the sequencer will look here (via a vector) to find the address and offsets
 ; into the fetch routine that it must use to do the self-mod stuff.
 
@@ -110,7 +108,7 @@ reu_get_size
 	jsr set_registers_AXY
 	; compare data
 	ldx #8 ; signature length, minus 1
--			lda reu_sig_candidate_start, x
+	-	lda reu_sig_candidate_start, x
 		cmp reu_signature_start, x
 		bne .failed
 		dex
@@ -120,14 +118,16 @@ reu_get_size
 	bne .rdlp
 
 	ldx reu_banknum
+	dex
 	jmp +
 
 .failed
 	clc
 	ldx reu_banknum
+	beq +
+	dex
 
-+	dex
-	stx reu_highest_bank		; if 0, REU not detected at all.
++	stx reu_highest_bank		; if 0, REU not detected at all.
 
 	!ifdef c128 {
 		!ifndef scpu {
@@ -161,5 +161,8 @@ reu_banknum
 ; target buffer when reading signatures back from REU
 reu_sig_candidate_start
 	!text $ff,"icanhaz?"; same length as above
+
+reu_not_found_msg
+	!text RED,LOWER,CLR,"No REU found!",RETURN,RETURN,0
 
 !align 255,0,0

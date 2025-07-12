@@ -11,20 +11,9 @@
 		lda #%00111110
 		sta MMU_CR1
 	rts
-
-	enable_roms
-		lda #0
-		sta MMU_CR1
-	rts
-
 } else {
 	disable_roms
 		lda #$35
-		sta $01
-	rts
-
-	enable_roms
-		lda #$37
 		sta $01
 	rts
 }

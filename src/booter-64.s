@@ -28,6 +28,9 @@ splash_colors_begin = splash_data + 1000
 splash_colors_end = splash_colors_begin + 1024
 
 boot_start
+	lda #0
+	sta VIC_BORDER
+	sta VIC_BACKGROUND
 
 	; copy the REU driver into its proper memory slot
 
@@ -42,13 +45,18 @@ boot_start
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
+	lda reu_highest_bank
+	bne +
+
+	ldx #<reu_not_found_msg
+	ldy #>reu_not_found_msg
+	jsr local_print_msg
+
+	- jmp -
 
 	; show the splash screen
 
-	lda #0
-	sta VIC_BORDER
-	sta VIC_BACKGROUND
-	lda #WHT ; FIXME -- this should be #BLK
++	lda #WHT ; FIXME -- this should be #BLK
 	jsr CHROUT
 	lda #LOWER
 	jsr CHROUT
@@ -176,6 +184,10 @@ block_copy_generic
 .vic_end_page
 	cmp #0
 	bne -
+rts
+
+local_print_msg
+	+LOCAL_PRINT_MSG
 rts
 
 program_load_decrunch_stub_origin
