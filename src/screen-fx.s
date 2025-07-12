@@ -1,7 +1,5 @@
 ; this file handles various screen effects like the gray-out-blur-out action
 
-!text "screen fx",0
-
 gray_out
 	!ifndef c128 {
 		lda #11

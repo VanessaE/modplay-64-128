@@ -1,7 +1,5 @@
 ; display the main menu
 
-!text "main menu",0
-
 show_main_menu
 	!ifdef c128 {				; restore screen/window dimensions
 		jsr FULLW

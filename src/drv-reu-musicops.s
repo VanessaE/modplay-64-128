@@ -1,7 +1,5 @@
 ; RAM driver for standard REU, music-related functions
 
-!text "reu driver, music-related",0,0,0
-
 ; the sequencer will look here (via a vector) to find the address and offsets
 ; into the fetch routine that it must use to do the self-mod stuff.
 

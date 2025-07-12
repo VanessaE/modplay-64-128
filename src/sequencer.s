@@ -2,8 +2,6 @@
 ; Originally I was gonna just port the old Modplay 64 v1.2 sequencer since
 ; it works pretty well, but that code is an absolute mess.
 
-!text "sequencer",0
-
 start_sequencer
 	lda #0
 	sta seq_abort_flag

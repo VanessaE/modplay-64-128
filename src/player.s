@@ -1,7 +1,5 @@
 ; this file will hold the outline of the actual player
 
-!text "player",0
-
 start_main_player
 	!ifdef scpu {
 		lda #0

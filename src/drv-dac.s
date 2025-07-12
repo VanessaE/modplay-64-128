@@ -6,8 +6,6 @@
 
 !zone dac_driver {
 
-!text "dac driver",0
-
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 

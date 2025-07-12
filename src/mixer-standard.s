@@ -1,7 +1,5 @@
 ; This file contains the standard mixer/lookahead routines
 
-!text "mixer-standard",0
-
 ; these counts are the average mixer run time, in cycles, per output sample
 ; pair.  See full details in doc/timing-info.txt.
 

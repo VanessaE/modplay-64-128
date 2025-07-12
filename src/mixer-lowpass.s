@@ -5,8 +5,6 @@
 ; In essence, we sacrifice a little bit of sample rate in exchange for
 ; less-noticable resampling noise/artifacts
 
-!text "mixer-lowpass",0
-
 ; these counts are the average mixer run time, in cycles, per output sample
 ; pair.  See full details in doc/timing-info.txt.
 

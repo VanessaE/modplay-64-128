@@ -1,8 +1,6 @@
 ; This file contains the waveforms visualizer, displaying a very simple,
 ; low-resolution character-based plot of the output sample data
 
-!text "viz-waveforms",0
-
 viz_waveform_init
 	lda #<viz_waveform_colors
 	sta viz_row_colors_vec+1

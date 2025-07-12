@@ -1,8 +1,6 @@
 ; this file contains the various routines that can be used by more than one
 ; visualizer mode
 
-!text "viz-common",0
-
 !ifndef c128 {
 	visualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
 } else {

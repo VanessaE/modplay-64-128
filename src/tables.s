@@ -6,8 +6,6 @@
 
 ; enter with .A = desired output resolution
 
-!text "tables",0
-
 generate_volume_tables
 	lda #<volume_table_lower
 	sta fill_copy_target

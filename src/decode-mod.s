@@ -1,8 +1,6 @@
 ; This file handles most of the work to parse a MOD file's header, determine
 ; the file type, etc.
 
-!text "decode-mod",0
-
 load_mod_header ; and also the first pattern if it's a 15-sample mod
 	lda #0
 	sta utility_counter

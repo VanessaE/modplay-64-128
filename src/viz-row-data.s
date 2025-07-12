@@ -1,8 +1,6 @@
 ; This file contains the row data visualizer (e.g. music/sequencer data,
 ; similar to what Protracker shows)
 
-!text "viz-row-data",0
-
 ; print the column dividers and pre-fill the colors
 ;
 ; This routine is called before the sequencer starts, so any Zero Page usage

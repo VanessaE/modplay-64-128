@@ -1,7 +1,5 @@
 ; miscellanious functions
 
-!text "misc functions",0
-
 ;#################
 ;# ROM SWITCHING #
 ;#################

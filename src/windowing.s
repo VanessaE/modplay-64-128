@@ -2,8 +2,6 @@
 
 ; these dimensions are all the CONTENT of the windows, excluding their frames
 
-!text "windowing",0
-
 corner_tl_char				= $ac
 corner_tr_char				= $bb
 corner_bl_char				= $bc

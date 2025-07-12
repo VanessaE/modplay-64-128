@@ -2,8 +2,6 @@
 
 ; ##### Start the ISR and initialize the audio device/driver
 
-!text "isr common",0
-
 isr_set_interval
 	; audio driver and RAM driver times may vary, so we just add them together
 	; according to what the drivers and CPU speed checks indicate

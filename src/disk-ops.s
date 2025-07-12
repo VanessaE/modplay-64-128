@@ -1,7 +1,5 @@
 ; this file contains all the usual DOS operations
 
-!text "file ops",0
-
 check_drive_presence			; enter with .A = device to check
 	ldx #0
 	stx $90

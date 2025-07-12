@@ -4,8 +4,6 @@
 
 !zone sid_4bit_driver {
 
-!text "sid 4 bit driver",0
-
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 

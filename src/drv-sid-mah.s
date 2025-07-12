@@ -5,8 +5,6 @@
 
 !zone sid_mahoney_driver {
 
-!text "sid mahoney driver",0
-
 sid_mahoney_driver_init
 	lda #<sid_mahoney_set_volume_table_resolution
 	sta audio_set_resolution_vec

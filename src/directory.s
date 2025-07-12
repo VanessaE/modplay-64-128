@@ -1,7 +1,5 @@
 ; show disk directory, C= hacking #6, greatly modified
 
-!text "directory",0
-
 c64_dir_popup_base_addr		= VIC_SCREEN + 2*40 + 5
 c64_dir_popup_colors_addr	= VIC_COLOR_RAM + 2*40 + 5
 c64_dir_height				= 21
