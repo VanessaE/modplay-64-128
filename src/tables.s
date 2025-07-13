@@ -320,26 +320,22 @@ regen_all_tables
 
 			jsr gray_out
 			jsr draw_short_popup
-			lda #0
-			ldx #<main_player_regen_tables_msg
-			ldy #>main_player_regen_tables_msg
-			sec
-			jsr print_msg
+
+			ldx #short_popup_top_row+1
+			ldy #short_popup_left_column
 			jmp ++
 
-		+	lda #0
-			ldx #<main_player_regen_tables_msg
-			ldy #>main_player_regen_tables_msg
-			sec
-			jsr print_msg
-		 ++
-		} else {
-			lda #0
-			ldx #<main_player_regen_tables_msg
-			ldy #>main_player_regen_tables_msg
-			sec
-			jsr print_msg
+		+	ldx #medium_popup_top_row+9
+			ldy #medium_popup_left_column
+		++	clc
+			jsr PLOT
 		}
+
+		lda #0
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		sec
+		jsr print_msg
 	}
 
 no_msgs1

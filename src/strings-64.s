@@ -473,8 +473,7 @@ main_player_row_speed_time
 	!byte 0
 
 main_player_regen_tables_msg
-	!byte HOME
-	!fill 14,DOWN
+	!byte RETURN
 	!fill 8,RIGHT
 	!text YEL,"A player setting altered",RETURN
 	!fill 5,RIGHT

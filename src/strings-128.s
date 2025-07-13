@@ -392,10 +392,10 @@ main_player_regen_tables_msg
 	!byte UP,HOME
 	!fill 9,DOWN
 	!byte YEL
-	!text "      A player setting changed", RETURN
-	!text "    that altered the sample rate,",RETURN
-	!text "        re-generating pitch",RETURN
-	!text "        and tempo tables..."
+	!text "        A player setting changed", RETURN
+	!text "      that altered the sample rate,",RETURN
+	!text "          re-generating pitch",RETURN
+	!text "          and tempo tables..."
 	!byte 0
 
 	main_player_keys_msg
@@ -407,7 +407,19 @@ main_player_regen_tables_msg
 
 main_player_regen_erase_tables_msg
 	!fill 4,UP
-	!byte RETURN,ESC,"@",0
+	!byte LEFT
+	!byte ESC,"p"
+	!byte DOWN
+	!byte ESC,"p"
+	!byte DOWN
+	!byte ESC,"p"
+	!byte DOWN
+	!byte ESC,"p"
+	!byte DOWN
+	!byte ESC,"p"
+	!byte DOWN
+	!byte ESC,"p"
+	!byte 0
 
 loader_erase_kbs_msg
 	!byte GRN

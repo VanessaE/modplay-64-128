@@ -61,6 +61,10 @@ bottom_edge_char			= $60
 	text_input_popup_height			= 2
 }
 
+short_popup_top_row					= (24 - short_popup_height) / 2
+short_popup_bottom_row				= (24 + short_popup_height) / 2
+short_popup_right_column				= short_popup_left_column + short_popup_width - 1
+
 mini_popup_top_row					= (24 - mini_popup_height) / 2
 mini_popup_bottom_row				= (24 + mini_popup_height) / 2
 mini_popup_right_column				= mini_popup_left_column + mini_popup_width - 1
