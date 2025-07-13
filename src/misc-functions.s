@@ -1142,7 +1142,7 @@ check_sid_type_left
 
 	!ifdef c128 {
 		lda #0
-		sta VIC_2_MHZ
+		sta C128_VIC_CLOCK_SPEED
 	}
 
 	lda #$ff				;Set frequency in voice 3 to $ffff 
@@ -1158,7 +1158,7 @@ check_sid_type_left
 	}
 
 	!ifdef c128 {
-		inc VIC_2_MHZ
+		inc C128_VIC_CLOCK_SPEED
 	}
 
 	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
@@ -1184,7 +1184,7 @@ check_sid_type_right
 
 	!ifdef c128 {
 		lda #0
-		sta VIC_2_MHZ
+		sta C128_VIC_CLOCK_SPEED
 	}
 
 	lda #$ff
@@ -1211,7 +1211,7 @@ check_sid_type_right
 	}
 
 	!ifdef c128 {
-		inc VIC_2_MHZ
+		inc C128_VIC_CLOCK_SPEED
 	}
 
 	lsr

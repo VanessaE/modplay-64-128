@@ -7,7 +7,7 @@ rti
 init
 	!ifdef c128 {
 		lda #1
-		sta VIC_2_MHZ
+		sta C128_VIC_CLOCK_SPEED
 		jsr disable_vic_screen
 		lda #$20
 		sta RPTFLAG ; disables key repeat other than cursor, space, delete

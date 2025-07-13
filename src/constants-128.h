@@ -11,8 +11,9 @@
 
 	reu_highest_bank				= $54
 	c128_highest_bank				= $55
+	c128_vdc_has_64k				= $61
 
-	; free: $61, $62
+	; free: $62
 
 	expansion_transfer_local_addr	= $c9 ; through $cb
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
@@ -85,6 +86,7 @@
 	RESET							= $e000
 
 	SWAPPER							= $ff5f
+	DLCHR							= $ff62
 	SETBNK							= $ff68
 
 }

@@ -17,6 +17,26 @@
   +
 }
 
+; here in the booter, we can't assume that the machine can stay in 2 MHz mode
+; (the user may have booted in 40 column mode)
+; whereas in the main program it mostly will.
+
+!macro C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ {
+	!ifndef scpu {
+		lda C128_VIC_CLOCK_SPEED
+		pha
+		lda #0
+		sta C128_VIC_CLOCK_SPEED
+	}
+}
+
+!macro C128_RESTORE_2MHZ_IF_POSSIBLE {
+	!ifndef scpu {
+		pla
+		sta C128_VIC_CLOCK_SPEED
+	}
+}
+
 !convtab pet
 !cpu 6510
 
@@ -51,8 +71,6 @@ boot_start
 
 	- jmp -
 
-	; show the splash screen
-
 +	lda #0
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
@@ -70,19 +88,18 @@ boot_start
 	pha
 	bpl + ; if positive, we're on 40 columns
 
-	+DISABLE_VIC_SCREEN
-	lda #1
-	sta VIC_2_MHZ
+	lda #CLR
+	jsr CHROUT
 	jmp ++
 
 +	ldx #<wrong_screen_msg
 	ldy #>wrong_screen_msg ; ends with "ESC x", which flips back to 80 cols
 	jsr local_print_msg
 
+++	jsr check_for_64k_vdc
+
 	; upload VDC alt charset
 
-++	lda #CLR
-	jsr CHROUT
 	lda #<charset_alt_data
 	sta fill_copy_source
 	lda #>charset_alt_data
@@ -96,6 +113,8 @@ boot_start
 	lda #$80
 	ldx #>(charset_alt_data+$0800)
 	jsr vdc_upload
+
+	; show the splash screen
 
 	lda #<splash_colors_begin		; copy the colors first to avoid the gfx
 	sta fill_copy_source			; painting into and hence briefly using
@@ -125,13 +144,6 @@ boot_start
 	ldx #>splash_text_end
 	jsr vdc_upload
 
-	pla
-	bmi .out ; if started on 80 columns, stay in 2 MHz mode.
-
-	dec VIC_2_MHZ
-	+ENABLE_VIC_SCREEN
-
-.out
 	clc
 	ldy #splash_ver_pos_col
 	ldx #splash_ver_pos_row
@@ -273,6 +285,59 @@ rts
 
 local_print_msg
 	+LOCAL_PRINT_MSG
+rts
+
+check_for_64k_vdc
+	lda #0
+	sta fill_copy_target
+
+	jsr vdc_set_41464_mode	; set 41464 mode and write a 0 to $0000
+
+	lda #0
+	sta fill_copy_target+1
+	+VDC_RAM_RW_SETUP
+	lda #0
+	+VDC_WRITE_RAM
+
+	lda #$80				; try to write a $ff to VDC $8000
+	sta fill_copy_target+1
+	+VDC_RAM_RW_SETUP
+	lda #$ff
+	+VDC_WRITE_RAM
+
+	lda #0					; and see what we get back from $0000
+	sta fill_copy_target+1
+	+VDC_RAM_RW_SETUP
+
+	+VDC_READ_RAM
+	bne .not_64k			; if it didn't come back with a 0, VDC has 16 kB
+	lda #$80				; otherwise set the flag for 64k,
+	sta c128_vdc_has_64k
+	jsr DLCHR				; and re-initialize the default charset
+	rts
+
+.not_64k
+	lda #0
+	sta c128_vdc_has_64k
+	jsr vdc_set_4416_mode
+rts
+
+vdc_set_41464_mode
+	lda #28					; set 4164/41464 mode
+	sta $d600
+-	bit $d600
+	bpl -
+	lda #$3f
+	sta $d601
+rts
+
+vdc_set_4416_mode			; otherwise put things back the way they were.
+	lda #28
+	sta $d600
+-	bit $d600
+	bpl -
+	lda #$2f
+	sta $d601
 rts
 
 program_load_decrunch_stub_origin

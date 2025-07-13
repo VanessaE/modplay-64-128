@@ -22,20 +22,16 @@ reu_fetch_block
 	sta DMA_DAL
 	lda stash_size+1
 	sta DMA_DAH
-	lda #$91
 
 	!ifdef c128 {
-		!ifndef scpu {
-			dec VIC_2_MHZ
-		}
+		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
 	}
 
+	lda #$91
 	sta DMA_CMD
 
 	!ifdef c128 {
-		!ifndef scpu {
-			sta VIC_2_MHZ
-		}
+		+C128_RESTORE_2MHZ_IF_POSSIBLE
 	}
 rts
 
@@ -57,20 +53,15 @@ reu_stash_block
 	lda stash_size+1
 	sta DMA_DAH
 
-	lda #$90
-
 	!ifdef c128 {
-		!ifndef scpu {
-			sta VIC_2_MHZ
-		}
+		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
 	}
 
+	lda #$90
 	sta DMA_CMD
 
 	!ifdef c128 {
-		!ifndef scpu {
-			inc VIC_2_MHZ
-		}
+		+C128_RESTORE_2MHZ_IF_POSSIBLE
 	}
 rts
 
@@ -82,9 +73,7 @@ REUCOMMAND_FETCH    = $91   ; immediately, no reload
 
 reu_get_size
 	!ifdef c128 {
-		!ifndef scpu {
-			dec VIC_2_MHZ
-		}
+		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
 	}
 
 	ldx #0  ; pre-init
@@ -130,9 +119,7 @@ reu_get_size
 +	stx reu_highest_bank		; if 0, REU not detected at all.
 
 	!ifdef c128 {
-		!ifndef scpu {
-			inc VIC_2_MHZ
-		}
+		+C128_RESTORE_2MHZ_IF_POSSIBLE
 	}
 rts
 

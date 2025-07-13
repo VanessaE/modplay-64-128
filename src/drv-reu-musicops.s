@@ -78,9 +78,9 @@ reu_fetch_row
 		; matter, the SCPU will automatically stretch the clock anyway.
 
 			sei
-			sta VIC_2_MHZ
+			sta C128_VIC_CLOCK_SPEED
 			sty DMA_CMD
-			sty VIC_2_MHZ
+			sty C128_VIC_CLOCK_SPEED
 			cli
 		}
 	} else {
@@ -217,7 +217,7 @@ reu_run_fetch_and_mixer
 				!ifdef c128 {
 					!ifndef scpu {
 						sei									; 2
-						dec VIC_2_MHZ						; 7
+						dec C128_VIC_CLOCK_SPEED						; 7
 					}
 				}
 
@@ -228,7 +228,7 @@ reu_run_fetch_and_mixer
 
 				!ifdef c128 {
 					!ifndef scpu {
-						sty VIC_2_MHZ						; 4
+						sty C128_VIC_CLOCK_SPEED						; 4
 						cli									; 2
 					}
 				}
