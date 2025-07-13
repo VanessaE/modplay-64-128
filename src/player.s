@@ -141,46 +141,6 @@ start_main_player
 	jsr print_msg
 
 no_player_ui
-	lda audio_driver
-	cmp #1
-	bne ns4ip
-
-	bit dither_enable
-	bpl +
-
-	jsr sid_4bit_dithered_driver_init
-	jmp player_gen_tables
-
-+	jsr sid_4bit_driver_init
-	jmp player_gen_tables
-
-ns4ip
-	cmp #2
-	bne nsmah
-	jsr sid_mahoney_driver_init
-	jmp player_gen_tables
-
-nsmah
-	jsr dac_driver_init
-
-player_gen_tables
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
-	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
-	+JSR_INDIRECT (audio_set_resolution_vec)
-
-	jsr reu_set_selfmod_and_mixer_vectors
-
-	lda filter_setting
-	bmi +
-	jsr mixer_standard_set_cycle_count
-	jmp ++
-
-+	jsr mixer_lowpass_set_cycle_count
-
-++	jsr isr_set_interval
-	lda #$80
-	sta allow_regen_msg
-
 	!ifndef c128 {
 		!ifdef scpu {
 			bit SCPU_PRESENT
@@ -192,10 +152,15 @@ player_gen_tables
 			sta SCPU_OPTIMIZATION_MODE
 			sta SCPU_DISABLE_HW_REGS
 		  +
+		} else {
+			lda #$80
+			sta allow_regen_msg
 		}
 	}
 
-	jsr regen_all_tables
+	jsr init_audio_driver
+	jsr reu_set_selfmod_and_mixer_vectors
+	jsr regenerate_tables_if_needed
 
 	!ifndef c128 {
 		!ifdef scpu {
@@ -204,7 +169,7 @@ player_gen_tables
 
 			sta SCPU_TURBO_ON
 			sta SCPU_ENABLE_HW_REGS
-			lda #%01000100				; optimize:  only echo $c000-$ffff to 
+			lda #%01000100				; optimize:  only echo $c000-$ffff to
 			sta SCPU_OPTIMIZATION_MODE	; local RAM
 			sta SCPU_DISABLE_HW_REGS
 		  +
@@ -256,4 +221,25 @@ player_gen_tables
 		jsr enable_vic_screen
 	  +
 	}
+rts
+
+init_audio_driver
+	lda audio_driver
+	cmp #3
+	bne +
+	jsr dac_driver_init
+	rts
+
++	cmp #2
+	bne +
+	jsr sid_mahoney_driver_init
+	rts
+
++	bit dither_enable
+	bpl +
+
+	jsr sid_4bit_dithered_driver_init
+	rts
+
++	jsr sid_4bit_driver_init
 rts

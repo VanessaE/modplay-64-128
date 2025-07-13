@@ -297,10 +297,24 @@ generate_note_number_lookup_table
 	cli
 rts
 
-regen_all_tables
+regenerate_tables_if_needed
+	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
+	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
+	+JSR_INDIRECT (audio_set_resolution_vec)
+
+	lda filter_setting
+	bmi +
+	jsr mixer_standard_set_cycle_count
+	jmp ++
+
++	jsr mixer_lowpass_set_cycle_count
+
+++	jsr isr_set_interval
+
 	lda isr_trigger_interval
 	cmp last_isr_trigger_interval
 	bne +
+
 	lda isr_trigger_interval+1
 	cmp last_isr_trigger_interval+1
 	bne +

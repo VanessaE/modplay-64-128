@@ -185,41 +185,7 @@ init
 
 	}
 
-	lda #<reu_fetch_block
-	sta fetch_block_vec
-	lda #>reu_fetch_block
-	sta fetch_block_vec+1
-
-	lda #<reu_stash_block
-	sta stash_block_vec
-	lda #>reu_stash_block
-	sta stash_block_vec+1
-
-	lda #<reu_fetch_row
-	sta fetch_row_expansion_vec+1
-	lda #>reu_fetch_row
-	sta fetch_row_expansion_vec+2
-
-	lda #<reu_set_cycle_counts
-	sta ram_driver_set_cycle_counts_vec
-	lda #>reu_set_cycle_counts
-	sta ram_driver_set_cycle_counts_vec+1
-
-	lda #<reu_run_fetch_and_mixer
-	sta run_fetch_and_mixer_vec+1
-	lda #>reu_run_fetch_and_mixer
-	sta run_fetch_and_mixer_vec+2
-
-	lda #<reu_do_selfmods_for_pitch_change
-	sta do_selfmod_pitch_vec
-	lda #>reu_do_selfmods_for_pitch_change
-	sta do_selfmod_pitch_vec+1
-
-	lda #<reu_do_selfmods_for_instrument_change
-	sta do_selfmod_instrument_vec
-	lda #>reu_do_selfmods_for_instrument_change
-	sta do_selfmod_instrument_vec+1
-
+	; REU start page, to be specific
 	lda #0
 	sta expansion_memory_start_page
 
@@ -360,35 +326,46 @@ init
 	jsr check_sid_type_left
 	jsr check_sid_type_right
 
-	lda audio_driver
-	cmp #1
-	bne ns4init
+	lda #<reu_fetch_block
+	sta fetch_block_vec
+	lda #>reu_fetch_block
+	sta fetch_block_vec+1
 
-	bit dither_enable
-	bpl +
+	lda #<reu_stash_block
+	sta stash_block_vec
+	lda #>reu_stash_block
+	sta stash_block_vec+1
 
-	jsr sid_4bit_dithered_driver_init
-	jmp ++
+	lda #<reu_fetch_row
+	sta fetch_row_expansion_vec+1
+	lda #>reu_fetch_row
+	sta fetch_row_expansion_vec+2
 
-+	jsr sid_4bit_driver_init
+	lda #<reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec
+	lda #>reu_set_cycle_counts
+	sta ram_driver_set_cycle_counts_vec+1
 
-++	jmp init_tables_gen
+	lda #<reu_run_fetch_and_mixer
+	sta run_fetch_and_mixer_vec+1
+	lda #>reu_run_fetch_and_mixer
+	sta run_fetch_and_mixer_vec+2
 
-ns4init
-	cmp #2
-	bne nmahinit
-	jsr sid_mahoney_driver_init
-	jmp init_tables_gen
+	lda #<reu_do_selfmods_for_pitch_change
+	sta do_selfmod_pitch_vec
+	lda #>reu_do_selfmods_for_pitch_change
+	sta do_selfmod_pitch_vec+1
 
-nmahinit
-	jsr dac_driver_init
+	lda #<reu_do_selfmods_for_instrument_change
+	sta do_selfmod_instrument_vec
+	lda #>reu_do_selfmods_for_instrument_change
+	sta do_selfmod_instrument_vec+1
 
-init_tables_gen
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
-	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
-	+JSR_INDIRECT (audio_set_resolution_vec)
-	jsr isr_set_interval
-	jsr regen_all_tables
+	lda #0
+	sta allow_regen_msg
+
+	jsr init_audio_driver
+	jsr regenerate_tables_if_needed
 
 	jsr generate_note_number_lookup_table
 
