@@ -29,16 +29,6 @@ init
 
 	lda #0
 
-	!ifndef c128 {
-		ldy #$cc ; length of the low memory area where player vars will go
-	} else {
-		ldy #$a2
-	}
-
--	dey
-	sta low_memory_area,y
-	bne -
-
 	ldy #0
 -	sta main_variables_zone,y
 	sta main_variables_zone+$0100,y
@@ -188,8 +178,6 @@ init
 	; REU start page, to be specific
 	lda #0
 	sta expansion_memory_start_page
-
-+	+SET_EXPANSION_ZONES
 
 	lda #0
 	sta ramlink_detect

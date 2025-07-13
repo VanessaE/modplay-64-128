@@ -457,8 +457,9 @@ tempo_fine_adjust_constant = 159778
 	}
 
 	; sequencer/player variables -- most of these are 8 bytes each
-	; these are placed in areas of memory where it's okay if they get trashed,
-	; so long as the area is stable while the player/seqencer is running.
+	; anything stored here will not be wiped with zeroes by init
+	; so only use it for stuff that is initialized explicitly, or which
+	; needs to be passed along from the booter.
 
 	low_memory_area = *
 	string_buffer_backup				= low_memory_area ; 48 bytes
@@ -472,6 +473,15 @@ tempo_fine_adjust_constant = 159778
 	seq_prev_command_arguments			!skip 8
 	seq_pitch_slide_target_period_lows	!skip 8
 	seq_pitch_slide_target_period_highs !skip 8
+
+	expansion_memory_start_page			!skip 1
+	exp_instr_names_start_page			!skip 1
+	exp_petscii_filenames_start_page	!skip 1
+	exp_screencode_filenames_start_page	!skip 1
+	exp_loader_bg_start_page			!skip 1
+	exp_player_bg_start_page			!skip 1
+	exp_file_data_start_page			!skip 1
+	highest_exp_addresss_used			!skip 3
 
 	!ifndef c128 {
 		!if * > $03ff {
@@ -630,16 +640,6 @@ tempo_fine_adjust_constant = 159778
 
 	supercpu_last_free_page				!skip 1
 	supercpu_last_free_bank				!skip 1
-
-	expansion_memory_start_page			!skip 1
-
-	exp_instr_names_start_page			!skip 1
-	exp_petscii_filenames_start_page	!skip 1
-	exp_screencode_filenames_start_page	!skip 1
-	exp_loader_bg_start_page			!skip 1
-	exp_player_bg_start_page			!skip 1
-	exp_file_data_start_page			!skip 1
-	highest_exp_addresss_used			!skip 3
 
 	; various program indirect JMP/JSR vectors
 
