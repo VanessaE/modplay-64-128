@@ -102,8 +102,9 @@ check_menu_key_f4
 check_menu_key_f5
 	cmp #$87
 	bne check_menu_key_f6
-	jsr copy_main_menu_to_cache_quick
 	jsr load_directory
+	lda #0
+	sta main_menu_cache_is_valid
 	lda #$80
 	rts
 
