@@ -1,18 +1,28 @@
 ; display the main menu
 
 show_main_menu
-	!ifdef c128 {				; restore screen/window dimensions
+	!ifdef c128 {
 		jsr FULLW
-		bit clear_menu_screen_flag
-		bpl +
-		lda #CLR
-		jsr CHROUT
-	+	lda #$80
-		sta clear_menu_screen_flag
 	}
+
+	lda #CLR
+	jsr CHROUT
+
+	!ifdef c128 {
+		bit c128_vdc_has_64k
+		bmi +
+		jmp menu_full_redraw
+	  +
+	}
+
+	bit main_menu_cache_is_valid
+	bpl menu_full_redraw
+	jsr retrieve_main_menu_from_cache_quick
+	jmp main_loop
 
 	; draw the main menu's outlines/boxes and title line
 
+menu_full_redraw
 	lda #0
 	ldx #<program_title
 	ldy #>program_title
@@ -60,13 +70,7 @@ show_main_menu
 	jsr prefill_playlist_colors
 	jsr display_playlist
 
-redraw_menu
-	!ifdef c128 {
-		jsr set_window_menu_pane
-		lda #CLR
-		jsr CHROUT
-
-	} else {
+	!ifndef c128 {
 		ldy #0
 		lda #$20
 	-	!for .row, 2, 16 {
@@ -77,23 +81,9 @@ redraw_menu
 		bne -
 	}
 
-	lda current_menu_page
-	bne +
-	jsr draw_menu_page_a
-	jmp finish_menu
-
-+	cmp #1
-	bne +
-	jsr draw_menu_page_b
-	jmp finish_menu
-
-+	jsr draw_menu_page_c
+	jsr draw_menu_right_pane_contents
 
 finish_menu
-	!ifdef c128 {
-		jsr set_window_playlist_pane
-	}
-
 	bit initial_playlist_loaded
 	bmi main_loop
 	jsr load_directory
@@ -106,12 +96,46 @@ main_loop
 	bne -		; common between both player UI and main menu
 
 	jsr get_menu_key
-	; exit status: .A = 0, do nothing; $80=just re-print/redraw
-	; the menu text, anything else = show main menu from start
+	; exit status:
+	; .A = 0, do nothing
+	; .A = 1, retrieve the cache and redraw the right pane
+	; .A = 2, retrieve the cache and redraw the info box
+	; .A = $80 or anything else = retrieve cache, use it immediately
+	;
+	; if no cache is available, all non-zero exits just trigger a fill redraw
 
 	beq main_loop
-	bmi redraw_menu
-	jmp show_main_menu
+
+	!ifdef c128 {
+		bit c128_vdc_has_64k
+		bmi +
+		jmp show_main_menu
+	  +
+	}
+
+	cmp #1
+	bne ++
+
+	bit main_menu_cache_is_valid
+	bpl +
+	jmp main_loop
+
++	jsr retrieve_main_menu_from_cache_quick
+	jsr draw_menu_right_pane_contents
+	lda #0
+	sta main_menu_cache_is_valid
+	jmp main_loop
+
+++	cmp #2
+	bne ++
+
+	jsr retrieve_main_menu_from_cache_quick
+	jsr populate_info_box
+	lda #0
+	sta main_menu_cache_is_valid
+	jmp main_loop
+
+++	jmp show_main_menu
 
 rp_start = VIC_SCREEN+(2*40)+19
 
@@ -122,7 +146,64 @@ switch_pages
 	bne +
 	lda #0
 	sta current_menu_page
-+ rts
++	jsr draw_menu_right_pane_contents
+	lda #0
+	sta main_menu_cache_is_valid
+rts
+
+draw_menu_right_pane_contents
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
+
+	jsr erase_menu_right_pane_contents
+
+	lda current_menu_page
+	bne +
+	jsr draw_menu_page_a
+	rts
+
++	cmp #1
+	bne +
+	jsr draw_menu_page_b
+	rts
+
++	jsr draw_menu_page_c
+rts
+
+erase_menu_right_pane_contents
+	!ifdef c128 {
+		lda #CLR
+		jsr CHROUT
+	} else {
+
+		lda #<(VIC_SCREEN + 2*40 + 18)
+		sta fill_copy_target
+		lda #>(VIC_SCREEN + 2*40 + 18)
+		sta fill_copy_target+1
+
+		ldx #2
+
+	--	lda #32
+		ldy #20
+
+	-	sta (fill_copy_target),y
+		dey
+		bpl -
+
+		clc
+		lda fill_copy_target
+		adc #40
+		sta fill_copy_target
+		lda fill_copy_target+1
+		adc #0
+		sta fill_copy_target+1
+
+		inx
+		cpx #17
+		bne --
+	}
+rts
 
 draw_menu_page_a
 	!ifndef c128 {

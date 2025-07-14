@@ -49,7 +49,7 @@ start_main_player
 
 		++
 	} else {
-		jsr copy_player_bg_from_reu
+		jsr vic_retrieve_player_bg_from_reu
 	}
 
 	!ifndef c128 {

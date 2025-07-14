@@ -6,10 +6,6 @@ get_menu_key
 	beq get_menu_key ; a zero exit means the C= key was not pressed
 
 	jsr switch_pages
-	!ifdef c128 {
-		jsr set_window_playlist_pane
-	}
-		lda #$80
 	rts
 
 check_menu_key_up
@@ -19,6 +15,7 @@ check_menu_key_up
 	beq check_menu_key_down
 	jsr playlist_scroll_up
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_down
@@ -28,6 +25,7 @@ check_menu_key_down
 	beq check_menu_key_p
 	jsr playlist_scroll_down
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_p
@@ -35,8 +33,9 @@ check_menu_key_p
 	bne check_menu_key_return
 	lda current_file_type
 	beq check_menu_key_return
+	jsr copy_main_menu_to_cache_quick
 	jsr start_main_player
-+	lda #1
+	lda #$80
 	rts
 
 check_menu_key_return
@@ -46,6 +45,7 @@ check_menu_key_return
 	beq check_menu_key_f1
 	jsr enqueue_file
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_f1
@@ -53,12 +53,13 @@ check_menu_key_f1
 	bne check_menu_key_f2
 	lda playlist_length
 	beq check_menu_key_f2
+	jsr copy_main_menu_to_cache_quick
 	clc
 	jsr load_file_to_expansion
 	lda current_file_type
 	beq +
 	jsr start_main_player
-+	lda #1
++	lda #2
 	rts
 
 check_menu_key_f2
@@ -66,11 +67,12 @@ check_menu_key_f2
 	bne check_menu_key_f3
 	lda playlist_length
 	beq check_menu_key_f3
+	jsr copy_main_menu_to_cache_quick
 	clc
 	lda #$80
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #1
++	lda #2
 	rts
 
 check_menu_key_f3
@@ -78,29 +80,31 @@ check_menu_key_f3
 	bne check_menu_key_f4
 	lda playlist_length
 	beq check_menu_key_f4
+	jsr copy_main_menu_to_cache_quick
 	clc
 	lda #0
 	sta playlist_scroll_pos
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #1
++	lda #2
 	rts
 
 check_menu_key_f4
 	cmp #$8a
 	bne check_menu_key_f5
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
+
 	jsr toggle_repeat
+	bcc +
 	lda #0
-	rts
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_f5
 	cmp #$87
 	bne check_menu_key_f6
+	jsr copy_main_menu_to_cache_quick
 	jsr load_directory
-	lda #1
+	lda #$80
 	rts
 
 check_menu_key_f6
@@ -114,6 +118,7 @@ check_menu_key_f6
 	bne -
 	jsr display_playlist
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_f7
@@ -121,11 +126,12 @@ check_menu_key_f7
 	bne check_menu_key_f8
 	lda playlist_length
 	beq check_menu_key_f8
+	jsr copy_main_menu_to_cache_quick
 	clc
 	lda #0
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #1
++	lda #2
 	rts
 
 check_menu_key_f8
@@ -146,6 +152,7 @@ check_menu_key_home
 	sta playlist_scroll_pos
 	jsr display_playlist
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_clr
@@ -161,6 +168,7 @@ check_menu_key_clr
 	sta playlist_scroll_pos
 	jsr display_playlist
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_minus
@@ -170,6 +178,7 @@ check_menu_key_minus
 	beq check_menu_key_plus
 	jsr playlist_page_up
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
 
 check_menu_key_plus
@@ -179,28 +188,18 @@ check_menu_key_plus
 	beq check_menu_key_l
 	jsr playlist_page_down
 	lda #0
+	sta main_menu_cache_is_valid
 	rts
-
-;check_menu_key_shift_p
-;	cmp #$70
-;	beq +
-;	cmp #$d0
-;	bne check_menu_key_l
-;
-;+	lda current_file_type
-;	beq check_menu_key_l
-;	jsr single_sample_player
-;	lda #1
-;	rts
 
 check_menu_key_l
 	cmp #$4c
 	bne check_menu_key_shf_l
 	lda playlist_length
 	beq check_menu_key_shf_l
+	jsr copy_main_menu_to_cache_quick
 	clc
 	jsr load_file_to_expansion
-	lda #1
+	lda #2
 	rts
 
 check_menu_key_shf_l
@@ -209,42 +208,46 @@ check_menu_key_shf_l
 	cmp #$cc
 	bne check_menu_key_number
 
-+	jsr request_filename
++	jsr copy_main_menu_to_cache_quick
+	jsr request_filename
 	beq + ; if zero length filename, just abort
 	sec
 	jsr load_file_to_expansion
-+	lda #1
++	lda #2
 	rts
 
 check_menu_key_number
 	cmp #$23
 	bne check_menu_key_dollar
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
+
 	jsr change_input_device
 	lda #0
-	rts
+	bcc +
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_dollar
 	cmp #$24
 	bne check_menu_key_at
+	jsr copy_main_menu_to_cache_quick
 	jsr show_directory
-	lda #1
+	lda #$80
 	rts
 
 check_menu_key_at
 	cmp #$40
 	bne check_menu_key_i
+	jsr copy_main_menu_to_cache_quick
 	jsr request_dos_command
-	lda #1
+	lda #$80
 	rts
 
 check_menu_key_i
 	cmp #$49
 	bne check_menu_key_d
+	jsr copy_main_menu_to_cache_quick
 	jsr show_system_info_popup
-	lda #1
+	lda #$80
 	rts
 
 ; keys for page C start here
@@ -252,27 +255,36 @@ check_menu_key_i
 check_menu_key_d
 	cmp #$44
 	bne check_menu_key_s
+	jsr copy_main_menu_to_cache_quick
 	jsr choose_audio_driver
+
+	lda current_menu_page
+	cmp #2
+	bne +
+
 	lda #1
+	rts
+
++	lda #$80
 	rts
 
 check_menu_key_s
 	cmp #$53
 	bne check_menu_key_a
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
 
 	jsr toggle_stereo_mode
 	jsr show_stereo_mode
+	bcc +
 
 	lda current_menu_page
 	cmp #2
-	beq +
+	bne +
+
 	lda #0
-	rts
-+	lda #$80
-	rts
+	sta main_menu_cache_is_valid
+
++	lda #0
+rts
 
 check_menu_key_a
 	cmp #$41
@@ -281,48 +293,52 @@ check_menu_key_a
 	bit stereo_enable
 	bpl +
 	jsr change_audio_addr
-+	lda #0
-	rts
+	lda #0
+	bcc +
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_f
 	cmp #$46
 	bne check_menu_key_t
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
+
 	jsr change_filter_setting
 	lda #0
-	rts
+	bcc +
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_t
 	cmp #$54
 	bne check_menu_key_e
 
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
-
 	lda audio_driver
 	cmp #1
 	bne +
 	jsr change_dithering_setting
-+	lda #0
-	rts
+	lda #0
+	bcc +
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_e
 	!ifndef c128 {
 		cmp #$45
 		bne check_menu_key_leftarrow
 		jsr toggle_screen_enable
-		lda #$80
+		bcc +
+		lda #0
+		sta main_menu_cache_is_valid
+	+	lda #0
 		rts
 	}
 
 check_menu_key_leftarrow
 	cmp #$5f
 	bne +
+	jsr copy_main_menu_to_cache_quick
 	jsr save_config
-	lda #1
+	lda #$80
 	rts
 
 +	lda #0

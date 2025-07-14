@@ -71,12 +71,12 @@
 }
 
 show_repeat_mode
+	clc
 	lda current_menu_page
 	beq +
 	rts
 
-+	clc
-	ldx #rpt_row
++	ldx #rpt_row
 	ldy #rpt_col
 	jsr PLOT
 	lda #0
@@ -113,6 +113,7 @@ choose_audio_driver
 	jsr gray_out
 	clc
 	jsr draw_mini_popup
+
 	lda #0
 	ldx #<choose_audio_msg
 	ldy #>choose_audio_msg
@@ -201,12 +202,19 @@ choose_audio_driver
 
 	and #$03
 	sta audio_driver
+	lda current_menu_page
+	cmp #2
+	bne +
+	lda #0
+	sta main_menu_cache_is_valid
+  +
 rts
 
 show_input_device
 	lda current_menu_page
 	cmp #1
 	beq +
+	clc
 	rts
 
 +	clc
@@ -233,6 +241,7 @@ show_input_device
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
+	sec
 rts
 
 change_input_device
@@ -253,6 +262,7 @@ show_audio_driver
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
 	rts
 
 +	clc
@@ -298,12 +308,14 @@ adrv_app
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
+	sec
 rts
 
 show_stereo_mode
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
 	rts
 
 +	clc
@@ -337,6 +349,7 @@ show_sid_addr
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
 	rts
 
 +	clc
@@ -378,12 +391,14 @@ show_sid_addr
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
+	sec
 rts
 
 show_dac_addr
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
 	rts
 
 +	clc
@@ -434,13 +449,10 @@ show_dac_addr
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
+	sec
 rts
 
 change_audio_addr
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
-
 	lda audio_driver
 	cmp #3
 	beq +
@@ -559,6 +571,13 @@ show_filter_setting
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
+	rts
+
++	lda audio_driver
+	cmp #2
+	beq +
+	clc
 	rts
 
 +	clc
@@ -566,8 +585,7 @@ show_filter_setting
 	ldy #filter_col
 	jsr PLOT
 
-
-+	bit filter_setting
+	bit filter_setting
 	bpl +
 
 	lda #0
@@ -595,6 +613,7 @@ show_dithering_setting
 	lda current_menu_page
 	cmp #2
 	beq +
+	clc
 	rts
 
 +	lda audio_driver
@@ -644,6 +663,7 @@ change_dithering_setting
 		lda current_menu_page
 		cmp #2
 		beq +
+		clc
 		rts
 
 	+	ldx #scr_en_row
@@ -675,7 +695,6 @@ change_dithering_setting
 }
 
 show_system_info_popup
-	clc
 	jsr draw_medium_popup
 	lda #0
 	ldx #<info_popup_msg

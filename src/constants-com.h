@@ -478,6 +478,7 @@ tempo_fine_adjust_constant = 159778
 	exp_instr_names_start_page			!skip 1
 	exp_petscii_filenames_start_page	!skip 1
 	exp_screencode_filenames_start_page	!skip 1
+	exp_menu_start_page					!skip 1
 	exp_loader_bg_start_page			!skip 1
 	exp_player_bg_start_page			!skip 1
 	exp_file_data_start_page			!skip 1
@@ -539,7 +540,6 @@ tempo_fine_adjust_constant = 159778
 	current_file_tracks					!skip 1
 
 	current_menu_page					!skip 1
-	clear_menu_screen_flag				!skip 1
 
 	file_to_load_name_len				!skip 1
 	file_to_load_size					!skip 2

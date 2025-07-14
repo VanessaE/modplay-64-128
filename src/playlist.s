@@ -280,14 +280,6 @@ load_directory
 
 .fin
 	jsr close_file
-
-	!ifdef c128 {
-		lda #0
-		sta clear_menu_screen_flag
-		ldx #mini_popup_height
-		ldy #mini_popup_width
-		jsr erase_popup
-	}
 rts
 
 ; display the loaded file list in the left pane
@@ -328,12 +320,14 @@ display_disk_name
 rts
 
 display_playlist
+	!ifdef c128 {
+		jsr set_window_playlist_pane
+	}
+
 	lda playlist_length
 	bne +
 
 	!ifdef c128 {
-		jsr set_window_playlist_pane
-
 		clc
 		ldx #playlist_middle_row
 		ldy #playlist_left_column+2
@@ -351,11 +345,7 @@ display_playlist
 	}
 	rts
 
-+	!ifdef c128 {
-		jsr set_window_playlist_pane
-	}
-
-	jsr erase_playlist_pane
++	jsr erase_playlist_pane
 
 	sec
 	lda #playlist_half_page_size

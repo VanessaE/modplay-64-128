@@ -9,7 +9,9 @@
 
 	progress_bar_char_pointer		= $22 ; and $23
 
-	; free: $4e, $4f
+	main_menu_cache_is_valid		= $4e
+
+	; free: $4f
 
 	reu_highest_bank				= $57
 

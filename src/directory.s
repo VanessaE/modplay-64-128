@@ -166,14 +166,6 @@ dir_finish
 	}
 
 	jsr press_any_key
-
-	!ifdef c128 {
-		lda #0
-		sta clear_menu_screen_flag
-		ldx #tall_popup_height
-		ldy #medium_popup_width
-		jsr erase_popup
-	}
 rts
 
 dir_open

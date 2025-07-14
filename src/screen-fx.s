@@ -380,7 +380,70 @@ nofill
 rts
 
 !ifndef c128 {
-	copy_loader_bg_from_reu
+	vic_copy_main_menu_to_reu
+		jsr vic_set_copy_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; menu text
+
+		lda #<VIC_SCREEN
+		sta expansion_transfer_local_addr
+		lda #>VIC_SCREEN
+		sta expansion_transfer_local_addr+1
+
+		lda exp_menu_start_page
+		sta expansion_memory_target_pointer+1
+
+		jsr reu_stash_block
+
+		; menu colors
+
+		lda #<VIC_COLOR_RAM
+		sta expansion_transfer_local_addr
+		lda #>VIC_COLOR_RAM
+		sta expansion_transfer_local_addr+1
+
+		lda exp_menu_start_page
+		clc
+		adc #4
+		sta expansion_memory_target_pointer+1
+
+		jsr reu_stash_block
+
+	rts
+
+	vic_retrieve_main_menu_from_reu
+		jsr vic_set_copy_size
+
+		lda #0
+		sta expansion_memory_target_pointer
+		sta expansion_memory_target_pointer+2
+
+		; menu colors
+
+		jsr vic_set_target_to_color_ram
+
+		lda exp_menu_start_page
+		clc
+		adc #4
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+
+		; menu text
+
+		jsr vic_set_target_to_text
+
+		lda exp_menu_start_page
+		sta expansion_memory_target_pointer+1
+
+		+JSR_INDIRECT (fetch_block_vec)
+	rts
+
+	vic_retrieve_loader_bg_from_reu
 		jsr vic_set_copy_size
 
 		lda #0
@@ -407,7 +470,7 @@ rts
 		+JSR_INDIRECT (fetch_block_vec)
 	rts
 
-	copy_player_bg_from_reu
+	vic_retrieve_player_bg_from_reu
 		jsr vic_set_copy_size
 
 		lda #0
@@ -419,6 +482,7 @@ rts
 		jsr vic_set_target_to_color_ram
 
 		lda exp_player_bg_start_page
+		clc
 		adc #4
 		sta expansion_memory_target_pointer+1
 
@@ -456,6 +520,91 @@ rts
 	rts
 
 } else {
+	vdc_copy_main_menu_to_cache
+
+		; menu attributes
+
+		lda #<VDC_ATTRIBUTES
+		sta fill_copy_source
+		lda #>VDC_ATTRIBUTES
+		sta fill_copy_source+1
+
+		lda #<VDC_64K_CACHE_MENU_ATTRS
+		sta fill_copy_target
+		lda #>VDC_64K_CACHE_MENU_ATTRS
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+
+		; menu text
+
+		lda #<VDC_SCREEN
+		sta fill_copy_source
+		lda #>VDC_SCREEN
+		sta fill_copy_source+1
+
+		lda #<VDC_64K_CACHE_MENU_TEXT
+		sta fill_copy_target
+		lda #>VDC_64K_CACHE_MENU_TEXT
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+	rts
+
+	vdc_retrieve_main_menu_from_cache
+		; menu attributes
+
+		lda #<VDC_64K_CACHE_MENU_ATTRS
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_MENU_ATTRS
+		sta fill_copy_source+1
+
+		lda #<VDC_ATTRIBUTES
+		sta fill_copy_target
+		lda #>VDC_ATTRIBUTES
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+
+		; menu text
+
+		lda #<VDC_64K_CACHE_MENU_TEXT
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_MENU_TEXT
+		sta fill_copy_source+1
+
+		lda #<VDC_SCREEN
+		sta fill_copy_target
+		lda #>VDC_SCREEN
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+	rts
+
 	vdc_retrieve_loader_bg_from_reu
 		jsr vdc_set_fetch_size
 
@@ -660,3 +809,32 @@ rts
 		bne -
 	rts
 }
+
+copy_main_menu_to_cache_quick
+	!ifdef c128 {
+		bit c128_vdc_has_64k
+		bmi +
+		rts
+	}
+
++	bit main_menu_cache_is_valid
+	bpl +
+	rts
+
++	!ifndef c128 {
+		jsr vic_copy_main_menu_to_reu
+	} else {
+		jsr vdc_copy_main_menu_to_cache
+	}
+
+	lda #$80
+	sta main_menu_cache_is_valid
+rts
+
+retrieve_main_menu_from_cache_quick
+	!ifndef c128 {
+		jsr vic_retrieve_main_menu_from_reu
+	} else {
+		jsr vdc_retrieve_main_menu_from_cache
+	}
+rts

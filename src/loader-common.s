@@ -186,6 +186,7 @@ load_by_filename_entry
 	jsr close_file
 
 	jsr draw_mini_popup
+
 	lda #0
 	ldx #<unknown_file_msg
 	ldy #>unknown_file_msg
@@ -407,7 +408,7 @@ loader_paint_screen
 
 		++
 	} else {
-		jsr copy_loader_bg_from_reu
+		jsr vic_retrieve_loader_bg_from_reu
 	}
 
 	!ifndef c128 {

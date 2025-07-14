@@ -12,8 +12,7 @@
 	reu_highest_bank				= $54
 	c128_highest_bank				= $55
 	c128_vdc_has_64k				= $61
-
-	; free: $62
+	main_menu_cache_is_valid		= $62
 
 	expansion_transfer_local_addr	= $c9 ; through $cb
 	; the third byte will always be 0, but SCPU RAM driver will need this later.
@@ -64,10 +63,12 @@
 	VIC_SCREEN						= $0400
 	VDC_SCREEN						= $0000
 	VDC_ATTRIBUTES					= $0800
-	VDC_64K_CACHE_LDR_BG_TEXT		= $4000 ; only used on 64k VRAM machines
-	VDC_64K_CACHE_LDR_BG_ATTRS		= $5000
-	VDC_64K_CACHE_PLYR_BG_TEXT		= $6000
-	VDC_64K_CACHE_PLYR_BG_ATTRS		= $7000
+	VDC_64K_CACHE_MENU_TEXT			= $4000 ; only used on 64k VRAM machines
+	VDC_64K_CACHE_MENU_ATTRS		= $5000
+	VDC_64K_CACHE_LDR_BG_TEXT		= $6000
+	VDC_64K_CACHE_LDR_BG_ATTRS		= $7000
+	VDC_64K_CACHE_PLYR_BG_TEXT		= $8000
+	VDC_64K_CACHE_PLYR_BG_ATTRS		= $9000
 
 	VDC_filename_cache				= $1000
 

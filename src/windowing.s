@@ -197,6 +197,25 @@ draw_window
 	jsr calculate_corners
 	plp
 
+	!ifdef c128 {
+		jsr FULLW
+		clc
+		lda top_row_pos
+		ldx left_column_pos
+		jsr WINDOW
+		sec
+		lda bottom_row_pos
+		ldx right_column_pos
+		jsr WINDOW
+		clc
+		ldx #0
+		ldy #0
+		jsr PLOT
+		lda #CLR
+		jsr CHROUT
+		jsr FULLW
+	}
+
 	lda #<CHROUT
 	sta print_vec
 	lda #>CHROUT
@@ -204,10 +223,6 @@ draw_window
 
 	lda num_rows
 	sta temp_abs_a
-
-	!ifdef c128 {
-		jsr erase_popup
-	}
 
 	ldx top_row_pos
 	dex
@@ -248,12 +263,15 @@ draw_window
 
 	lda #bl_color			; and follow it with the right edge
 	jsr CHROUT
+
 	!ifdef c128 {		; on the C128 it'll always be a reverse $a1 anyway.
 		lda #RVSON
 		jsr CHROUT
 	}
+
 	lda #right_edge_char
 	jsr CHROUT
+
 	!ifdef c128 {
 		lda #RVSOFF
 		jsr CHROUT
@@ -310,33 +328,6 @@ draw_win_seek_to_left_edge
 	dey
 	bne -
 rts
-
-!ifdef c128 {
-	erase_popup
-		jsr FULLW
-
-		ldx top_row_pos
-		dex
-		txa
-		ldx left_column_pos
-		dex
-		dex
-		clc
-		jsr WINDOW
-
-		ldx bottom_row_pos
-		inx
-		txa 
-		ldx right_column_pos
-		inx
-		inx
-		sec
-		jsr WINDOW
-		lda #CLR
-		jsr CHROUT
-		jsr FULLW
-	rts
-}
 
 draw_mini_popup
 	ldx #mini_popup_height

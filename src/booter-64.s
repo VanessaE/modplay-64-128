@@ -171,6 +171,9 @@ boot_start
 	sta exp_screencode_filenames_start_page
 	adc #16
 
+	sta exp_menu_start_page
+	adc #8
+
 	sta exp_loader_bg_start_page
 	adc #8
 

@@ -110,10 +110,6 @@ init
 
 +	lda #0
 	sta current_menu_page
-	!ifdef c128 {
-		lda #$80
-		sta clear_menu_screen_flag
-	}
 
 	; test highest C128 bank number (normally it'll only return 1 or 3, unless
 	; the user's MMU hack is broken :-P)
