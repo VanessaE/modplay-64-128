@@ -185,33 +185,31 @@ load_by_filename_entry
 
 	jsr close_file
 
-	jsr draw_mini_popup
+	!ifndef c128 {
+		ldy #mini_popup_left_column+4
+	} else {
+		ldy #mini_popup_left_column+31
+	}
+
+	ldx #mini_popup_top_row+4
+	clc
+	jsr PLOT
 
 	lda #0
 	ldx #<unknown_file_msg
 	ldy #>unknown_file_msg
-
 	sec
+	jsr print_msg
+
 	!ifndef c128 {
-		jsr print_msg
-		lda #0
-		ldx #<mini_popup_next_line
-		ldy #>mini_popup_next_line
-		sec
-		jsr print_msg_rle
-		lda #RIGHT
+		ldy #mini_popup_left_column+3
 	} else {
-		jsr print_msg_rle
-		lda #RIGHT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
-		jsr CHROUT
+		ldy #mini_popup_left_column+33
 	}
-	jsr CHROUT
-	jsr CHROUT
+
+	ldx #mini_popup_top_row+6
+	clc
+	jsr PLOT
 
 	jmp abort_load
 

@@ -382,7 +382,7 @@ drive_loader_check_msg
 	!byte 0
 
 unknown_file_msg
-	!text DOWN,RIGHT,RIGHT,RIGHT,RED,"Unknown file",RETURN,0
+	!text RED,"Unknown file",0
 
 dirname_background
 	!byte $82,RVSON,CYAN

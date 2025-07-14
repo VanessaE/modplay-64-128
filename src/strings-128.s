@@ -314,10 +314,7 @@ drive_loader_check_msg
 	!byte 0
 
 unknown_file_msg
-	!byte $81,DOWN
-	!byte 6,RIGHT
-	!byte $80+20
-	!text RED,"Unknown file type",RETURN,RETURN
+	!text RED,"Unknown file type"
 	!byte 0
 
 dirname_background
