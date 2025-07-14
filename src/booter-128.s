@@ -44,8 +44,18 @@
 
 splash_text_begin = splash_data
 splash_text_end = splash_data + 2048
-splash_colors_begin = splash_data + 2000
-splash_colors_end = splash_colors_begin + 2048
+splash_attrs_begin = splash_data + 2000
+splash_attrs_end = splash_attrs_begin + 2048
+
+loader_background_text_begin = loader_background_data
+loader_background_text_end = loader_background_data + 2048
+loader_background_attrs_begin = loader_background_data + 2000
+loader_background_attrs_end = loader_background_attrs_begin + 2048
+
+player_background_text_begin = player_background_data
+player_background_text_end = player_background_data + 2048
+player_background_attrs_begin = player_background_data + 2000
+player_background_attrs_end = player_background_attrs_begin + 2048
 
 boot_start
 
@@ -116,9 +126,9 @@ boot_start
 
 	; show the splash screen
 
-	lda #<splash_colors_begin		; copy the colors first to avoid the gfx
+	lda #<splash_attrs_begin		; copy the attrs first to avoid the gfx
 	sta fill_copy_source			; painting into and hence briefly using
-	lda #>splash_colors_begin		; wrong, possibly-bright, color data.
+	lda #>splash_attrs_begin		; wrong, possibly-bright, color data.
 	sta fill_copy_source+1
 
 	lda #<VDC_ATTRIBUTES
@@ -127,7 +137,7 @@ boot_start
 	sta fill_copy_target+1
 
 	lda #0
-	ldx #>splash_colors_end
+	ldx #>splash_attrs_end
 	jsr vdc_upload
 
 	lda #<splash_text_begin
@@ -167,72 +177,43 @@ boot_start
 	lda #0
 	sta expansion_memory_start_page
 
-	+SET_EXPANSION_ZONES
-
-	lda #<2000
-	sta stash_size
-	lda #>2000
-	sta stash_size+1
-
-	lda #0
-	sta expansion_memory_target_pointer
-	sta expansion_memory_target_pointer+2
-
-	; loader background text
-
-	lda #<loader_background_data
-	sta expansion_transfer_local_addr
-	lda #>loader_background_data
-	sta expansion_transfer_local_addr+1
-
-	lda exp_loader_bg_start_page
-	sta expansion_memory_target_pointer+1
-
-	jsr reu_stash_block
-
-	; loader background colors
-
-	lda #<loader_background_data+2000
-	sta expansion_transfer_local_addr
-	lda #>loader_background_data+2000
-	sta expansion_transfer_local_addr+1
-
-	lda exp_loader_bg_start_page
 	clc
-	adc #8
-	sta expansion_memory_target_pointer+1
+	sta highest_exp_addresss_used
+	sta highest_exp_addresss_used+2
 
-	jsr reu_stash_block
+	adc #2
 
-	; player background text
+	sta exp_instr_names_start_page
+	adc #4
 
-	lda #<player_background_data
-	sta expansion_transfer_local_addr
-	lda #>player_background_data
-	sta expansion_transfer_local_addr+1
+	sta exp_petscii_filenames_start_page
+	adc #16
 
-	lda exp_player_bg_start_page
-	sta expansion_memory_target_pointer+1
+	bit c128_vdc_has_64k
+	bmi +
 
-	jsr reu_stash_block
+	sta exp_loader_bg_start_page
+	adc #16
 
-	; player background colors
+	sta exp_player_bg_start_page
+	adc #16
 
-	lda #<player_background_data+2000
-	sta expansion_transfer_local_addr
-	lda #>player_background_data+2000
-	sta expansion_transfer_local_addr+1
++	sta exp_file_data_start_page
+	adc #16
 
-	lda exp_player_bg_start_page
-	adc #8
-	sta expansion_memory_target_pointer+1
+	sta highest_exp_addresss_used+1
 
-	jsr reu_stash_block
+	bit c128_vdc_has_64k
+	bmi +
+	jsr copy_screens_to_reu
+	jmp ++
+
++	jsr upload_screens_to_vdc_cache
 
 	; copy the program loader to somewhere below where the program
 	; itself actually loads or it'll overwrite itself. 😛
 
-	ldx #0
+++	ldx #0
 -	lda program_load_decrunch_stub_origin,x
 	sta program_load_decrunch_stub,x
 	lda program_load_decrunch_stub_origin+$100,x
@@ -338,6 +319,134 @@ vdc_set_4416_mode			; otherwise put things back the way they were.
 	bpl -
 	lda #$2f
 	sta $d601
+rts
+
+upload_screens_to_vdc_cache
+	; loader background text
+
+	lda #<loader_background_text_begin
+	sta fill_copy_source
+	lda #>loader_background_text_begin
+	sta fill_copy_source+1
+
+	lda #<VDC_64K_CACHE_LDR_BG_TEXT
+	sta fill_copy_target
+	lda #>VDC_64K_CACHE_LDR_BG_TEXT
+	sta fill_copy_target+1
+
+	lda #0
+	ldx #>loader_background_text_end
+	jsr vdc_upload
+
+	; loader background attributes
+
+	lda #<loader_background_attrs_begin
+	sta fill_copy_source
+	lda #>loader_background_attrs_begin
+	sta fill_copy_source+1
+
+	lda #<VDC_64K_CACHE_LDR_BG_ATTRS
+	sta fill_copy_target
+	lda #>VDC_64K_CACHE_LDR_BG_ATTRS
+	sta fill_copy_target+1
+
+	lda #0
+	ldx #>loader_background_attrs_end
+	jsr vdc_upload
+
+	; player background text
+
+	lda #<player_background_text_begin
+	sta fill_copy_source
+	lda #>player_background_text_begin
+	sta fill_copy_source+1
+
+	lda #<VDC_64K_CACHE_PLYR_BG_TEXT
+	sta fill_copy_target
+	lda #>VDC_64K_CACHE_PLYR_BG_TEXT
+	sta fill_copy_target+1
+
+	lda #0
+	ldx #>player_background_text_end
+	jsr vdc_upload
+
+	; player background attributes
+
+	lda #<player_background_attrs_begin
+	sta fill_copy_source
+	lda #>player_background_attrs_begin
+	sta fill_copy_source+1
+
+	lda #<VDC_64K_CACHE_PLYR_BG_ATTRS
+	sta fill_copy_target
+	lda #>VDC_64K_CACHE_PLYR_BG_ATTRS
+	sta fill_copy_target+1
+
+	lda #0
+	ldx #>player_background_attrs_end
+	jsr vdc_upload
+rts
+
+copy_screens_to_reu
+	lda #<2000
+	sta stash_size
+	lda #>2000
+	sta stash_size+1
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+
+	; loader background text
+
+	lda #<loader_background_data
+	sta expansion_transfer_local_addr
+	lda #>loader_background_data
+	sta expansion_transfer_local_addr+1
+
+	lda exp_loader_bg_start_page
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; loader background attributes
+
+	lda #<loader_background_data+2000
+	sta expansion_transfer_local_addr
+	lda #>loader_background_data+2000
+	sta expansion_transfer_local_addr+1
+
+	lda exp_loader_bg_start_page
+	clc
+	adc #8
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; player background text
+
+	lda #<player_background_data
+	sta expansion_transfer_local_addr
+	lda #>player_background_data
+	sta expansion_transfer_local_addr+1
+
+	lda exp_player_bg_start_page
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
+
+	; player background attributes
+
+	lda #<player_background_data+2000
+	sta expansion_transfer_local_addr
+	lda #>player_background_data+2000
+	sta expansion_transfer_local_addr+1
+
+	lda exp_player_bg_start_page
+	adc #8
+	sta expansion_memory_target_pointer+1
+
+	jsr reu_stash_block
 rts
 
 program_load_decrunch_stub_origin

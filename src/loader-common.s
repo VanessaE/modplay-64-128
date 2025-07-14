@@ -396,7 +396,19 @@ rts
 loader_paint_screen
 	lda #CLR
 	jsr CHROUT
-	jsr retrieve_loader_bg
+
+	!ifdef c128 {
+		bit c128_vdc_has_64k
+		bmi +
+		jsr vdc_retrieve_loader_bg_from_reu
+		jmp ++
+
+	+	jsr vdc_copy_loader_bg_from_cache
+
+		++
+	} else {
+		jsr copy_loader_bg_from_reu
+	}
 
 	!ifndef c128 {
 		lda #0

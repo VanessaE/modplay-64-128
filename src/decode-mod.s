@@ -349,8 +349,8 @@ parse_instruments
 	inc parse_header_sample_pointer+2
 
 +	lda temp_counter+1						; if this sample's len < 2 words,
-	bne +									; zero-out its start addrs and 
-	lda temp_counter						; skip setting any attribs, now
+	bne +									; zero-out its start addrs and
+	lda temp_counter						; skip setting any attributes, now
 	cmp #2									; that there's a valid addr to use
 	bcs +									; for the next sample's start addr
 

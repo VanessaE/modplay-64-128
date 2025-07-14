@@ -984,6 +984,14 @@ rts
 		stx VDC_DATA
 	rts
 
+	vdc_block_copy_extend
+	-	bit $d600
+		bpl -
+		lda #30
+		sta VDC_ADDR
+		stx VDC_DATA
+	rts
+
 	; enter with fill_copy_target = start address, .A = fill byte,
 	; .X = fill length
 

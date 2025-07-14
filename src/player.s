@@ -39,7 +39,18 @@ start_main_player
 	lda #CLR
 	jsr CHROUT
 
-	jsr retrieve_player_bg
+	!ifdef c128 {
+		bit c128_vdc_has_64k
+		bmi +
+		jsr vdc_retrieve_player_bg_from_reu
+		jmp ++
+
+	+	jsr vdc_copy_player_bg_from_cache
+
+		++
+	} else {
+		jsr copy_player_bg_from_reu
+	}
 
 	!ifndef c128 {
 		lda #0

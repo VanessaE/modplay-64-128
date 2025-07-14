@@ -203,39 +203,6 @@
 	}
 }
 
-!macro SET_EXPANSION_ZONES {
-+	clc
-	sta highest_exp_addresss_used
-	sta highest_exp_addresss_used+2
-
-	adc #2
-	sta exp_instr_names_start_page
-
-	adc #4
-	sta exp_petscii_filenames_start_page
-
-	!ifndef c128 {
-		adc #16
-		sta exp_screencode_filenames_start_page
-	}
-
-	adc #16
-	sta exp_loader_bg_start_page
-
-	!ifndef c128 {
-		background_img_len = 8 ; pages
-	} else {
-		background_img_len = 16 ; pages
-	}
-
-	adc #background_img_len
-	sta exp_player_bg_start_page
-
-	adc #background_img_len
-	sta exp_file_data_start_page
-	sta highest_exp_addresss_used+1
-}
-
 !macro JSR_INDIRECT .vec {
 	sta .reload_a+1
 	lda #>.ra

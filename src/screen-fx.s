@@ -380,7 +380,7 @@ nofill
 rts
 
 !ifndef c128 {
-	retrieve_loader_bg
+	copy_loader_bg_from_reu
 		jsr vic_set_copy_size
 
 		lda #0
@@ -407,7 +407,7 @@ rts
 		+JSR_INDIRECT (fetch_block_vec)
 	rts
 
-	retrieve_player_bg
+	copy_player_bg_from_reu
 		jsr vic_set_copy_size
 
 		lda #0
@@ -456,14 +456,14 @@ rts
 	rts
 
 } else {
-	retrieve_loader_bg
+	vdc_retrieve_loader_bg_from_reu
 		jsr vdc_set_fetch_size
 
 		lda #0
 		sta expansion_memory_target_pointer
 		sta expansion_memory_target_pointer+2
 
-		; loader background colors
+		; loader background attributes
 
 		jsr vdc_set_load_buf_as_relay
 
@@ -474,7 +474,7 @@ rts
 
 		+JSR_INDIRECT (fetch_block_vec)
 
-		jsr vdc_bg_upload_attribs
+		jsr vdc_bg_upload_attrs
 
 		; loader background text
 
@@ -488,14 +488,14 @@ rts
 		jsr vdc_bg_upload_text
 	rts
 
-	retrieve_player_bg
+	vdc_retrieve_player_bg_from_reu
 		jsr vdc_set_fetch_size
 
 		lda #0
 		sta expansion_memory_target_pointer
 		sta expansion_memory_target_pointer+2
 
-		; player background colors
+		; player background attributes
 
 		jsr vdc_set_load_buf_as_relay
 
@@ -506,7 +506,7 @@ rts
 
 		+JSR_INDIRECT (fetch_block_vec)
 
-		jsr vdc_bg_upload_attribs
+		jsr vdc_bg_upload_attrs
 
 		; player background text
 
@@ -518,6 +518,92 @@ rts
 		+JSR_INDIRECT (fetch_block_vec)
 
 		jsr vdc_bg_upload_text
+	rts
+
+	vdc_copy_loader_bg_from_cache
+
+		; loader background attributes
+
+		lda #<VDC_64K_CACHE_LDR_BG_ATTRS
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_LDR_BG_ATTRS
+		sta fill_copy_source+1
+
+		lda #<VDC_ATTRIBUTES
+		sta fill_copy_target
+		lda #>VDC_ATTRIBUTES
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+
+		; loader background text
+
+		lda #<VDC_64K_CACHE_LDR_BG_TEXT
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_LDR_BG_TEXT
+		sta fill_copy_source+1
+
+		lda #<VDC_SCREEN
+		sta fill_copy_target
+		lda #>VDC_SCREEN
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+	rts
+
+	vdc_copy_player_bg_from_cache
+
+		; player background attributes
+
+		lda #<VDC_64K_CACHE_PLYR_BG_ATTRS
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_PLYR_BG_ATTRS
+		sta fill_copy_source+1
+
+		lda #<VDC_ATTRIBUTES
+		sta fill_copy_target
+		lda #>VDC_ATTRIBUTES
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
+
+		; player background text
+
+		lda #<VDC_64K_CACHE_PLYR_BG_TEXT
+		sta fill_copy_source
+		lda #>VDC_64K_CACHE_PLYR_BG_TEXT
+		sta fill_copy_source+1
+
+		lda #<VDC_SCREEN
+		sta fill_copy_target
+		lda #>VDC_SCREEN
+		sta fill_copy_target+1
+
+		ldx #0
+		jsr vdc_block_copy
+
+		ldy #7
+	-	jsr vdc_block_copy_extend
+		dey
+		bne -
 	rts
 
 	vdc_set_fetch_size
@@ -536,7 +622,7 @@ rts
 		sta fill_copy_source+1
 	rts
 
-	vdc_bg_upload_attribs
+	vdc_bg_upload_attrs
 		lda #<VDC_ATTRIBUTES
 		sta fill_copy_target
 		lda #>VDC_ATTRIBUTES

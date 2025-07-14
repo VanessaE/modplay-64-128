@@ -156,7 +156,31 @@ boot_start
 	lda #0
 	sta expansion_memory_start_page
 
-	+SET_EXPANSION_ZONES
+	clc
+	sta highest_exp_addresss_used
+	sta highest_exp_addresss_used+2
+
+	adc #2
+
+	sta exp_instr_names_start_page
+	adc #4
+
+	sta exp_petscii_filenames_start_page
+	adc #16
+
+	sta exp_screencode_filenames_start_page
+	adc #16
+
+	sta exp_loader_bg_start_page
+	adc #8
+
+	sta exp_player_bg_start_page
+	adc #8
+
+	sta exp_file_data_start_page
+	adc #8
+
+	sta highest_exp_addresss_used+1
 
 	lda #<1000
 	sta stash_size
