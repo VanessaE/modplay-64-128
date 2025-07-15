@@ -292,6 +292,8 @@ UPPER								= $8e
 RVSON								= $12
 RVSOFF								= $92
 
+QUOTE								= $22
+
 ; Misc stuff not specific to the machine's OS
 
 X = "X" ; so that the delay routine doesn't
@@ -616,6 +618,8 @@ tempo_fine_adjust_constant = 159778
 	scroll_area_width					!skip 1
 	scroll_area_height					!skip 1
 	scroll_area_blank_last_line_flag	!skip 1
+
+	erase_screen_area_row_count			!skip 1
 
 	number_of_song_positions			!skip 1
 	number_of_patterns					!skip 1

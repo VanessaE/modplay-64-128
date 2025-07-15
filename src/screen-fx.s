@@ -838,3 +838,33 @@ retrieve_main_menu_from_cache_quick
 		jsr vdc_retrieve_main_menu_from_cache
 	}
 rts
+
+; .X/.Y = address of the top left corner, .A = width to erase
+; erase_screen_area_row_count must also be set.
+
+!ifndef c128 {
+	vic_erase_screen_area
+		sta temp_abs_y
+		stx fill_copy_target
+		sty fill_copy_target+1
+		ldx erase_screen_area_row_count
+
+	--	ldy #0
+		lda #32 ; space
+	-	sta (fill_copy_target),y
+		iny
+		cpy temp_abs_y
+		bne -
+
+		clc
+		lda fill_copy_target
+		adc #40
+		sta fill_copy_target
+		lda fill_copy_target+1
+		adc #0
+		sta fill_copy_target+1
+
+		dex
+		bne --
+	rts
+}

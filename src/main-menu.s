@@ -502,24 +502,46 @@ print_menu_line
 	jsr print_msg
 rts
 
+!ifndef c128 {
+	nfcol = 19
+
+	ibr2col = 18
+
+	ibtop = 20
+	ibleft = 18
+	ibwidth = 21
+	ibheight = 3
+
+	ib_top_left_addr = (VIC_SCREEN + ibtop*40 + ibleft)
+} else {
+	nfcol = 6
+
+	ibr2col = 4
+
+	ibtop = 0
+	ibleft = 0
+	ibwidth = 41
+	ibheight = 3
+}
+
 populate_info_box
 	!ifndef c128 {
-		ibr1col = 18
-		ibr2col = 18
-		ibrow = 20
-		nfcol = 19
+		ldx #<ib_top_left_addr
+		ldy #>ib_top_left_addr
+		lda #ibheight
+		sta erase_screen_area_row_count
+		lda #ibwidth
+		jsr vic_erase_screen_area
 	} else {
 		jsr set_window_infobox
-		ibr1col = 6
-		ibr2col = 4
-		ibrow = 0
-		nfcol = 6
+		lda #CLR
+		jsr CHROUT
 	}
 
 	lda current_file_type
 	bne +
 
-	ldx #ibrow+1
+	ldx #ibtop+1
 	ldy #nfcol
 	clc
 	jsr PLOT
@@ -538,26 +560,46 @@ populate_info_box
 	rts
 
 +	clc
-	ldx #ibrow
-	ldy #ibr1col
+	ldx #ibtop
+	ldy #ibleft
 	jsr PLOT
 
 	!ifdef c128 {
+		ldx #<current_file_name
+		ldy #>current_file_name
+		jsr get_string_length
+
+		tya
+		clc
+		adc #14 ; the length of the visible part of "Current file: "
+		lsr
+		sta temp_abs_a
+		sec
+		lda #ibwidth/2
+		sbc temp_abs_a
+		tay
+
+		lda #RIGHT
+	-	jsr CHROUT
+		dey
+		bne -
+
+		lda #16
 		ldx #<current_file_msg
 		ldy #>current_file_msg
 		sec
 		jsr print_msg
+	} else {
+		lda #ibwidth
+		ldx #<current_file_name
+		ldy #>current_file_name
+		jsr center_string
 	}
 
 	lda #CYAN
 	jsr CHROUT
 
-	lda #21
-	ldx #<current_file_name
-	ldy #>current_file_name
-	jsr center_string
-
-	lda #$22 ; quote
+	lda #QUOTE
 	jsr CHROUT
 
 	lda #16
@@ -566,13 +608,14 @@ populate_info_box
 	sec
 	jsr print_msg
 
-	lda #$22 ; quote
+	lda #QUOTE
 	jsr CHROUT
-	lda #$0d
+
+	lda #RETURN
 	jsr CHROUT
 
 	clc
-	ldx #ibrow+1
+	ldx #ibtop+1
 	ldy #ibr2col
 	jsr PLOT
 
@@ -637,7 +680,7 @@ populate_info_box
 		sbc temp_abs_a
 		lsr
 		tay
-		ldx #ibrow+2
+		ldx #ibtop+2
 		clc
 		jsr PLOT
 
@@ -658,7 +701,7 @@ populate_info_box
 		jsr print_msg
 	} else {
 		clc
-		ldx #ibrow+2
+		ldx #ibtop+2
 		ldy #18 ; "ibr3col"
 		jsr PLOT
 	}
