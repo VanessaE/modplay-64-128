@@ -1,5 +1,11 @@
 ; display the main menu
 
+!ifndef c128 {
+	menu_right_pane_base_addr = (VIC_SCREEN + 2*40 + 18)
+	menu_right_pane_width = 21
+	menu_right_pane_height = 15
+}
+
 show_main_menu
 	!ifdef c128 {
 		jsr FULLW
@@ -176,32 +182,12 @@ erase_menu_right_pane_contents
 		lda #CLR
 		jsr CHROUT
 	} else {
-
-		lda #<(VIC_SCREEN + 2*40 + 18)
-		sta fill_copy_target
-		lda #>(VIC_SCREEN + 2*40 + 18)
-		sta fill_copy_target+1
-
-		ldx #2
-
-	--	lda #32
-		ldy #20
-
-	-	sta (fill_copy_target),y
-		dey
-		bpl -
-
-		clc
-		lda fill_copy_target
-		adc #40
-		sta fill_copy_target
-		lda fill_copy_target+1
-		adc #0
-		sta fill_copy_target+1
-
-		inx
-		cpx #17
-		bne --
+		ldx #<menu_right_pane_base_addr
+		ldy #>menu_right_pane_base_addr
+		lda #menu_right_pane_height
+		sta erase_screen_area_row_count
+		lda #menu_right_pane_width
+		jsr vic_erase_screen_area
 	}
 rts
 

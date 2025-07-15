@@ -545,33 +545,12 @@ rts
 
 erase_playlist_pane
 	!ifndef c128 {
-
-		lda #<(VIC_SCREEN + 3*40 + 1)
-		sta fill_copy_target
-		lda #>(VIC_SCREEN + 3*40 + 1)
-		sta fill_copy_target+1
-
-		ldx #3
-
-	--	lda #32
-		ldy #15
-
-	-	sta (fill_copy_target),y
-		dey
-		bpl -
-
-		clc
-		lda fill_copy_target
-		adc #40
-		sta fill_copy_target
-		lda fill_copy_target+1
-		adc #0
-		sta fill_copy_target+1
-
-		inx
-		cpx #20
-		bne --
-
+		ldx #<playlist_pane_base_addr
+		ldy #>playlist_pane_base_addr
+		lda #playlist_pane_height
+		sta erase_screen_area_row_count
+		lda #playlist_width
+		jsr vic_erase_screen_area
 	} else {
 		lda #<(VDC_SCREEN + 3*80 + 5)
 		sta fill_copy_target
