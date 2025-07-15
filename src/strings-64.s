@@ -105,7 +105,7 @@ menu_text_play_loaded_b
 	!fill 9,RIGHT
 	!text LGRY,"loaded file",RETURN,0
 menu_text_add_to_list
-	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Add to list",RETURN,0
+	!text GRN,RIGHT,"[",YEL,"Space",GRN,"]",LGRY," Add to list",RETURN,0
 menu_text_play_list
 	!fill 4,RIGHT
 	!text GRN,"[",YEL,"F2",GRN,"]",LGRY," Play list",RETURN,0

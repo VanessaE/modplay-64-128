@@ -30,16 +30,16 @@ check_menu_key_down
 
 check_menu_key_p
 	cmp #$50
-	bne check_menu_key_return
+	bne check_menu_key_space
 	lda current_file_type
-	beq check_menu_key_return
+	beq check_menu_key_space
 	jsr copy_main_menu_to_cache_quick
 	jsr start_main_player
 	lda #$80
 	rts
 
-check_menu_key_return
-	cmp #$0d
+check_menu_key_space
+	cmp #$20
 	bne check_menu_key_f1
 	lda playlist_length
 	beq check_menu_key_f1

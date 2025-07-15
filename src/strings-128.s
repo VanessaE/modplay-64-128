@@ -103,8 +103,8 @@ menu_text_play_loaded
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play currently-loaded file",RETURN,0
 menu_text_add_to_list
-	!fill 3,RIGHT
-	!text GRN,"[",YEL,"Return",GRN,"]"
+	!fill 4,RIGHT
+	!text GRN,"[",YEL,"Space",GRN,"]"
 	!text LGRY," Add highlighted to playlist",RETURN,0
 menu_text_play_list
 	!fill 7,RIGHT
