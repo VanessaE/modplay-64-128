@@ -1228,5 +1228,18 @@ check_sid_type_right
 	sta sid_type_right
 rts
 
+keyboard_debounce
+	lda #0						; drive all columns low on CIA
+	sta CIA1_PORT_A
+	!ifdef c128 {
+		sta C128_EXTRA_KEYS		; and on C128 extra keys
+	}
+	lda #$ff
+-	cmp CIA1_PORT_B				; is any row low?
+	bne -						; if so, a key of some kind was pressed
+
+	lda #0						; make sure we exit with a "no key" status
+rts
+
 press_key_msg
 	!text "Press any key",0

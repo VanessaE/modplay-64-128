@@ -224,6 +224,8 @@ player_ui_finish
 	jsr isr_shutdown
 	+JSR_INDIRECT (audio_stop_vec)
 
+	jsr keyboard_debounce
+
 	jsr restore_zero_page
 	jsr enable_kernal_only
 	plp

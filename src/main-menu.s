@@ -98,9 +98,6 @@ finish_menu
 	jmp show_main_menu
 
 main_loop
--	jsr GETIN	; debounce in case of player exit via any key
-	bne -		; common between both player UI and main menu
-
 	jsr get_menu_key
 	; exit status:
 	; .A = 0, do nothing
