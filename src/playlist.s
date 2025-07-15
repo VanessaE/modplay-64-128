@@ -1058,5 +1058,11 @@ playlist_next_file
 	cmp playlist_length
 	bne playlist_iterate
 
-	dec playlist_scroll_pos
+	bit repeat_mode
+	bpl +
+	lda #0
+	sta playlist_scroll_pos
+	beq playlist_iterate
+
++	dec playlist_scroll_pos
 rts

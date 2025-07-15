@@ -94,8 +94,8 @@ check_menu_key_f4
 	bne check_menu_key_f5
 
 	jsr toggle_repeat
-	bcc +
 	lda #0
+	bcc +
 	sta main_menu_cache_is_valid
 +	rts
 

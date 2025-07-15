@@ -71,12 +71,13 @@
 }
 
 show_repeat_mode
-	clc
 	lda current_menu_page
 	beq +
+	clc
 	rts
 
-+	ldx #rpt_row
++	clc
+	ldx #rpt_row
 	ldy #rpt_col
 	jsr PLOT
 	lda #0

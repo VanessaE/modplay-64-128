@@ -576,7 +576,7 @@ tempo_fine_adjust_constant = 159778
 	char_table_select					!skip 1 ; only used on C64
 	print_msg_char_limit				!skip 1
 
-	repeat_mode							!skip 1
+	repeat_mode							!skip 1 ; $80 = enabled
 	volume_tables_resolution			!skip 1
 	last_volume_tables_resolution		!skip 1
 	allow_regen_msg						!skip 1
