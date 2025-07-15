@@ -533,6 +533,7 @@ populate_info_box
 		jsr print_msg_rle
 	} else {
 		jsr print_msg
+		jsr set_window_menu_pane
 	}
 	rts
 
@@ -704,6 +705,10 @@ populate_info_box
 	ldy #>kb_msg
 	sec
 	jsr print_msg
+
+	!ifdef c128 {
+		jsr set_window_menu_pane
+	}
 rts
 
 print_filetype
