@@ -1003,9 +1003,6 @@ playlist_load_next_file
 		bpl +
 	}
 
-	sec
-	jsr draw_medium_popup
-
 +	bit seq_abort_flag				; if the song exited with $80 here,
 	bpl playlist_next_file			; the user pressed F7 to bail-out
 	rts
