@@ -101,19 +101,30 @@ main_loop
 	jsr get_menu_key
 	; exit status:
 	; .A = 0, do nothing
-	; .A = 1, retrieve the cache and redraw the right pane
-	; .A = 2, retrieve the cache and redraw the info box
+	;
+	; otherwise, retrieve the cache and then....
+	;
+	; .A = 1, redraw the right pane
+	; .A = 2, redraw the info box
+	; .A = 3, redraw the playlist
 	; .A = $80 or anything else = retrieve cache, use it immediately
 	;
 	; if no cache is available, all non-zero exits just trigger a fill redraw
 
-	beq main_loop
 
-	!ifdef c128 {
+	!ifndef c128 {
+		beq main_loop
+	} else {
+		sta temp_abs_a
+		bne +
+		jsr set_window_menu_pane
+		jmp main_loop
+
+	+	jsr set_window_menu_pane
 		bit c128_vdc_has_64k
 		bmi +
 		jmp show_main_menu
-	  +
+	+	lda temp_abs_a
 	}
 
 	cmp #1
@@ -134,6 +145,15 @@ main_loop
 
 	jsr retrieve_main_menu_from_cache_quick
 	jsr populate_info_box
+	lda #0
+	sta main_menu_cache_is_valid
+	jmp main_loop
+
+++	cmp #3
+	bne ++
+
+	jsr retrieve_main_menu_from_cache_quick
+	jsr display_playlist
 	lda #0
 	sta main_menu_cache_is_valid
 	jmp main_loop
@@ -538,7 +558,6 @@ populate_info_box
 		jsr print_msg_rle
 	} else {
 		jsr print_msg
-		jsr set_window_menu_pane
 	}
 	rts
 
@@ -731,10 +750,6 @@ populate_info_box
 	ldy #>kb_msg
 	sec
 	jsr print_msg
-
-	!ifdef c128 {
-		jsr set_window_menu_pane
-	}
 rts
 
 print_filetype

@@ -77,7 +77,7 @@ check_menu_key_f2
 	lda #$80
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #2
++	lda #3
 	rts
 
 check_menu_key_f3
@@ -91,7 +91,7 @@ check_menu_key_f3
 	sta playlist_scroll_pos
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #2
++	lda #3
 	rts
 
 check_menu_key_f4
@@ -122,9 +122,9 @@ check_menu_key_f6
 	inx
 	cpx #192
 	bne -
-	jsr display_playlist
 	lda #0
 	sta main_menu_cache_is_valid
+	lda #3
 	rts
 
 check_menu_key_f7
@@ -137,7 +137,7 @@ check_menu_key_f7
 	lda #0
 	sta playlist_iterate_mode
 	jsr playlist_iterate
-+	lda #2
++	lda #3
 	rts
 
 check_menu_key_f8
@@ -156,9 +156,9 @@ check_menu_key_home
 	beq check_menu_key_clr
 	lda #0
 	sta playlist_scroll_pos
-	jsr display_playlist
 	lda #0
 	sta main_menu_cache_is_valid
+	lda #3
 	rts
 
 check_menu_key_clr
@@ -172,9 +172,9 @@ check_menu_key_clr
 	cmp playlist_scroll_pos
 	beq check_menu_key_minus
 	sta playlist_scroll_pos
-	jsr display_playlist
 	lda #0
 	sta main_menu_cache_is_valid
+	lda #3
 	rts
 
 check_menu_key_minus

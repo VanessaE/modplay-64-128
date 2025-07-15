@@ -1004,8 +1004,7 @@ playlist_load_next_file
 	}
 
 +	bit seq_abort_flag				; if the song exited with $80 here,
-	bpl playlist_next_file			; the user pressed F7 to bail-out
-	rts
+	bmi playlist_exit				; the user pressed F7 to bail-out
 
 playlist_next_file
 	inc playlist_scroll_pos
@@ -1014,10 +1013,10 @@ playlist_next_file
 	bne playlist_iterate
 
 	bit repeat_mode
-	bpl +
+	bpl playlist_exit
 	lda #0
 	sta playlist_scroll_pos
 	beq playlist_iterate
 
-+	dec playlist_scroll_pos
-rts
+playlist_exit
+ rts
