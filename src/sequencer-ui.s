@@ -195,12 +195,19 @@ key_pressed
 
 +	dec seq_key_debounce
 
+	!ifdef c128 {
+		lda #%11111111		; all of columns K2-K0 high
+		sta C128_EXTRA_KEYS
+	}
+
 	lda #%11111110			; column 0 low
 	sta CIA1_PORT_A
 	lda CIA1_PORT_B
 	cmp #%11110111			; look for row 3, F7 key
 	bne +
--	lda #$80
+
+.pui_abort_list
+	lda #$80
 	sta seq_abort_flag
 	rts
 
@@ -208,7 +215,7 @@ key_pressed
 	sta CIA1_PORT_A
 	lda CIA1_PORT_B
 	cmp #%01111111			; loop for row 7, Run/Stop
-	beq -
+	beq .pui_abort_list
 
 	cmp #%11101111			; look for row 4, spacebar
 	bne +
@@ -236,8 +243,24 @@ key_pressed
 	jmp toggle_enable_track
 
 +	cmp #%11110111			; row 3, the "4" key
-	bne exit_player_keyscan
-	ldy #3
+	!ifndef c128 {
+		bne exit_player_keyscan
+		ldy #3
+		jmp toggle_enable_track
+	} else {
+		bne +
+		ldy #3
+		jmp toggle_enable_track
+
+	+	lda #%11111111			; all regular columns high
+		sta CIA1_PORT_A
+		lda #%11111101			; column K1 low
+		sta C128_EXTRA_KEYS
+		lda CIA1_PORT_B
+		cmp #%11111110			; Row 0, the "Esc" key
+		bne exit_player_keyscan
+		jmp .pui_abort_list
+	}
 
 toggle_enable_track
 	lda track_current_enable_flags,y

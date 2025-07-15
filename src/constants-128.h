@@ -74,6 +74,7 @@
 
 	VDC_CHARSETS					= $2000
 	VDC_VM3							= $0a2e ; base of VDC screen mem
+	C128_EXTRA_KEYS					= $d02f ; Esc, Alt, Help, 10-key pad, etc.
 
 	MMU_CR1							= $d500
 
