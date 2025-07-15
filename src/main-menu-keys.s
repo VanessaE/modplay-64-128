@@ -40,20 +40,25 @@ check_menu_key_p
 
 check_menu_key_space
 	cmp #$20
-	bne check_menu_key_f1
+	bne check_menu_key_return
 	lda playlist_length
-	beq check_menu_key_f1
+	beq check_menu_key_return
 	jsr enqueue_file
 	lda #0
 	sta main_menu_cache_is_valid
 	rts
+
+check_menu_key_return
+	cmp #$0d
+	bne check_menu_key_f1
+	jmp +
 
 check_menu_key_f1
 	cmp #$85
 	bne check_menu_key_f2
 	lda playlist_length
 	beq check_menu_key_f2
-	jsr copy_main_menu_to_cache_quick
++	jsr copy_main_menu_to_cache_quick
 	clc
 	jsr load_file_to_expansion
 	lda current_file_type

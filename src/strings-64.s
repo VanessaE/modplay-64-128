@@ -96,8 +96,7 @@ menu_text_up_down
 	!text RIGHT,GRN,"[",YEL,"Up",GRN,"/",YEL,"Dn",GRN,"]"
 	!text LGRY," Scroll list",RETURN,0
 menu_text_load_and_play
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F1",GRN,"]",LGRY," Load & Play",RETURN,0
+	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Load & Play",RETURN,0
 menu_text_play_loaded
 	!fill 5,RIGHT
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play current",RETURN,0

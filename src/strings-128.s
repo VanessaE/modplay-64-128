@@ -97,8 +97,8 @@ menu_text_up_down
 	!text GRN,"[",YEL,"Up",GRN,"/",YEL,"Down",GRN,"]"
 	!text LGRY," Scroll file list by 1 item",RETURN,0
 menu_text_load_and_play
-	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F1",GRN,"]",LGRY," Load and play file",RETURN,0
+	!fill 3,RIGHT
+	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Load and play file",RETURN,0
 menu_text_play_loaded
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play currently-loaded file",RETURN,0
