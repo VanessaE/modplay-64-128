@@ -402,22 +402,6 @@ main_player_regen_tables_msg
 		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
 		!byte 0
 
-main_player_regen_erase_tables_msg
-	!fill 4,UP
-	!byte LEFT
-	!byte ESC,"p"
-	!byte DOWN
-	!byte ESC,"p"
-	!byte DOWN
-	!byte ESC,"p"
-	!byte DOWN
-	!byte ESC,"p"
-	!byte DOWN
-	!byte ESC,"p"
-	!byte DOWN
-	!byte ESC,"p"
-	!byte 0
-
 loader_erase_kbs_msg
 	!byte GRN
 	!fill 12," "

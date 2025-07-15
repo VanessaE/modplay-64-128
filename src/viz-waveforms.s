@@ -2,6 +2,8 @@
 ; low-resolution character-based plot of the output sample data
 
 viz_waveform_init
+	jsr visualizer_clear_area
+
 	lda #<viz_waveform_colors
 	sta viz_row_colors_vec+1
 	lda #>viz_waveform_colors

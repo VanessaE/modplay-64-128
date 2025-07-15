@@ -374,28 +374,5 @@ no_msgs1
 
 	jsr generate_tempo_table
 	jsr generate_period_table
-
-++	!ifndef scpu {
-		bit allow_regen_msg
-		bpl no_msgs2
-
-		!ifndef c128 {
-			bit enable_screen_on_playback
-			bpl no_msgs2
-
-			lda #0
-			ldx #<main_player_regen_erase_tables_msg
-			ldy #>main_player_regen_erase_tables_msg
-			sec
-			jsr print_msg_rle
-		} else {
-			lda #0
-			ldx #<main_player_regen_erase_tables_msg
-			ldy #>main_player_regen_erase_tables_msg
-			sec
-			jsr print_msg
-		}
-	}
-
-  no_msgs2
+  ++
 rts

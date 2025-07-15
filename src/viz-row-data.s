@@ -13,6 +13,8 @@ viz_row_data_init
 		bpl no_vrdi
 	}
 
+	jsr visualizer_clear_area
+
 	lda #<viz_row_data_colors
 	sta viz_row_colors_vec+1
 	lda #>viz_row_data_colors

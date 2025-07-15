@@ -867,4 +867,25 @@ rts
 		dex
 		bne --
 	rts
+} else {
+	vdc_erase_screen_area
+		sta temp_abs_b
+		stx fill_copy_target
+		sty fill_copy_target+1
+
+	-	lda #32 ; space
+		ldx temp_abs_b
+		jsr vdc_block_fill
+
+		clc
+		lda fill_copy_target
+		adc #80
+		sta fill_copy_target
+		lda fill_copy_target+1
+		adc #0
+		sta fill_copy_target+1
+
+		dec erase_screen_area_row_count
+		bne -
+	rts
 }

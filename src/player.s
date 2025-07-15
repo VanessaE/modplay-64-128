@@ -43,11 +43,11 @@ start_main_player
 		bit c128_vdc_has_64k
 		bmi +
 		jsr vdc_retrieve_player_bg_from_reu
-		jmp ++
+		jmp .pnvdcc
 
 	+	jsr vdc_copy_player_bg_from_cache
 
-		++
+	  .pnvdcc
 	} else {
 		jsr vic_retrieve_player_bg_from_reu
 	}
@@ -189,12 +189,14 @@ no_player_ui
 
 	!ifndef c128 {
 		bit enable_screen_on_playback
-		bmi +
+		bmi player_init_visualizer
+
 		jsr disable_vic_screen
-		jmp ++
+		jmp player_ui_finish
 	}
 
-+	clc
+player_init_visualizer
+	clc
 	ldx #visualizer_screen_row
 	ldy #visualizer_screen_column
 	jsr PLOT
@@ -203,11 +205,12 @@ no_player_ui
 	bne +
 
 	jsr viz_row_data_init
-	jmp ++
+	jmp player_ui_finish
 
 +	jsr viz_waveform_init
 
-++	php
+player_ui_finish
+	php
 	sei
 	jsr disable_roms
 

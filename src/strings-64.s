@@ -488,18 +488,6 @@ main_player_keys_msg
 	!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
 	!byte 0
 
-main_player_regen_erase_tables_msg
-	!byte 3,UP
-	!byte 2,RIGHT
-	!byte 36," "
-	!byte $80+1,RETURN
-	!byte 2,RIGHT
-	!byte 36," "
-	!byte $80+1,RETURN
-	!byte 2,RIGHT
-	!byte 36," "
-	!byte 0
-
 !ifdef scpu {
 	turn_turbo_on_msg
 		!byte DOWN

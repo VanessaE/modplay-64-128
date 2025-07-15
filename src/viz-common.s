@@ -3,8 +3,10 @@
 
 !ifndef c128 {
 	visualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
+	visualizer_width = 36
 } else {
 	visualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
+	visualizer_width = 40
 }
 
 visualizer_line_2 = visualizer_base_addr + screen_width
@@ -20,6 +22,23 @@ visualizer_colors_row_3 = visualizer_colors_base_addr + screen_width*2
 ; This routine is called before the sequencer starts, so any Zero Page usage
 ; must be stuff that's safe to use when ZP IS NOT BACKED-UP, and the KERNAL is
 ; banked-in at this point, so the usual PLOT, CHROUT, etc. calls are available.
+
+visualizer_clear_area
+	lda #6 ; height is always 6
+	sta erase_screen_area_row_count
+	lda #visualizer_width
+
+	!ifndef c128 {
+		ldx #<visualizer_base_addr
+		ldy #>visualizer_base_addr
+
+		jsr vic_erase_screen_area
+	} else {
+		ldx #<(visualizer_base_addr-1)
+		ldy #>(visualizer_base_addr-1)
+		jsr vdc_erase_screen_area
+	}
+rts
 
 visualizer_prefill_colors
 	lda #<visualizer_base_addr

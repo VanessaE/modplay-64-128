@@ -544,37 +544,16 @@ erase_file_list
 rts
 
 erase_playlist_pane
+	ldx #<playlist_pane_base_addr
+	ldy #>playlist_pane_base_addr
+	lda #playlist_pane_height
+	sta erase_screen_area_row_count
+	lda #playlist_width
+
 	!ifndef c128 {
-		ldx #<playlist_pane_base_addr
-		ldy #>playlist_pane_base_addr
-		lda #playlist_pane_height
-		sta erase_screen_area_row_count
-		lda #playlist_width
 		jsr vic_erase_screen_area
 	} else {
-		lda #<(VDC_SCREEN + 3*80 + 5)
-		sta fill_copy_target
-		lda #>(VDC_SCREEN + 3*80 + 5)
-		sta fill_copy_target+1
-
-		ldy #3
-
-	-	lda #32
-		ldx #26
-		jsr vdc_block_fill
-
-		clc
-		lda fill_copy_target
-		adc #80
-		sta fill_copy_target
-		lda fill_copy_target+1
-		adc #0
-		sta fill_copy_target+1
-
-		iny
-		cpy #22
-		bne -
-
+		jsr vdc_erase_screen_area
 	}
 rts
 

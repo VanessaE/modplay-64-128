@@ -515,7 +515,7 @@ tempo_fine_adjust_constant = 159778
 	filter_setting						!skip 1 ; 0=none, $80=lowpass
 	visualizer_mode						!skip 1 ; 0=row data, 1=waveforms
 	dither_enable						!skip 1
-	enable_screen_on_playback			!skip 1
+	enable_screen_on_playback			!skip 1 ; $80 = enabled (C64 only)
 
 	cfg_data_end						!skip 1 ; one byte past the real end
 
