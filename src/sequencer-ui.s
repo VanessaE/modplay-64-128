@@ -200,7 +200,7 @@ key_pressed
 	lda CIA1_PORT_B
 	cmp #%11110111			; look for row 3, F7 key
 	bne +
-	lda #$80
+-	lda #$80
 	sta seq_abort_flag
 	rts
 
@@ -208,14 +208,15 @@ key_pressed
 	sta CIA1_PORT_A
 	lda CIA1_PORT_B
 	cmp #%01111111			; loop for row 7, Run/Stop
-	beq +
+	beq -
+
 	cmp #%11101111			; look for row 4, spacebar
-	bne ++
-+	lda #1
+	bne +
+	lda #1
 	sta seq_abort_flag
 	rts
 
-++	cmp #%11111110			; row 0, the "1" key
++	cmp #%11111110			; row 0, the "1" key
 	bne +
 	ldy #0
 	jmp toggle_enable_track
