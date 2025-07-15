@@ -396,9 +396,9 @@ main_player_regen_tables_msg
 	!byte 0
 
 	main_player_keys_msg
-		!fill 3,RIGHT
+		!byte RIGHT
 		!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
-		!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
+		!text LBLU,"[",CYAN,"F7",LBLU,"/",CYAN,"Stop",LBLU,"] ",CYAN,"Quit  "
 		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
 		!byte 0
 

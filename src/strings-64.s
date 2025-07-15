@@ -482,9 +482,9 @@ main_player_regen_tables_msg
 	!text "pitch and tempo tables...",RETURN,0
 
 main_player_keys_msg
-	!fill 3,RIGHT
-	!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
-	!text LBLU,"[",CYAN,"F7",LBLU,"] ",CYAN,"Quit  "
+	!fill 2,RIGHT
+	!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip "
+	!text LBLU,"[",CYAN,"F7",LBLU,"/",CYAN,"Stop",LBLU,"] ",CYAN,"Quit "
 	!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
 	!byte 0
 
