@@ -174,7 +174,7 @@ and with the lowpass filtering mixer, a C128 should do about 10.1 kHz:
 As mentioned above, using the lowpass filtering mixer increases sample time,
 thus trading sample rate for a boost in mixing quality.  That's fine if you
 have the cycles to spare, but if all you have is a stock, non-accelerated
-C64, this mode is not, because it is so costly.
+C64, this mode is not recommended, because it is so costly.
 
 While it only adds 16 cycles per sample pair, for a total of around 181
 cycles, having the screen turned on adds 20 extra cycles of fudge on top of

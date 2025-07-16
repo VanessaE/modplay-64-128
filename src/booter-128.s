@@ -267,8 +267,9 @@ rts
 local_print_msg
 	+LOCAL_PRINT_MSG
 rts
-
 check_for_64k_vdc
+	jsr booter_vdc_blank
+
 	lda #0
 	sta fill_copy_target
 
@@ -294,13 +295,27 @@ check_for_64k_vdc
 	bne .not_64k			; if it didn't come back with a 0, VDC has 16 kB
 	lda #$80				; otherwise set the flag for 64k,
 	sta c128_vdc_has_64k
+	lda #CLR
+	jsr CHROUT
 	jsr DLCHR				; and re-initialize the default charset
+	jsr booter_vdc_unblank
 	rts
 
 .not_64k
 	lda #0
 	sta c128_vdc_has_64k
 	jsr vdc_set_4416_mode
+	lda #CLR
+	jsr CHROUT
+	jsr booter_vdc_unblank
+rts
+
+booter_vdc_blank
+	+VDC_BLANK
+rts
+
+booter_vdc_unblank
+	+VDC_UNBLANK
 rts
 
 vdc_set_41464_mode

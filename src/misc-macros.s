@@ -201,6 +201,24 @@
 
 		lda VDC_DATA
 	}
+
+	!macro VDC_BLANK {
+		lda #34
+		sta VDC_ADDR
+	-	bit VDC_ADDR
+		bpl -
+		lda #$80 ; any value over $7d blanks the screen
+		sta VDC_DATA
+	}
+
+	!macro VDC_UNBLANK {
+		lda #34
+		sta VDC_ADDR
+	-	bit VDC_ADDR
+		bpl -
+		lda #$7d ; default
+		sta VDC_DATA
+	}
 }
 
 !macro JSR_INDIRECT .vec {
