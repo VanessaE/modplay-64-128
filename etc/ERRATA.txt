@@ -12,9 +12,6 @@
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 
-* Dir loader: the file list routine should filter-out the program's own
-  binaries if present.
-
 * Loader:  consider massaging the header and music data to normalize the
   volume levels, so that something like DJ Metune's "Axel-F" is as loud as
   "Fun Tune", while preserving the song's dynamic range.
@@ -112,8 +109,6 @@
 * C64: if list is positioned not to fill the pane (e.g. close to start or
   end), file sizes aren't shown properly at bottom when scrolling with cursor
   keys (but page up/down, top/bottom, and C128 are all fine).
-
-* C128: the displayed file name in infobox overwrites "Current".
 
 * Loader: sometimes, the filename displays as garbage in the mini popup when
   loading, yet the file will still load just fine.  This appears to be

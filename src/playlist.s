@@ -129,8 +129,36 @@ load_directory
 .filename
 	jsr dir_read_line
 	jsr dir_file_unquote
-	bcs .next_entry			; carry set = no valid filename in the buffer
+	bcs .next_entry				; carry set = no valid filename in the buffer
 
+	lda string_buffer+32		; filter-out the program's own binaries from
+	cmp #"m"					; the list.
+	bne .valid_filename
+	lda string_buffer+33
+	cmp #"p"
+	bne .valid_filename
+	!ifndef c128 {
+		lda string_buffer+34
+		cmp #"6"
+		bne .valid_filename
+		lda string_buffer+35
+		cmp #"4"
+		bne .valid_filename
+	} else {
+		lda string_buffer+34
+		cmp #"1"
+		bne .valid_filename
+		lda string_buffer+35
+		cmp #"2"
+		bne .valid_filename
+		lda string_buffer+36
+		cmp #"8"
+		bne .valid_filename
+	}
+	sec
+	jmp .next_entry
+
+.valid_filename
 	clc
 	!ifndef c128 {
 		ldx #mini_popup_bottom_row
