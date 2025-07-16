@@ -126,7 +126,7 @@ decode_mod_header
 ; last ditch effort: see if there's something in the title, if the "restart"
 ; byte is between 1 and 128, if sample #1 has non-zero length and non-zero
 ; volume, if there's between 1 and 128 song positions, and if there's at
-; least two patterns.
+; least two patterns, with no pattern number being greater than 127.
 
 ; theoretically a mod could have only one pattern (#0), but then it would be
 ; so short that it would be basically empty.
@@ -168,13 +168,15 @@ mod_filetype_unsure
 	bpl -
 	and #$ff ; was .A is non-zero?
 	beq +
+	cmp #$80					; were any pattern numbers greater than 127?
+	bcs +
 	lda #1						; if all of that is present, there is a
 	sta current_file_type		; reasonable chance that it's a 15-sample mod
 	lda #4
 	sta current_file_tracks
 	bne get_pattern_table
 
-+	sec							; if any of that is missing, consider the file
++	sec							; if any of that is wrong, consider the file
 	rts							; as unknown and signal the loader to abort.
 
 set_num_tracks
