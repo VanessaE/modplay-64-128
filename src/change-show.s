@@ -846,8 +846,14 @@ show_system_info_popup
 	ldy #info_rsid_col
 	jsr PLOT
 
-	bit sid_type_right
-	bmi +
+	lda sid_type_right
+	cmp #$ff
+	bne +
+	ldx #<not_present_msg
+	ldy #>not_present_msg
+	jmp ++
+
++	bmi +
 	ldx #<info_popup_6581_msg
 	ldy #>info_popup_6581_msg
 	jmp ++
@@ -858,6 +864,9 @@ show_system_info_popup
 ++	lda #0
 	sec
 	jsr print_msg
+
+	lda #LGRN
+	jsr CHROUT
 
 	clc
 	ldx #info_files_row

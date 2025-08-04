@@ -519,6 +519,8 @@ tempo_fine_adjust_constant = 159778
 
 	cfg_data_end						!skip 1 ; one byte past the real end
 
+	stereo_enable_temp					!skip 1
+
 	mixer_cycle_count					!skip 1
 	audio_driver_isr_cycle_count		!skip 1
 	ram_driver_fetch_cycle_count		!skip 1

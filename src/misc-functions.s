@@ -1203,16 +1203,12 @@ check_sid_type_right
 	ldy #$0f
 	sta (utility_pointer),y
 
-	lda #$20
 	ldy #$12
+	lda #$20
 	sta (utility_pointer),y
 
 	ldy #$1b
 	lda (utility_pointer),y
-
-	; because those instructions take longer than a regular STA:LDA pair
-	; the value returned from the SID will be from a couple of cycles later in
-	; the oscillator run than normal:  6 for 6581, 5 for 8580.
 
 	!ifdef scpu {
 		sta SCPU_TURBO_ON
@@ -1222,9 +1218,37 @@ check_sid_type_right
 		inc C128_VIC_CLOCK_SPEED
 	}
 
-	lsr
-	lda #0
+	; before we use the supposed right SID oscillator 3 value,
+	; hard-reset left SID oscillator 3
+
+	; if doing so appears to reset right SID oscillator 3, then there isn't
+	; a SID there, it was just an I/O echo/mirror of the left SID.
+
+	tax
+	lda #$ff
+	sta SID_VOICE3_CR
+	lda (utility_pointer),y
+	beq no_right_sid
+	txa
+
+	; because LDY #foo:LDA (bar),y instructions take longer than a regular
+	; STA:LDA pair, the value returned from right SID oscillator 3 will be
+	; from a couple of cycles later in its cycle than normal:
+	; 6 for 6581, 5 for 8580.
+
+	cmp #5							; if the return value is neither 5 nor 6,
+	beq +							; then whatever is there isn't a SID
+	cmp #6
+	bne no_right_sid
+
++	lsr								; use the lowest bit to set the 6581/8580
+	lda #0							; flag in bit 7
 	ror
+	sta sid_type_right
+rts
+
+no_right_sid
+	lda #$ff
 	sta sid_type_right
 rts
 

@@ -169,7 +169,17 @@ no_player_ui
 		}
 	}
 
-	jsr init_audio_driver
+	lda stereo_enable
+	sta stereo_enable_temp
+
+	lda sid_type_right	; if the right SID isn't present, force mono mode.
+	cmp #$ff
+	bne +
+
+	lda #0
+	sta stereo_enable
+
++	jsr init_audio_driver
 	jsr reu_set_selfmod_and_mixer_vectors
 	jsr regenerate_tables_if_needed
 
@@ -229,6 +239,9 @@ player_ui_finish
 	jsr restore_zero_page
 	jsr enable_kernal_only
 	plp
+
+	lda stereo_enable_temp
+	sta stereo_enable
 
 	!ifndef c128 {
 		jsr set_standard_charset
