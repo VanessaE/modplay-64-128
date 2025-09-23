@@ -307,9 +307,6 @@ init
 	inx
 	bne -
 
-	jsr check_sid_type_left
-	jsr check_sid_type_right
-
 	lda #<reu_fetch_block
 	sta fetch_block_vec
 	lda #>reu_fetch_block
@@ -349,6 +346,9 @@ init
 	sta allow_regen_msg
 
 	jsr init_audio_driver
+	jsr check_sid_type_left
+	jsr check_sid_type_right
+
 	jsr regenerate_tables_if_needed
 
 	jsr generate_note_number_lookup_table

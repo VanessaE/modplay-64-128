@@ -1130,20 +1130,9 @@ rts
 
 ; SID DETECTION ROUTINES
 ;
-; By SounDemon - Based on a tip from Dag Lem.
-; Put together by FTC after SounDemons instructions
-; ...and tested by Rambones and Jeff.
-;
-; with right-SID variant
+; Based on code by SounDemon.
 
 check_sid_type_left
-	sei		;No disturbing interrupts
-	lda #$ff
--	cmp VIC_RASTER_LOW	;Don't run it on a badline.
-	bne -
-
-	;Detection itself starts here
-
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
 	}
@@ -1152,6 +1141,14 @@ check_sid_type_left
 		lda #0
 		sta C128_VIC_CLOCK_SPEED
 	}
+
+	sei						;No disturbing interrupts
+
+	jsr reset_sids
+
+	lda #$ff
+-	cmp VIC_RASTER_LOW		;Don't run it on a badline.
+	bne -
 
 	lda #$ff				;Set frequency in voice 3 to $ffff 
 	sta SID_VOICE3_CR		;...and set testbit (other bits don't matter) in VCREG3 ($d412) to disable oscillator
@@ -1161,6 +1158,12 @@ check_sid_type_left
 	sta SID_VOICE3_CR
 	lda SID_VOICE3_OSC_OUT	;Accu now has different value depending on sid model (6581=3/8580=2)
 
+	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
+	lda #0
+	ror
+	eor #$80
+	sta sid_type_left
+
 	!ifdef scpu {
 		sta SCPU_TURBO_ON
 	}
@@ -1168,23 +1171,42 @@ check_sid_type_left
 	!ifdef c128 {
 		inc C128_VIC_CLOCK_SPEED
 	}
+rts
 
-	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
-	lda #0
-	ror
-	eor #$80
-	sta sid_type_left
+; this routine sets up the addresses the right-SID-check routine will
+; need to use, so that it can use the same base code, thus keeping the
+; timings the same as the left-SID check.
+
+setup_right_sid_check
+	clc
+
+	lda stereo_sid_addr
+	adc #$12
+	sta .s2_v3_cr_1+1
+	sta .s2_v3_cr_2+1
+
+	lda stereo_sid_addr
+	adc #$0e
+	sta .s2_v3_fl+1
+	adc #1
+	sta .s2_v3_fh+1
+
+	lda stereo_sid_addr
+	adc #$1b
+	sta .s2_osc3_1+1
+
+	; all high bytes are the same
+
+	lda stereo_sid_addr+1
+	sta .s2_v3_cr_1+2
+	sta .s2_v3_cr_2+2
+	sta .s2_v3_fl+2
+	sta .s2_v3_fh+2
+	sta .s2_osc3_1+2
 rts
 
 check_sid_type_right
-	lda #$ff
--	cmp VIC_RASTER_LOW
-	bne -
-
-	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
+	php							; back-up the state of the I flag
 
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
@@ -1195,20 +1217,37 @@ check_sid_type_right
 		sta C128_VIC_CLOCK_SPEED
 	}
 
+	sei
+
+	jsr reset_sids
+
+	lda #$ff					; make sure left SID osc 3 is stopped
+	sta SID_VOICE3_CR
+
+	jsr setup_right_sid_check
+
 	lda #$ff
-	ldy #$12
-	sta (utility_pointer),y
-	ldy #$0e
-	sta (utility_pointer),y
-	ldy #$0f
-	sta (utility_pointer),y
+-	cmp VIC_RASTER_LOW
+	bne -
 
-	ldy #$12
-	lda #$20
-	sta (utility_pointer),y
+	lda #$ff					; max frequency
+.s2_v3_cr_1
+	sta $1234					; (set testbit)
+.s2_v3_fl
+	sta $1234					; (set frequency)
+.s2_v3_fh
+	sta $1234
 
-	ldy #$1b
-	lda (utility_pointer),y
+	lda #$20					; sawtooth wave, gate OFF
+.s2_v3_cr_2
+	sta $1234
+
+.s2_osc3_1
+	lda $1234					; read right osc 3
+	sta temp_abs_a
+
+	plp							; restores the I flag in case interrupts were
+								; enabled (other flags, don't care)
 
 	!ifdef scpu {
 		sta SCPU_TURBO_ON
@@ -1218,38 +1257,78 @@ check_sid_type_right
 		inc C128_VIC_CLOCK_SPEED
 	}
 
-	; before we use the supposed right SID oscillator 3 value,
-	; hard-reset left SID oscillator 3
+	lda SID_VOICE3_OSC_OUT		; did the right-SID test cause the left SID
+	bne right_sid_is_echo		; osc 3 to start?  if so, there's only an I/O
+								; echo at the configured right SID addr.
 
-	; if doing so appears to reset right SID oscillator 3, then there isn't
-	; a SID there, it was just an I/O echo/mirror of the left SID.
-
-	tax
-	lda #$ff
-	sta SID_VOICE3_CR
-	lda (utility_pointer),y
-	beq no_right_sid
-	txa
-
-	; because LDY #foo:LDA (bar),y instructions take longer than a regular
-	; STA:LDA pair, the value returned from right SID oscillator 3 will be
-	; from a couple of cycles later in its cycle than normal:
-	; 6 for 6581, 5 for 8580.
-
-	cmp #5							; if the return value is neither 5 nor 6,
-	beq +							; then whatever is there isn't a SID
-	cmp #6
+	lda temp_abs_a
+	cmp #2						; if the right SID osc 3 value in .A wasn't
+	beq has_right_sid			; 2 or 3, then it's not an I/O echo, but
+	cmp #3						; whatever IS there probably isn't a SID
 	bne no_right_sid
 
-+	lsr								; use the lowest bit to set the 6581/8580
-	lda #0							; flag in bit 7
+has_right_sid
+	lsr							; otherwise use the same carry trick as in
+	lda #0						; the left SID type check
 	ror
+	eor #$80
 	sta sid_type_right
 rts
 
 no_right_sid
+	ora #$40
+	sta sid_type_right
+rts
+
+right_sid_is_echo
 	lda #$ff
 	sta sid_type_right
+rts
+
+init_audio_driver
+	lda audio_driver
+	cmp #3
+	bne +
+	jsr dac_driver_init
+	rts
+
++	cmp #2
+	bne +
+	jsr sid_mahoney_driver_init
+	rts
+
++	bit dither_enable
+	bpl +
+
+	jsr sid_4bit_dithered_driver_init
+	rts
+
++	jsr sid_4bit_driver_init
+rts
+
+reset_sids
+	lda #0
+	ldy #$18
+
+-	sta SID,y
+	dey
+	bpl -
+
+	bit stereo_enable
+	bmi +
+	rts
+
++	lda stereo_sid_addr
+	sta utility_pointer
+	lda stereo_sid_addr+1
+	sta utility_pointer+1
+
+	lda #0
+	ldy #$18
+
+-	sta (utility_pointer),y
+	dey
+	bpl -
 rts
 
 keyboard_debounce

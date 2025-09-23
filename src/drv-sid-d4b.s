@@ -28,9 +28,9 @@ sid_4bit_dithered_driver_init
 	lda #>sid_4bit_dithered_mute
 	sta audio_mute_vec+1
 
-	lda #<sid_4bit_dithered_stop
+	lda #<reset_sids
 	sta audio_stop_vec
-	lda #>sid_4bit_dithered_stop
+	lda #>reset_sids
 	sta audio_stop_vec+1
 
 	bit stereo_enable
@@ -54,6 +54,8 @@ sid_4bit_dithered_driver_init
 	sta audio_isr_vec
 	lda #>sid_isr_4b_dithered_stereo
 	sta audio_isr_vec+1
+
+	jsr reset_sids
 rts
 
 sid_4bit_dithered_set_isr_cycle_count
@@ -86,7 +88,7 @@ sid_4bit_dithered_set_volume_table_resolution
 rts
 
 sid_4bit_dithered_start
-	jsr sid_4bit_dithered_stop
+	jsr reset_sids
 
 	lda #$ff
 	sta SID_VOICE1_ENV_SR
@@ -146,31 +148,6 @@ sid_4bit_dithered_start
 rts
 
 sid_4bit_dithered_mute
-rts
-
-sid_4bit_dithered_stop
-	lda #0
-	ldy #$1f
-
--	sta SID,y
-	dey
-	bpl -
-
-	bit stereo_enable
-	bmi +
-	rts
-
-+	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
-
-	lda #0
-	ldy #$1f
-
--	sta (utility_pointer),y
-	dey
-	bpl -
 rts
 
 sid_isr_4b_dithered_mono		; 7 cycles coming in

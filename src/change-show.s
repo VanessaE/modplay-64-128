@@ -458,7 +458,6 @@ change_audio_addr
 	cmp #3
 	beq +
 	jsr change_sid_addr
-	jsr check_sid_type_right
 	rts
 
 +	jsr change_dac_addr
@@ -696,6 +695,8 @@ change_dithering_setting
 }
 
 show_system_info_popup
+	jsr check_sid_type_right
+
 	jsr draw_medium_popup
 	lda #0
 	ldx #<info_popup_msg
@@ -932,5 +933,6 @@ show_system_info_popup
 	ldx #info_anykey_row
 	ldy #info_anykey_col
 	jsr PLOT
+
 	jsr press_any_key
 rts

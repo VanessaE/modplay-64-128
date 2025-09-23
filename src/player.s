@@ -172,9 +172,10 @@ no_player_ui
 	lda stereo_enable
 	sta stereo_enable_temp
 
-	lda sid_type_right	; if the right SID isn't present, force mono mode.
-	cmp #$ff
-	bne +
+	jsr check_sid_type_right	; if this returns with .A being some value
+	beq +						; other than 0 or $80, there's no right SID
+	cmp #$80					; at the configured address
+	beq +
 
 	lda #0
 	sta stereo_enable
@@ -250,25 +251,4 @@ player_ui_finish
 		jsr enable_vic_screen
 	  +
 	}
-rts
-
-init_audio_driver
-	lda audio_driver
-	cmp #3
-	bne +
-	jsr dac_driver_init
-	rts
-
-+	cmp #2
-	bne +
-	jsr sid_mahoney_driver_init
-	rts
-
-+	bit dither_enable
-	bpl +
-
-	jsr sid_4bit_dithered_driver_init
-	rts
-
-+	jsr sid_4bit_driver_init
 rts

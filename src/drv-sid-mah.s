@@ -26,9 +26,9 @@ sid_mahoney_driver_init
 	lda #>sid_mahoney_mute
 	sta audio_mute_vec+1
 
-	lda #<sid_mahoney_stop
+	lda #<reset_sids
 	sta audio_stop_vec
-	lda #>sid_mahoney_stop
+	lda #>reset_sids
 	sta audio_stop_vec+1
 
 	bit stereo_enable
@@ -52,6 +52,8 @@ sid_mahoney_driver_init
 	sta audio_isr_vec
 	lda #>sid_isr_mahoney_stereo
 	sta audio_isr_vec+1
+
+	jsr reset_sids
 rts
 
 sid_mahoney_set_isr_cycle_count
@@ -85,7 +87,7 @@ sid_mahoney_set_volume_table_resolution
 rts
 
 sid_mahoney_start
-	jsr sid_mahoney_stop		; clears the SID(s).
+	jsr reset_sids
 
 	lda #$0f					;Setup attack=0 and decay=15
 	sta SID_VOICE1_ENV_AD
@@ -164,31 +166,6 @@ sid_mahoney_start
 rts
 
 sid_mahoney_mute
-rts
-
-sid_mahoney_stop
-	lda #0
-	ldy #$1f
-
--	sta SID,y
-	dey
-	bpl -
-
-	bit stereo_enable
-	bmi +
-	rts
-
-+	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
-
-	lda #0
-	ldy #$1f
-
--	sta (utility_pointer),y
-	dey
-	bpl -
 rts
 
 sid_isr_mahoney_mono			; 7 cycles coming in
