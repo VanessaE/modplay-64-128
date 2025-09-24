@@ -89,40 +89,18 @@ rts
 sid_4bit_start
 	jsr reset_sids
 
-	lda #$ff
-	sta SID_VOICE1_ENV_SR
-	sta SID_VOICE2_ENV_SR
-	sta SID_VOICE3_ENV_SR
+	bit sid_type_left
+	bpl +
+	jsr enable_8580_digiboost_left
 
-	lda #$49
-	sta SID_VOICE1_CR
-	sta SID_VOICE2_CR
-	sta SID_VOICE3_CR
-
-	bit stereo_enable
++	bit stereo_enable
 	bmi +
 	rts
 
-+	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
-
-	lda #$ff
-	ldy #$06
-	sta (utility_pointer),y
-	ldy #$0d
-	sta (utility_pointer),y
-	ldy #$14
-	sta (utility_pointer),y
-
-	lda #$49
-	ldy #$04
-	sta (utility_pointer),y
-	ldy #$0b
-	sta (utility_pointer),y
-	ldy #$12
-	sta (utility_pointer),y
++	bit sid_type_right
+	bpl +
+	jsr enable_8580_digiboost_right
+  +
 rts
 
 sid_4bit_mute

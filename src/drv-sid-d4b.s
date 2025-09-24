@@ -90,10 +90,11 @@ rts
 sid_4bit_dithered_start
 	jsr reset_sids
 
-	lda #$ff
-	sta SID_VOICE1_ENV_SR
-	sta SID_VOICE2_ENV_SR
+	bit sid_type_left
+	bpl +
+	jsr enable_8580_digiboost_left
 
++	lda #$ff
 	sta SID_VOICE3_FREQ_LOW
 	sta SID_VOICE3_FREQ_HIGH
 
@@ -105,25 +106,20 @@ sid_4bit_dithered_start
 	lda #$81	; voice 3 waveform = noise + gate
 	sta SID_VOICE3_CR
 
-	lda #$49
-	sta SID_VOICE1_CR
-	sta SID_VOICE2_CR
-
 	bit stereo_enable
 	bmi +
 	rts
+
++	bit sid_type_right
+	bpl +
+	jsr enable_8580_digiboost_right
 
 +	lda stereo_sid_addr
 	sta utility_pointer
 	lda stereo_sid_addr+1
 	sta utility_pointer+1
-
+ 
 	lda #$ff
-	ldy #$06
-	sta (utility_pointer),y
-	ldy #$0d
-	sta (utility_pointer),y
-
 	ldy #$0e					; right SID voice 3 freq = $ffff
 	sta (utility_pointer),y
 	ldy #$0f
@@ -138,12 +134,6 @@ sid_4bit_dithered_start
 
 	lda #$81					; right SID voice 3 wave = noise + gate
 	ldy #$12
-	sta (utility_pointer),y
-
-	lda #$49
-	ldy #$04
-	sta (utility_pointer),y
-	ldy #$0b
 	sta (utility_pointer),y
 rts
 
