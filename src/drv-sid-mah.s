@@ -40,15 +40,7 @@ sid_mahoney_driver_init
 	sta audio_isr_vec+1
 	rts
 
-+	clc
-	lda stereo_sid_addr
-	adc #$18
-	sta .s2a+1
-	lda stereo_sid_addr+1
-	adc #0
-	sta .s2a+2
-
-	lda #<sid_isr_mahoney_stereo
++	lda #<sid_isr_mahoney_stereo
 	sta audio_isr_vec
 	lda #>sid_isr_mahoney_stereo
 	sta audio_isr_vec+1
@@ -111,61 +103,111 @@ sid_mahoney_start
 	bit sid_type_left
 	bpl +
 	lda #>mah_table_8580
-+	sta .mt_mono+2
++	sta .mah_mono_tbl+2
 
 	bit stereo_enable
 	bmi +
 	rts
 
-+	sta .mt_stereo_l+2
++	sta .mah_stereo_tl+2
 
-	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
+	jsr mah_setup_right_sid_addrs
 
 	lda #$0f
-	ldy #$05
-	sta (utility_pointer),y
-	ldy #$0c
-	sta (utility_pointer),y
-	ldy #$13
-	sta (utility_pointer),y
+.mah_v1r_ad		sta $1234
+.mah_v2r_ad		sta $1234
+.mah_v3r_ad		sta $1234
 
 	lda #$ff
-	ldy #$06
-	sta (utility_pointer),y
-	ldy #$0d
-	sta (utility_pointer),y
-	ldy #$14
-	sta (utility_pointer),y
+.mah_v1r_sr		sta $1234
+.mah_v2r_sr		sta $1234
+.mah_v3r_sr		sta $1234
 
 	lda #$49
-	ldy #$04
-	sta (utility_pointer),y
-	ldy #$0b
-	sta (utility_pointer),y
-	ldy #$12
-	sta (utility_pointer),y
+.mah_v1r_cr		sta $1234
+.mah_v2r_cr		sta $1234
+.mah_v3r_cr		sta $1234
 
 	lda #$ff
-	ldy #$15
-	sta (utility_pointer),y
-	ldy #$16
-	sta (utility_pointer),y
+.mah_flr		sta $1234
+.mah_fhr		sta $1234
 
 	lda #$03
-	ldy #$17
-	sta (utility_pointer),y
+.mah_fvsr		sta $1234
 
 	lda #>mah_table_6581
 	bit sid_type_right
 	bpl +
 	lda #>mah_table_8580
-+	sta .mt_stereo_r+2
++	sta .mah_stereo_tr+2
 rts
 
 sid_mahoney_mute
+rts
+
+mah_setup_right_sid_addrs
+	; low bytes vary
+
+	clc
+
+	lda stereo_sid_addr
+	adc #5
+	sta .mah_v1r_ad+1
+	adc #7
+	sta .mah_v2r_ad+1
+	adc #7
+	sta .mah_v3r_ad+1
+
+	lda stereo_sid_addr
+	adc #6
+	sta .mah_v1r_sr+1
+	adc #7
+	sta .mah_v2r_sr+1
+	adc #7
+	sta .mah_v3r_sr+1
+
+	lda stereo_sid_addr
+	adc #4
+	sta .mah_v1r_cr+1
+	adc #7
+	sta .mah_v2r_cr+1
+	adc #7
+	sta .mah_v3r_cr+1
+
+	lda stereo_sid_addr
+	adc #$15
+	sta .mah_flr+1
+	adc #1
+	sta .mah_fhr+1
+
+	lda stereo_sid_addr
+	adc #$17
+	sta .mah_fvsr+1
+
+	; high bytes are all the same
+	lda stereo_sid_addr+1
+
+	sta .mah_v1r_ad+2
+	sta .mah_v2r_ad+2
+	sta .mah_v3r_ad+2
+
+	sta .mah_v1r_sr+2
+	sta .mah_v2r_sr+2
+	sta .mah_v3r_sr+2
+
+	sta .mah_v1r_cr+2
+	sta .mah_v2r_cr+2
+	sta .mah_v3r_cr+2
+
+	sta .mah_flr+2
+	sta .mah_fhr+2
+
+	sta .mah_fvsr+2
+
+	sta .mah_s2a+2
+	lda stereo_sid_addr
+	adc #$18
+	sta .mah_s2a+1
 rts
 
 sid_isr_mahoney_mono			; 7 cycles coming in
@@ -178,7 +220,7 @@ sid_isr_mahoney_mono			; 7 cycles coming in
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
 	tax							; 2
-.mt_mono
+.mah_mono_tbl
 	lda $6400,x					; 4 / will be reset to the addr of the proper
 	sta SID_VOLUME				; 4 / table, below.
 
@@ -201,14 +243,14 @@ sid_isr_mahoney_stereo			; 7 cycles coming in
 	ldx audio_out_buf_index		; 3
 
 	ldy audio_buffer_left,x		; 4
-.mt_stereo_l
+.mah_stereo_tl
 	lda $6400,y					; 4
 	sta SID_VOLUME				; 4
 
 	ldy audio_buffer_right,x	; 4
-.mt_stereo_r
+.mah_stereo_tr
 	lda $6400,y					; 4
-.s2a
+.mah_s2a
 	sta $1234					; 4 / will be set to right SID addr + $18, above
 
 .ias lda #00					; 2

@@ -1231,19 +1231,15 @@ check_sid_type_right
 	bne -
 
 	lda #$ff					; max frequency
-.s2_v3_cr_1
-	sta $1234					; (set testbit)
-.s2_v3_fl
-	sta $1234					; (set frequency)
-.s2_v3_fh
-	sta $1234
+.s2_v3_cr_1		sta $1234		; (set testbit)
+.s2_v3_fl		sta $1234		; (set frequency)
+.s2_v3_fh		sta $1234
 
 	lda #$20					; sawtooth wave, gate OFF
-.s2_v3_cr_2
-	sta $1234
+.s2_v3_cr_2		sta $1234
 
-.s2_osc3_1
-	lda $1234					; read right osc 3
+.s2_osc3_1		lda $1234		; read right osc 3
+
 	sta temp_abs_a
 
 	plp							; restores the I flag in case interrupts were
