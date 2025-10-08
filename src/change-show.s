@@ -23,13 +23,13 @@
 	info_anykey_col	= 14
 	info_plat_row	= 7
 	info_plat_col	= 13
-	info_expram_row	= 8
+	info_expram_row	= 11
 	info_expram_col	= 23
-	info_lsid_row	= 9
+	info_lsid_row	= 8
 	info_lsid_col	= 13
-	info_rsid_row	= 10
+	info_rsid_row	= 9
 	info_rsid_col	= 14
-	info_files_row	= 11
+	info_files_row	= 10
 	info_files_col	= 26
 	info_ram_use_row = 12
 	info_ram_use_col = 24
@@ -56,13 +56,13 @@
 	info_anykey_col	= 14
 	info_plat_row	= 2
 	info_plat_col	= 13
-	info_expram_row	= 3
+	info_expram_row	= 6
 	info_expram_col	= 23
-	info_lsid_row	= 4
+	info_lsid_row	= 3
 	info_lsid_col	= 13
-	info_rsid_row	= 5
+	info_rsid_row	= 4
 	info_rsid_col	= 14
-	info_files_row	= 6
+	info_files_row	= 5
 	info_files_col	= 26
 	info_ram_use_row = 7
 	info_ram_use_col = 24
@@ -726,47 +726,6 @@ show_system_info_popup
 	  +
 	}
 
-	clc
-	ldx #info_expram_row
-	ldy #info_expram_col
-	jsr PLOT
-
-	clc
-	lda reu_highest_bank
-	adc #1
-	sta utility_pointer
-	lda #0
-	rol
-
-	asl utility_pointer
-	rol 
-	asl utility_pointer
-	rol 
-	asl utility_pointer
-	rol 
-	asl utility_pointer
-	rol 
-	asl utility_pointer
-	rol 
-	asl utility_pointer
-	rol 
-
-	sec
-	ldx utility_pointer
-	tay
-	jsr print_uint16
-
-	!ifndef c128 {
-		lda #32
-		jsr CHROUT
-	}
-
-	lda #0
-	ldx #<kb_msg
-	ldy #>kb_msg
-	sec
-	jsr print_msg
-
 ;	!ifdef scpu {
 ;
 ;		lda supercpu_last_free_page
@@ -878,6 +837,47 @@ show_system_info_popup
 	ldx playlist_length
 	ldy #0
 	jsr print_uint16
+
+	clc
+	ldx #info_expram_row
+	ldy #info_expram_col
+	jsr PLOT
+
+	clc
+	lda reu_highest_bank
+	adc #1
+	sta utility_pointer
+	lda #0
+	rol
+
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+	asl utility_pointer
+	rol 
+
+	sec
+	ldx utility_pointer
+	tay
+	jsr print_uint16
+
+	!ifndef c128 {
+		lda #32
+		jsr CHROUT
+	}
+
+	lda #0
+	ldx #<kb_msg
+	ldy #>kb_msg
+	sec
+	jsr print_msg
 
 	lda highest_exp_addresss_used+1
 	sta utility_pointer

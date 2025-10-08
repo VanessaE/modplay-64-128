@@ -206,10 +206,10 @@ info_popup_msg
 	!fill 9,RIGHT
 	!text YEL,"System Information",RETURN,RETURN
 	!text RIGHT,RIGHT,RIGHT,"Platform:",RETURN
-	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Left SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Right SID:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
+	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Expansion RAM usage:",RETURN
 	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
