@@ -71,11 +71,7 @@ start_main_player
 		jsr PLOT
 	}
 
-	lda #0
-	ldx #<main_player_now_playing_msg
-	ldy #>main_player_now_playing_msg
-	sec
-	jsr print_msg
+	jsr print_now_playing_msg
 
 	lda #0
 	ldx #<main_player_file_msg

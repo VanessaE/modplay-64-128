@@ -73,9 +73,9 @@ check_menu_key_f2
 	lda playlist_length
 	beq check_menu_key_f3
 	jsr copy_main_menu_to_cache_quick
-	clc
 	lda #$80
 	sta playlist_iterate_mode
+	jsr playlist_get_selection_counts
 	jsr playlist_iterate
 +	lda #3
 	rts
@@ -87,9 +87,13 @@ check_menu_key_f3
 	beq check_menu_key_f4
 	jsr copy_main_menu_to_cache_quick
 	clc
+	lda #1
+	sta playlist_iterate_mode
+	sta playlist_pos_within_selection
+	lda playlist_length
+	sta playlist_num_files_in_selection
 	lda #0
 	sta playlist_scroll_pos
-	sta playlist_iterate_mode
 	jsr playlist_iterate
 +	lda #3
 	rts
@@ -134,8 +138,13 @@ check_menu_key_f7
 	beq check_menu_key_f8
 	jsr copy_main_menu_to_cache_quick
 	clc
-	lda #0
+	lda #1
 	sta playlist_iterate_mode
+	lda playlist_length
+	sta playlist_num_files_in_selection
+	ldx playlist_scroll_pos
+	inx
+	stx playlist_pos_within_selection
 	jsr playlist_iterate
 +	lda #3
 	rts

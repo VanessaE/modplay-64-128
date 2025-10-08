@@ -353,8 +353,11 @@ between_songs_msg
 	!byte 0
 
 main_player_now_playing_msg
-	!fill 13,RIGHT
-	!text CYAN,"Now playing:",RETURN,RETURN
+	!text CYAN,"Now playing"
+	!byte 0
+
+main_player_of_msg
+	!text " of "
 	!byte 0
 
 main_player_file_msg

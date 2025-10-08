@@ -6,6 +6,7 @@
 	playlist_bottom_row			= 19
 	playlist_left_column		= 1
 	playlist_width				= 16
+	player_ui_header_right_count = 12
 	dirname_row					= 2
 	dirname_col					= 1
 	file_list_number_row		= 13
@@ -20,6 +21,7 @@
 	playlist_bottom_row			= 18
 	playlist_left_column		= 1
 	playlist_width				= 26
+	player_ui_header_right_count = 14
 	dirname_row					= 2
 	dirname_col					= 9
 	file_list_number_row		= 4
@@ -1010,10 +1012,11 @@ rts
 ; is found, or is selected, as appropriate.
 
 playlist_iterate
-	bit playlist_iterate_mode		; play all files?
-	bpl playlist_load_next_file
+	lda playlist_iterate_mode		; are we working through a playlist?
+	beq playlist_exit
+	bpl playlist_load_next_file		; play all files in the list?
 
-	ldx playlist_scroll_pos			; okay, selected-only.
+	ldx playlist_scroll_pos			; okay, so selected-only mode then
 	lda playlist_file_flags,x		; is the file selected?
 	bpl playlist_next_file
 
@@ -1023,15 +1026,12 @@ playlist_load_next_file
 	clc
 	jsr load_file_to_expansion
 	lda current_file_type
-	beq playlist_next_file			; did the file load?
+	beq playlist_post_inc			; did the file load?
 	jsr start_main_player
 
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl +
-	}
-
-+	bit seq_abort_flag				; if the song exited with $80 here,
+playlist_post_inc
+	inc playlist_pos_within_selection
+	bit seq_abort_flag				; if the song exited with $80 here,
 	bmi playlist_exit				; the user pressed F7 to bail-out
 
 playlist_next_file
@@ -1042,9 +1042,113 @@ playlist_next_file
 
 	bit repeat_mode
 	bpl playlist_exit
+	lda #1
+	sta playlist_pos_within_selection
 	lda #0
 	sta playlist_scroll_pos
 	beq playlist_iterate
 
 playlist_exit
+	lda #0
+	sta playlist_iterate_mode
+	sta playlist_pos_within_selection
+	sta playlist_num_files_in_selection
  rts
+
+print_now_playing_msg
+	lda playlist_iterate_mode
+	beq .npl1a					; don't print the count if it's just one file
+
+	; this first bit get the total length of the two playlist counts
+
+	clc
+	ldx playlist_pos_within_selection
+	ldy #0
+	jsr get_num_length
+	sta temp_abs_a
+
+	clc
+	ldx playlist_num_files_in_selection
+	ldy #0
+	jsr get_num_length
+
+	clc
+	adc temp_abs_a
+	adc #12		; length of "Now playing " (with the space)
+	adc #5		; length of " of " (with spaces) and the trailing colon
+
+	tay
+	lda #medium_popup_width
+	jsr center_string_by_len_val
+	jmp .npl1b
+
+.npl1a
+	ldy #player_ui_header_right_count
+	lda #RIGHT
+-	jsr CHROUT
+	dey
+	bne -
+
+.npl1b
+	lda #0
+	ldx #<main_player_now_playing_msg
+	ldy #>main_player_now_playing_msg
+	sec
+	jsr print_msg
+
+	lda playlist_iterate_mode
+	beq .npl2
+
+	lda #32
+	jsr CHROUT
+
+	ldx playlist_pos_within_selection
+	ldy #0
+	sec
+	jsr print_uint16
+
+	ldx #<main_player_of_msg
+	ldy #>main_player_of_msg
+	sec
+	jsr print_msg
+
+	ldx playlist_num_files_in_selection
+	ldy #0
+	jsr print_uint16
+
+.npl2
+	lda #":"
+	jsr CHROUT
+
+	lda #RETURN
+	jsr CHROUT
+	jsr CHROUT
+rts
+
+playlist_get_selection_counts
+	lda #0
+	sta playlist_num_files_in_selection
+	sta playlist_pos_within_selection
+
+	ldy #0
+-	lda playlist_file_flags,y
+	bpl +
+	inc playlist_num_files_in_selection
++	iny
+	cpy playlist_length
+	bne -
+
+	ldy playlist_scroll_pos
+-	lda playlist_file_flags,y
+	bpl +
+	inc playlist_pos_within_selection 
++	dey
+	cpy #255
+	bne -
+
+	ldy playlist_scroll_pos
+	lda playlist_file_flags,y
+	bmi +
+	inc playlist_pos_within_selection
+  +
+rts

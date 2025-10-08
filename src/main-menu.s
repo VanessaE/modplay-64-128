@@ -7,6 +7,11 @@
 }
 
 show_main_menu
+	lda #0
+	sta playlist_iterate_mode
+	sta playlist_pos_within_selection
+	sta playlist_num_files_in_selection
+
 	!ifdef c128 {
 		jsr FULLW
 	}

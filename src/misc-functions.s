@@ -64,9 +64,10 @@ get_string_length
 center_string
 	pha
 	jsr get_string_length
-	tya
-	sta temp_abs_a
 	pla
+
+center_string_by_len_val	; or enter here with known string length in .Y
+	sty temp_abs_a			; and width of the area in .A
 	sec
 	sbc temp_abs_a
 	lsr
