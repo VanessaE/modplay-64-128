@@ -91,7 +91,7 @@ run_effect_pitch_slide
 	lda seq_pitch_slide_target_period_highs,y
 	sbc current_note_periods_highs,y
 	bcs stop_pitch_slide
-	jmp set_pitch
+	jmp set_pitch_by_table_lookup
 
 slide_pitch_down
 	clc
@@ -107,7 +107,7 @@ slide_pitch_down
 	lda current_note_periods_highs,y
 	sbc seq_pitch_slide_target_period_highs,y
 	bcs stop_pitch_slide
-	jmp set_pitch
+	jmp set_pitch_by_table_lookup
 
 stop_pitch_slide
 	lda seq_pitch_slide_target_period_lows,y
@@ -116,7 +116,7 @@ stop_pitch_slide
 	sta current_note_periods_highs,y
 	lda #0
 	sta current_pitch_slide_rates,y
-	jmp set_pitch
+	jmp set_pitch_by_table_lookup
 
 ; continue pitch slide and add volume slide
 

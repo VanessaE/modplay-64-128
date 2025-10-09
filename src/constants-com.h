@@ -342,6 +342,7 @@ tempo_fine_adjust_constant = 159778
 	do_viz_plot							!skip 1
 	seq_key_debounce					!skip 1
 
+	curren
 	!if * > $0023 {
 			!error "Backed-up-zero-page variables, lower part exceeds $0023 by ", * - $0023, " bytes!"
 	}
@@ -420,25 +421,26 @@ tempo_fine_adjust_constant = 159778
 
 	* = $60
 
-	current_pitch_slide_rates			!skip 8
-	current_pitch_slide_dirs			!skip 8 ; 0=pitching down, $80=pitching up
 	arpeggio_counters					!skip 8 ; zero page is mandatory (STX $ZP,Y)
-	fine_tune_values					!skip 8
 	cut_sample_ticks					!skip 8
 	delay_sample_ticks					!skip 8
-	current_sample_numbers				!skip 8
 	vibrato_rates						!skip 8
 	tremolo_rates						!skip 8
 	volume_slide_rates					!skip 8
-	current_steprates_fracts			!skip 8
-	current_steprates_ints				!skip 8
 	sample_pointers_fracts				!skip 8
 	sample_pointers_lows				!skip 8
 	sample_pointers_mids				!skip 8
 	sample_pointers_highs				!skip 8
+
+	current_sample_numbers				!skip 8
+	current_steprates_fracts			!skip 8
+	current_steprates_ints				!skip 8
 	current_sample_end_addr_lows		!skip 8
 	current_sample_end_addr_mids		!skip 8
 	current_sample_end_addr_highs		!skip 8
+	current_pitch_slide_rates			!skip 8
+	current_pitch_slide_dirs			!skip 8 ; 0=pitching down, $80=pitching up
+	current_fine_tune_values			!skip 8
 
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"
@@ -485,6 +487,7 @@ tempo_fine_adjust_constant = 159778
 	exp_player_bg_start_page			!skip 1
 	exp_file_data_start_page			!skip 1
 	highest_exp_addresss_used			!skip 3
+	fine_tuning_table					!skip 32
 
 	!ifndef c128 {
 		!if * > $03ff {

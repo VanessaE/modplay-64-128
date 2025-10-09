@@ -192,11 +192,30 @@ viz_row_data_fetch_and_print
 		lsr
 		lsr
 		lsr
-		cmp #16
+		cmp #14 ; extended commands need extra checks
+		bne +
+
+		lda #$45 ; "E"
+		jsr visualizer_print_char
+
+		lda seq_current_row_data + .viz_tr*4 + 3
+		and #$f0
+		cmp #5 ; ext cmd 5 needs custom handling
+		beq +++ ; print_cmd_args
+
+		lsr
+		lsr
+		lsr
+		tax
+		lda extended_effect_command_jump_table,x
+		beq ++ ; print_arg_qmarks
+		bne +++ ; print_cmd_args 
+
+	+	cmp #16
 		bcc +
 		lda #$3f
 		jsr visualizer_print_char
-		jmp ++
+		jmp ++ ; print_arg_qmarks
 
 	+	jsr to_hex
 		jsr visualizer_print_char
@@ -210,13 +229,15 @@ viz_row_data_fetch_and_print
 		lsr
 		tax ; .X will need command no. * 2
 		lda start_effect_command_jump_table+1,x
-		bne +++
+		bne +++ ; print_cmd_args
 
+	; print_arg_qmarks
 	++	lda #$3f
 		jsr visualizer_print_char
 		jsr visualizer_print_char
 		jmp +
 
+	; print_cmd_args
 	+++	ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x
 		jsr to_hex

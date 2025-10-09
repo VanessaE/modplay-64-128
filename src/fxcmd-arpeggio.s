@@ -105,14 +105,13 @@ run_effect_arpeggio
 
 +	ldx #0
 	stx arpeggio_counters,y
-	jsr set_pitch
+	jsr set_pitch_by_table_lookup
 
 	ldx sequencer_temp_x
 	rts
 
 set_arp_pitch_2_3
 	stx arpeggio_counters,y
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
-
-	ldx sequencer_temp_x
+	jsr apply_fine_tuning		; uses the step rate values set above rather
+	ldx sequencer_temp_x		; than looking-up the "original" note
 rts

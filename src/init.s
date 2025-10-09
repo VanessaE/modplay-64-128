@@ -279,6 +279,7 @@ init
 	sta CIA2_CRA
 
 	jsr semitones_table_copy
+	jsr fine_tuning_table_copy
 	jsr note_names_table_copy
 
 	ldx #15
@@ -432,12 +433,28 @@ semitones_table_copy
 	bpl -
 rts
 
-twelfth_root_2 = 1.059463
+fine_tuning_table_copy
+	ldx #31
+-	lda fine_tuning_table_origin,x
+	sta fine_tuning_table,x
+	dex
+	bpl -
+rts
+
+one_semitone			= 1.059463094 ; 2^(1/12)
+one_eighth_semitone		= 1.007246412 ; 2^(1/(12*8))
 
 semitones_table_origin
 	!for s2, 0, 15 {
 		!zone {
-			!word int((twelfth_root_2 ^ s2) * 256)
+			!word int((one_semitone ^ s2) * 256)
+		}
+	}
+
+fine_tuning_table_origin
+	!for ft, -8, 7 {
+		!zone {
+			!word int((one_eighth_semitone ^ ft) * 32768)
 		}
 	}
 

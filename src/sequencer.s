@@ -18,7 +18,6 @@ start_sequencer
 	sta seq_pitch_slide_target_period_lows,x
 	sta seq_pitch_slide_target_period_highs,x
 
-	sta fine_tune_values,x
 	sta retrigger_rates,x
 	sta cut_sample_ticks,x
 	sta delay_sample_ticks,x
@@ -45,6 +44,12 @@ start_sequencer
 	sta current_sample_end_addr_lows,x
 	sta current_sample_end_addr_highs,x
 
+	dex
+	bpl -
+
+	lda #8
+	ldx #7
+-	sta current_fine_tune_values,x
 	dex
 	bpl -
 
@@ -164,7 +169,7 @@ next_row_no_scroll
 	bcs seq_fetch_row_data
 
 	lda #<visualizer_line_6
-	sta utility_pointer 
+	sta utility_pointer
 	lda #>visualizer_line_6
 	sta utility_pointer+1
 
@@ -245,7 +250,7 @@ get_note_period
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
-	jsr set_pitch
+	jsr set_pitch_by_table_lookup
 	ldx sequencer_temp_x
 	ldy seq_current_track
 
@@ -401,7 +406,7 @@ dont_run_post_tick_command
 
 +	lda pattern_break_target_row
 	beq +
-	jmp next_pattern 
+	jmp next_pattern
 
 +	inc seq_current_row
 	lda seq_current_row
@@ -420,7 +425,7 @@ rts
 ; auxillary routines
 
 ; fetch the row indicated by .X, from pattern indicated by .Y, from expansion
-; RAM into the row data buffer.  
+; RAM into the row data buffer.
 
 fetch_row_data
 	lda #0
@@ -495,7 +500,24 @@ start_sample
 	lda sample_default_loop_flags,x
 	sta track_current_loop_flags,y
 
-	+JSR_INDIRECT (do_selfmod_instrument_vec)
+	; if extended command #5 is called-for on this track and row, use
+	; its fine-tune value instead of the sample's default.
+
+	lda seq_commands,y
+	cmp #14
+	bne +
+	lda seq_command_arguments,y
+	and #$f0
+	cmp #$50
+	bne +
+
+	jsr extcmd_set_fine_tune
+	jmp ++
+
++	lda sample_default_fine_tunes,x
+	sta current_fine_tune_values,y
+
+++	+JSR_INDIRECT (do_selfmod_instrument_vec)
 
 	ldy seq_current_track
 	ldx current_sample_numbers,y
@@ -504,14 +526,13 @@ rts
 ; convert a note period into a sample stepper value
 ; enter with .Y = track number
 
-set_pitch
-	tya
-	tax
+set_pitch_by_table_lookup
+	sty sequencer_temp_y
 
-	lda current_note_periods_lows,x
+	lda current_note_periods_lows,y
 	sta utility_pointer
-	lda current_note_periods_highs,x
-	asl utility_pointer
+	lda current_note_periods_highs,y
+++	asl utility_pointer
 	rol
 	sta utility_pointer+1
 
@@ -523,13 +544,51 @@ set_pitch
 	adc #>steprate_lookup_table
 	sta utility_pointer+1
 
+	tya
+	tax
+
 	ldy #0
 	lda (utility_pointer),y
 	sta current_steprates_fracts,x
 	iny
 	lda (utility_pointer),y
 	sta current_steprates_ints,x
+	ldy sequencer_temp_y
 
+apply_fine_tuning
+	lda current_fine_tune_values,y
+	cmp #8
+	beq doesnt_need_fine_tune
+
+	asl
+	tax
+	lda fine_tuning_table,x
+	sta multiplicand_a
+	lda fine_tuning_table+1,x
+	sta multiplicand_a+1
+
+	lda current_steprates_fracts,y
+	sta multiplicand_b
+	lda current_steprates_ints,y
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16
+	ldy sequencer_temp_y
+
+	; multiplying the upper three bytes by 2 and then using the highest two
+	; bytes is the same as dividing the entire four-byte result by 32768
+
+	asl product+1
+	rol product+2
+	rol product+3
+
+	lda product+2
+	sta current_steprates_fracts,y
+	lda product+3
+	sta current_steprates_ints,y
+
+doesnt_need_fine_tune
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
 
@@ -554,7 +613,7 @@ start_effect_command_jump_table
 	!word 0 ; run_effect_position_jump
 	!word run_effect_set_volume
 	!word run_effect_pattern_break
-	!word 0
+	!word start_extended_effect
 	!word run_effect_set_speed
 
 run_effect_command_jump_table
@@ -572,5 +631,5 @@ run_effect_command_jump_table
 	!word 0
 	!word 0
 	!word 0
-	!word 0
+	!word run_extended_effect
 	!word 0
