@@ -118,7 +118,9 @@ rts
 
 !source "src/player.s"
 !source "src/sequencer.s"
+!source "src/sequencer-aux.s"
 !source "src/sequencer-ui.s"
+
 !source "src/fxcmd-arpeggio.s"
 !source "src/fxcmd-pitch-sliding.s"
 !source "src/fxcmd-set-sample-offset.s"
