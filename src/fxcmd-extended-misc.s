@@ -46,8 +46,8 @@ extended_effect_command_jump_table
 	!word 0 ; tremolo waveform
 	!word 0 ; [unused]
 	!word 0 ; retrigger sample
-	!word 0 ; fine volume slide up
-	!word 0 ; fine volume slide down
+	!word extcmd_fine_vol_slide_up
+	!word extcmd_fine_vol_slide_down
 	!word 0 ; cut/truncate sample
 	!word 0 ; delay sample start
 	!word 0 ; delay pattern
