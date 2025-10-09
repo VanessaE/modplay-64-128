@@ -37,8 +37,8 @@ rts
 
 extended_effect_command_jump_table
 	!word 0 ; filter on/off
-	!word 0 ; fine pitch slide up
-	!word 0 ; fine pitch slide down
+	!word extcmd_fine_slide_up
+	!word extcmd_fine_slide_down
 	!word 0 ; glissando on/off
 	!word 0 ; vibrato waveform
 	!word extcmd_set_fine_tune

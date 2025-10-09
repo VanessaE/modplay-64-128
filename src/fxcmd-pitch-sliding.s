@@ -75,7 +75,7 @@ run_effect_pitch_slide
 +	lda current_pitch_slide_dirs,y
 	bpl slide_pitch_down ; to higher period value
 
-	; slide pitch up, to lower period value
+slide_pitch_up
 	sec
 	lda current_note_periods_lows,y
 	sbc current_pitch_slide_rates,y
@@ -83,8 +83,8 @@ run_effect_pitch_slide
 	lda current_note_periods_highs,y
 	sbc #0
 	bcc stop_pitch_slide				; a really fast slide-up from a high
-	sta current_note_periods_highs,y	; pitch could underflow the period
-										; st 0, breaking the limit check below
+	sta current_note_periods_highs,y	; pitch could underflow the period past
+										; breaking the limit check below
 
 	lda seq_pitch_slide_target_period_lows,y
 	cmp current_note_periods_lows,y
@@ -129,3 +129,17 @@ run_effect_pitch_slide_plus_volume_slide
 	jsr run_effect_pitch_slide
 	jsr run_effect_volume_slide
 rts
+
+; Extended commands, fine pitch slide up/down
+
+extcmd_fine_slide_up
+	lda seq_command_arguments,y
+	and #$0f
+	sta current_pitch_slide_rates,y
+jmp slide_pitch_up
+
+extcmd_fine_slide_down
+	lda seq_command_arguments,y
+	and #$0f
+	sta current_pitch_slide_rates,y
+jmp slide_pitch_down
