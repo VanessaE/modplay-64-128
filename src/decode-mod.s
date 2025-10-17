@@ -328,6 +328,28 @@ parse_instruments
 	lda temp_counter+2
 	sta sample_lengths_highs,x
 
+	; check if that sample overlaps a 512k boundary
+
+	clc
+	lda sample_start_addresses_mids,x
+	adc sample_lengths_mids,x
+	lda sample_start_addresses_highs,x
+	adc sample_lengths_highs,x
+
+	and #$07
+	bne .decode_no_512k_wrap
+	lda sample_start_addresses_highs,x
+	and #$07
+	beq .decode_no_512k_wrap
+
+	lda #0
+	sta sample_start_addresses_mids,x
+	sta parse_header_sample_pointer
+	sta parse_header_sample_pointer+1
+	inc sample_start_addresses_highs,x
+	inc parse_header_sample_pointer+2
+
+.decode_no_512k_wrap
 	clc
 	lda sample_lengths_lows,x
 	adc parse_header_sample_pointer			; preset for next sample address

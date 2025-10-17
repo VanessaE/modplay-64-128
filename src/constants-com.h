@@ -615,6 +615,7 @@ tempo_fine_adjust_constant = 159778
 	temp_abs_y2							!skip 1
 	temp_carry							!skip 1
 	temp_counter						!skip 3
+	temp_counter_b						!skip 3
 	utility_counter						!skip 3
 
 	stash_size							!skip 2

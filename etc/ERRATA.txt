@@ -27,10 +27,6 @@
 ##  KNOWN ISSUES  ##
 ####################
 
-* Fetch code:  There needs to be some kind of further mitigation for the REU
-  512k wraparound glitch, for the benefit playback code, since it can grab
-  up to 200 or so bytes in one go.  Not sure how to handle this.
-
 * Fetch code:  due to lookahead behavior, really short loops tend to get
   kinda "hard-synced" against the REU transfer window, causing pitch
   distortion to the point of sometimes collapsing into just a few discrete
