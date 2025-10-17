@@ -213,7 +213,7 @@ load_by_filename_entry
 
 	jmp abort_load
 
-	lda highest_exp_addresss_used+2
++	lda highest_exp_addresss_used+2
 	cmp reu_highest_bank
 	bcc +
 
