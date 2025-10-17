@@ -20,3 +20,10 @@ run_effect_pattern_break
 
 	ldx temp_zpbk_a+1
 rts
+
+; POSITION JUMP
+
+run_effect_position_jump
+	lda seq_command_arguments,y
+	sta pos_jump_target_pattern
+rts

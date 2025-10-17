@@ -65,6 +65,9 @@ start_sequencer
 	dex
 	bpl -
 
+	lda #$ff
+	sta pos_jump_target_pattern
+
 ; caution:  do not init more than 4 tracks here until the fetch and mixer
 ; loops have been expanded to handle it, will cause mem corruption
 
@@ -112,8 +115,16 @@ start_sequencer
 	beq nple
 
 next_pattern
-	inc current_song_pos
-	lda current_song_pos
+	lda pos_jump_target_pattern
+	cmp #$ff
+	beq +
+	sta current_song_pos
+	lda #$ff
+	sta pos_jump_target_pattern
+	bne ++
+
++	inc current_song_pos
+++	lda current_song_pos
 	cmp number_of_song_positions
 	bne nple
 	jmp stop_song
@@ -158,6 +169,7 @@ next_row_no_scroll
 	beq +
 	and #$7f
 	sta seq_current_row
+	jsr viz_row_data_pattern_preload
 	lda #0
 	sta pattern_break_target_row
 
@@ -408,6 +420,13 @@ dont_run_post_tick_command
 	beq +
 	jmp next_pattern
 
++	lda pos_jump_target_pattern
+	cmp #$ff
+	beq +
+	lda #0
+	sta seq_current_row
+	jmp next_pattern
+
 +	inc seq_current_row
 	lda seq_current_row
 	cmp #64
@@ -439,7 +458,7 @@ start_effect_command_jump_table
 	!word 0
 	!word run_effect_set_sample_offset
 	!word start_effect_volume_slide
-	!word 0 ; run_effect_position_jump
+	!word run_effect_position_jump
 	!word run_effect_set_volume
 	!word run_effect_pattern_break
 	!word start_extended_effect

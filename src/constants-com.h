@@ -371,6 +371,7 @@ tempo_fine_adjust_constant = 159778
 	* = $2a
 
 	pattern_break_target_row			!skip 1
+	pos_jump_target_pattern				!skip 1
 	seq_current_pattern_number			!skip 1
 	seq_current_row						!skip 1
 	seq_current_track					!skip 1

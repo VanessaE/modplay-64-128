@@ -81,7 +81,7 @@ viz_row_data_pattern_preload
 	lda #>visualizer_line_3
 	sta utility_pointer+1
 
-	ldx #0
+	ldx seq_current_row
 	jsr viz_row_data_fetch_and_print
 
 	lda #<visualizer_line_4

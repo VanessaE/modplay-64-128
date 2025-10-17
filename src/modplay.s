@@ -126,7 +126,7 @@ rts
 !source "src/fxcmd-set-sample-offset.s"
 !source "src/fxcmd-volume-sliding.s"
 !source "src/fxcmd-set-volume.s"
-!source "src/fxcmd-pattern-break.s"
+!source "src/fxcmd-patbreak-posjump.s"
 !source "src/fxcmd-set-speed.s"
 
 !source "src/fxcmd-extended-misc.s"
