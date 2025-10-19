@@ -203,7 +203,7 @@ next_track_this_row
 	asl
 	asl					; .X = track number x 4
 	tax
-	stx sequencer_temp_x
+	stx seq_cur_track_data_offset
 
 ; split each row, each track's four data bytes into their different components
 
@@ -218,7 +218,7 @@ get_command								; ...and its parameters.
 	sta seq_commands,y
 
 get_sample_number
-	ldx sequencer_temp_x
+	ldx seq_cur_track_data_offset
 	lda seq_current_row_data,x			; if sample number is 0, keep using
 	beq +								; the previous sample number
 
@@ -227,7 +227,7 @@ get_sample_number
 	tax									; only change the channel's volume if
 	lda sample_default_volume_levels,x	; the sample number changes.
 	jsr set_volume
-	ldx sequencer_temp_x
+	ldx seq_cur_track_data_offset
 
 +	lda seq_current_row_data+1,x		; if period is 0, don't restart
 	and #$0f							; the sample
@@ -242,7 +242,7 @@ get_sample_number
 
 	lda current_sample_numbers,y
 	jsr start_sample
-	ldx sequencer_temp_x
+	ldx seq_cur_track_data_offset
 	ldy seq_current_track
 
 get_note_period
@@ -263,7 +263,7 @@ get_note_period
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
 	jsr set_pitch_by_table_lookup
-	ldx sequencer_temp_x
+	ldx seq_cur_track_data_offset
 	ldy seq_current_track
 
 run_command

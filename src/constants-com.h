@@ -375,6 +375,7 @@ tempo_fine_adjust_constant = 159778
 	seq_current_pattern_number			!skip 1
 	seq_current_row						!skip 1
 	seq_current_track					!skip 1
+	seq_cur_track_data_offset			!skip 1
 	seq_ticks_counter					!skip 1
 	current_song_pos					!skip 1
 	glissando_flag						!skip 1
