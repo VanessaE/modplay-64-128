@@ -175,20 +175,6 @@ init
 	lda #0
 	sta expansion_memory_start_page
 
-	lda #0
-	sta ramlink_detect
-	sta RAMLINK_REG_ENABLE		; try to enable RAMLink registers
-	lda #$30
-	sta RAMLINK_8255_PORT_C		; try to write to RAMLink 8255 Port C
-	lda #0						; reset REU DMA_ADL in case that write hit an
-	sta DMA_ADL					; I/O echo ($df42 -> $df02)
-	lda RAMLINK_8255_PORT_C		; if this comes back correct, that write didn't
-	cmp #$30					; hit an echo, so there's a RAMLink present.
-	bne +
-	lda #$80
-	sta ramlink_detect
-	sta RAMLINK_REG_DISABLE		; disable RAMLink registers.
-
 	; generate tables for JackAsser's "Seriously fast" 8x8 multiply
 	; Code by Graham (reformatted for Acme and my code style)
 	; https://codebase64.org/doku.php?id=base:table_generator_routine_for_fast_8_bit_mul_table

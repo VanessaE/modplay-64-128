@@ -163,25 +163,6 @@ rts
 dirname
 		!text "$"
 
-; Audio and RAM driver assignments
-;
-; RAM:
-; 0 = system memory -- C128 only
-; 1 = REU
-; 2 = GeoRAM
-; 3 = RAMLink DACC
-; 4 = SuperCPU expansion RAM
-;
-; Audio:
-; 0 = SID 4-bit volume register
-; 1 = SID 4-bit volume reg with dithering
-; 2 = SID 4-bit volume reg with interpolating -- C128 or accel only
-; 3 = SID 8-bit PWM
-; 4 = SID 8-bit PWM with interpolating -- C128 or accel only
-; 5 = DAC/DigiMAX
-; 6 = DAC/DigiMAX with interpolating -- C128 or accel only
-
-
 ; File list flags
 ;
 ; file entries are stored one after the other in 20-byte increments:

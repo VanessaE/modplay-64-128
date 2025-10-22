@@ -212,10 +212,6 @@
 	DMA_DAL								= $df07		; transfer length
 	DMA_DAH								= $df08
 
-	RAMLINK_REG_ENABLE					= $df7e
-	RAMLINK_REG_DISABLE					= $df7f
-	RAMLINK_8255_PORT_C					= $df42
-
 	; KERNAL calls
 
 	CINT								= $ff81
@@ -560,7 +556,6 @@ tempo_fine_adjust_constant = 159778
 	loaded_bytes_count					!skip 3
 	header_loaded						!skip 1
 
-	ramlink_detect						!skip 1
 	main_memory_free_pages				!skip 1
 
 	old_STOP_vec						!skip 2
