@@ -121,9 +121,6 @@
   Best guess, the REU code is simply fetching too much data and slowing
   everything down because there's no limiter.
 
-* BOTH:  setting vibrato to 00 repeatedly may be causing the sort of rapid
-  ticking some songs are displaying....?  division error?
-
 * C128:  (maybe both)  Listing a directory on the RAMLink crashes the
   program, but that and all other functions seem fine when performed on other
   devices while RL is enabled (loading over CMD HD parallel works too).

@@ -128,6 +128,7 @@ rts
 !source "src/fxcmd-set-volume.s"
 !source "src/fxcmd-patbreak-posjump.s"
 !source "src/fxcmd-set-speed.s"
+!source "src/fxcmd-vibrato.s"
 
 !source "src/fxcmd-extended-misc.s"
 

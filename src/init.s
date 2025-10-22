@@ -281,6 +281,7 @@ init
 	jsr semitones_table_copy
 	jsr fine_tuning_table_copy
 	jsr note_names_table_copy
+	jsr sixteenth_semitones_table_copy
 
 	ldx #15
 -	lda nybble_x10_origin,x
@@ -441,8 +442,19 @@ fine_tuning_table_copy
 	bpl -
 rts
 
-one_semitone			= 1.059463094 ; 2^(1/12)
-one_eighth_semitone		= 1.007246412 ; 2^(1/(12*8))
+sixteenth_semitones_table_copy
+	ldx #15
+-	lda sixteenth_semitones_table_lows_origin,x
+	sta sixteenth_semitones_table_lows,x
+	lda sixteenth_semitones_table_highs_origin,x
+	sta sixteenth_semitones_table_highs,x
+	dex
+	bpl -
+rts
+
+one_semitone				= 1.059463094 ; 2^(1/12)
+one_eighth_semitone			= 1.007246412 ; 2^(1/(12*8))
+one_sixteenth_semitone		= 1.003616666 ; 2^(1/(12*16))
 
 semitones_table_origin
 	!for s2, 0, 15 {
@@ -455,6 +467,20 @@ fine_tuning_table_origin
 	!for ft, -8, 7 {
 		!zone {
 			!word int((one_eighth_semitone ^ ft) * 32768)
+		}
+	}
+
+sixteenth_semitones_table_lows_origin
+	!for vib, 0, -15 {
+		!zone {
+			!byte int((one_sixteenth_semitone ^ vib) * 32768) AND 255
+		}
+	}
+
+sixteenth_semitones_table_highs_origin
+	!for vib, 0, -15 {
+		!zone {
+			!byte int((one_sixteenth_semitone ^ vib) * 32768 / 256)
 		}
 	}
 

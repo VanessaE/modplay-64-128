@@ -22,14 +22,18 @@ start_sequencer
 	sta cut_sample_ticks,x
 	sta delay_sample_ticks,x
 	sta track_current_loop_flags,x
-	sta vibrato_rates,x
-	sta tremolo_rates,x
+	sta current_vibrato_step_size_ints,x
+	sta current_vibrato_step_size_fracts,x
+	sta last_vibrato_rates,x
+	sta last_vibrato_amplitudes,x
+	sta current_tremolo_step_sizes,x
 	sta volume_slide_rates,x
 	sta seq_commands,x
 	sta seq_prev_commands,x
 	sta seq_command_arguments,x
 	sta seq_prev_command_arguments,x
 
+	sta current_note_periods_fracts,x
 	sta current_note_periods_lows,x
 	sta current_note_periods_highs,x
 
@@ -262,21 +266,41 @@ get_note_period
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
+
 	jsr set_pitch_by_table_lookup
 	ldx seq_cur_track_data_offset
 	ldy seq_current_track
 
 run_command
 
-	; if the command number is > 15 or the command is unimplemented, don't
-	; try to run anything.
+	; if the command is invalid, there's nothing to do at this point 😛
 
 	lda seq_commands,y
 	cmp #16
 	bcs no_command_this_row_this_track
 
-	asl
-	tax								; we need command no. * 2
+	; if there IS a command, and isn't one of the two vibrato variants, set
+	; vibrato top point to 0 so that the next time one of those commands is
+	; run, the routine will know it's a new call.
+
+	lda seq_commands,y
+	cmp #4
+	beq +
+	cmp #6
+	beq +
+
+	ldx #0
+	stx current_vibrato_top_period_lows,y
+	stx current_vibrato_top_period_highs,y
+
+	; if the command and its param is all 0's, there's nothing else to do.
+
+	ora seq_command_arguments,y
+	beq no_command_this_row_this_track
+
+	lda seq_commands,y
++	asl								; whatever the command is, we need
+	tax								; the command number * 2
 	lda start_effect_command_jump_table+1,x
 	beq no_command_this_row_this_track
 	sta start_command_vec+2
@@ -451,9 +475,9 @@ start_effect_command_jump_table
 	!word start_effect_pitch_slide ; up
 	!word start_effect_pitch_slide ; down
 	!word start_effect_pitch_slide ; portamento to note
-	!word 0 ; start_effect_vibrato
+	!word start_effect_vibrato
 	!word start_effect_pitch_slide_plus_volume_slide
-	!word 0 ; start_effect_vibrato_plus_volume_slide
+	!word start_effect_vibrato_plus_volume_slide
 	!word 0
 	!word 0
 	!word run_effect_set_sample_offset
@@ -469,9 +493,9 @@ run_effect_command_jump_table
 	!word run_effect_pitch_slide
 	!word run_effect_pitch_slide
 	!word run_effect_pitch_slide
-	!word 0 ; run_effect_vibrato
+	!word run_effect_vibrato
 	!word run_effect_pitch_slide_plus_volume_slide
-	!word 0 ; run_effect_vibrato_plus_volume_slide
+	!word run_effect_vibrato_plus_volume_slide
 	!word 0
 	!word 0
 	!word 0

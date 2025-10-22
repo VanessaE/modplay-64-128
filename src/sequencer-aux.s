@@ -60,8 +60,9 @@ start_sample
 	sta sample_pointers_highs,y
 
 +	lda #0
-	sta vibrato_rates,y
-	sta tremolo_rates,y
+	sta current_vibrato_step_size_ints,y
+	sta current_vibrato_step_size_fracts,y
+	sta current_tremolo_step_sizes,y
 	sta volume_slide_rates,y
 	sta current_pitch_slide_rates,y
 	sta sample_pointers_fracts,y
@@ -104,12 +105,10 @@ rts
 ; enter with .Y = track number
 
 set_pitch_by_table_lookup
-	sty sequencer_temp_y
-
 	lda current_note_periods_lows,y
 	sta utility_pointer
 	lda current_note_periods_highs,y
-++	asl utility_pointer
+	asl utility_pointer
 	rol
 	sta utility_pointer+1
 
@@ -130,9 +129,9 @@ set_pitch_by_table_lookup
 	iny
 	lda (utility_pointer),y
 	sta current_steprates_ints,x
-	ldy sequencer_temp_y
+	ldy seq_current_track
 
-apply_fine_tuning
+apply_fine_tuning ; still needs a track number in .Y if called separately
 	lda current_fine_tune_values,y
 	cmp #8
 	beq doesnt_need_fine_tune
@@ -151,7 +150,7 @@ apply_fine_tuning
 
 	sec
 	jsr multiply_16x16
-	ldy sequencer_temp_y
+	ldy seq_current_track
 
 	; multiplying the upper three bytes by 2 and then using the highest two
 	; bytes is the same as dividing the entire four-byte result by 32768

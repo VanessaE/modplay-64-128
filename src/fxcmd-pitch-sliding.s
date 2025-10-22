@@ -17,7 +17,7 @@ start_effect_pitch_slide
 
 set_slide_up ; that is, decreasing the note period
 	lda #$80
-	sta current_pitch_slide_dirs,y
+	sta current_pitch_bend_dirs,y
 	lda #57
 	sta seq_pitch_slide_target_period_lows,y
 	lda #0
@@ -28,7 +28,7 @@ set_slide_up ; that is, decreasing the note period
 
 set_slide_down ; increase the note period
 	lda #0
-	sta current_pitch_slide_dirs,y
+	sta current_pitch_bend_dirs,y
 	lda #<1712
 	sta seq_pitch_slide_target_period_lows,y
 	lda #>1712
@@ -59,7 +59,7 @@ set_slide_to_note
 	sbc seq_pitch_slide_target_period_highs,y
 	lda #0
 	ror
-	sta current_pitch_slide_dirs,y
+	sta current_pitch_bend_dirs,y
 
 	lda seq_command_arguments,y
 	beq +
@@ -72,7 +72,7 @@ run_effect_pitch_slide
 	bne +
 	rts
 
-+	lda current_pitch_slide_dirs,y
++	lda current_pitch_bend_dirs,y
 	bpl slide_pitch_down ; to higher period value
 
 slide_pitch_up

@@ -338,11 +338,8 @@ tempo_fine_adjust_constant = 159778
 	track_current_enable_flags			!skip 8
 	track_current_loop_flags			!skip 8
 
-	last_seconds						!skip 1
-	do_viz_plot							!skip 1
-	seq_key_debounce					!skip 1
+	arpeggio_counters					!skip 8 ; zero page is mandatory for this one (STX $ZP,Y)
 
-	curren
 	!if * > $0023 {
 			!error "Backed-up-zero-page variables, lower part exceeds $0023 by ", * - $0023, " bytes!"
 	}
@@ -419,16 +416,9 @@ tempo_fine_adjust_constant = 159778
 
 	; unused: $5e
 
-	; divide_tmp uses $5f
+	; divide_tmp uses $5f and $60
 
-	* = $60
-
-	arpeggio_counters					!skip 8 ; zero page is mandatory (STX $ZP,Y)
-	cut_sample_ticks					!skip 8
-	delay_sample_ticks					!skip 8
-	vibrato_rates						!skip 8
-	tremolo_rates						!skip 8
-	volume_slide_rates					!skip 8
+	* = $61
 	sample_pointers_fracts				!skip 8
 	sample_pointers_lows				!skip 8
 	sample_pointers_mids				!skip 8
@@ -440,9 +430,21 @@ tempo_fine_adjust_constant = 159778
 	current_sample_end_addr_lows		!skip 8
 	current_sample_end_addr_mids		!skip 8
 	current_sample_end_addr_highs		!skip 8
+
+	current_vibrato_fundamental_period_lows  !skip 8
+	current_vibrato_fundamental_period_highs !skip 8
+	current_vibrato_top_period_lows		!skip 8
+	current_vibrato_top_period_highs	!skip 8
+	current_vibrato_step_size_fracts	!skip 8
+	current_vibrato_step_size_ints		!skip 8
+
 	current_pitch_slide_rates			!skip 8
-	current_pitch_slide_dirs			!skip 8 ; 0=pitching down, $80=pitching up
-	current_fine_tune_values			!skip 8
+	current_pitch_bend_dirs				!skip 8 ; 0=pitching down, $80=pitching up
+												; ¯¯\__ vibrato uses this also
+
+	last_seconds						!skip 1
+	do_viz_plot							!skip 1
+	seq_key_debounce					!skip 1
 
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"
@@ -470,7 +472,8 @@ tempo_fine_adjust_constant = 159778
 	low_memory_area = *
 	string_buffer_backup				= low_memory_area ; 48 bytes
 
-	current_note_periods_lows			!skip 8
+	current_note_periods_fracts			!skip 8 ; only used by vibrato, everything
+	current_note_periods_lows			!skip 8 ; ¯¯\__ else ignores this one
 	current_note_periods_highs			!skip 8
 	seq_current_row_data				!skip 32
 	seq_commands						!skip 8
@@ -490,6 +493,7 @@ tempo_fine_adjust_constant = 159778
 	exp_file_data_start_page			!skip 1
 	highest_exp_addresss_used			!skip 3
 	fine_tuning_table					!skip 32
+	current_fine_tune_values			!skip 8
 
 	!ifndef c128 {
 		!if * > $03ff {
@@ -562,11 +566,25 @@ tempo_fine_adjust_constant = 159778
 	old_STOP_vec						!skip 2
 	parse_header_sample_pointer			!skip 3
 
+	volume_slide_rates					!skip 8
+
 	arpeggio_extra_note_first_fracts	!skip 8
 	arpeggio_extra_note_first_ints		!skip 8
 	arpeggio_extra_note_second_fracts	!skip 8
 	arpeggio_extra_note_second_ints		!skip 8
+
 	retrigger_rates						!skip 8
+
+	sixteenth_semitones_table_lows		!skip 16
+	sixteenth_semitones_table_highs		!skip 16
+
+	last_vibrato_rates					!skip 8
+	last_vibrato_amplitudes				!skip 8
+
+	cut_sample_ticks					!skip 8
+	delay_sample_ticks					!skip 8
+
+	current_tremolo_step_sizes			!skip 8
 
 	progress_bar_row					!skip 1
 	progress_bar_column					!skip 1
