@@ -198,16 +198,12 @@ viz_row_data_fetch_and_print
 		lda #$45 ; "E"
 		jsr visualizer_print_char
 
-		lda seq_current_row_data + .viz_tr*4 + 3
-		and #$f0
+		ldx seq_current_row_data + .viz_tr*4 + 3
+		lda divide_by_16_table,x
 		cmp #5 ; ext cmd 5 needs custom handling
-		beq +++ ; print_cmd_args
-
-		lsr
-		lsr
-		lsr
+		beq ++++ ; print_cmd_args
 		tax
-		lda extended_effect_command_jump_table,x
+		lda extended_effect_command_jump_table_highs,x
 		beq ++ ; print_arg_qmarks
 		bne +++ ; print_cmd_args 
 
@@ -222,13 +218,9 @@ viz_row_data_fetch_and_print
 
 		; unimplemented or garbage commands get a param of "??"
 
-		lda seq_current_row_data + .viz_tr*4 + 1
-		and #$f0
-		lsr
-		lsr
-		lsr
-		tax ; .X will need command no. * 2
-		lda start_effect_command_jump_table+1,x
+		ldx seq_current_row_data + .viz_tr*4 + 1
+		lda divide_by_16_table,x
+		lda start_effect_command_jump_table_highs,x
 		bne +++ ; print_cmd_args
 
 	; print_arg_qmarks
@@ -240,7 +232,7 @@ viz_row_data_fetch_and_print
 	; print_cmd_args
 	+++	ldx seq_current_row_data + .viz_tr*4 + 3
 		lda divide_by_16_table,x
-		jsr to_hex
+   ++++	jsr to_hex
 		jsr visualizer_print_char
 
 		lda seq_current_row_data + .viz_tr*4 + 3

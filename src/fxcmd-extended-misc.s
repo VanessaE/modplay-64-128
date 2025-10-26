@@ -6,13 +6,11 @@ start_extended_effect
 	stx sequencer_temp_x
 	ldx seq_command_arguments,y
 	lda divide_by_16_table,x
-	asl
 	tax
-
-	lda extended_effect_command_jump_table+1,x
+	lda extended_effect_command_jump_table_highs,x
 	sta start_extended_effect_vec+2
 	beq dont_start_extended_effect
-	lda extended_effect_command_jump_table,x
+	lda extended_effect_command_jump_table_lows,x
 	sta start_extended_effect_vec+1
 
 	start_extended_effect_vec
@@ -35,20 +33,38 @@ extcmd_set_fine_tune
 	sta current_fine_tune_values,y
 rts
 
-extended_effect_command_jump_table
-	!word 0 ; filter on/off
-	!word extcmd_fine_slide_up
-	!word extcmd_fine_slide_down
-	!word 0 ; glissando on/off
-	!word 0 ; vibrato waveform
-	!word extcmd_set_fine_tune
-	!word 0 ; loop pattern
-	!word 0 ; tremolo waveform
-	!word 0 ; [unused]
-	!word 0 ; retrigger sample
-	!word extcmd_fine_vol_slide_up
-	!word extcmd_fine_vol_slide_down
-	!word 0 ; cut/truncate sample
-	!word 0 ; delay sample start
-	!word 0 ; delay pattern
-	!word 0 ; invert loop
+extended_effect_command_jump_table_lows
+	!byte 0 ; filter on/off
+	!byte <extcmd_fine_slide_up
+	!byte <extcmd_fine_slide_down
+	!byte 0 ; glissando on/off
+	!byte 0 ; vibrato waveform
+	!byte <extcmd_set_fine_tune
+	!byte 0 ; loop pattern
+	!byte 0 ; tremolo waveform
+	!byte 0 ; [unused]
+	!byte 0 ; retrigger sample
+	!byte <extcmd_fine_vol_slide_up
+	!byte <extcmd_fine_vol_slide_down
+	!byte 0 ; cut/truncate sample
+	!byte 0 ; delay sample start
+	!byte 0 ; delay pattern
+	!byte 0 ; invert loop
+
+extended_effect_command_jump_table_highs
+	!byte 0 ; filter on/off
+	!byte >extcmd_fine_slide_up
+	!byte >extcmd_fine_slide_down
+	!byte 0 ; glissando on/off
+	!byte 0 ; vibrato waveform
+	!byte >extcmd_set_fine_tune
+	!byte 0 ; loop pattern
+	!byte 0 ; tremolo waveform
+	!byte 0 ; [unused]
+	!byte 0 ; retrigger sample
+	!byte >extcmd_fine_vol_slide_up
+	!byte >extcmd_fine_vol_slide_down
+	!byte 0 ; cut/truncate sample
+	!byte 0 ; delay sample start
+	!byte 0 ; delay pattern
+	!byte 0 ; invert loop

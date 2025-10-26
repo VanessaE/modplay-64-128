@@ -275,36 +275,33 @@ run_command
 
 	; if the command is invalid, there's nothing to do at this point 😛
 
-	lda seq_commands,y
-	cmp #16
+	ldx seq_commands,y
+	cpx #16
 	bcs no_command_this_row_this_track
 
 	; if there IS a command, and isn't one of the two vibrato variants, set
 	; vibrato top point to 0 so that the next time one of those commands is
 	; run, the routine will know it's a new call.
 
-	lda seq_commands,y
-	cmp #4
+	cpx #4
 	beq +
-	cmp #6
+	cpx #6
 	beq +
 
-	ldx #0
-	stx current_vibrato_top_period_lows,y
-	stx current_vibrato_top_period_highs,y
+	lda #0
+	sta current_vibrato_top_period_lows,y
+	sta current_vibrato_top_period_highs,y
 
 	; if the command and its param is all 0's, there's nothing else to do.
 
+	txa
 	ora seq_command_arguments,y
 	beq no_command_this_row_this_track
 
-	lda seq_commands,y
-+	asl								; whatever the command is, we need
-	tax								; the command number * 2
-	lda start_effect_command_jump_table+1,x
++	lda start_effect_command_jump_table_highs,x
 	beq no_command_this_row_this_track
 	sta start_command_vec+2
-	lda start_effect_command_jump_table,x
+	lda start_effect_command_jump_table_lows,x
 	sta start_command_vec+1
 
 start_command_vec					; start or initialize an effect command
@@ -341,22 +338,20 @@ next_tick
 
 next_track_pre_tick
 	ldy seq_current_track
-	lda seq_commands,y					; commands 0-3, and 5 need to be run
-	cmp #5								; after the fetch/mixer routine, not
+	ldx seq_commands,y					; commands 0-3, and 5 need to be run
+	cpx #5								; after the fetch/mixer routine, not
 	beq dont_run_pre_tick_command		; before.
-	cmp #4
+	cpx #4
 	bcc dont_run_pre_tick_command
-	cmp #16
+	cpx #16
 	bcs dont_run_pre_tick_command
 
 pre_tick_command
-	asl
-	tax
-	lda run_effect_command_jump_table+1,x
+	lda run_effect_command_jump_table_highs,x
 	beq dont_run_pre_tick_command
 
 	sta run_command_pre_tick_vec+2
-	lda run_effect_command_jump_table,x
+	lda run_effect_command_jump_table_lows,x
 	sta run_command_pre_tick_vec+1
 
 run_command_pre_tick_vec			; run effect command if it needs tick-interval timing
@@ -404,27 +399,24 @@ run_fetch_and_mixer_vec
 
 next_track_post_tick
 	ldy seq_current_track
-	lda seq_commands,y					; commands 0-3, and 5 need to be run here.
-	cmp #5
+	ldx seq_commands,y					; commands 0-3, and 5 need to be run here.
+	cpx #5
 	beq run_post_tick_command
-	cmp #4
+	cpx #4
 	bcc run_post_tick_command
-	cmp #16
+	cpx #16
 	bcs dont_run_post_tick_command
 
 run_post_tick_command
-	ldx seq_ticks_counter				; post-tick commands only run N-1 times
-	cpx #1								; per row/division
+	lda seq_ticks_counter				; post-tick commands only run N-1 times
+	cmp #1								; per row/division
 	beq dont_run_post_tick_command
 
-	asl
-	tax
-
-	lda run_effect_command_jump_table+1,x
+	lda run_effect_command_jump_table_highs,x
 	beq dont_run_post_tick_command
 	sta run_command_post_tick_vec+2
 
-	lda run_effect_command_jump_table,x
+	lda run_effect_command_jump_table_lows,x
 	sta run_command_post_tick_vec+1
 
 run_command_post_tick_vec
@@ -470,38 +462,74 @@ rts
 ; enter each command with .Y = track number
 ; The actual commands are in fxcmd-*.s, linked into modplay.s
 
-start_effect_command_jump_table
-	!word start_effect_arpeggio
-	!word start_effect_pitch_slide ; up
-	!word start_effect_pitch_slide ; down
-	!word start_effect_pitch_slide ; portamento to note
-	!word start_effect_vibrato
-	!word start_effect_pitch_slide_plus_volume_slide
-	!word start_effect_vibrato_plus_volume_slide
-	!word 0
-	!word 0
-	!word run_effect_set_sample_offset
-	!word start_effect_volume_slide
-	!word run_effect_position_jump
-	!word run_effect_set_volume
-	!word run_effect_pattern_break
-	!word start_extended_effect
-	!word run_effect_set_speed
+start_effect_command_jump_table_lows
+	!byte <start_effect_arpeggio
+	!byte <start_effect_pitch_slide ; up
+	!byte <start_effect_pitch_slide ; down
+	!byte <start_effect_pitch_slide ; portamento to note
+	!byte <start_effect_vibrato
+	!byte <start_effect_pitch_slide_plus_volume_slide
+	!byte <start_effect_vibrato_plus_volume_slide
+	!byte 0
+	!byte 0
+	!byte <run_effect_set_sample_offset
+	!byte <start_effect_volume_slide
+	!byte <run_effect_position_jump
+	!byte <run_effect_set_volume
+	!byte <run_effect_pattern_break
+	!byte <start_extended_effect
+	!byte <run_effect_set_speed
 
-run_effect_command_jump_table
-	!word run_effect_arpeggio
-	!word run_effect_pitch_slide
-	!word run_effect_pitch_slide
-	!word run_effect_pitch_slide
-	!word run_effect_vibrato
-	!word run_effect_pitch_slide_plus_volume_slide
-	!word run_effect_vibrato_plus_volume_slide
-	!word 0
-	!word 0
-	!word 0
-	!word run_effect_volume_slide
-	!word 0
-	!word 0
-	!word 0
-	!word run_extended_effect
-	!word 0
+start_effect_command_jump_table_highs
+	!byte >start_effect_arpeggio
+	!byte >start_effect_pitch_slide ; up
+	!byte >start_effect_pitch_slide ; down
+	!byte >start_effect_pitch_slide ; portamento to note
+	!byte >start_effect_vibrato
+	!byte >start_effect_pitch_slide_plus_volume_slide
+	!byte >start_effect_vibrato_plus_volume_slide
+	!byte 0
+	!byte 0
+	!byte >run_effect_set_sample_offset
+	!byte >start_effect_volume_slide
+	!byte >run_effect_position_jump
+	!byte >run_effect_set_volume
+	!byte >run_effect_pattern_break
+	!byte >start_extended_effect
+	!byte >run_effect_set_speed
+
+run_effect_command_jump_table_lows
+	!byte <run_effect_arpeggio
+	!byte <run_effect_pitch_slide
+	!byte <run_effect_pitch_slide
+	!byte <run_effect_pitch_slide
+	!byte <run_effect_vibrato
+	!byte <run_effect_pitch_slide_plus_volume_slide
+	!byte <run_effect_vibrato_plus_volume_slide
+	!byte 0
+	!byte 0
+	!byte 0
+	!byte <run_effect_volume_slide
+	!byte 0
+	!byte 0
+	!byte 0
+	!byte <run_extended_effect
+	!byte 0
+
+run_effect_command_jump_table_highs
+	!byte >run_effect_arpeggio
+	!byte >run_effect_pitch_slide
+	!byte >run_effect_pitch_slide
+	!byte >run_effect_pitch_slide
+	!byte >run_effect_vibrato
+	!byte >run_effect_pitch_slide_plus_volume_slide
+	!byte >run_effect_vibrato_plus_volume_slide
+	!byte 0
+	!byte 0
+	!byte 0
+	!byte >run_effect_volume_slide
+	!byte 0
+	!byte 0
+	!byte 0
+	!byte >run_extended_effect
+	!byte 0
