@@ -428,6 +428,9 @@ loader_paint_screen
 		jsr PLOT
 	}
 
+	lda #0
+	sta string_buffer+16
+
 	lda #mini_popup_width
 	ldx #<string_buffer
 	ldy #>string_buffer

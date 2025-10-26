@@ -106,11 +106,6 @@
   end), file sizes aren't shown properly at bottom when scrolling with cursor
   keys (but page up/down, top/bottom, and C128 are all fine).
 
-* Loader: sometimes, the filename displays as garbage in the mini popup when
-  loading, yet the file will still load just fine.  This appears to be
-  related to the length of the filename, seems to only happen with files
-  whose names are exactly 16 chars long.
-
 * C64: there is some kind of slowdown happening relating to arpeggios and/or
   high pitches, but it only happens with one or two songs (Cybernoid 1 for
   instance), and only on C64 + User Port DigiMAX, and only when playing in

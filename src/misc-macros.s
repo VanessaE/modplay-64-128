@@ -30,7 +30,6 @@
 	ror
 	sta print_msg_colors_flag
 
-	dec print_msg_char_limit
 	stx print_msg_addr
 	sty print_msg_addr+1
 	ldy #0
@@ -39,9 +38,9 @@
 
 	jsr check_color_flag
 	jsr CHROUT
+	iny
 	cpy print_msg_char_limit
 	beq +
-	iny
 	bne -
 +	plp
 }
