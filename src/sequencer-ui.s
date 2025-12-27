@@ -133,8 +133,7 @@ print_elapsed_time
 	} else {
 		print_et_target = VDC_SCREEN + 10*80 + 53
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #18
 		sta VDC_ADDR

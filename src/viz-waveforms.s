@@ -139,8 +139,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_2 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -163,8 +162,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -181,8 +179,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_3 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -200,8 +197,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -218,8 +214,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_5 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -238,8 +233,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -256,8 +250,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_6 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -275,8 +268,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -295,8 +287,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_2 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -318,8 +309,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -336,8 +326,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_3 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -355,8 +344,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -373,8 +361,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_5 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -392,8 +379,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx
@@ -410,8 +396,7 @@ viz_waveform_plot
 		lda #<(visualizer_line_6 + 1)
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
@@ -429,8 +414,7 @@ viz_waveform_plot
 
 	+	lda #32
 	++
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 		inx
 		inx

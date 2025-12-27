@@ -320,20 +320,18 @@ rts
 
 vdc_set_41464_mode
 	lda #28					; set 4164/41464 mode
-	sta $d600
--	bit $d600
-	bpl -
+	sta VDC_ADDR
+	+VDC_UPD_RDY_WAIT
 	lda #$3f
-	sta $d601
+	sta VDC_DATA
 rts
 
 vdc_set_4416_mode			; otherwise put things back the way they were.
 	lda #28
-	sta $d600
--	bit $d600
-	bpl -
+	sta VDC_ADDR
+	+VDC_UPD_RDY_WAIT
 	lda #$2f
-	sta $d601
+	sta VDC_DATA
 rts
 
 upload_screens_to_vdc_cache

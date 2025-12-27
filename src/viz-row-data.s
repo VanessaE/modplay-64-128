@@ -123,8 +123,8 @@ viz_row_data_fetch_and_print
 		txa
 		jsr display_byte_hex_direct
 
-	-	bit VDC_ADDR	; perform a dummy read to skip ahead one byte
-		bpl -
+		; perform a dummy read to skip ahead one byte
+		+VDC_UPD_RDY_WAIT
 		bit VDC_DATA
 	}
 

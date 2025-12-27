@@ -163,9 +163,13 @@
 }
 
 !ifdef c128 {
+	!macro VDC_UPD_RDY_WAIT {
+		.updr	bit VDC_ADDR
+				bpl .updr
+	}
+
 	!macro VDC_RAM_ACC_SETUP {
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #18
 		sta VDC_ADDR
@@ -177,8 +181,7 @@
 		lda fill_copy_target
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 	}
 
 	!macro VDC_RAM_RW_SETUP {
@@ -188,24 +191,19 @@
 	}
 
 	!macro VDC_WRITE_RAM {
-	-	bit VDC_ADDR
-		bpl -
-
+		+VDC_UPD_RDY_WAIT
 		sta VDC_DATA
 	}
 
 	!macro VDC_READ_RAM {
-	-	bit VDC_ADDR
-		bpl -
-
+		+VDC_UPD_RDY_WAIT
 		lda VDC_DATA
 	}
 
 	!macro VDC_BLANK {
 		lda #34
 		sta VDC_ADDR
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		lda #$80 ; any value over $7d blanks the screen
 		sta VDC_DATA
 	}
@@ -213,8 +211,7 @@
 	!macro VDC_UNBLANK {
 		lda #34
 		sta VDC_ADDR
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		lda #$7d ; default
 		sta VDC_DATA
 	}

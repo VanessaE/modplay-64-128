@@ -986,8 +986,7 @@ rts
 	rts
 
 	vdc_block_copy_extend
-	-	bit $d600
-		bpl -
+		+VDC_UPD_RDY_WAIT
 		lda #30
 		sta VDC_ADDR
 		stx VDC_DATA
@@ -1006,8 +1005,7 @@ rts
 		lda temp_abs_a
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #24
 		sta VDC_ADDR
@@ -1026,16 +1024,14 @@ rts
 
 	vdc_block_fill_extend
 		sta temp_abs_a
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #31
 		sta VDC_ADDR
 		lda temp_abs_a
 		sta VDC_DATA
 
-	-	bit VDC_ADDR
-		bpl -
+		+VDC_UPD_RDY_WAIT
 
 		lda #24
 		sta VDC_ADDR

@@ -112,8 +112,8 @@ visualizer_print_char
 		cmp #RIGHT
 		bne +
 
-	-	bit VDC_ADDR	; perform a dummy read to skip ahead one byte
-		bpl -
+		; perform a dummy read to skip ahead one byte
+		+VDC_UPD_RDY_WAIT
 		bit VDC_DATA
 		jmp ++
 
@@ -151,8 +151,7 @@ visualizer_erase_row
 			cmp #RIGHT
 			bne +
 
-		-	bit VDC_ADDR
-			bpl -
+			+VDC_UPD_RDY_WAIT
 			bit VDC_DATA ; do a read to skip the byte, and it's guaranteed to be non-zero
 			jmp ++
 
