@@ -282,13 +282,160 @@ viz_waveform_plot
 		inx
 		dey
 		bpl --
-
 		rts
 
-
-
 	viz_128_plot_for_4bit
+	+	lda #18
+		sta VDC_ADDR
+		lda #>(visualizer_line_2 + 1)
+		sta VDC_DATA
 
+		lda #19
+		sta VDC_ADDR
+		lda #<(visualizer_line_2 + 1)
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #31
+		sta VDC_ADDR
+
+		sec
+		lda audio_in_buf_index
+		sbc #(viz_bytes_to_plot*2 + 1)
+		sta temp_zpbk_a
+		tax
+		ldy #viz_bytes_to_plot
+
+	--	lda audio_buffer_left,x
+		asl
+		asl
+		cmp #32
+		bcc +
+ 		eor #$a1 ; same as sbc #32 : ora #$80 : adc #1
+		jmp ++
+
+	+	lda #32
+	++
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
+
+		lda #18
+		sta VDC_ADDR
+		lda #>(visualizer_line_3 + 1)
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda #<(visualizer_line_3 + 1)
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #31
+		sta VDC_ADDR
+
+		ldx temp_zpbk_a
+		ldy #viz_bytes_to_plot
+
+	--	lda audio_buffer_left,x
+		asl
+		asl
+		cmp #32
+		bcs +
+ 		ora #$81
+		jmp ++
+
+	+	lda #32
+	++
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
+
+		lda #18
+		sta VDC_ADDR
+		lda #>(visualizer_line_5 + 1)
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda #<(visualizer_line_5 + 1)
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #31
+		sta VDC_ADDR
+
+		ldx temp_zpbk_a
+		ldy #viz_bytes_to_plot
+
+	--	lda audio_buffer_right,x
+		asl
+		asl
+		cmp #32
+		bcc +
+ 		eor #$a1 ; same as sbc #32 : ora #$80 : adc #1
+		jmp ++
+
+	+	lda #32
+	++
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
+
+		lda #18
+		sta VDC_ADDR
+		lda #>(visualizer_line_6 + 1)
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda #<(visualizer_line_6 + 1)
+		sta VDC_DATA
+
+	-	bit VDC_ADDR
+		bpl -
+
+		lda #31
+		sta VDC_ADDR
+
+		ldx temp_zpbk_a
+		ldy #viz_bytes_to_plot
+
+	--	lda audio_buffer_right,x
+		asl
+		asl
+		cmp #32
+		bcs +
+ 		ora #$81
+		jmp ++
+
+	+	lda #32
+	++
+	-	bit VDC_ADDR
+		bpl -
+		sta VDC_DATA
+		inx
+		inx
+		dey
+		bpl --
 		rts
 	}
 
