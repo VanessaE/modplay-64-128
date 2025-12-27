@@ -80,7 +80,38 @@
   That'll rule out using a few of the mods in my testing library on my C128,
   as my REU is just a puny little 1 MB unit.  🙂  Guess I have another reason
   to write the planned SuperCPU RAM driver.  Oh horror. 😉
-  
+
+  Mipmap outline:
+
+	set "loaded file is mipmapped" to false
+	outer_loop:
+		fill load buffer with $80
+		fetch the next 2 kB of sample data from REU into load buffer,
+		or just however much is left.
+
+		next_chunk:
+			reset byte pointers
+
+			inner_loop:
+				average two bytes of data in the load buffer
+				store the resulting byte back into load buffer at origin / 2
+				update byte pointers
+				repeat 1024, 512, or 256 times,
+				returning to inner_loop
+
+				store the resultant 1024/512/256 bytes back to REU at a new place
+				bump to next mipmap level, or exit this section
+			jump to inner_loop
+
+			repeat until all data for the current sample has been processed
+		jump to next_chunk
+
+		advance read pointer to the start of the next sample
+	return to outer_loop
+
+	set "loaded file is mipmapped" to true
+	exit
+
 * Loader: all instrument loops need to be unrolled to a minimum length of
   10 kB, which shall be appended to the end of the sample.  That shall then be
   padded with one last copy of the first 1 kB of the loop (or the whole thing

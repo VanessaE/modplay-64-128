@@ -142,7 +142,7 @@ nple
 	jsr print_song_pos_pat_num
 
 	lda visualizer_mode
-	bne next_row
+	bne next_row_no_scroll
 
 	jsr viz_row_data_pattern_preload
 	jmp next_row_no_scroll
@@ -170,14 +170,18 @@ next_row_no_scroll
 	ldy pattern_table,x
 
 	lda pattern_break_target_row
-	beq +
+	beq ++
 	and #$7f
 	sta seq_current_row
+
+	lda visualizer_mode
+	bne +
 	jsr viz_row_data_pattern_preload
-	lda #0
+
++	lda #0
 	sta pattern_break_target_row
 
-+	lda visualizer_mode
+++	lda visualizer_mode
 	bne seq_fetch_row_data
 
 	ldx seq_current_row
