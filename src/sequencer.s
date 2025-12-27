@@ -69,6 +69,9 @@ start_sequencer
 	dex
 	bpl -
 
+	lda #2
+	sta do_viz_plot
+
 	lda #$ff
 	sta pos_jump_target_pattern
 
@@ -392,10 +395,20 @@ run_fetch_and_mixer_vec
 	}
 	lda visualizer_mode
 	beq +
-	lda do_viz_plot
-	eor #$80
-	sta do_viz_plot
-	bpl +
+
+	!ifndef c128 {
+		lda do_viz_plot
+		eor #$80
+		sta do_viz_plot
+		bpl +
+	} else {
+		dec do_viz_plot
+		lda do_viz_plot
+		bne +
+		lda #2
+		sta do_viz_plot
+	}
+
 	jsr viz_waveform_plot
 
 +	ldy #0
