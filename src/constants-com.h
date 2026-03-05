@@ -647,6 +647,8 @@ tempo_fine_adjust_constant = 159778
 
 	sid_type_left						!skip 1 ; $80 = 8580, 0 = 6581.
 	sid_type_right						!skip 1
+	ultisid_detect_left					!skip 1 ; $80 = detected UltiSID, 0 = assume real SID(s)
+	ultisid_detect_right				!skip 1
 
 	match_header						!skip 1
 

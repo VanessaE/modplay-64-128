@@ -1154,14 +1154,28 @@ check_sid_type_left
 	lda #$20				;Sawtooth wave and gatebit OFF to start oscillator again.
 	sta SID_VOICE3_CR
 	lda SID_VOICE3_OSC_OUT	;Accu now has different value depending on sid model (6581=3/8580=2)
+	ldx SID					; Read the very first SID register - UltiSID will
+	cpx #$20				; return $20 or $21 from this otherwise unreadable
+	beq left_sid_is_ultisid	; register, while real SID and VICE/resid don't.
+	cpx #$21
+	beq left_sid_is_ultisid
 
 	lsr						;...that is: Carry flag is set for 6581, and clear for 8580.
 	lda #0
+	sta ultisid_detect_left
+
 	ror
 	eor #$80
 	sta sid_type_left
+	jmp +
 
-	!ifdef scpu {
+left_sid_is_ultisid
+	lda #0
+	sta sid_type_left
+	lda #$80
+	sta ultisid_detect_left
+
++	!ifdef scpu {
 		sta SCPU_TURBO_ON
 	}
 
@@ -1178,6 +1192,7 @@ setup_right_sid_check
 	clc
 
 	lda stereo_sid_addr
+	sta .s2_base+1
 	adc #$12
 	sta .s2_v3_cr_1+1
 	sta .s2_v3_cr_2+1
@@ -1195,6 +1210,7 @@ setup_right_sid_check
 	; all high bytes are the same
 
 	lda stereo_sid_addr+1
+	sta .s2_base+2
 	sta .s2_v3_cr_1+2
 	sta .s2_v3_cr_2+2
 	sta .s2_v3_fl+2
@@ -1237,6 +1253,7 @@ check_sid_type_right
 
 .s2_osc3_1		lda $1234		; read right osc 3
 
+.s2_base		ldx $1234		; and right sid reg 0
 	sta temp_abs_a
 
 	plp							; restores the I flag in case interrupts were
@@ -1249,6 +1266,14 @@ check_sid_type_right
 	!ifdef c128 {
 		inc C128_VIC_CLOCK_SPEED
 	}
+
+	cpx #$20
+	beq right_sid_is_ultisid
+	cpx #$21
+	beq right_sid_is_ultisid
+
+	lda #0
+	sta ultisid_detect_right
 
 	lda SID_VOICE3_OSC_OUT		; did the right-SID test cause the left SID
 	bne right_sid_is_echo		; osc 3 to start?  if so, there's only an I/O
@@ -1276,6 +1301,13 @@ rts
 right_sid_is_echo
 	lda #$ff
 	sta sid_type_right
+rts
+
+right_sid_is_ultisid
+	lda #0
+	sta sid_type_right
+	lda #$80
+	sta ultisid_detect_right
 rts
 
 init_audio_driver
