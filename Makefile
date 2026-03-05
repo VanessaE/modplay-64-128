@@ -54,8 +54,8 @@ c64:
 	acme $(OPTIONS) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
 	acme $(OPTIONS) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
 
-	$(EXOMIZER) sfx 0x1800 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64 src/mp64.o
-	$(EXOMIZER) mem -o bin/mp64.main src/mp64.main.o
+	$(EXOMIZER) sfx 0x1800 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64.prg src/mp64.o
+	$(EXOMIZER) mem -o bin/mp64.main.prg src/mp64.main.o
 
 	sort -dbf /tmp/mp64-symbols.txt > etc/mp64-symbols.txt
 
@@ -68,8 +68,8 @@ c128:
 
 	acme $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o src/c128-boot-sect.s
 
-	$(EXOMIZER) sfx 0x1800 -t 128 -s '$(value PRE_DECRUNCH_128)' -o bin/mp128 src/mp128.o
-	$(EXOMIZER) mem -o bin/mp128.main src/mp128.main.o
+	$(EXOMIZER) sfx 0x1800 -t 128 -s '$(value PRE_DECRUNCH_128)' -o bin/mp128.prg src/mp128.o
+	$(EXOMIZER) mem -o bin/mp128.main.prg src/mp128.main.o
 
 	sort -dbf /tmp/mp128-symbols.txt > etc/mp128-symbols.txt
 
@@ -79,7 +79,7 @@ c64_scpu:
 	acme $(OPTIONS) -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
 	acme $(OPTIONS) -Dscpu=1 -o src/mp64.main-scpu.o -l /tmp/mp64+scpu-symbols.txt /tmp/mp64-s.sym src/modplay.s
 
-	$(EXOMIZER) mem -o bin/mp64.main-scpu src/mp64.main-scpu.o
+	$(EXOMIZER) mem -o bin/mp64.main-scpu.prg src/mp64.main-scpu.o
 
 	sort -dbf /tmp/mp64+scpu-symbols.txt > etc/mp64+scpu-symbols.txt
 
@@ -89,7 +89,7 @@ c128_scpu:
 	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp128-s.sym src/constants-com.h
 	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o src/mp128.main-scpu.o -l /tmp/mp128+scpu-symbols.txt /tmp/mp128-s.sym src/modplay.s
 
-	$(EXOMIZER) mem -o bin/mp128.main-scpu src/mp128.main-scpu.o
+	$(EXOMIZER) mem -o bin/mp128.main-scpu.prg src/mp128.main-scpu.o
 
 	sort -dbf /tmp/mp128+scpu-symbols.txt > etc/mp128+scpu-symbols.txt
 
@@ -120,13 +120,13 @@ ifeq ($(MACHINE),128)
 	$(CC1541) -p 1,0,0,'src/c128-boot-sect.o'  $(DISK_IMG)
 
 	$(CC1541) -t -r 18 -b 5 -s $(PROGINTLV) \
-				-f 'mp128' 					-w 'bin/mp128'					\
+				-f 'mp128' 					-w 'bin/mp128.prg'				\
 																		$(DISK_IMG)
 	$(CC1541) -b 4 -r 19 -c -s $(PROGINTLV) \
-				-f 'mp128.main'				-w 'bin/mp128.main'				\
+				-f 'mp128.main'				-w 'bin/mp128.main.prg'			\
 																		$(DISK_IMG)
 	$(CC1541) -r 15 -c -s $(PROGINTLV) \
-				-f 'mp128.main-scpu'		-w 'bin/mp128.main-scpu'		\
+				-f 'mp128.main-scpu'		-w 'bin/mp128.main-scpu.prg'	\
 																		$(DISK_IMG)
 
 	$(CC1541) -c -S $(INTLV) -v \
@@ -141,13 +141,13 @@ ifeq ($(MACHINE),128)
 else
 
 	$(CC1541) -t -r 18 -b 7 -s $(PROGINTLV) \
-				-f 'mp64' 					-w 'bin/mp64'					\
+				-f 'mp64' 					-w 'bin/mp64.prg'				\
 																		$(DISK_IMG)
 	$(CC1541) -t -r 19 -s $(PROGINTLV) \
-				-f 'mp64.main'				-w 'bin/mp64.main'				\
+				-f 'mp64.main'				-w 'bin/mp64.main.prg'			\
 																		$(DISK_IMG)
 	$(CC1541) -r 13 -s $(PROGINTLV) \
-				-f 'mp64.main-scpu'			-w 'bin/mp64.main-scpu'			\
+				-f 'mp64.main-scpu'			-w 'bin/mp64.main-scpu.prg'		\
 																		$(DISK_IMG)
 
 	$(CC1541) -S $(INTLV) -v \
