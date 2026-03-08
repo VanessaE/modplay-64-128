@@ -378,12 +378,12 @@ loader_check_for_more_samples
 	ldy #0
 -	lda string_buffer,y
 	sta current_file_name,y
-	beq acptr_exit
+	beq slow_load_exit
 	iny
 	cpy #16
 	bne -
 
-acptr_exit
+  slow_load_exit
 rts
 
 abort_load
@@ -653,14 +653,12 @@ loader_print_loading_speed
 
 +	lda divisor
 	sta last_seconds_lsb
-	sec
-	lda #0
+
+	lda loaded_bytes_count
 	sta dividend
-	lda expansion_memory_target_pointer+1
-	sbc exp_file_data_start_page
+	lda loaded_bytes_count+1
 	sta dividend+1
-	lda expansion_memory_target_pointer+2
-	sbc #0
+	lda loaded_bytes_count+2
 	sta dividend+2
 
 	jsr divide_24by24
@@ -765,7 +763,7 @@ loader_get_1_byte
 	bne +
 	inc loaded_bytes_count+2
 
-+	jsr ACPTR
++	jsr CHRIN
 rts
 
 loader_get_1_block

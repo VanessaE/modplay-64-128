@@ -22,6 +22,40 @@
   related effects' rate parameters (such as used by slide or tremolo) by that
   ratio, capped as necessary.
 
+* Need to detect C64U/U64 so that turbo can be supported.  This ought to work:
+
+	* Disable IRQ's
+	* blank the screen
+	* write $0F to $D031
+	* wait for raster line 255
+	* execute a loop:
+
+			ldx #168
+	loop	dex
+			lda $1234
+			lda $1234
+			lda $1234
+			bit $02
+			bne loop
+
+	* That's 20 cycles per loop, and will take 3360 cycles plus a few to start
+      and end the loop.
+
+	* Check now if raster low is 0 or 255.
+
+	* If it's still line 255, then the machine must be at 64 MHz, since it
+	  crammed 3360 cycles into the curent raster line (with time to spare),
+	  indicating that it's a C64 Ultimate or recent Ultimate 64 Elite II.  If
+	  it's line 0, then it must be 48 MHz, indicating an earlier Ultimate 64.
+	  Anything else, for now, will be treated as 1 MHz.
+
+* Need to check for 1541U Command Interface, so that Hyperspeed-compaible
+  calls can be used for loading, and so that later, a Hyperspeed-specific,
+  DMA-capable loader can be added.  Just need to determine if the UCI is
+  enabled by reading $DF1C/D.  They will be 0 and $C9 respectively when
+  enabled, $FF otherwise.  And of course make sure the drive we're loading
+  from is the SoftIEC device.
+
 
 ####################
 ##  KNOWN ISSUES  ##
