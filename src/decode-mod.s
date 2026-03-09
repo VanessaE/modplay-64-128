@@ -31,6 +31,13 @@ load_mod_header ; and also the first pattern if it's a 15-sample mod
 	sbc #>header31_seek_to_pat_data
 	bcc -
 
+	lda #<header31_seek_to_pat_data
+	sta loaded_bytes_count
+	lda #>header31_seek_to_pat_data
+	sta loaded_bytes_count+1
+	lda #0
+	sta loaded_bytes_count+2
+
 	jsr decode_mod_header
 	bcc +
 	rts
@@ -64,10 +71,20 @@ load_mod_header ; and also the first pattern if it's a 15-sample mod
 	sbc #>540
 	bcc -
 
+	clc
+	lda loaded_bytes_count
+	adc #<540
+	sta loaded_bytes_count
+	lda loaded_bytes_count+1
+	adc #>540
+	sta loaded_bytes_count+1
+	bcc +
+	inc loaded_bytes_count+2
+
 	; now that the header is no longer needed and the first pattern has been
 	; loaded, move it down to the bottom of the load buffer
 
-	lda #<load_buffer
++	lda #<load_buffer
 	sta load_pointer
 	lda #>load_buffer
 	sta load_pointer+1

@@ -270,12 +270,22 @@ load_next_sample
 	lda sample_lengths_lows,y			; if the length is 0, it's an empty
 	ora sample_lengths_mids,y			; sample slot (duh 🙂)
 	ora sample_lengths_highs,y
-	bne +
+	bne ++
 	jsr loader_get_1_byte				; skip two bytes of the file if the
 	jsr loader_get_1_byte				; sample is empty (mods always have this) 
-	jmp load_next_sample
 
-+	lda sample_start_addresses_mids,y
+	clc
+	lda loaded_bytes_count
+	adc #2
+	sta loaded_bytes_count
+	bcc +
+	inc loaded_bytes_count+1
+	bne +
+	inc loaded_bytes_count+2
+
++	jmp load_next_sample
+
+++	lda sample_start_addresses_mids,y
 	sta expansion_memory_target_pointer+1
 	lda sample_start_addresses_highs,y
 	sta expansion_memory_target_pointer+2
@@ -339,7 +349,16 @@ load_rest_of_sample						; if neither, load the exact number of remaining bytes
 	cpy utility_counter
 	bne -
 
-	lda #$80							; clear rest of load buf page
+	clc
+	tya
+	adc loaded_bytes_count
+	sta loaded_bytes_count
+	bcc +
+	inc loaded_bytes_count+1
+	bne +
+	inc loaded_bytes_count+2
+
++	lda #$80							; clear rest of load buf page
 -	sta load_buffer,y
 	iny
 	bne -
@@ -757,13 +776,7 @@ rts
 ; later when multiple loaders are available.
 
 loader_get_1_byte
-	inc loaded_bytes_count
-	bne +
-	inc loaded_bytes_count+1
-	bne +
-	inc loaded_bytes_count+2
-
-+	jsr CHRIN
+	jsr CHRIN
 rts
 
 loader_get_1_block
@@ -779,6 +792,11 @@ loader_get_1_block_no_reset_ptr
 	sta (load_pointer),y
 	iny
 	bne -
+
+	inc loaded_bytes_count+1
+	bne +
+	inc loaded_bytes_count+2
+  +
 rts
 
 loader_get_1kb
