@@ -141,7 +141,6 @@
 	; are correct.
 
 	!ifdef scpu {
-		SCPU_TURBO_OFF					= $d07a
 		SCPU_TURBO_ON					= $d07b
 		SCPU_ENABLE_HW_REGS				= $d07e
 		SCPU_DISABLE_HW_REGS			= $d07f
@@ -154,6 +153,7 @@
 		SCPU_RAM_LAST_BANK				= $d27f
 	}
 
+	SCPU_TURBO_OFF						= $d07a
 	SCPU_PRESENT						= $d0bc
 
 	SID									= $d400
@@ -490,6 +490,8 @@ tempo_fine_adjust_constant = 159778
 	highest_exp_addresss_used			!skip 3
 	fine_tuning_table					!skip 32
 	current_fine_tune_values			!skip 8
+
+	c64u_detect							!skip 1
 
 	!ifndef c128 {
 		!if * > $03ff {

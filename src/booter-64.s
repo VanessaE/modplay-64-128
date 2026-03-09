@@ -32,6 +32,8 @@ boot_start
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
 
+	jsr c64u_speed_check
+
 	; copy the REU driver into its proper memory slot
 
 	+ENABLE_KERNAL_ONLY
@@ -282,6 +284,131 @@ local_print_msg
 	+LOCAL_PRINT_MSG
 rts
 
+; Test if the machine is a C64 Ultimate, Ultimate 64, or oldskool C64
+
+; If the computer's running at 48 MHz, the register will be 0, indicating
+; an older-model Ultimate 64.
+
+; if it's running at 64 MHz, it'll still be 255, indicating a C64 Ultimate or
+; later-model Ultimate 64 Elite II+.
+
+; Anything else, it's either an oldskool C64, or some kind of turbo is in
+; play that we didn't detect.
+
+; after that, do a second test with a shorter loop that's just enough for the
+; raster low to roll over to 0 if the 1 MHz setting works.  If it stays on
+; line 255, the speed has been manually set to 2 MHz or higher by the user.
+
+; Bottom line:
+
+; Assume an oldskool C64 if the speed cannot freely be switched between 1 MHz
+; and 48/64 MHz -- that is, the first test must return 0 or 255, the second
+; must return 0.
+
+
+c64u_speed_check
+	sei
+	+DISABLE_VIC_SCREEN
+
+	bit SCPU_PRESENT		; if SCPU is detected, disable its turbo
+	bmi +
+
+	sta SCPU_TURBO_OFF
+
++	lda #15
+	sta c64u_speed_select	; on U64 this selects 48 MHz, on C64U it's 64 MHz
+
+	ldx #254				; wait for raster line 254, then 255
+-	cpx VIC_RASTER_LOW
+	bne -
+	inx
+-	cpx VIC_RASTER_LOW
+	bne -
+
+	ldx #168				; 20 cycles per loop * 168 = ~3360 cycles
+-	lda $1234
+	lda $1234
+	lda $1234
+	bit $02
+	dex
+	bne -
+
+	; read and store the raster low register
+
+	lda VIC_RASTER_LOW
+	sta temp_abs_a
+
+	; Now do it all again, but this time, at 1 MHz
+
+	lda #0
+	sta c64u_speed_select
+
+	ldx #254				; wait for line 255
+-	cpx VIC_RASTER_LOW
+	bne -
+	inx
+-	cpx VIC_RASTER_LOW
+	bne -
+
+	ldx #7					; delay loop, 70 cycles
+-	nop
+	bit $02
+	dex
+	bne -
+
+	; read the low register again
+
+	lda VIC_RASTER_LOW
+	bne u64_turbo_broken	; if non 0, then the machine is stuck at 2+ MHz.
+
+	lda temp_abs_a			; if second test passed, and the first test gave
+	beq is_u64				; us 0 or 255, we have working turbo control
+	cmp #255
+	beq is_c64u
+	cmp #43					; if the first test gave a value of 43 or higher,
+	bcc u64_turbo_broken	; the machine is at 1 MHz.  Anything else = broken
+	lda #0
+	sta c64u_detect
+	jmp c64u_speed_check_exit
+
+is_u64
+	lda #$60
+	sta c64u_detect
+	jmp c64u_speed_check_exit
+
+is_c64u
+	lda #$80
+	sta c64u_detect
+	jmp c64u_speed_check_exit
+
+u64_turbo_broken
+	lda #$ff
+	sta c64u_detect
+
+c64u_speed_check_exit
+	+ENABLE_VIC_SCREEN
+	cli
+
+	lda c64u_detect
+	cmp #$ff
+	beq +
+	rts
+
++	lda #0
+	ldx #<turbo_broken_msg_1
+	ldy #>turbo_broken_msg_1
+	jsr local_print_msg
+
+	lda #0
+	ldx #<turbo_broken_msg_2
+	ldy #>turbo_broken_msg_2
+	jsr local_print_msg
+
+	- jmp - ; hang here, we can't proceed without reliable speed control.
+
+rts
+
+
 program_load_decrunch_stub_origin
 	!pseudopc program_load_decrunch_stub {
 		lda main_filename_lengths+1
@@ -340,6 +467,23 @@ program_load_decrunch_stub_origin
 		!text CYAN,"Initializing..."
 		!byte 0
 	}
+
+turbo_broken_msg_1
+	!byte CLR,LOWER,LRED
+;                                                  |<-- 40
+	!text "Turbo was detected, but either it's not",RETURN
+	!text "one of C64 Ultimate, Ultimate64, or",RETURN
+	!text "SuperCPU, or user programs can't change",RETURN
+	!text "the setting.  Please enable turbo",RETURN
+	!text "control and restart, or disable turbo",RETURN
+	!text "entirely.",RETURN,RETURN
+	!byte 0
+
+turbo_broken_msg_2
+	!text "On C64U/U64: Open the main menu,",RETURN
+	!text "Select Turbo Boost -> Turbo Control",RETURN
+	!text "and set it to \"Turbo Registers\"."
+	!byte 0
 
 reu_driver_origin
 	!pseudopc reu_driver {

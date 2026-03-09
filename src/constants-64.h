@@ -55,6 +55,7 @@
 	; I/O
 
 	VIC_CHARSETS					= $d000
+	c64u_speed_select				= $d031
 
 	; KERNAL routines/jump table
 
