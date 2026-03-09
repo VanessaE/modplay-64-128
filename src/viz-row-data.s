@@ -8,7 +8,7 @@
 ; banked-in at this point, so the usual PLOT, CHROUT, etc. calls are available.
 
 viz_row_data_init
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl no_vrdi
 	}
@@ -58,7 +58,7 @@ rts
 ; newly-selected pattern number in .Y
 
 viz_row_data_pattern_preload
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi +
 		rts
@@ -101,7 +101,7 @@ rts
 
 ; fetch and print one song data row, with the row number in .X
 viz_row_data_fetch_and_print
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi +
 		rts
@@ -252,7 +252,7 @@ rts
 ; scroll the visualizer up one line
 
 viz_row_data_scroll
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl no_vrdsc
 	}

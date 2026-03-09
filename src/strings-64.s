@@ -1,12 +1,7 @@
 program_version
 	!text version_major+$30,".",version_minor+$30,0
 
-	!ifndef scpu {
-		program_title
-			!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v",LRED,0
-		program_title_b
-			!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0
-	} else {
+	!ifdef scpu {
 		program_title
 			!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v",LRED,0
 		program_title_b
@@ -14,7 +9,19 @@ program_version
 			!text LRED,"[",PUR,"SCPU",LRED,"]"
 			!fill 6,LEFT
 			!byte INST,RETURN,0
-	}
+	} else ifdef c64u {
+		program_title
+			!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player"
+			!text LRED,"[",CYAN,"C64U",LRED,"]"
+			!fill 6,LEFT
+			!byte INST,RETURN,0
+	} else {
+		program_title
+			!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v",LRED,0
+		program_title_b
+			!text WHT," - ",LBLU,"Amiga",CYAN," module",GRN," player",RETURN,0	}
 
 ; these are all RLE-encoded for the print_msg_rle* function
 
@@ -190,11 +197,15 @@ menu_text_filter
 	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filter",RETURN,0
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Dithering",RETURN,0
-menu_text_enable_screen
-	!text RIGHT,GRN,"[",YEL,"E",GRN,"]",LGRY," Enable player",RETURN,0
-menu_text_enable_screen_b
-	!fill 5,RIGHT
-	!text LGRY,"screen",RETURN,0
+
+!ifdef badlines_exist {
+	menu_text_enable_screen
+		!text RIGHT,GRN,"[",YEL,"E",GRN,"]",LGRY," Enable player",RETURN,0
+	menu_text_enable_screen_b
+		!fill 5,RIGHT
+		!text LGRY,"screen",RETURN,0
+}
+
 menu_text_enable_filter
 	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filtering",RETURN,0
 menu_text_save_config
@@ -220,6 +231,11 @@ info_popup_platform_computer
 !ifdef scpu {
 	info_popup_plus_scpu_msg
 		!text " + SuperCPU ",0
+}
+
+!ifdef c64u {
+	info_popup_plus_c64u_msg
+		!text " Ultimate ",0
 }
 
 info_popup_6581_msg

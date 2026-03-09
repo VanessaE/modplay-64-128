@@ -496,22 +496,39 @@ rts
 fkey_codes					!byte $85,$89,$86,$8a,$87,$8b,$88,$8c
 
 default_config
-	!ifndef c128 {			; signature
-		!byte $64,0,"c",6,4
+	!ifdef c128 {			; signature
+		!byte 128,"c",1,2,8
+	} else ifdef c64u {
+		!byte 48,"c",6,4,"u"
 	} else {
-		!byte $80,"c",1,2,8
+		!byte 64,0,"c",6,4
 	}
-	!byte 8					; default device
-	!word $d700				; default stereo SID addr
-	!word $dd01				; default DigiMAX/DAC addr
-	!byte 2					; default audio driver (SID Mahoney method)
-	!byte 1					; default RAM driver (REU)
-	!byte $80				; default Stereo mode (on)
-	!byte 0					; default filter setting
-	!byte 0					; default visualizer mode (row data)
-	!byte 0					; default dithering mode (off)
-	!byte $80				; default screen enable (on)
-	!byte $ff				; end of file marker
+
+	!ifdef c64u {
+		!byte 8					; default device
+		!word $d420				; default stereo SID addr
+		!word $dd01				; default DigiMAX/DAC addr
+		!byte 1					; default audio driver (SID 4-bit)
+		!byte 1					; default RAM driver (REU)
+		!byte $80				; default Stereo mode (on)
+		!byte $80				; default filter setting (on)
+		!byte 0					; default visualizer mode (row data)
+		!byte $80				; default dithering mode (on)
+		!byte 0					; [always 0]
+		!byte $ff				; end of file marker
+	} else {
+		!byte 8					; default device
+		!word $d700				; default stereo SID addr
+		!word $dd01				; default DigiMAX/DAC addr
+		!byte 2					; default audio driver (SID Mahoney method)
+		!byte 1					; default RAM driver (REU)
+		!byte $80				; default Stereo mode (on)
+		!byte 0					; default filter setting
+		!byte 0					; default visualizer mode (row data)
+		!byte 0					; default dithering mode (off)
+		!byte $80				; default screen enable (on)
+		!byte $ff				; end of file marker
+	}
 configuration_data_end
 
 nybble_x10_origin

@@ -327,9 +327,6 @@ check_menu_key_t
 	cmp #$54
 	bne check_menu_key_e
 
-	lda audio_driver
-	cmp #1
-	bne +
 	jsr change_dithering_setting
 	lda #0
 	bcc +
@@ -337,9 +334,10 @@ check_menu_key_t
 +	rts
 
 check_menu_key_e
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		cmp #$45
 		bne check_menu_key_leftarrow
+
 		jsr toggle_screen_enable
 		bcc +
 		lda #0

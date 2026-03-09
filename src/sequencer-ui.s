@@ -9,7 +9,7 @@
 }
 
 print_num_song_pos
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
@@ -34,7 +34,7 @@ rts
 }
 
 print_song_pos_pat_num ; enter with .X = song position
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
@@ -62,7 +62,7 @@ rts
 }
 
 print_row_num
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
@@ -85,7 +85,7 @@ rts
 }
 
 print_song_speed
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
@@ -274,7 +274,7 @@ toggle_enable_track
 +	lda current_sample_volume_levels,y
 	jsr set_volume
 
-++	!ifndef c128 {
+++	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl exit_player_keyscan
 	}

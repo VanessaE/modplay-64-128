@@ -326,10 +326,11 @@ no_command_this_row_this_track
 	sta seq_ticks_counter
 
 next_tick
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
+
 	lda CIA1_TOD_SECONDS
 	cmp last_seconds
 	beq +
@@ -389,10 +390,11 @@ dont_run_pre_tick_command
 run_fetch_and_mixer_vec
 	jsr $1234
 
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bpl +
 	}
+
 	lda visualizer_mode
 	beq +
 

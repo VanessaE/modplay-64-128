@@ -26,6 +26,7 @@ all:
 
 	$(MAKE) c64
 	$(MAKE) c64_scpu
+	$(MAKE) c64u
 	$(MAKE) c128
 	$(MAKE) c128_scpu
 
@@ -82,6 +83,16 @@ c64_scpu:
 	$(EXOMIZER) mem -o bin/mp64.main-scpu.prg src/mp64.main-scpu.o
 
 	sort -dbf /tmp/mp64+scpu-symbols.txt > etc/mp64+scpu-symbols.txt
+
+c64u:
+	@echo -e '\nBuilding Modplay 64 (C64 Ultimate/Ultimate64 edition)...\n'
+
+	acme $(OPTIONS) -Dc64u=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
+	acme $(OPTIONS) -Dc64u=1 -o src/mp64.main-c64u.o -l /tmp/mp64+c64u-symbols.txt /tmp/mp64-s.sym src/modplay.s
+
+	$(EXOMIZER) mem -o bin/mp64.main-c64u.prg src/mp64.main-c64u.o
+
+	sort -dbf /tmp/mp64+c64u-symbols.txt > etc/mp64+c64u-symbols.txt
 
 c128_scpu:
 	@echo -e '\nBuilding Modplay 128 (SuperCPU edition)...\n'
@@ -149,7 +160,9 @@ else
 	$(CC1541) -r 13 -s $(PROGINTLV) \
 				-f 'mp64.main-scpu'			-w 'bin/mp64.main-scpu.prg'		\
 																		$(DISK_IMG)
-
+	$(CC1541) -r 13 -s $(PROGINTLV) \
+				-f 'mp64.main-c64u'			-w 'bin/mp64.main-c64u.prg'		\
+																		$(DISK_IMG)
 	$(CC1541) -S $(INTLV) -v \
 				-f 'Acidbat II'				-w 'mods/Acidbat II.mod'		\
 				-f 'Fun Tune'				-w 'mods/Fun Tune.mod'			\

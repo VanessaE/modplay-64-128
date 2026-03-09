@@ -20,6 +20,12 @@
 
 ; main program code
 
+!ifndef c128 {
+	!ifndef c64u {
+		badlines_exist = 1
+	}
+}
+
 !convtab pet
 !cpu 6510
 
@@ -40,7 +46,6 @@
 		inc C128_VIC_CLOCK_SPEED
 	}
 }
-
 
 start
 	jsr init

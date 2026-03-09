@@ -411,18 +411,30 @@ rts
 
 program_load_decrunch_stub_origin
 	!pseudopc program_load_decrunch_stub {
+		lda c64u_detect
+		beq + ; $ff was trapped-out earlier.
+
+		lda #15+128  ; the high bit being set disables badline emulation
+		sta c64u_speed_select
+
+		lda main_filename_lengths+2
+		ldx #<(main_filename+32)
+		ldy #>(main_filename+32)
+		jmp ++
+
+	+	bit SCPU_PRESENT
+		bmi +
+
 		lda main_filename_lengths+1
 		ldx #<(main_filename+16)
 		ldy #>(main_filename+16)
+		jmp ++
 
-		bit SCPU_PRESENT
-		bpl +
-
-		lda main_filename_lengths
+	+	lda main_filename_lengths
 		ldx #<main_filename
 		ldy #>main_filename
 
-	+	jsr SETNAM
+	++	jsr SETNAM
 
 		lda #0
 		ldx FA
@@ -454,10 +466,12 @@ program_load_decrunch_stub_origin
 
 	main_filename
 		!text "mp64.main",0,0,0,0,0,0,0
-		!text "mp64.main-scpu",0
+		!text "mp64.main-scpu",0,0
+		!text "mp64.main-c64u",0,0
 
 	main_filename_lengths
 		!byte 9
+		!byte 14
 		!byte 14
 
 	initializing_msg

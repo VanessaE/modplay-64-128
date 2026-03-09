@@ -256,6 +256,19 @@ any limit.  Come to think of it, that driver probably wouldn't need the
 lookahead cache at all (just direct reads using ordinary pointers), so all
 pitches, both high and low, would have the same total cycle count.
 
+==================================
+On the C64 Ultimate and Ultimate64
+
+These machines are so freakin' fast that I simply run at 64 MHz or 48 MHz,
+respectively, and set all playback modes and drivers to a fixed time of 20,
+1 MHz cycles on PAL and 21 on NTSC, producing 49.2 or 48.7 kHz sample rates,
+respectively....and there's still CPU to to spare!
+
+In theory, these machines are probably fast enough to do 96 kHz, but I doubt
+the actual audio hardware goes that fast, and the CIAs timers don't have the
+resolution necessary (that would be 10.65, 1 MHz cycles on NTSC or 10.26 on
+PAL). :)
+
 
 ====
 NOTE

@@ -325,31 +325,33 @@ regenerate_tables_if_needed
 	rts
 
 +	!ifndef scpu {
-		bit allow_regen_msg
-		bpl no_msgs1
+		!ifndef c64u {
+			bit allow_regen_msg
+			bpl no_msgs1
 
-		!ifndef c128 {
-			bit enable_screen_on_playback	; because if it's enabled, the display will
-			bmi +							; have switched to the alt charset by this point.
+			!ifndef c128 {
+				bit enable_screen_on_playback	; because if it's enabled, the display will
+				bmi +							; have switched to the alt charset by this point.
 
-			jsr gray_out
-			jsr draw_short_popup
+				jsr gray_out
+				jsr draw_short_popup
 
-			ldx #short_popup_top_row+1
-			ldy #short_popup_left_column
-			jmp ++
+				ldx #short_popup_top_row+1
+				ldy #short_popup_left_column
+				jmp ++
 
-		+	ldx #medium_popup_top_row+9
-			ldy #medium_popup_left_column
-		++	clc
-			jsr PLOT
+			+	ldx #medium_popup_top_row+9
+				ldy #medium_popup_left_column
+			++	clc
+				jsr PLOT
+			}
+
+			lda #0
+			ldx #<main_player_regen_tables_msg
+			ldy #>main_player_regen_tables_msg
+			sec
+			jsr print_msg
 		}
-
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		sec
-		jsr print_msg
 	}
 
 no_msgs1

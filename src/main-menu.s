@@ -457,7 +457,7 @@ not_sid_menu
 	sec
 	jsr print_menu_line
 
-+	!ifndef c128 {
++	!ifdef badlines_exist {
 		ldx #<menu_text_enable_screen
 		ldy #>menu_text_enable_screen
 		sec
@@ -484,7 +484,8 @@ not_sid_menu
 	jsr show_stereo_mode
 	jsr show_filter_setting
 	jsr show_dithering_setting
-	!ifndef c128 {
+
+	!ifdef badlines_exist {
 		jsr show_screen_enable
 	}
 rts

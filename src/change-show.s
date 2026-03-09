@@ -1,6 +1,74 @@
 ; this file handles changing and showing settings in the main menu
 
-!ifndef c128 {
+!ifdef c128 {
+	rpt_row			= 6
+	rpt_col			= 31
+	dev_row			= 4
+	dev_col			= 32
+	adrv_row		= 1
+	adrv_col		= 5
+	stereo_row		= 2
+	stereo_col		= 19
+	sidaddr_row		= 3
+	sidaddr_col		= 31
+	dacaddr_row		= 3
+	dacaddr_col		= 32
+	filter_row		= 4
+	filter_col		= 24
+	dith_en_row		= 4
+	dith_en_col		= 22
+	info_anykey_row	= 15
+	info_anykey_col	= 14
+	info_plat_row	= 2
+	info_plat_col	= 13
+	info_expram_row	= 6
+	info_expram_col	= 23
+	info_lsid_row	= 3
+	info_lsid_col	= 13
+	info_rsid_row	= 4
+	info_rsid_col	= 14
+	info_files_row	= 5
+	info_files_col	= 26
+	info_ram_use_row = 7
+	info_ram_use_col = 24
+	build_no_row	= 13
+	build_no_col	= 13
+} else ifdef c64u {
+	rpt_row			= 9
+	rpt_col			= 34
+	dev_row			= 8
+	dev_col			= 34
+	adrv_row		= 3
+	adrv_col		= 23
+	stereo_row		= 4
+	stereo_col		= 30
+	sidaddr_row		= 6
+	sidaddr_col		= 31
+	dacaddr_row		= 6
+	dacaddr_col		= 31
+	filter_row		= 7
+	filter_col		= 33
+	dith_en_row		= 7
+	dith_en_col		= 33
+	scr_en_row		= 9
+	scr_en_col		= 30
+	info_anykey_row	= 20
+	info_anykey_col	= 14
+	info_plat_row	= 7
+	info_plat_col	= 13
+	info_expram_row	= 11
+	info_expram_col	= 23
+	info_lsid_row	= 8
+	info_lsid_col	= 13
+	info_rsid_row	= 9
+	info_rsid_col	= 14
+	info_files_row	= 10
+	info_files_col	= 26
+	info_ram_use_row = 12
+	info_ram_use_col = 24
+	build_no_row	= 18
+	build_no_col	= 13
+} else {
 	rpt_row			= 9
 	rpt_col			= 34
 	dev_row			= 8
@@ -34,39 +102,6 @@
 	info_ram_use_row = 12
 	info_ram_use_col = 24
 	build_no_row	= 18
-	build_no_col	= 13
-} else {
-	rpt_row			= 6
-	rpt_col			= 31
-	dev_row			= 4
-	dev_col			= 32
-	adrv_row		= 1
-	adrv_col		= 5
-	stereo_row		= 2
-	stereo_col		= 19
-	sidaddr_row		= 3
-	sidaddr_col		= 31
-	dacaddr_row		= 3
-	dacaddr_col		= 32
-	filter_row		= 4
-	filter_col		= 24
-	dith_en_row		= 4
-	dith_en_col		= 22
-	info_anykey_row	= 15
-	info_anykey_col	= 14
-	info_plat_row	= 2
-	info_plat_col	= 13
-	info_expram_row	= 6
-	info_expram_col	= 23
-	info_lsid_row	= 3
-	info_lsid_col	= 13
-	info_rsid_row	= 4
-	info_rsid_col	= 14
-	info_files_row	= 5
-	info_files_col	= 26
-	info_ram_use_row = 7
-	info_ram_use_col = 24
-	build_no_row	= 13
 	build_no_col	= 13
 }
 
@@ -571,18 +606,17 @@ show_filter_setting
 	lda current_menu_page
 	cmp #2
 	beq +
-	clc
+	sec
 	rts
 
-+	lda audio_driver
-	cmp #2
-	beq +
-	clc
-	rts
++	ldx #filter_row
 
-+	clc
-	ldx #filter_row
-	ldy #filter_col
+	lda audio_driver
+	cmp #1
+	bne +
+	inx
++	ldy #filter_col
+	clc
 	jsr PLOT
 
 	bit filter_setting
@@ -613,12 +647,13 @@ show_dithering_setting
 	lda current_menu_page
 	cmp #2
 	beq +
-	clc
+	sec
 	rts
 
 +	lda audio_driver
 	cmp #1
 	beq +
+	sec
 	rts
 
 +	clc
@@ -643,15 +678,17 @@ change_dithering_setting
 	lda audio_driver
 	cmp #1
 	beq +
+	sec
 	rts
 
 +	lda dither_enable
 	eor #$80
 	sta dither_enable
 	jsr show_dithering_setting
-+ rts
+	sec
+rts
 
-!ifndef c128 {
+!ifdef badlines_exist {
 	toggle_screen_enable
 		lda enable_screen_on_playback
 		eor #$80

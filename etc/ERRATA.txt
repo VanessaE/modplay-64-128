@@ -22,9 +22,6 @@
   related effects' rate parameters (such as used by slide or tremolo) by that
   ratio, capped as necessary.
 
-* Need to actually USE the C64U speed test for something tangible, suchas, I
-  dunno, turbo support. :)
-
 * Need to check for 1541U Command Interface, so that Hyperspeed-compaible
   calls can be used for loading, and so that later, a Hyperspeed-specific,
   DMA-capable loader can be added.  Just need to determine if the UCI is

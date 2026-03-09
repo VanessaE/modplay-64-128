@@ -17,55 +17,68 @@ isr_set_interval
 	lda #0
 	sta isr_trigger_interval+1
 
-	clc
-	lda mixer_cycle_count
-	adc audio_driver_isr_cycle_count
-	adc ram_driver_fetch_cycle_count
+	!ifdef c64u {
+		; on C64U and U64, ignore all the timings specified
+		; by the drivers and just run at a fixed 48.7 or 49.2 kHz.
 
-	; on non-SCPU setups, add some fudge just to ensure the sequencer always
-	; has enough time to run - 15 cycles on C128, 20 on C64 when the screen is
-	; off, 40 on C64 is the screen is turned on.
+		lda #20
+		bit pal_flag
+		bmi +
+		lda #21
+	  +
 
-	!ifndef scpu {
-		!ifdef c128 {
-			adc #15
-		} else {
+	} else {
+		clc
+		lda mixer_cycle_count
+		adc audio_driver_isr_cycle_count
+		adc ram_driver_fetch_cycle_count
+
+		; on non-SCPU setups, add some fudge just to ensure the sequencer always
+		; has enough time to run - 15 cycles on C128, 20 on C64 when the screen is
+		; off, 40 on C64 is the screen is turned on.
+
+		!ifndef scpu {
+			!ifdef c128 {
+				adc #15
+			} else {
+				bit enable_screen_on_playback
+				bpl +
+				adc #40
+				jmp ++
+			  + adc #20
+			 ++
+			}
+		}
+
+		!ifndef c128 {
 			bit enable_screen_on_playback
 			bpl +
-			adc #40
-			jmp ++
-		  + adc #20
-		 ++
+
+			sta dividend				; on C64 with the screen on, we need to
+			lda raster_len				; sync to the VIC-II raster, so we divide
+			sta divisor					; that total cycles figure by the raster
+			lda #0						; line length
+			sta dividend+1
+			sta divisor+1
+			jsr divide_16by16
+
+			clc
+			lda quotient				; discard the remainder and add 1
+			adc #1
+			ldx raster_len
+			jsr multiply_8x8			; then multiply it back up, thus rounding
+			lda product+1				; the ISR time to the next whole multiple
+			sta isr_trigger_interval+1	; of the raster length
+			lda product
 		}
+
+		; if the screen is off, or on C128 in any case, we don't need all that BS 😛
+		; because no VIC-II/IIe screen means no need to sync to the raster.
 	}
-
-	!ifndef c128 {
-		bit enable_screen_on_playback
-		bpl +
-
-		sta dividend				; on C64 with the screen on, we need to
-		lda raster_len				; sync to the VIC-II raster, so we divide
-		sta divisor					; that total cycles figure by the raster
-		lda #0						; line length
-		sta dividend+1
-		sta divisor+1
-		jsr divide_16by16
-
-		clc
-		lda quotient				; discard the remainder and add 1
-		adc #1
-		ldx raster_len
-		jsr multiply_8x8			; then multiply it back up, thus rounding
-		lda product+1				; the ISR time to the next whole multiple
-		sta isr_trigger_interval+1	; of the raster length
-		lda product
-	}
-
-; if the screen is off, or on C128 in any case, we don't need all that BS 😛
-; because no VIC-II/IIe screen means no need to sync to the raster.
 
 +	sta isr_trigger_interval
 rts
+
 
 isr_startup
 	sei
@@ -111,7 +124,20 @@ isr_startup
 	lda VIC_IRQ_FLAGS		; and clear any VIC IRQ that's pending.  normally
 	sta VIC_IRQ_FLAGS		; we could lsr here but that doesn't work on SCPU
 
-	!ifndef c128 {
+	!ifndef badlines_exist {
+		; on C128 and C64U, it's similar to oldskool C64 with screen off
+		lda audio_isr_vec
+		sta CPU_IRQ_vector
+		lda audio_isr_vec+1
+		sta CPU_IRQ_vector+1
+
+		lda #$82				; enable timer B IRQ
+		sta CIA1_ICR
+		lda #$11
+		sta CIA1_CRB			; start CIA timer B
+
+	} else {
+
 		; if the screen is off, don't bother with the double-IRQ code,
 		; just point the IRQ directly to the audio driver entry
 
@@ -178,18 +204,6 @@ isr_startup
 			sta CIA1_CRB			; start CIA timer B
 									; we should now be on line 255, cycle 53.
 		}
-
-	} else {
-		; on C128, it's similar to C64 with screen off
-		lda audio_isr_vec
-		sta CPU_IRQ_vector
-		lda audio_isr_vec+1
-		sta CPU_IRQ_vector+1
-
-		lda #$82				; enable timer B IRQ
-		sta CIA1_ICR
-		lda #$11
-		sta CIA1_CRB			; start CIA timer B
 	}
 
 ; on stock machines, set up for quick IRQ exit.  saves one cycle in the ISR's
@@ -205,16 +219,18 @@ isr_startup
 	cli
 rts
 
-!ifndef c128 {
-; This code is based on "Double-IRQ" stable interrupt method from
-; adapted to only be called/run once.
-; https://codebase64.org/doku.php?id=base:the_double_irq_method
-; (author unknown)
+!ifdef badlines_exist {
+	; This code is based on "Double-IRQ" stable interrupt method from
+	; adapted to only be called/run once.  It's only used on oldskool C64's
+	; when the screen is turned on, but not on C128's or C64U.
+	;
+	; https://codebase64.org/doku.php?id=base:the_double_irq_method
+	; (author unknown)
 
 	irq_stage_1					; 7 cycles to enter
-		inc VIC_RASTER_LOW				; 6
-		lda VIC_IRQ_FLAGS				; 4
-		sta VIC_IRQ_FLAGS				; 4
+		inc VIC_RASTER_LOW		; 6
+		lda VIC_IRQ_FLAGS		; 4
+		sta VIC_IRQ_FLAGS		; 4
 		sta .s1a + 1			; 4 / we're about to trash .A so back it up
 		lda #<irq_stage_2		; 2
 		sta CPU_IRQ_vector		; 4

@@ -28,12 +28,15 @@ start_main_player
 	  +
 	}
 
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi +
 		jmp no_player_ui
+	  +
+	}
 
-	+	jsr set_alt_charset
+	!ifndef c128 {
+		jsr set_alt_charset
 	}
 
 	lda #CLR
@@ -194,7 +197,7 @@ no_player_ui
 		}
 	}
 
-	!ifndef c128 {
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi player_init_visualizer
 
@@ -242,9 +245,12 @@ player_ui_finish
 
 	!ifndef c128 {
 		jsr set_standard_charset
+	}
+
+	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi +
 		jsr enable_vic_screen
-	  +
+	 +
 	}
 rts
