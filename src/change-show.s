@@ -745,22 +745,29 @@ show_system_info_popup
 	ldx #info_plat_row
 	ldy #info_plat_col
 	jsr PLOT
-	lda #0
-	ldx #<info_popup_platform_computer
-	ldy #>info_popup_platform_computer
-	sec
-	jsr print_msg
 
-	!ifdef scpu {
-		bit supercpu_detected
-		bpl +
-
+	!ifdef c64u {
 		lda #0
-		ldx #<info_popup_plus_scpu_msg
-		ldy #>info_popup_plus_scpu_msg
+		bit c64u_detect
+		bmi +
+
+		ldx #<info_popup_platform_computer_u64
+		ldy #>info_popup_platform_computer_u64
 		sec
 		jsr print_msg
-	  +
+		jmp ++
+
+	+	ldx #<info_popup_platform_computer_c64u
+		ldy #>info_popup_platform_computer_c64u
+		sec
+		jsr print_msg
+	  ++
+	} else {
+		lda #0
+		ldx #<info_popup_platform_computer
+		ldy #>info_popup_platform_computer
+		sec
+		jsr print_msg
 	}
 
 ;	!ifdef scpu {

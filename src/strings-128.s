@@ -189,12 +189,12 @@ info_popup_msg
 	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
-info_popup_platform_computer
-	!text LGRN,"C128",0
-
 !ifdef scpu {
-	info_popup_plus_scpu_msg
-		!text " + SuperCPU ",0
+	info_popup_platform_computer
+		!text LGRN,"C128 + SuperCPU ",0
+} else {
+	info_popup_platform_computer
+		!text LGRN,"C128",0
 }
 
 info_popup_6581_msg

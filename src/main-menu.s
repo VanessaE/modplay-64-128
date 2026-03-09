@@ -52,6 +52,24 @@ menu_full_redraw
 	sec
 	jsr print_msg
 
+	!ifdef c64u {
+		lda #0
+		bit c64u_detect
+		bmi +
+
+		ldx #<program_title_edition_u64
+		ldy #>program_title_edition_u64
+		jsr print_msg
+		jmp ++
+
+	+	lda #0
+		ldx #<program_title_edition_c64u
+		ldy #>program_title_edition_c64u
+		jsr print_msg
+	 ++
+	}
+
+
 	ldy #0
 	sty temp_abs_y
 -	ldy temp_abs_y

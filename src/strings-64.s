@@ -13,10 +13,13 @@ program_version
 		program_title
 			!text NOSHIFTCOM,CLR,YEL,"Modplay",LGRN,"64",RED," v",LRED,0
 		program_title_b
-			!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player"
+			!text WHT," - ",LBLU,"Amiga",CYAN," mod",GRN," player",0
+		program_title_edition_c64u
 			!text LRED,"[",CYAN,"C64U",LRED,"]"
 			!fill 6,LEFT
 			!byte INST,RETURN,0
+		program_title_edition_u64
+			!text LRED," [",YEL,"U64",LRED,"]",RETURN,0
 	} else {
 		program_title
 			!text NOSHIFTCOM,CLR,YEL," Modplay",LGRN," 64",RED," v",LRED,0
@@ -225,17 +228,17 @@ info_popup_msg
 	!fill 5,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
-info_popup_platform_computer
-	!text LGRN,"C64",0
-
-!ifdef scpu {
-	info_popup_plus_scpu_msg
-		!text " + SuperCPU ",0
-}
-
 !ifdef c64u {
-	info_popup_plus_c64u_msg
-		!text " Ultimate ",0
+	info_popup_platform_computer_c64u
+		!text LGRN,"C64 Ultimate",0
+	info_popup_platform_computer_u64
+		!text LGRN,"Ultimate64",0
+} else ifdef scpu {
+	info_popup_platform_computer
+		!text LGRN,"C64 + SuperCPU ",0
+} else {
+	info_popup_platform_computer
+		!text LGRN,"C64",0
 }
 
 info_popup_6581_msg
