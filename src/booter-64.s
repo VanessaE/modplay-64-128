@@ -447,12 +447,18 @@ program_load_decrunch_stub_origin
 		sei
 		+ENABLE_KERNAL_ONLY
 
+
+		bit SCPU_PRESENT
+		bpl +
+		lda c64u_detect
+		bne +
+
 		lda #0
 		ldx #<initializing_msg
 		ldy #>initializing_msg
 		+LOCAL_PRINT_MSG
 
-		lda EAL
+	+	lda EAL
 		sta $04
 		lda EAL+1
 		sta $05
@@ -480,7 +486,7 @@ program_load_decrunch_stub_origin
 		!fill 12,RIGHT
 		!text CYAN,"Initializing..."
 		!byte 0
-	}
+}
 
 turbo_broken_msg_1
 	!byte CLR,LOWER,LRED
