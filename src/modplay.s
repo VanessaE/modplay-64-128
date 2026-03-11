@@ -102,6 +102,7 @@ disable_vic_screen
 rts
 
 !source "src/loader-common.s"
+!source "src/loader-standard.s"
 !source "src/decode-mod.s"
 
 !source "src/disk-ops.s"

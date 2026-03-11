@@ -126,15 +126,17 @@ load_by_filename_entry
 	lsr file_size_in_kb+1
 	ror file_size_in_kb
 
+	; the actual loading process starts here.
+
 	jsr loader_paint_screen
 
 	lda file_to_load_name_len
 	ldx #<string_buffer
 	ldy #>string_buffer+1
-	jsr open_file
+	jsr loader_standard_open_file
 
 	bcc +
-	jmp load_err
+	jmp print_generic_load_error
 
 +	lda #<load_buffer
 	sta expansion_transfer_local_addr
@@ -168,14 +170,10 @@ load_by_filename_entry
 	sta CIA1_TOD_SECONDS
 	sta CIA1_TOD_TENTHS
 
-; read-in the header
+; Header loader returns .N = 0 on error or if header is bad
+; or returns .C = 0 for 15 samples, .C = 1 for 31
 
-	jsr load_mod_header		; returns .N = 0 on error or if header is bad
-							; or .C = 0 for 15 samples, .C = 1 for 31
-
-	lda #0
-	ror
-	sta temp_carry
+	jsr loader_standard_get_mod_header
 
 	lda #4
 	sta stash_size+1
@@ -183,7 +181,7 @@ load_by_filename_entry
 	bit header_loaded
 	bmi +
 
-	jsr close_file
+	jsr loader_standard_close_file
 
 	!ifndef c128 {
 		ldy #mini_popup_left_column+4
@@ -217,7 +215,7 @@ load_by_filename_entry
 	cmp reu_highest_bank
 	bcc +
 
-	jsr close_file
+	jsr loader_standard_close_file
 
 	jsr draw_mini_popup
 
@@ -229,180 +227,12 @@ load_by_filename_entry
 
 	jmp abort_load
 
+	; okay, at this point we can go ahead and load the rest of the file.
+
 +	jsr loader_add_progress_bar
 
-	bit temp_carry
-	bpl loaded_15
-
-; okay, at this point we can go ahead and load the rest of the file.
-
-load_next_pattern
-	jsr loader_get_1kb
-	jsr loader_update_progress
-
-loaded_15
-	jsr reformat_pattern_data
-
-	+JSR_INDIRECT (stash_block_vec)
-
-	clc
-	lda expansion_memory_target_pointer+1
-	adc #4
-	sta expansion_memory_target_pointer+1
-	bcc +
-	inc expansion_memory_target_pointer+2
-
-+	inc pattern_conv_pat_counter
-	lda pattern_conv_pat_counter
-	cmp number_of_patterns
-	bcc load_next_pattern
-
-	lda #1
-	sta stash_size+1
-
-	lda #0
-	sta sample_number_count
-
-load_next_sample
-	inc sample_number_count
-	ldy sample_number_count
-
-	lda sample_lengths_lows,y			; if the length is 0, it's an empty
-	ora sample_lengths_mids,y			; sample slot (duh 🙂)
-	ora sample_lengths_highs,y
-	bne ++
-	jsr loader_get_1_byte				; skip two bytes of the file if the
-	jsr loader_get_1_byte				; sample is empty (mods always have this) 
-
-	clc
-	lda loaded_bytes_count
-	adc #2
-	sta loaded_bytes_count
-	bcc +
-	inc loaded_bytes_count+1
-	bne +
-	inc loaded_bytes_count+2
-
-+	jmp load_next_sample
-
-++	lda sample_start_addresses_mids,y
-	sta expansion_memory_target_pointer+1
-	lda sample_start_addresses_highs,y
-	sta expansion_memory_target_pointer+2
-
-	lda sample_lengths_lows,y			; okay, so it isn't empty 🙂
-	sta utility_counter					; use the specified length
-	lda sample_lengths_mids,y
-	sta utility_counter+1
-	lda sample_lengths_highs,y
-	sta utility_counter+2
-
-	ora sample_lengths_mids,y			; if the top two bytes of len are 0,
-	beq load_rest_of_sample				; the sample is less than one page, so
-										; just use the load-remainder routine
-
-load_next_sample_block
-	jsr loader_get_1_block
-
-	ldy #0
--	lda load_buffer,y
-	clc
-	adc #$80							; translate signed -> unsigned
-	sta load_buffer,y
-	iny
-	bne -
-
-	+JSR_INDIRECT (stash_block_vec)
-
-	inc expansion_memory_target_pointer+1
-	bne +
-	inc expansion_memory_target_pointer+2
-
-+	lda expansion_memory_target_pointer+1
-	and #$03
-	bne +
-	jsr loader_update_progress
-
-+	lda STATUS
-	bne .done
-
-	sec
-	lda utility_counter+1
-	sbc #1
-	sta utility_counter+1
-	bcs +
-	dec utility_counter+2
-
-+	ora utility_counter+2				; are there less than 256 bytes left?
-	bne load_next_sample_block			; if not, keep loading...
-
-	lda utility_counter					; is the remainder just 0?  (e.g. sample
-	beq loader_check_for_more_samples	; is a multiple of 256 bytes)
-
-load_rest_of_sample						; if neither, load the exact number of remaining bytes
-	ldy #0
--	jsr loader_get_1_byte
-	clc
-	adc #$80							; translate signed -> unsigned
-	sta load_buffer,y
-	iny
-	cpy utility_counter
-	bne -
-
-	clc
-	tya
-	adc loaded_bytes_count
-	sta loaded_bytes_count
-	bcc +
-	inc loaded_bytes_count+1
-	bne +
-	inc loaded_bytes_count+2
-
-+	lda #$80							; clear rest of load buf page
--	sta load_buffer,y
-	iny
-	bne -
-
-	+JSR_INDIRECT (stash_block_vec)		; store the result
-
-	inc expansion_memory_target_pointer+1
-	bne +
-	inc expansion_memory_target_pointer+2
-
-+	lda #$80							; create an entirely blank page
-	ldy #0
--	sta load_buffer,y
-	iny
-	bne -
-
-	+JSR_INDIRECT (stash_block_vec)		; and tack it onto the end of the sample
-
-	lda STATUS
-	bne .done
-
-loader_check_for_more_samples
-	ldy num_samples_to_load
-	dey
-	cpy sample_number_count
-	bcc .done
-	jmp load_next_sample
-
-.done
-	jsr close_file
-	lda file_size_in_kb
-	sta current_file_size_in_kb
-	lda file_size_in_kb+1
-	sta current_file_size_in_kb+1
-
-	ldy #0
--	lda string_buffer,y
-	sta current_file_name,y
-	beq slow_load_exit
-	iny
-	cpy #16
-	bne -
-
-  slow_load_exit
+	jsr loader_standard_load_pattern_data
+	jsr loader_standard_load_sample_data
 rts
 
 abort_load
@@ -749,7 +579,7 @@ set_first_exp_pages_to_silence
 	+JSR_INDIRECT (stash_block_vec)
 rts
 
-load_err
+print_generic_load_error
 	lda #"E"
 	jsr CHROUT
 	lda #"r"
@@ -770,43 +600,6 @@ load_err
 
 -	jsr GETIN
 	beq -
-rts
-
-; obviously this bit of indirection costs a few cycles but it'll be needed
-; later when multiple loaders are available.
-
-loader_get_1_byte
-	jsr CHRIN
-rts
-
-loader_get_1_block
-	lda #<load_buffer
-	sta load_pointer
-	lda #>load_buffer
-	sta load_pointer+1
-
-loader_get_1_block_no_reset_ptr
-	ldy #0
-
--	jsr loader_get_1_byte
-	sta (load_pointer),y
-	iny
-	bne -
-
-	inc loaded_bytes_count+1
-	bne +
-	inc loaded_bytes_count+2
-  +
-rts
-
-loader_get_1kb
-	jsr loader_get_1_block
-	inc load_pointer+1
-	jsr loader_get_1_block_no_reset_ptr
-	inc load_pointer+1
-	jsr loader_get_1_block_no_reset_ptr
-	inc load_pointer+1
-	jsr loader_get_1_block_no_reset_ptr
 rts
 
 kbs_fract_approx
