@@ -129,13 +129,20 @@ load_by_filename_entry
 	; the actual loading process starts here.
 
 	jsr loader_paint_screen
+	jsr can_load_dev_use_uci
 
+	clc
 	lda file_to_load_name_len
 	ldx #<string_buffer
 	ldy #>string_buffer+1
-	jsr loader_standard_open_file
 
-	bcc +
+	bit load_device_can_use_uci
+	bmi +
+	jsr open_file
+	jmp ++
++	jsr uci_open_file
+
+++	bcc +
 	jmp print_generic_load_error
 
 +	lda #<load_buffer
@@ -173,17 +180,25 @@ load_by_filename_entry
 ; Header loader returns .N = 0 on error or if header is bad
 ; or returns .C = 0 for 15 samples, .C = 1 for 31
 
+	bit load_device_can_use_uci
+	bmi +
 	jsr loader_standard_get_mod_header
+	jmp ++
++	jsr loader_uci_get_mod_header
 
-	lda #4
+++	lda #4
 	sta stash_size+1
 
 	bit header_loaded
+	bmi header_is_okay
+
+	bit load_device_can_use_uci
 	bmi +
+	jsr close_file
+	jmp ++
++	jsr uci_close_file
 
-	jsr loader_standard_close_file
-
-	!ifndef c128 {
+++	!ifndef c128 {
 		ldy #mini_popup_left_column+4
 	} else {
 		ldy #mini_popup_left_column+31
@@ -211,13 +226,18 @@ load_by_filename_entry
 
 	jmp abort_load
 
-+	lda highest_exp_addresss_used+2
+header_is_okay
+	lda highest_exp_addresss_used+2
 	cmp reu_highest_bank
-	bcc +
+	bcc file_size_okay
 
-	jsr loader_standard_close_file
+	bit load_device_can_use_uci
+	bmi +
+	jsr close_file
+	jmp ++
++	jsr uci_close_file
 
-	jsr draw_mini_popup
+++	jsr draw_mini_popup
 
 	lda #0
 	ldx #<file_too_large_msg
@@ -229,10 +249,18 @@ load_by_filename_entry
 
 	; okay, at this point we can go ahead and load the rest of the file.
 
-+	jsr loader_add_progress_bar
+file_size_okay
+	jsr loader_add_progress_bar
+
+	bit load_device_can_use_uci
+	bmi +
 
 	jsr loader_standard_load_pattern_data
 	jsr loader_standard_load_sample_data
+	rts
+
++	jsr loader_uci_load_pattern_data
+	jsr loader_uci_load_sample_data
 rts
 
 abort_load
@@ -490,13 +518,18 @@ loader_print_loading_speed
 	sta divisor+1
 
 	; only print the loading speed every couple of seconds
+	; (every second if it's the UCI loader just cuz it's so fast)
 
 	lda divisor
-	cmp last_seconds_lsb
+	bne +
+	rts
++	cmp last_seconds_lsb
 	bne +
 	rts
 
-+	and #$01
++	bit load_device_can_use_uci
+	bmi +
+	and #$01
 	bne +
 	rts
 

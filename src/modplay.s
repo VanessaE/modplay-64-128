@@ -103,9 +103,11 @@ rts
 
 !source "src/loader-common.s"
 !source "src/loader-standard.s"
+!source "src/loader-uci.s"
 !source "src/decode-mod.s"
 
 !source "src/disk-ops.s"
+!source "src/uci-ops.s"
 !source "src/directory.s"
 
 !source "src/main-menu.s"

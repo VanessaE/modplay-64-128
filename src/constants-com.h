@@ -17,9 +17,13 @@
 
 !addr {
 	STATUS								= $90
+	VERIFYFLAG							= $93
 	MSGFLG								= $9d
 	EAL									= $ae
+	NAMELEN								= $b7
+	SECADDR								= $b9
 	FA									= $ba
+	NAMEPTR								= $bb
 
 	; These Zero Page addrs can be the same on both C64 and C128
 	; and are for use when Zero Page is not backed-up.
@@ -211,6 +215,13 @@
 
 	DMA_DAL								= $df07		; transfer length
 	DMA_DAH								= $df08
+
+	; 1541U-specific registers
+
+	UCI_OUR_DEVICE						= $DF1B
+	UCI_CMD_IF_CONTROL					= $DF1C
+	UCI_CMD_IF_COMMAND					= $DF1D
+	UCI_CMD_IF_RESULT					= $DF1E
 
 	; KERNAL calls
 
@@ -493,6 +504,10 @@ tempo_fine_adjust_constant = 159778
 
 	c64u_detect							!skip 1
 
+	UCI_LAST_SA							!skip 1
+	UCI_LAST_CMD						!skip 1
+	UCI_PENDING_CMD						!skip 1
+
 	!ifndef c128 {
 		!if * > $03ff {
 				!error "Low memory area exceeds overlaps `multablo` by ", * - $03ff, " bytes!"
@@ -557,6 +572,7 @@ tempo_fine_adjust_constant = 159778
 	file_size_in_kb						!skip 2
 	loaded_bytes_count					!skip 3
 	header_loaded						!skip 1
+	load_device_can_use_uci				!skip 1
 
 	main_memory_free_pages				!skip 1
 

@@ -154,7 +154,7 @@ loader_standard_load_sample_data
 	ora sample_lengths_highs,y
 	bne ++
 	jsr CHRIN				; skip two bytes of the file if the
-	jsr CHRIN				; sample is empty (mods always have this) 
+	jsr CHRIN				; sample is empty (mods always have this)
 
 	clc
 	lda loaded_bytes_count
@@ -180,7 +180,7 @@ loader_standard_load_sample_data
 	sta utility_counter+2
 
 	ora sample_lengths_mids,y			; if the top two bytes of len are 0,
-	beq .load_rest_of_sample				; the sample is less than one page, so
+	beq .load_rest_of_sample			; the sample is less than one page, so
 										; just use the load-remainder routine
 
 .load_next_sample_block
@@ -285,12 +285,6 @@ loader_standard_load_sample_data
 	bne -
   .ldr_exit
 rts
-
-loader_standard_open_file
-	jmp open_file
-
-loader_standard_close_file
-	jmp close_file
 
 loader_standard_get_block
 	lda #<load_buffer
