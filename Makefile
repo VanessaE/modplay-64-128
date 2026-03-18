@@ -39,9 +39,9 @@ all:
 
 	@echo "Launching VICE and auto-starting..."
 
-	$(X64) -warp -autostart "$(BASE_DIR)/disk-images/modplay64v0.d64" -10 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x64sc.dhd &
+	$(X64) -warp -autostart "$(BASE_DIR)/disk-images/modplay64v0.d64" -10 /home/vanessa/Commodore-related/Misc/VICE-CMD-HD.hda &
 
-	$(X128) -warp -8 "$(BASE_DIR)/disk-images/modplay128v0.d71" -10 ~/Commodore-related/Software/disk-images-misc/cmd-hd-x128.dhd &
+	$(X128) -warp -8 "$(BASE_DIR)/disk-images/modplay128v0.d71" -10 /home/vanessa/Commodore-related/Misc/VICE-CMD-HD.hda &
 
 clean:
 	rm -f bin/*

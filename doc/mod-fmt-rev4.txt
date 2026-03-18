@@ -31,6 +31,16 @@ Module Format:
           jumping back to this position, and playing for the repeat
           length, etc.
 2         Length of sample repeat in words. Only loop if greater than 1.
+
+          ################################################################
+          # Note by VanessaE: the above is wrong - Protracker plays from #
+          # the start of the sample to the *loop's endpoint*, ignoring   #
+          # the sample data beyond that point, if there is a loop        #
+          # defined.  After that, it returns to the loop's start point   #
+          # and cycles indefinitely.  It only plays from start to end    #
+          # if no loop is defined.                                       #
+          ################################################################
+
 (End of this sample's data.. each sample uses the same format and they
  are stored sequentially)
 N.B. All 2 byte lengths are stored with the Hi-byte first, as is usual
