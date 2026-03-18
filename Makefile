@@ -2,9 +2,6 @@ VERSION_MAJOR=0
 VERSION_MINOR=0
 BUILD_NO := $(shell git rev-list --count HEAD)
 
-X64=/home/vanessa/.local/bin/x64sc
-X128=/home/vanessa/.local/bin/x128
-
 OPTIONS=-Wno-label-indent -v3 --format cbm \
 	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) -Dbuild_no=$(BUILD_NO) 
 
@@ -16,8 +13,6 @@ CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
 EXOMIZER=/home/vanessa/Commodore-related/Software/PC-tools/exomizer/src/exomizer
 
 PRE_DECRUNCH_128=bit $d7 bpl notvdc lda \#$0b sta $d011 lda \#1 sta $d030 notvdc: nop
-
-BASE_DIR=/home/vanessa/Commodore-related/Software/My Creations/modplay-v2.0
 
 all:
 	rm -f "$(TMPDIR)/*"
@@ -36,12 +31,6 @@ all:
 	$(MAKE) gen_mod_disks
 
 	@echo -e '\nFinished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)'
-
-	@echo "Launching VICE and auto-starting..."
-
-	$(X64) -warp -autostart "$(BASE_DIR)/disk-images/modplay64v0.d64" -10 /home/vanessa/Commodore-related/Misc/VICE-CMD-HD.hda &
-
-	$(X128) -warp -8 "$(BASE_DIR)/disk-images/modplay128v0.d71" -10 /home/vanessa/Commodore-related/Misc/VICE-CMD-HD.hda &
 
 clean:
 	rm -f bin/*
