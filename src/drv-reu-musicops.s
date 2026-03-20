@@ -53,7 +53,7 @@ reu_fetch_row
 	sta DMA_LO
 	lda utility_pointer_b+1
 	sta DMA_HI
-	lda #0
+	lda utility_pointer_b+2
 	sta DMA_BANK
 
 	lda #<seq_current_row_data

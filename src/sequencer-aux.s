@@ -40,6 +40,8 @@ fetch_row_data
 	lda utility_pointer_b+1
 	adc exp_file_data_start_page
 	sta utility_pointer_b+1
+	bcc fetch_row_expansion_vec
+	inc utility_pointer_b+2
 
 	fetch_row_expansion_vec
 		jmp $1234 ; just exit back to the caller via the fetch routine
