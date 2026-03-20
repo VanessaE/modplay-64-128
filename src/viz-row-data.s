@@ -187,11 +187,8 @@ viz_row_data_fetch_and_print
 		; high byte = 0, then the command is unimplemented. if greater than
 		; 15, it and its params must be garbage.
 
-		lda seq_current_row_data + .viz_tr*4 + 1
-		lsr
-		lsr
-		lsr
-		lsr
+		ldx seq_current_row_data + .viz_tr*4 + 1
+		lda divide_by_16_table,x
 		cmp #14 ; extended commands need extra checks
 		bne +
 
@@ -220,6 +217,7 @@ viz_row_data_fetch_and_print
 
 		ldx seq_current_row_data + .viz_tr*4 + 1
 		lda divide_by_16_table,x
+		tax
 		lda start_effect_command_jump_table_highs,x
 		bne +++ ; print_cmd_args
 
