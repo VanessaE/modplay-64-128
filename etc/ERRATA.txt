@@ -26,10 +26,10 @@
 ##  KNOWN ISSUES  ##
 ####################
 
-* Fetch code:  due to lookahead behavior, really short loops tend to get
-  kinda "hard-synced" against the REU transfer window, causing pitch
-  distortion to the point of sometimes collapsing into just a few discrete
-  pitches that bear no relation to the actual requested pitch.
+* Fetch code:  due to lookahead behavior, fetching the last bit of a loop
+  usually ends up also fetching some amount of the silence at the end of
+  each sample, leading to clicks and pops as the sample cycles through the
+  loop.
 
   Possible solution, should be fairly CPU-cheap:
 
@@ -42,10 +42,6 @@
     from the start of the loop
   - then just set the transfer pointer to the end of that second part, to be
     used on the next go-round
-
-  This would *probably* eliminate the need for unrolling loops as mentioned
-  below, though this may still be needed if some random tune really abuses
-  the ability of the Paula chip to handle super-short loops.
   
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is
   loaded, iterate through the instrument samples, creating downsampled
@@ -110,22 +106,6 @@
 
 	set "loaded file is mipmapped" to true
 	exit
-
-* Loader: all instrument loops need to be unrolled to a minimum length of
-  10 kB, which shall be appended to the end of the sample.  That shall then be
-  padded with one last copy of the first 1 kB of the loop (or the whole thing
-  if it's shorter). If the loop was already over 10 kB, don't do any
-  unrolling.  If the loop had to be unrolled, its start and end points shall
-  be set to the first and last byte of the newly-unrolled data, excluding that
-  last loop copy, and ignoring the original loop data entirely.  If not
-  unrolled, the start and end points will remain at their original locations.
-
-  The idea with all this unrolling is to minimize the load on the fetch code
-  by requiring fewer loops per second (and hence fewer calls to the code which
-  which resets the instrument sample pointer to the loop's start point, which
-  is a little expensive).  So-called "chip tunes" are especially problematic
-  here, owing to their minimal instrument data (sometimes only a few hundreds
-  of bytes, or even less).
 
 * C128: cursor-left in main menu triggers switch pages code
 

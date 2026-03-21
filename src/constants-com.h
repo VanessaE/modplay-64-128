@@ -499,6 +499,7 @@ tempo_fine_adjust_constant = 159778
 	exp_player_bg_start_page			!skip 1
 	exp_file_data_start_page			!skip 1
 	highest_exp_addresss_used			!skip 3
+
 	fine_tuning_table					!skip 32
 	current_fine_tune_values			!skip 8
 
@@ -650,6 +651,10 @@ tempo_fine_adjust_constant = 159778
 	temp_counter						!skip 3
 	temp_counter_b						!skip 3
 	utility_counter						!skip 3
+
+	exp_target_ptr_temp					!skip 3
+	exp_local_ptr_temp					!skip 2
+	exp_stash_size_temp					!skip 2
 
 	stash_size							!skip 2
 

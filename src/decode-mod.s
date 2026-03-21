@@ -328,7 +328,8 @@ parse_instruments
 	bne +									; sample as loopable
 	lda temp_counter
 	cmp #2
-	bcc skip_sample
+	bcs +
+	jmp skip_sample
 
 +	lda #$80
 	sta sample_default_loop_flags,x
@@ -379,6 +380,52 @@ parse_instruments
 	lda sample_loop_start_addresses_highs,x
 	adc temp_counter+2
 	sta sample_loop_end_addresses_highs,x
+
+	;----------------------------------
+	; reserve extra mem for unrolling loops
+	;
+	; temp_counter still holds the loop len...
+
+	; is that loop more than 2kB in size?
+	lda temp_counter
+	cmp #0
+	lda temp_counter+1
+	sbc #8
+	lda temp_counter+2
+	sbc #0
+	bcs skip_sample ; loop is > 2kB, no need to unroll it
+
+	; reserve original loop length....
+	clc
+	lda sample_loop_end_addresses_lows,x
+	adc temp_counter
+	sta utility_pointer_b
+	lda sample_loop_end_addresses_mids,x
+	adc temp_counter+1
+	sta utility_pointer_b+1
+	lda sample_loop_end_addresses_highs,x
+	adc temp_counter+2
+	sta utility_pointer_b+2
+
+	; ..plus 2kb
+	clc
+	lda utility_pointer_b+1
+	adc #8
+	sta utility_pointer_b+1
+	bcc +
+	inc utility_pointer_b+2
+
++	sta parse_header_sample_pointer+1
+	lda utility_pointer_b
+	sta parse_header_sample_pointer
+	lda utility_pointer_b+2
+	sta parse_header_sample_pointer+2
+
+	; and add 256 bytes to pad to the next sample
+
+	inc parse_header_sample_pointer+1
+	bne skip_sample
+	inc parse_header_sample_pointer+2
 
 skip_sample
 	clc

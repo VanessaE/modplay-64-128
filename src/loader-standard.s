@@ -206,9 +206,10 @@ loader_standard_load_sample_data
 	jsr loader_update_progress
 
 +	lda STATUS
-	bne .ldr_done
+	beq +
+	jmp .ldr_done
 
-	sec
++	sec
 	lda utility_counter+1
 	sbc #1
 	sta utility_counter+1
@@ -259,10 +260,13 @@ loader_standard_load_sample_data
 
 	+JSR_INDIRECT (stash_block_vec)		; and tack it onto the end of the sample
 
+.chk_more_samples
+	ldy sample_number_count
+	jsr mod_unroll_loop
+
 	lda STATUS
 	bne .ldr_done
 
-.chk_more_samples
 	ldy num_samples_to_load
 	dey
 	cpy sample_number_count
