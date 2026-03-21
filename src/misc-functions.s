@@ -1132,6 +1132,9 @@ rts
 check_sid_type_left
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
+	} else ifdef c64u {
+		lda #0
+		sta c64u_speed_select
 	}
 
 	!ifdef c128 {
@@ -1177,11 +1180,15 @@ left_sid_is_ultisid
 
 +	!ifdef scpu {
 		sta SCPU_TURBO_ON
+	} else ifdef c64u {
+		lda #15+128
+		sta c64u_speed_select
 	}
 
 	!ifdef c128 {
 		inc C128_VIC_CLOCK_SPEED
 	}
+
 rts
 
 ; this routine sets up the addresses the right-SID-check routine will
@@ -1223,6 +1230,9 @@ check_sid_type_right
 
 	!ifdef scpu {
 		sta SCPU_TURBO_OFF
+	} else ifdef c64u {
+		lda #0
+		sta c64u_speed_select
 	}
 
 	!ifdef c128 {
@@ -1261,6 +1271,9 @@ check_sid_type_right
 
 	!ifdef scpu {
 		sta SCPU_TURBO_ON
+	} else ifdef c64u {
+		lda #15+128
+		sta c64u_speed_select
 	}
 
 	!ifdef c128 {

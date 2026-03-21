@@ -139,7 +139,7 @@
 	VIC_BORDER							= $d020
 	VIC_BACKGROUND						= $d021
 
-	C128_VIC_CLOCK_SPEED							= $d030
+	C128_VIC_CLOCK_SPEED				= $d030
 	; C128 only note:  in $D030, only bits 1 & 0 matter, so "test" and 1/2 MHz
 	; mode switching will work with any stored value as long as those two bits
 	; are correct.
