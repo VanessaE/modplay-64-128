@@ -219,21 +219,21 @@ parse_instruments
 
 	; .Y = 22 here.
 	lda #0
-	sta temp_counter+2
+	sta utility_pointer_b+2
 	lda (fill_copy_source),y				; read sample length, MSB first
-	sta temp_counter+1
+	sta utility_pointer_b+1
 	iny ; 23
 	lda (fill_copy_source),y
 
 	asl
-	sta temp_counter						; double it:  # words to # bytes
+	sta utility_pointer_b						; double it:  # words to # bytes
 	sta sample_lengths_lows,x
-	rol temp_counter+1
-	rol temp_counter+2
+	rol utility_pointer_b+1
+	rol utility_pointer_b+2
 
-	lda temp_counter+1
+	lda utility_pointer_b+1
 	sta sample_lengths_mids,x
-	lda temp_counter+2
+	lda utility_pointer_b+2
 	sta sample_lengths_highs,x
 
 	; check if that sample overlaps a 512k boundary
@@ -280,9 +280,9 @@ parse_instruments
 	bcc +
 	inc parse_header_sample_pointer+2
 
-+	lda temp_counter+1						; if this sample's len < 2 words,
++	lda utility_pointer_b+1						; if this sample's len < 2 words,
 	bne +									; zero-out its start addrs and
-	lda temp_counter						; skip setting any attributes, now
+	lda utility_pointer_b						; skip setting any attributes, now
 	cmp #2									; that there's a valid addr to use
 	bcs +									; for the next sample's start addr
 
@@ -314,19 +314,19 @@ parse_instruments
 
 	ldy #28
 	lda #0
-	sta temp_counter+2
+	sta utility_pointer_b+2
 	lda (fill_copy_source),y				; read loop length, MSB first
-	sta temp_counter+1
+	sta utility_pointer_b+1
 	iny ; 29
 	lda (fill_copy_source),y
-	sta temp_counter
+	sta utility_pointer_b
 
 	lda #0
 	sta sample_default_loop_flags,x
 
-	lda temp_counter+1						; if loop len > 1 word, flag this
+	lda utility_pointer_b+1						; if loop len > 1 word, flag this
 	bne +									; sample as loopable
-	lda temp_counter
+	lda utility_pointer_b
 	cmp #2
 	bcs +
 	jmp skip_sample
@@ -336,79 +336,78 @@ parse_instruments
 
 	ldy #26
 	lda #0
-	sta temp_counter+2
+	sta utility_pointer_b+2
 	lda (fill_copy_source),y				; read loop start offset, MSB first
-	sta temp_counter+1
+	sta utility_pointer_b+1
 	iny ; 27
 	lda (fill_copy_source),y
 
 	asl
-	sta temp_counter						; double it:  # words to # bytes
-	rol temp_counter+1
-	rol temp_counter+2
+	sta utility_pointer_b						; double it:  # words to # bytes
+	rol utility_pointer_b+1
+	rol utility_pointer_b+2
 
 	clc										; convert to address
-	lda temp_counter
+	lda utility_pointer_b
 	sta sample_loop_start_addresses_lows,x
 	lda sample_start_addresses_mids,x
-	adc temp_counter+1
+	adc utility_pointer_b+1
 	sta sample_loop_start_addresses_mids,x
 	lda sample_start_addresses_highs,x
-	adc temp_counter+2
+	adc utility_pointer_b+2
 	sta sample_loop_start_addresses_highs,x
 
 	ldy #28									; read loop length again
 	lda #0
-	sta temp_counter+2
+	sta utility_pointer_b+2
 	lda (fill_copy_source),y
-	sta temp_counter+1
+	sta utility_pointer_b+1
 	iny ; 29
 	lda (fill_copy_source),y
-	sta temp_counter
+	sta utility_pointer_b
 
-	asl temp_counter						; double it:  # words to # bytes
-	rol temp_counter+1
-	rol temp_counter+2
+	asl utility_pointer_b						; double it:  # words to # bytes
+	rol utility_pointer_b+1
+	rol utility_pointer_b+2
 
 	clc										; convert to address
 	lda sample_loop_start_addresses_lows,x
-	adc temp_counter
+	adc utility_pointer_b
 	sta sample_loop_end_addresses_lows,x
 	lda sample_loop_start_addresses_mids,x
-	adc temp_counter+1
+	adc utility_pointer_b+1
 	sta sample_loop_end_addresses_mids,x
 	lda sample_loop_start_addresses_highs,x
-	adc temp_counter+2
+	adc utility_pointer_b+2
 	sta sample_loop_end_addresses_highs,x
 
 	;----------------------------------
 	; reserve extra mem for unrolling loops
 	;
-	; temp_counter still holds the loop len...
+	; utility_pointer_b still holds the loop len...
 
 	; is that loop more than 2kB in size?
-	lda temp_counter
+	lda utility_pointer_b
 	cmp #0
-	lda temp_counter+1
+	lda utility_pointer_b+1
 	sbc #8
-	lda temp_counter+2
+	lda utility_pointer_b+2
 	sbc #0
 	bcs skip_sample ; loop is > 2kB, no need to unroll it
 
 	; reserve original loop length....
 	clc
 	lda sample_loop_end_addresses_lows,x
-	adc temp_counter
+	adc utility_pointer_b
 	sta utility_pointer_b
 	lda sample_loop_end_addresses_mids,x
-	adc temp_counter+1
+	adc utility_pointer_b+1
 	sta utility_pointer_b+1
 	lda sample_loop_end_addresses_highs,x
-	adc temp_counter+2
+	adc utility_pointer_b+2
 	sta utility_pointer_b+2
 
-	; ..plus 2kb
-	clc
+	; ..plus 2kB
 	lda utility_pointer_b+1
 	adc #8
 	sta utility_pointer_b+1

@@ -257,10 +257,12 @@ file_size_okay
 
 	jsr loader_standard_load_pattern_data
 	jsr loader_standard_load_sample_data
-	rts
+	jmp ++
 
 +	jsr loader_uci_load_pattern_data
 	jsr loader_uci_load_sample_data
+
+++	jsr unroll_mod_sample_loops
 rts
 
 abort_load
@@ -614,62 +616,48 @@ rts
 
 ; enter with .Y = sample number
 
-mod_unroll_loop
+unroll_mod_sample_loops
+	ldy #15
+
+	lda current_file_type
+	cmp #1
+	beq unroll_one_loop
+	ldy #31
+
+unroll_one_loop
 	; is there a loop at all?
 	lda sample_default_loop_flags,y
 	bmi +
-	rts
+	jmp unroll_next
 
 	; is its len > 2kB?
 
 +	sec
 	lda sample_loop_end_addresses_lows,y
 	sbc sample_loop_start_addresses_lows,y
-	sta temp_counter
+	sta utility_pointer_b
+	sta stash_size
 	lda sample_loop_end_addresses_mids,y
 	sbc sample_loop_start_addresses_mids,y
-	sta temp_counter+1
+	sta utility_pointer_b+1
+	sta stash_size+1
 	lda sample_loop_end_addresses_highs,y
 	sbc sample_loop_start_addresses_highs,y
-	sta temp_counter+2
+	sta utility_pointer_b+2
 
-	lda temp_counter
+	lda utility_pointer_b
 	cmp #0
-	lda temp_counter+1
+	lda utility_pointer_b+1
 	sbc #8
-	lda temp_counter+2
+	lda utility_pointer_b+2
 	sbc #0
 	bcc +
-	rts ; if not, just bail out
+	jmp unroll_next ; if so, just bail out
 
 	; otherwise, fetch the loop data into the load buf
-	; but first, back-up the expansion RAM pointers
-
-+	lda expansion_memory_target_pointer
-	sta exp_target_ptr_temp
-	lda expansion_memory_target_pointer+1
-	sta exp_target_ptr_temp+1
-	lda expansion_memory_target_pointer+2
-	sta exp_target_ptr_temp+2
-
-	lda expansion_transfer_local_addr
-	sta exp_local_ptr_temp
-	lda expansion_transfer_local_addr+1
-	sta exp_local_ptr_temp+1
-
-	lda stash_size
-	sta exp_stash_size_temp
-	lda stash_size+1
-	sta exp_stash_size_temp+1
-
 	; the loop length becomes the stash/fetch size
 
-	lda temp_counter
-	sta stash_size
-	lda temp_counter+1
-	sta stash_size+1
-
-	lda #<load_buffer
++	lda #<load_buffer
 	sta expansion_transfer_local_addr
 	lda #>load_buffer
 	sta expansion_transfer_local_addr+1
@@ -683,110 +671,88 @@ mod_unroll_loop
 
 	+JSR_INDIRECT (fetch_block_vec)
 
-	; store a new copy of the loop data at the end of the existing data
+	; calculate the endpoint of the unroll reserve area,
+	; same as in decode-mod.s -- first add the loop length
+
+	clc
+	lda sample_loop_end_addresses_lows,y
+	adc stash_size
+	sta utility_pointer_b
+	lda sample_loop_end_addresses_mids,y
+	adc stash_size+1
+	sta utility_pointer_b+1
+	lda sample_loop_end_addresses_highs,y
+	adc #0
+	sta utility_pointer_b+2
+
+	; ..then add 2kB
+
+	; clc implied
+	lda utility_pointer_b+1
+	adc #8
+	sta utility_pointer_b+1
+	bcc store_first_copy
+	inc utility_pointer_b+2
+
+	; store the first new copy of the loop data right at the end of the
+	; existing data, overwriting any trailing sample data (since it'll be
+	; ignored anyway)
+
+store_first_copy
+	lda sample_loop_end_addresses_lows,y
+	sta expansion_memory_target_pointer
+	lda sample_loop_end_addresses_mids,y
+	sta expansion_memory_target_pointer+1
+	lda sample_loop_end_addresses_highs,y
+	sta expansion_memory_target_pointer+2
 
 unroll_more
+	+JSR_INDIRECT (stash_block_vec)
+
 	clc
 	lda expansion_memory_target_pointer
-	adc temp_counter
+	adc stash_size
 	sta expansion_memory_target_pointer
 	sta sample_loop_end_addresses_lows,y
+	sta sample_end_addresses_lows,y
 	lda expansion_memory_target_pointer+1
-	adc temp_counter+1
+	adc stash_size+1
 	sta expansion_memory_target_pointer+1
 	sta sample_loop_end_addresses_mids,y
+	sta sample_end_addresses_mids,y
 	lda expansion_memory_target_pointer+2
 	adc #0
 	sta expansion_memory_target_pointer+2
 	sta sample_loop_end_addresses_highs,y
+	sta sample_end_addresses_highs,y
 
-+	+JSR_INDIRECT (stash_block_vec)
+	; is there more room in the reserved space for this loop?
 
-	; was that the last cycle that needed to be copied?
-
-	sec
+	; clc implied
+	lda expansion_memory_target_pointer
+	adc stash_size
+	sta utility_pointer_c
 	lda expansion_memory_target_pointer+1
-	sbc sample_loop_start_addresses_mids,y
-	cmp #9
+	adc stash_size+1
+	sta utility_pointer_c+1
+	lda expansion_memory_target_pointer+2
+	adc #0
+	sta utility_pointer_c+2
+
+	lda utility_pointer_c
+	cmp utility_pointer_b
+	lda utility_pointer_c+1
+	sbc utility_pointer_b+1
+	lda utility_pointer_c+2
+	sbc utility_pointer_b+2
 	bcc unroll_more
 
-	; and restore the exp variables
-
-	lda exp_target_ptr_temp
-	sta expansion_memory_target_pointer
-	lda exp_target_ptr_temp+1
-	sta expansion_memory_target_pointer+1
-	lda exp_target_ptr_temp+2
-	sta expansion_memory_target_pointer+2
-
-	lda exp_local_ptr_temp
-	sta expansion_transfer_local_addr
-	lda exp_local_ptr_temp+1
-	sta expansion_transfer_local_addr+1
-
-	lda exp_stash_size_temp
-	sta stash_size
-	lda exp_stash_size_temp+1
-	sta stash_size+1
+unroll_next
+	dey
+	beq +
+	jmp unroll_one_loop
+  +
 rts
-
-;----------------------------------
-; reserve extra mem for unrolling loops
-;
-; temp_counter still holds the loop len...
-;
-	; is that loop more than 2kB in size?
-;	lda temp_counter
-;	cmp #0
-;	lda temp_counter+1
-;	sbc #8
-;	lda temp_counter+2
-;	sbc #0
-;	bcs skip_sample ; loop is > 2kB, no need to unroll it
-;
-; reserve original loop length....
-;	clc
-;	lda sample_loop_end_addresses_lows,x
-;	adc temp_counter
-;	sta utility_pointer_b
-;	lda sample_loop_end_addresses_mids,x
-;	adc temp_counter+1
-;	sta utility_pointer_b+1
-;	lda sample_loop_end_addresses_highs,x
-;	adc temp_counter+2
-;	sta utility_pointer_b+2
-;
-; ..plus 2kb
-;	clc
-;	lda utility_pointer_b+1
-;	adc #8
-;	sta utility_pointer_b+1
-;	bcc +
-;	inc utility_pointer_b+2
-;
-; +	sta parse_header_sample_pointer+1
-;	sta sample_loop_end_addresses_mids,x
-;	sta sample_end_addresses_mids,x
-;	lda utility_pointer_b
-;	sta parse_header_sample_pointer
-;	sta sample_loop_end_addresses_lows,x
-;	sta sample_end_addresses_lows,x
-;	lda utility_pointer_b+2
-;	sta parse_header_sample_pointer+2
-;	sta sample_loop_end_addresses_highs,x
-;	sta sample_end_addresses_highs,x
-;
-; and add 256 bytes to pad to the next sample
-;
-;	inc parse_header_sample_pointer+1
-;	bne +
-;	inc parse_header_sample_pointer+2
-;
-;  +
-
-
-
-
 
 print_generic_load_error
 	lda #"E"

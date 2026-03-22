@@ -193,6 +193,8 @@ init_end
 load_buffer							= init_begin	; 2 kB
 sample_data_buffer					= init_begin	; 2 kB, overlapped
 
+* = load_buffer + 2048
+
 sample_start_addresses_mids			!skip 32
 sample_start_addresses_highs		!skip 32
 sample_end_addresses_lows			!skip 32

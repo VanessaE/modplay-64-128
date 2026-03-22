@@ -417,12 +417,9 @@ tempo_fine_adjust_constant = 159778
 			!error "Backed-up-zero-page variables, second middle part exceeds $0059 by ", * - $0059, " bytes!"
 	}
 
-	; remainder, load pointer and other random stuff uses $59 through $5b
-	; expansion_memory_target_pointer uses $5c/$5d
+	; remainder, load pointer and other random stuff uses $59-$5b
+	; expansion_memory_target_pointer uses $5c-$5e
 	; binary search binsearch_value is at $59/$5a
-
-	; unused: $5e
-
 	; divide_tmp uses $5f and $60
 
 	* = $61
