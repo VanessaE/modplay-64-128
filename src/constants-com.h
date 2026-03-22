@@ -400,6 +400,7 @@ tempo_fine_adjust_constant = 159778
 	isr_minimum_times_before_fetch		!skip 8
 	current_sample_volume_levels		!skip 8
 
+	!byte 0
 	!if * > $0050 {
 			!error "Backed-up-zero-page variables, first middle part exceeds $0050 by ", * - $0050, " bytes!"
 	}
@@ -449,6 +450,8 @@ tempo_fine_adjust_constant = 159778
 	last_seconds						!skip 1
 	do_viz_plot							!skip 1
 	seq_key_debounce					!skip 1
+
+	profiler_temp						!skip 1
 
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"

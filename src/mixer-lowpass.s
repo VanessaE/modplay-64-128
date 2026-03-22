@@ -28,9 +28,11 @@ run_mixer_lowpass_lookahead								; 6 to enter
 	txa														; 2
 	adc #16													; 2
 
--	ldy audio_out_buf_index									; 3
-	cmp and_f0_table,y										; 4
-	beq -													; 3/2
+	!if use_profiler != 1 {
+	-	ldy audio_out_buf_index									; 3
+		cmp and_f0_table,y										; 4
+		beq -													; 3/2
+	}
 
 	mixer_lowpass_loop_open
 	  !for .idx2, 0, 15 {

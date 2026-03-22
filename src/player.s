@@ -206,6 +206,10 @@ no_player_ui
 	}
 
 player_init_visualizer
+	!if use_profiler {
+		jsr profiler_draw_popup
+	}
+
 	clc
 	ldx #visualizer_screen_row
 	ldy #visualizer_screen_column
@@ -227,11 +231,17 @@ player_ui_finish
 	jsr backup_zero_page
 
 	+JSR_INDIRECT (audio_start_vec)
-	jsr isr_startup
+
+	!if use_profiler != 1 {
+		jsr isr_startup
+	}
 
 	jsr start_sequencer
 
-	jsr isr_shutdown
+	!if use_profiler != 1 {
+		jsr isr_shutdown
+	}
+
 	+JSR_INDIRECT (audio_stop_vec)
 
 	jsr keyboard_debounce

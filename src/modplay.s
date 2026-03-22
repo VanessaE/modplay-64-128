@@ -81,6 +81,10 @@ start
 !source "src/misc-macros.s"
 !source "src/misc-functions.s"
 
+!if use_profiler {
+	!source "src/profiler.s"
+}
+
 check_color_flag
 	+CHECK_COLOR_FLAG
 rts
@@ -151,6 +155,7 @@ rts
 !source "src/windowing.s"
 
 !source "src/tables.s"
+
 
 ; generic text/PETSCII stuff that's used by multiple functions goes here
 

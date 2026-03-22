@@ -2,8 +2,11 @@ VERSION_MAJOR=0
 VERSION_MINOR=0
 BUILD_NO := $(shell git rev-list --count HEAD)
 
+use_profiler?=0
+
 OPTIONS=-Wno-label-indent -v3 --format cbm \
-	-Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) -Dbuild_no=$(BUILD_NO) 
+ -Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) \
+ -Dbuild_no=$(BUILD_NO) -Duse_profiler=$(use_profiler)
 
 TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)

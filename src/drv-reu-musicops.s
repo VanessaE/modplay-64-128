@@ -100,6 +100,7 @@ rts
 reu_fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
 
 reu_run_fetch_and_mixer
+
 	lda #0
 	sta DMA_DAH
 	lda audio_in_buf_index
@@ -115,6 +116,11 @@ reu_run_fetch_and_mixer
 		reu_fetch_unroll_open
 			!for reu_fetch_track, 0, 3 {
 			  !zone reu_fetchloop {
+
+				!if use_profiler {
+					+FETCH_PROFILER_A
+				}
+ 
 				!set .ftrk = reu_fetch_track
 
 				!set .reu_steprate_fract_addr	= reu_cur_steprate_f + reu_fetch_loop_segment_length * .ftrk + 1
@@ -232,6 +238,10 @@ reu_run_fetch_and_mixer
 						cli									; 2
 					}
 				}
+
+				!if use_profiler {
+					+FETCH_PROFILER_B 7, .ftrk
+				}
 			}
 
 		!if reu_fetch_track = 0 { reu_fetch_unroll_close = * }
@@ -246,6 +256,8 @@ reu_run_fetch_and_mixer
 	jmp reu_fetch_main_loop									; 3
 
 +	stx audio_in_buf_index
+
+
 rts
 
 ; =========================================================
