@@ -90,51 +90,28 @@ rts
 sid_4bit_dithered_start
 	jsr reset_sids
 
-	bit sid_type_left
-	bpl +
-	jsr enable_8580_digiboost_left
-
-+	lda #$ff
+	lda #$ff						; voice 3 max frequency
 	sta SID_VOICE3_FREQ_LOW
 	sta SID_VOICE3_FREQ_HIGH
 
-	lda #0		; voice 3 ADSR = 0,0,f,0
+	lda #0							; voice 3 ADSR
 	sta SID_VOICE3_ENV_AD
-	lda #$f0
 	sta SID_VOICE3_ENV_SR
 
-	lda #$81	; voice 3 waveform = noise + gate
+	lda #$81						; voice 3 waveform = noise + gate
 	sta SID_VOICE3_CR
 
 	bit stereo_enable
-	bmi +
-	rts
+	bpl +
 
-+	bit sid_type_right
+	bit sid_type_right
 	bpl +
 	jsr enable_8580_digiboost_right
 
-+	lda stereo_sid_addr
-	sta utility_pointer
-	lda stereo_sid_addr+1
-	sta utility_pointer+1
- 
-	lda #$ff
-	ldy #$0e					; right SID voice 3 freq = $ffff
-	sta (utility_pointer),y
-	ldy #$0f
-	sta (utility_pointer),y
-
-	lda #0						; right SID voice 3 ADSR = 0,0,f,0
-	ldy #$13
-	sta (utility_pointer),y
-	lda #$f0
-	ldy #$18
-	sta (utility_pointer),y
-
-	lda #$81					; right SID voice 3 wave = noise + gate
-	ldy #$12
-	sta (utility_pointer),y
++	bit sid_type_left
+	bpl +
+	jsr enable_8580_digiboost_left
+  +
 rts
 
 sid_4bit_dithered_mute
@@ -153,10 +130,10 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 	adc audio_buffer_right,x	; 4
 	bcc +						; 3/2
 	lda #$0f					; 2
-	jmp ++						; 3
+	bne ++						; 3
 
 +	tax							; 2
-	lda divide16_or80_table,x	; 4
+	lda divide_by_16_table,x	; 4
 ++	sta SID_VOLUME				; 4
 
 	+IRQ_RESTORE_AX				; 6
@@ -171,26 +148,27 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 
 	lda SID_VOICE3_OSC_OUT		; 4
 	and #$0f					; 2
-	sta .sd4br+1				; 4
+	sta irq_temp_b				; 3
 	clc							; 2
 	adc audio_buffer_left,x		; 4
 	bcc +						; 3/2
 	clc							; 2
-	lda #$8f					; 2
+	lda #$0f					; 2
 	bne ++						; 3
+
 +	tax							; 2
-	lda divide16_or80_table,x	; 4
+	lda divide_by_16_table,x	; 4
+	ldx audio_out_buf_index		; 3
+
 ++	sta SID_VOLUME				; 4
 
-	ldx audio_out_buf_index		; 3
-.sd4br
-	lda #0						; 2
+	lda irq_temp_b				; 3
 	adc audio_buffer_right,x	; 4
 	bcc +						; 3/2
-	lda #$8f					; 2
+	lda #$0f					; 2
 	bne ++						; 3
 +	tax							; 2
-	lda divide16_or80_table,x	; 4
+	lda divide_by_16_table,x	; 4
 ++
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 

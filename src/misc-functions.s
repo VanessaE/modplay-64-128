@@ -1373,12 +1373,10 @@ enable_8580_digiboost_left
 	lda #$ff
 	sta SID_VOICE1_ENV_SR
 	sta SID_VOICE2_ENV_SR
-	sta SID_VOICE3_ENV_SR
 
 	lda #$49
 	sta SID_VOICE1_CR
 	sta SID_VOICE2_CR
-	sta SID_VOICE3_CR
 rts
 
 enable_8580_digiboost_right
@@ -1392,15 +1390,11 @@ enable_8580_digiboost_right
 	sta (utility_pointer),y
 	ldy #$0d
 	sta (utility_pointer),y
-	ldy #$14
-	sta (utility_pointer),y
 
 	lda #$49
 	ldy #$04
 	sta (utility_pointer),y
 	ldy #$0b
-	sta (utility_pointer),y
-	ldy #$12
 	sta (utility_pointer),y
 rts
 

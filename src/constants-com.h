@@ -109,13 +109,13 @@
 
 	; Under-KERNAL-ROM stuff
 
-	note_names_table					= $fa00 ; 240 bytes + waste
+	; free:  $fa00-faff
 
-	divide_by_16_table					= $fb00 ; 1 page
+	note_names_table					= $fb00 ; 240 bytes + waste
 
-	; 1 page, used by dither driver, or-$80 cuts-off voice 3 from audio path
-	divide16_or80_table					= $fc00 
+	divide_by_16_table					= $fc00 ; 1 page
 
+	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page
 
@@ -456,6 +456,7 @@ tempo_fine_adjust_constant = 159778
 	irq_temp_a							!skip 1 ; use these for saving and
 	irq_temp_x							!skip 1 ; restoring .AXY during IRQ's
 	irq_temp_y							!skip 1
+	irq_temp_b							!skip 1
 
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"
