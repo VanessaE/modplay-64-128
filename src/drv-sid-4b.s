@@ -107,8 +107,7 @@ sid_4bit_mute
 rts
 
 sid_isr_4b_mono					; 7 cycles coming in
-	sta .iam + 1				; 4
-	stx .ixm + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -118,18 +117,12 @@ sid_isr_4b_mono					; 7 cycles coming in
 	ror							; 2
 	sta SID_VOLUME				; 4
 
-.iam lda #00					; 2
-.ixm ldx #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit (does an implicit read of CIA1_ICR)
-} else {
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 cycles to exit on stock C64/128, 10 w/SCPU
+
 
 sid_isr_4b_stereo				; 7 cycles coming in
-	sta .ias + 1				; 4
-	stx .ixs + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -138,14 +131,8 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	lda audio_buffer_right,x	; 4
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
-.ias lda #00					; 2
-.ixs ldx #00					; 2
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 or 10
 
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6
-} else {
-	bit CIA1_ICR				; 4
-	rti							; 6 cycles to exit
-}
 
 }

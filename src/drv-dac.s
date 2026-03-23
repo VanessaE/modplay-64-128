@@ -166,8 +166,7 @@ dac_stop
 + rts
 
 dac_isr_mono					; 7 cycles coming in
-	sta .iam + 1				; 4
-	stx .ixm + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -177,19 +176,12 @@ dac_isr_mono					; 7 cycles coming in
 
 .da1 sta $1234					; 4
 
-.iam lda #00					; 2
-.ixm ldx #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit (does an implicit read of CIA1_ICR)
-} else {
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 cycles to exit on stock C64/128, 10 w/SCPU
 
 
 dac_isr_stereo					; 7 cycles coming in
-	sta .ias + 1				; 4
-	stx .ixs + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -198,19 +190,12 @@ dac_isr_stereo					; 7 cycles coming in
 	lda audio_buffer_right,x	; 4
 .db  sta $1234					; 4 / will be set to right DAC addr + $18, above
 
-.ias lda #00					; 2
-.ixs ldx #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit
-} else {
-	bit CIA1_ICR				; 4
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 or 10
 
 
 dac_isr_stereo_user_port		; 7 cycles coming in
-	sta .iasup + 1				; 4
-	stx .ixsup + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -223,13 +208,8 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 	lda audio_buffer_right,x	; 4
 	sta CIA2_PORT_B				; 4
 
-.iasup lda #00					; 2
-.ixsup ldx #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit
-} else {
-	bit CIA1_ICR				; 4
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 or 10
+
 
 }

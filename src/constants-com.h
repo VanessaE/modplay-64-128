@@ -453,6 +453,10 @@ tempo_fine_adjust_constant = 159778
 
 	profiler_temp						!skip 1
 
+	irq_temp_a							!skip 1 ; use these for saving and
+	irq_temp_x							!skip 1 ; restoring .AXY during IRQ's
+	irq_temp_y							!skip 1
+
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"
 	}

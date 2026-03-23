@@ -211,8 +211,7 @@ mah_setup_right_sid_addrs
 rts
 
 sid_isr_mahoney_mono			; 7 cycles coming in
-	sta .iam + 1				; 4
-	stx .ixm + 1				; 4
+	+IRQ_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -224,20 +223,12 @@ sid_isr_mahoney_mono			; 7 cycles coming in
 	lda $6400,x					; 4 / will be reset to the addr of the proper
 	sta SID_VOLUME				; 4 / table, below.
 
-.iam lda #00					; 2
-.ixm ldx #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit (does an implicit read of CIA1_ICR)
-} else {
-	bit CIA1_ICR				; 4 / acknowledge CIA#1 timer B interrupt
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AX				; 6
++IRQ_EXIT						; 9 cycles to exit on stock C64/128, 10 w/SCPU
 
 
 sid_isr_mahoney_stereo			; 7 cycles coming in
-	sta .ias + 1				; 4
-	stx .ixs + 1				; 4
-	sty .iys + 1				; 4
+	+IRQ_SAVE_AXY				; 9
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -253,14 +244,7 @@ sid_isr_mahoney_stereo			; 7 cycles coming in
 .mah_s2a
 	sta $1234					; 4 / will be set to right SID addr + $18, above
 
-.ias lda #00					; 2
-.ixs ldx #00					; 2
-.iys ldy #00					; 2
-!ifndef scpu {
-	jmp CIA1_SDR				; 3+6 cycles to exit
-} else {
-	bit CIA1_ICR				; 4
-	rti							; 6 cycles to exit
-}
+	+IRQ_RESTORE_AXY			; 9
++IRQ_EXIT						; 9 or 10
 
 }

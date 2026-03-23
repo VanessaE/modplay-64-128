@@ -228,3 +228,34 @@
 	jmp (.vec)
 	.ra = * - 1
 }
+
+!macro IRQ_SAVE_AX {			; 6 cycles
+	sta irq_temp_a
+	stx irq_temp_x
+}
+
+!macro IRQ_RESTORE_AX {			; 6 cycles
+	lda irq_temp_a
+	ldx irq_temp_x
+}
+
+!macro IRQ_SAVE_AXY {			; 9 cycles
+	sta irq_temp_a
+	stx irq_temp_x
+	sty irq_temp_y
+}
+
+!macro IRQ_RESTORE_AXY {		; 9 cycles
+	lda irq_temp_a
+	ldx irq_temp_x
+	ldy irq_temp_y
+}
+
+!macro IRQ_EXIT {				; 3+6 on C64, 4+6 on SCPU
+	!ifndef scpu {
+		jmp CIA1_SDR
+	} else {
+		bit CIA1_ICR
+		rti
+	}
+}
