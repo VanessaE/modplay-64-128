@@ -177,7 +177,8 @@ dac_isr_mono					; 7 cycles coming in
 .da1 sta $1234					; 4
 
 	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9 cycles to exit on stock C64/128, 10 w/SCPU
++IRQ_EXIT						; 9 cycles to exit on stock C64, 11 on C128
+								; 26 on SCPU
 
 
 dac_isr_stereo					; 7 cycles coming in
@@ -209,7 +210,7 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 	sta CIA2_PORT_B				; 4
 
 	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9 or 10
++IRQ_EXIT						; 9, 11, or 26
 
 
 }

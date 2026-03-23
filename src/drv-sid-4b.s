@@ -72,7 +72,7 @@ sid_4bit_set_isr_cycle_count
 		!ifndef c128 {
 			lda #52
 		} else {
-			lda #(55 + 1) / 2
+			lda #56 / 2
 		}
 	} else {
 		lda #7
@@ -117,7 +117,8 @@ sid_isr_4b_mono					; 7 cycles coming in
 	sta SID_VOLUME				; 4
 
 	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9 cycles to exit on stock C64/128, 10 w/SCPU
++IRQ_EXIT						; 9 cycles to exit on stock C64, 11 on C128
+								; 26 on SCPU
 
 
 sid_isr_4b_stereo				; 7 cycles coming in
@@ -131,7 +132,7 @@ sid_isr_4b_stereo				; 7 cycles coming in
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
 	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9 or 10
++IRQ_EXIT						; 9, 11, or 26
 
 
 }

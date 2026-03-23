@@ -251,11 +251,14 @@
 	ldy irq_temp_y
 }
 
-!macro IRQ_EXIT {				; 3+6 on C64, 4+6 on SCPU
-	!ifndef scpu {
-		jmp CIA1_SDR
-	} else {
+!macro IRQ_EXIT {				; 3+6 on C64, 5+6 on C128, 20+6 on SCPU
+	!ifdef c128 {
 		bit CIA1_ICR
 		rti
+	} else ifdef scpu {
+		bit CIA1_ICR
+		rti
+	} else {
+		jmp CIA1_SDR
 	}
 }
