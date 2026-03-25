@@ -9,8 +9,8 @@ run_effect_set_sample_offset
 	rol temp_zpbk_a
 	clc
 	adc sample_start_addresses_mids,x
-	sta sample_pointers_mids,y
+	sta current_sample_pointers_mids,y
 	lda sample_start_addresses_highs,x
 	adc temp_zpbk_a
-	sta sample_pointers_highs,y
+	sta current_sample_pointers_highs,y
 rts

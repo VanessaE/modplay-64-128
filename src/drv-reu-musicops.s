@@ -12,9 +12,9 @@ reu_set_selfmod_and_mixer_vectors
 	lda filter_setting
 	bmi +
 
-	lda #<run_mixer_standard_lookahead
+	lda #<run_mixer_standard
 	sta reu_mixer_call_vec+1
-	lda #>run_mixer_standard_lookahead
+	lda #>run_mixer_standard
 	sta reu_mixer_call_vec+2
 
 	lda #<mixer_standard_do_selfmods_for_pitch_change
@@ -23,9 +23,9 @@ reu_set_selfmod_and_mixer_vectors
 	sta reu_selfmod_init_vec+2
 	rts
 
-+	lda #<run_mixer_lowpass_lookahead
++	lda #<run_mixer_lowpass
 	sta reu_mixer_call_vec+1
-	lda #>run_mixer_lowpass_lookahead
+	lda #>run_mixer_lowpass
 	sta reu_mixer_call_vec+2
 
 	lda #<mixer_lowpass_do_selfmods_for_pitch_change
@@ -132,57 +132,57 @@ reu_run_fetch_and_mixer
 				lda #(>sample_data_buffer) + .ftrk			; 2
 				sta DMA_ADH									; 4
 
-				lda sample_pointers_fracts + .ftrk			; 3
+				lda current_sample_pointers_fracts + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_cur_steprate_f = * }
 				adc #0										; 2
-				sta sample_pointers_fracts + .ftrk			; 3
+				sta current_sample_pointers_fracts + .ftrk	; 3
 
-				lda sample_pointers_lows + .ftrk			; 3
+				lda current_sample_pointers_lows + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_cur_steprate_i = * }
 				adc #0										; 2
-				sta sample_pointers_lows + .ftrk			; 3
+				sta current_sample_pointers_lows + .ftrk	; 3
 				sta DMA_LO									; 4
 				bcc .reu_fix_dma_top_two_bytes				; 3/2
 
-				inc sample_pointers_mids + .ftrk			; 5
-				lda sample_pointers_mids + .ftrk			; 3
+				inc current_sample_pointers_mids + .ftrk	; 5
+				lda current_sample_pointers_mids + .ftrk	; 3
 				sta DMA_HI									; 4
 				bne .reu_fix_dma_top_byte					; 3/2
 
-				inc sample_pointers_highs + .ftrk			; 5
-				lda sample_pointers_highs + .ftrk			; 3
+				inc current_sample_pointers_highs + .ftrk	; 5
+				lda current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_BANK								; 4
 				jmp .reu_check_end							; 3
 
 			.reu_fix_dma_top_two_bytes
-				lda sample_pointers_mids + .ftrk			; 3
+				lda current_sample_pointers_mids + .ftrk	; 3
 				sta DMA_HI									; 4
 
 			.reu_fix_dma_top_byte
-				lda sample_pointers_highs + .ftrk			; 3
+				lda current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_BANK								; 4
 
 			.reu_check_end
-				lda sample_pointers_lows + .ftrk			; 3
+				lda current_sample_pointers_lows + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_ckend_l = * }
 				cmp #0										; 2
 
-				lda sample_pointers_mids + .ftrk			; 3
+				lda current_sample_pointers_mids + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_ckend_m = * }
 				sbc #0										; 2
 
-				lda sample_pointers_highs + .ftrk			; 3
+				lda current_sample_pointers_highs + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_ckend_h = * }
 				sbc #0										; 2
 
 				bcc .reu_fetch_sample_data					; 3/2
 
 				clc											; 2
-				lda track_current_loop_flags + .ftrk		; 3
+				lda current_track_loop_flags + .ftrk		; 3
 				bne .reu_sample_has_loop					; 3/2
-				sta sample_pointers_lows + .ftrk			; 3
-				sta sample_pointers_mids + .ftrk			; 3
-				sta sample_pointers_highs + .ftrk			; 3
+				sta current_sample_pointers_lows + .ftrk	; 3
+				sta current_sample_pointers_mids + .ftrk	; 3
+				sta current_sample_pointers_highs + .ftrk	; 3
 				sta .reu_steprate_fract_addr				; 4
 				sta .reu_steprate_int_addr					; 4
 
@@ -195,16 +195,16 @@ reu_run_fetch_and_mixer
 
 			.reu_sample_has_loop
 				lda #0										; 2
-				sta sample_pointers_fracts + .ftrk			; 3
+				sta current_sample_pointers_fracts + .ftrk	; 3
 				ldy current_sample_numbers + .ftrk			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
-				sta sample_pointers_lows + .ftrk			; 3
+				sta current_sample_pointers_lows + .ftrk	; 3
 				sta DMA_LO									; 4
 				lda sample_loop_start_addresses_mids,y		; 5
-				sta sample_pointers_mids + .ftrk			; 3
+				sta current_sample_pointers_mids + .ftrk	; 3
 				sta DMA_HI									; 4
 				lda sample_loop_start_addresses_highs,y		; 5
-				sta sample_pointers_highs + .ftrk			; 3
+				sta current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_BANK								; 4
 				lda sample_loop_end_addresses_lows,y		; 5
 				sta .reu_samp_end_low_addr					; 4
@@ -223,7 +223,7 @@ reu_run_fetch_and_mixer
 				!ifdef c128 {
 					!ifndef scpu {
 						sei									; 2
-						dec C128_VIC_CLOCK_SPEED						; 7
+						dec C128_VIC_CLOCK_SPEED			; 7
 					}
 				}
 
@@ -234,7 +234,7 @@ reu_run_fetch_and_mixer
 
 				!ifdef c128 {
 					!ifndef scpu {
-						sty C128_VIC_CLOCK_SPEED						; 4
+						sty C128_VIC_CLOCK_SPEED			; 4
 						cli									; 2
 					}
 				}

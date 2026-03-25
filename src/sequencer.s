@@ -21,7 +21,7 @@ start_sequencer
 	sta retrigger_rates,x
 	sta cut_sample_ticks,x
 	sta delay_sample_ticks,x
-	sta track_current_loop_flags,x
+	sta current_track_loop_flags,x
 	sta current_vibrato_step_size_ints,x
 	sta current_vibrato_step_size_fracts,x
 	sta last_vibrato_rates,x
@@ -40,10 +40,10 @@ start_sequencer
 	sta current_steprates_fracts,x
 	sta current_steprates_ints,x
 
-	sta sample_pointers_fracts,x
-	sta sample_pointers_lows,x
-	sta sample_pointers_mids,x
-	sta sample_pointers_highs,x
+	sta current_sample_pointers_fracts,x
+	sta current_sample_pointers_lows,x
+	sta current_sample_pointers_mids,x
+	sta current_sample_pointers_highs,x
 
 	sta current_sample_end_addr_lows,x
 	sta current_sample_end_addr_highs,x

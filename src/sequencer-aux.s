@@ -57,9 +57,9 @@ start_sample
 	beq +
 
 	lda sample_start_addresses_mids,x
-	sta sample_pointers_mids,y
+	sta current_sample_pointers_mids,y
 	lda sample_start_addresses_highs,x
-	sta sample_pointers_highs,y
+	sta current_sample_pointers_highs,y
 
 +	lda #0
 	sta current_vibrato_step_size_ints,y
@@ -67,11 +67,11 @@ start_sample
 	sta current_tremolo_step_sizes,y
 	sta volume_slide_rates,y
 	sta current_pitch_slide_rates,y
-	sta sample_pointers_fracts,y
-	sta sample_pointers_lows,y
+	sta current_sample_pointers_fracts,y
+	sta current_sample_pointers_lows,y
 
 	lda sample_default_loop_flags,x
-	sta track_current_loop_flags,y
+	sta current_track_loop_flags,y
 	bne +
 
 	; if no loop is defined, the sample's endpoint is the literal end of the

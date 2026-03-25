@@ -34,6 +34,6 @@ voltab_use_upper
 set_vol_addrs_only
 	bit filter_setting
 	bmi +
-	jmp mixer_standard_set_lookahead_vol_addrs
-+	jmp mixer_lowpass_set_lookahead_vol_addrs
+	jmp mixer_standard_set_vol_addrs
++	jmp mixer_lowpass_set_vol_addrs
 

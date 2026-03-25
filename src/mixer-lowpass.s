@@ -24,7 +24,7 @@ rts
 ; Must enter with .X = the most recent 16-byte offset into the audio input
 ; buffer, which will be updated here
 
-run_mixer_lowpass_lookahead								; 6 to enter
+run_mixer_lowpass								; 6 to enter
 	txa														; 2
 	adc #16													; 2
 
@@ -87,10 +87,10 @@ rts															; 6
 
 mixer_lowpass_loop_segment_length = mixer_lowpass_loop_close - mixer_lowpass_loop_open
 
-mixer_lowpass_set_lookahead_vol_addrs
-	ldx mixer_lowpass_lookahead_vol_addr_idx,y
+mixer_lowpass_set_vol_addrs
+	ldx mixer_lowpass_vol_addr_idx,y
 
-	!zone lookahead_idx_set {
+	!zone mixer_pitch_selfmod_idx_set {
 		!for .idx6, 0, 15 {
 			sta mixer_lowpass_vol_addr_1 + mixer_lowpass_loop_segment_length * .idx6 + 2,x
 		}
@@ -98,7 +98,7 @@ mixer_lowpass_set_lookahead_vol_addrs
 rts
 
 mixer_lowpass_do_selfmods_for_pitch_change
-  !zone lookahead_idx_set {
+  !zone mixer_pitch_selfmod_idx_set {
 	ldy seq_current_track
 
 	lda #0
@@ -125,7 +125,7 @@ mixer_lowpass_do_selfmods_for_pitch_change
 	ror temp_zpbk_a
 	sta temp_zpbk_a+2
 
-	ldx mixer_lowpass_lookahead_read_addr_idx,y
+	ldx mixer_lowpass_read_addr_idx,y
 
 	clc
 	lda seq_current_track
@@ -160,13 +160,13 @@ mixer_lowpass_do_selfmods_for_pitch_change
 	adc #1
 rts
 
-mixer_lowpass_lookahead_read_addr_idx
+mixer_lowpass_read_addr_idx
 	!byte 0
 	!byte mixer_lowpass_rd_la_track_2 - mixer_lowpass_rd_la_track_1
 	!byte mixer_lowpass_rd_la_track_3 - mixer_lowpass_rd_la_track_1
 	!byte mixer_lowpass_rd_la_track_4 - mixer_lowpass_rd_la_track_1
 
-mixer_lowpass_lookahead_vol_addr_idx
+mixer_lowpass_vol_addr_idx
 	!byte 0
 	!byte mixer_lowpass_vol_addr_2 - mixer_lowpass_vol_addr_1
 	!byte mixer_lowpass_vol_addr_3 - mixer_lowpass_vol_addr_1

@@ -343,7 +343,7 @@ tempo_fine_adjust_constant = 159778
 	temp_zpbk_b							!skip 1
 
 	track_current_enable_flags			!skip 8
-	track_current_loop_flags			!skip 8
+	current_track_loop_flags			!skip 8
 
 	arpeggio_counters					!skip 8 ; zero page is mandatory for this one (STX $ZP,Y)
 
@@ -424,12 +424,11 @@ tempo_fine_adjust_constant = 159778
 	; divide_tmp uses $5f and $60
 
 	* = $61
-	sample_pointers_fracts				!skip 8
-	sample_pointers_lows				!skip 8
-	sample_pointers_mids				!skip 8
-	sample_pointers_highs				!skip 8
+	current_sample_pointers_fracts		!skip 8
+	current_sample_pointers_lows		!skip 8
+	current_sample_pointers_mids		!skip 8
+	current_sample_pointers_highs		!skip 8
 
-	current_sample_numbers				!skip 8
 	current_steprates_fracts			!skip 8
 	current_steprates_ints				!skip 8
 	current_sample_end_addr_lows		!skip 8
@@ -487,6 +486,7 @@ tempo_fine_adjust_constant = 159778
 	current_note_periods_fracts			!skip 8 ; only used by vibrato, everything
 	current_note_periods_lows			!skip 8 ; ¯¯\__ else ignores this one
 	current_note_periods_highs			!skip 8
+
 	seq_current_row_data				!skip 32
 	seq_commands						!skip 8
 	seq_prev_commands					!skip 8
@@ -726,6 +726,8 @@ tempo_fine_adjust_constant = 159778
 	playlist_file_sizes_lows			!skip 256
 	playlist_file_sizes_highs			!skip 256
 	playlist_file_flags					!skip 256
+
+	current_sample_numbers				!skip 8
 
 	!if * > $0fff {
 			!error "Main variables zone exceeds $0fff by ", * - $0fff, " bytes!"
