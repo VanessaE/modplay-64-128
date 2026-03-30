@@ -83,26 +83,6 @@ clear_screen_early	; redirect the KERNAL and clear
 	jsr CHROUT
 rts
 
-!ifdef c128 {
-	reset_attributes_charset
-
-		lda #<VDC_ATTRIBUTES
-		sta fill_copy_target
-		lda #>VDC_ATTRIBUTES
-		sta fill_copy_target+1
-		lda #$01
-		ldx #255
-		jsr vdc_block_fill
-
-		ldy #7
-		ldx #255
-		lda #$01
-	-	jsr vdc_block_fill_extend
-		dey
-		bne -
-	rts
-}
-
 scroll_area_down
 	sec
 	lda scroll_area_target_addr

@@ -80,7 +80,35 @@ rts
 
 
 isr_startup
+	jsr enable_kernal_only
+
 	sei
+
+	; Disable CIA interrupts and the VIC raster IRQ, if there is one
+	lda #$7f
+	sta CIA1_ICR
+	sta CIA2_ICR
+	lda #0
+	sta VIC_IRQ_MASK
+
+	lda #<vic_raster_sync_stage_1
+	sta CPU_IRQ_vector
+	lda #>vic_raster_sync_stage_1
+	sta CPU_IRQ_vector+1
+
+	lda audio_isr_vec
+	sta CPU_NMI_vector
+	lda audio_isr_vec+1
+	sta CPU_NMI_vector+1
+
+	jsr disable_roms
+
+	; stop the three CIA timers we're not using
+
+	lda #0
+	sta CIA1_CRA
+	sta CIA1_CRB
+	sta CIA2_CRB
 
 	ldy #0
 	lda #$80
@@ -92,133 +120,93 @@ isr_startup
 	sec
 	lda isr_trigger_interval
 	sbc #1					; subtract 1 cycle because the CIA will add 1.
-	sta CIA1_TIMER_B_LOW	; set the result as CIA #1 timer B interval
+	sta CIA2_TIMER_A_LOW	; set the result as CIA #2 timer A interval
 	lda isr_trigger_interval+1
 	sbc #0
-	sta CIA1_TIMER_B_HIGH
-
-	jsr enable_kernal_only	; theres a minuscule chance that an NMI can fire
-	lda #<lockout_nmi		; while changing this vector, this'll make sure it
-	sta CPU_NMI_vector		; is always "whole".
-	lda #>lockout_nmi
-	sta CPU_NMI_vector+1
-	jsr disable_roms
-
-	; force CIA2 to generate an NMI so that we can lock them out.
-	lda #0					; stop CIA #2 timer A
-	sta CIA2_CRA
-	sta CIA2_TIMER_A_LOW	; set Timer A to 0, after starting
-	sta CIA2_TIMER_A_HIGH	; NMI will occur immediately
-	lda #$81
-	sta CIA2_ICR			; set Timer A as source for NMI
-	lda #$01
-	sta CIA2_CRA			; start Timer A -> NMI
-
-	lda #$03				; disable both CIA #1 timers' IRQ's
-	sta CIA1_ICR
-	bit CIA1_ICR			; and clear any pending IRQs
-
-	lda #0
-	sta VIC_IRQ_MASK		; disable VIC raster IRQ
-	lda VIC_IRQ_FLAGS		; and clear any VIC IRQ that's pending.  normally
-	sta VIC_IRQ_FLAGS		; we could lsr here but that doesn't work on SCPU
+	sta CIA2_TIMER_A_HIGH
 
 	!ifndef badlines_exist {
 		; on C128 and C64U, it's similar to oldskool C64 with screen off
-		lda audio_isr_vec
-		sta CPU_IRQ_vector
-		lda audio_isr_vec+1
-		sta CPU_IRQ_vector+1
 
-		lda #$82				; enable timer B IRQ
-		sta CIA1_ICR
+		lda #$81				; enable only the timer A interrupt
+		sta CIA2_ICR
 		lda #$11
-		sta CIA1_CRB			; start CIA timer B
+		sta CIA2_CRA			; start CIA 2 timer A
 
 	} else {
 
-		; if the screen is off, don't bother with the double-IRQ code,
-		; just point the IRQ directly to the audio driver entry
+		; if the screen is off, don't bother starting the double-IRQ code,
+		; just point the NMI vector at the audio driver and get on with it
 
 		bit enable_screen_on_playback
 		bmi +
 
-		lda audio_isr_vec
-		sta CPU_IRQ_vector
-		lda audio_isr_vec+1
-		sta CPU_IRQ_vector+1
-
-		lda #$82			; enable timer B IRQ
-		sta CIA1_ICR
-		lda #$11			; start CIA timer B in continuous mode,
-		sta CIA1_CRB		; counting Phi2 cycles, no output on PB6
+		lda #$81			; enable timer A interrupt
+		sta CIA2_ICR
+		lda #$11			; start timer A in continuous mode,
+		sta CIA2_CRA		; counting Phi2 cycles, no output on PB6
 
 		bne ++
 
 		+ !ifndef scpu {
-			; C64 NTSC fix: turn two of the nop's in irq_stage_2 below into
-			; 'lda ($ea,x)' turning 2 bytes/4 cycles into 2 bytes/6 cycles
+			; C64 NTSC fix: turn two of the nop's in vic_raster_sync_stage_2
+			; below into `lda ($ea,x)`, thus turning 2 bytes/4 cycles into
+			; 2 bytes/6 cycles
 
 			bit pal_flag
 			bmi +
 			lda #$a1
 			sta ntsc_adj
 
-		+	lda #<irq_stage_1
-			sta CPU_IRQ_vector
-			lda #>irq_stage_1
-			sta CPU_IRQ_vector+1
-
-			lda #254				; stage 1 IRQ will fire on line 254
+		+	lda #254				; stage 1 IRQ will fire on line 254
 			sta VIC_RASTER_LOW
 			lda VIC_CONTROL_A
 			and #$7f
 			sta VIC_CONTROL_A
-			lda #$81
+
+			lda VIC_IRQ_FLAGS
+			sta VIC_IRQ_FLAGS
+
+			lda #$01
 			sta VIC_IRQ_MASK		; and now enable the raster IRQ
+			cli
 
 		} else {
 			sta SCPU_TURBO_ON		; on SCPU we don't have to double-IRQ...
-
-			lda audio_isr_vec
-			sta CPU_IRQ_vector
-			lda audio_isr_vec+1
-			sta CPU_IRQ_vector+1
 
 			ldx #254				; ...we can just spin-wait for line 254
 		-	cpx VIC_RASTER_LOW
 			bne -
 
 			inx						; just in case we were already there,
-		-	cpx VIC_RASTER_LOW				; now wait for line 255.
+		-	cpx VIC_RASTER_LOW		; now wait for line 255.
 			bne -
 
 			ldx #49					; waste 49, 1 MHz cycles
 		-	sta $c7ff				; anywhere above $C000 will do, we just
 			dex						; want to force the SCPU to wait on its
 			bne -					; async write cache.
-			lda #$82				; enable timer B IRQ
-			sta CIA1_ICR			; a CIA write takes 2, 1 MHz cycles
+			lda #$81				; enable timer A interrupt
+			sta CIA2_ICR			; a CIA write takes 2, 1 MHz cycles
 			lda #$11
-			sta CIA1_CRB			; start CIA timer B
+
+			sta CIA2_CRA			; start timer A
 									; we should now be on line 255, cycle 53.
 		}
 	}
 
-; on stock machines, set up for quick IRQ exit.  saves one cycle in the ISR's
+; on stock machines, set up for quick interrupt exit.
+; saves one cycle in the ISR's
 
 ++	!ifndef scpu {
-		lda CIA1_CRA			; set CIA1 serial register to output, so that
+		lda CIA2_CRA			; set CIA2 serial register to output, so that
 		ora #%01000000			; we can store to it.
-		sta CIA1_CRA
+		sta CIA2_CRA
 		lda #$40				; $40 is the opcode for "RTI"
-		sta CIA1_SDR
+		sta CIA2_SDR
 	}
-
-	cli
 rts
 
-!ifdef badlines_exist {
 	; This code is based on "Double-IRQ" stable interrupt method from
 	; adapted to only be called/run once.  It's only used on oldskool C64's
 	; when the screen is turned on, but not on C128's or C64U.
@@ -226,79 +214,82 @@ rts
 	; https://codebase64.org/doku.php?id=base:the_double_irq_method
 	; (author unknown)
 
-	irq_stage_1					; 7 cycles to enter
-		inc VIC_RASTER_LOW		; 6
-		lda VIC_IRQ_FLAGS		; 4
-		sta VIC_IRQ_FLAGS		; 4
-		sta .s1a + 1			; 4 / we're about to trash .A so back it up
-		lda #<irq_stage_2		; 2
-		sta CPU_IRQ_vector		; 4
-		lda #>irq_stage_2		; 2
-		sta CPU_IRQ_vector+1	; 4
-		cli						; 2 / 37 cycles for switchover (43 on C128)
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop						; 55 cycles / stage 2 could fire here on PAL if
-		nop						;             stage 1's jitter maxed-out at 7 cycles
-		nop
-		nop
-		nop						; 63 / or as late as here if stage 1 was on-time on PAL
-		nop						; 65 / or as late as here on NTSC
-		nop
-		nop
+vic_raster_sync_stage_1		; 7 cycles to enter
+	sta .s1a + 1			; 4 / we're about to trash .A so back it up
+	inc VIC_RASTER_LOW		; 6
+	lda VIC_IRQ_FLAGS		; 4
+	sta VIC_IRQ_FLAGS		; 4
+	lda #<vic_raster_sync_stage_2 ; 2
+	sta CPU_IRQ_vector		; 4
+	lda #>vic_raster_sync_stage_2 ; 2
+	sta CPU_IRQ_vector+1	; 4
+	cli						; 2 / 37 cycles for switchover
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop						; 55 cycles / stage 2 could fire here on PAL if
+	nop						;             stage 1's jitter maxed-out at 7 cycles
+	nop
+	nop
+	nop						; 63 / or as late as here if stage 1 was on-time on PAL
+	nop						; 65 / or as late as here on NTSC
+	nop
+	nop
 
-	irq_stage_2					; 7 cycles to enter, plus jitter of 1 cycle
-		lda #0					; 2 / disable VIC interrupts, CIA#1 will handle
-		sta VIC_IRQ_MASK				; 4 / the IRQ from now on.
-		lda VIC_IRQ_FLAGS				; 4
-		sta VIC_IRQ_FLAGS				; 4
+vic_raster_sync_stage_2		; 7 cycles to enter, plus jitter of 1 cycle
+	lda #0					; 2 / disable further raster IRQ's, CIA 2 will
+	sta VIC_IRQ_MASK		; 4 / handle the audio interrupt from now on.
+	lda VIC_IRQ_FLAGS		; 4
+	sta VIC_IRQ_FLAGS		; 4
 
-		pla						; 4 / discard stage 2's return address and cpu status
-		pla						; 4 / so that we return via stage 1's stack values
-		pla 					; 4
-	ntsc_adj
-		nop						; 2 \__ these become 'lda ($ea,x)'
-		nop						; 2 /   on NTSC to add 2 more cycles
-		nop						; 2
-		nop						; 2
-		nop						; 2
-		nop						; 2
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda VIC_RASTER_LOW				; 4 / 61 cycles, -0/+1
-		cmp #255				; 2
-		beq fixcycle			; 3 or 2
+	pla						; 4 / discard stage 2's return address and cpu status
+	pla						; 4 / so that we return via stage 1's stack values
+	pla 					; 4
 
-	fixcycle					; we are now at cycle 5 of line 255
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		lda (0,x)				; 6
-		nop						; 2  / waste 26 cycles
+ntsc_adj
+	nop						; 2 \__ these become 'lda ($ea,x)'
+	nop						; 2 /   on NTSC to add 2 more cycles
+	nop						; 2
+	nop						; 2
+	nop						; 2
+	nop						; 2
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda VIC_RASTER_LOW		; 4 / 61 cycles, -0/+1
+	cmp #255				; 2
+	beq fixcycle			; 3 or 2
 
-		lda audio_isr_vec		; 4 / re-point the IRQ to the audio driver
-		sta CPU_IRQ_vector		; 4 / entry point
-		lda audio_isr_vec+1		; 4
-		sta CPU_IRQ_vector+1	; 4
+fixcycle					; we are now at cycle 5 of line 255
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6
+	lda (0,x)				; 6 / waste 42 cycles
 
-		lda #$82				; 2 enable timer B IRQ
-		sta CIA1_ICR			; 4
-		lda #$11				; 2
+	lda #$81				; 2 enable timer A interrupt
+	sta CIA2_ICR			; 4
+	lda #$11				; 2
 
-								; we should now be on cycle 55 of line 255, JUST
-								; past where the next bad line delay will end.
+							; we should now be on cycle 55 of line 255, JUST
+							; past where the next bad line delay will end.
 
-		sta CIA1_CRB			; 4 / start CIA timer B
+	sta CIA2_CRA			; 4 / start timer A
 
-	.s1a lda #0					; restore .A
-		cli
-	rti
-}
+	lda #<irq_lockout		; make sure IRQs can never do anything again
+	sta CPU_IRQ_vector		; if somehow they manage to run.
+	lda #>irq_lockout
+	sta CPU_IRQ_vector+1
+
+.s1a lda #0					; restore .A
+
+  irq_lockout
+rti
 
 ; ##### end of ISR Init
 
@@ -306,23 +297,12 @@ rts
 ; ##### just what it says on the tin, this stops the ISR and silences the audio
 
 isr_shutdown
-	sei
-
 	lda #0
-	sta CIA1_CRB
+	sta CIA2_CRA
+	sta CIA2_CRB
 
-	!ifndef c128 {
-		lda #0
-		sta VIC_IRQ_MASK
-		lda #$81
-		sta CIA1_ICR
-	} else {
-		lda #$81
-		sta VIC_IRQ_MASK
-	}
-
-	lda VIC_IRQ_FLAGS
-	lda CIA1_ICR
+	lda #$7f
+	sta CIA2_ICR
 
 	!ifdef c128 {
 		lda #36
@@ -331,6 +311,3 @@ isr_shutdown
 		sta VDC_DATA
 	}
 rts
-
-lockout_nmi ; exit any NMI that gets here, unacknowledged
-rti

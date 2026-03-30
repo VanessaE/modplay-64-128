@@ -118,7 +118,7 @@ sid_4bit_dithered_mute
 rts
 
 sid_isr_4b_dithered_mono		; 7 cycles coming in
-	+IRQ_SAVE_AX				; 6
+	+NMI_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
@@ -136,19 +136,19 @@ sid_isr_4b_dithered_mono		; 7 cycles coming in
 	lda divide_by_16_table,x	; 4
 ++	sta SID_VOLUME				; 4
 
-	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9 cycles to exit on stock C64, 11 on C128
+	+NMI_RESTORE_AX				; 6
++NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
 								; 26 on SCPU
 
 sid_isr_4b_dithered_stereo		; 7 cycles coming in
-	+IRQ_SAVE_AX				; 6
+	+NMI_SAVE_AX				; 6
 
 	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 
 	lda SID_VOICE3_OSC_OUT		; 4
 	and #$0f					; 2
-	sta irq_temp_b				; 3
+	sta nmi_temp_b				; 3
 	clc							; 2
 	adc audio_buffer_left,x		; 4
 	bcc +						; 3/2
@@ -162,7 +162,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 
 ++	sta SID_VOLUME				; 4
 
-	lda irq_temp_b				; 3
+	lda nmi_temp_b				; 3
 	adc audio_buffer_right,x	; 4
 	bcc +						; 3/2
 	lda #$0f					; 2
@@ -172,7 +172,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 ++
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
 
-	+IRQ_RESTORE_AX				; 6
-+IRQ_EXIT						; 9, 11, or 26
+	+NMI_RESTORE_AX				; 6
++NMI_EXIT						; 9, 11, or 26
 
 }

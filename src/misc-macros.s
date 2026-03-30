@@ -229,36 +229,55 @@
 	.ra = * - 1
 }
 
-!macro IRQ_SAVE_AX {			; 6 cycles
-	sta irq_temp_a
-	stx irq_temp_x
+!macro NMI_SAVE_AX {			; 6 cycles
+	sta nmi_temp_a
+	stx nmi_temp_x
 }
 
-!macro IRQ_RESTORE_AX {			; 6 cycles
-	lda irq_temp_a
-	ldx irq_temp_x
+!macro NMI_RESTORE_AX {			; 6 cycles
+	lda nmi_temp_a
+	ldx nmi_temp_x
 }
 
-!macro IRQ_SAVE_AXY {			; 9 cycles
-	sta irq_temp_a
-	stx irq_temp_x
-	sty irq_temp_y
+!macro NMI_SAVE_AXY {			; 9 cycles
+	sta nmi_temp_a
+	stx nmi_temp_x
+	sty nmi_temp_y
 }
 
-!macro IRQ_RESTORE_AXY {		; 9 cycles
-	lda irq_temp_a
-	ldx irq_temp_x
-	ldy irq_temp_y
+!macro NMI_RESTORE_AXY {		; 9 cycles
+	lda nmi_temp_a
+	ldx nmi_temp_x
+	ldy nmi_temp_y
 }
 
-!macro IRQ_EXIT {				; 3+6 on C64, 5+6 on C128, 20+6 on SCPU
+!macro NMI_EXIT {				; 3+6 on C64, 5+6 on C128, 20+6 on SCPU
 	!ifdef c128 {
-		bit CIA1_ICR
+		bit CIA2_ICR
 		rti
 	} else ifdef scpu {
-		bit CIA1_ICR
+		bit CIA2_ICR
 		rti
 	} else {
-		jmp CIA1_SDR
+		jmp CIA2_SDR
+	}
+}
+
+; these two turbo macros only take effect on C128 sans SCPU, because with
+; that device, the turbo clock is automatically stretched as on the C64.
+
+!macro C128_2MHZ_OFF_FOR_REU {
+	!ifdef c128 {
+		!ifndef scpu {
+			dec C128_VIC_CLOCK_SPEED			; 5, 7 or 20
+		}
+	}
+}
+
+!macro C128_2MHZ_ON_FOR_REU {
+	!ifdef c128 {
+		!ifndef scpu {
+			inc C128_VIC_CLOCK_SPEED			; 5, 9 or 20
+		}
 	}
 }

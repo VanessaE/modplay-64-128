@@ -23,16 +23,11 @@ reu_fetch_block
 	lda stash_size+1
 	sta DMA_DAH
 
-	!ifdef c128 {
-		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
-	}
-
 	lda #$91
-	sta DMA_CMD
 
-	!ifdef c128 {
-		+C128_RESTORE_2MHZ_IF_POSSIBLE
-	}
+	+C128_2MHZ_OFF_FOR_REU
+	sta DMA_CMD
+	+C128_2MHZ_ON_FOR_REU
 rts
 
 reu_stash_block
@@ -53,16 +48,11 @@ reu_stash_block
 	lda stash_size+1
 	sta DMA_DAH
 
-	!ifdef c128 {
-		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
-	}
-
 	lda #$90
-	sta DMA_CMD
 
-	!ifdef c128 {
-		+C128_RESTORE_2MHZ_IF_POSSIBLE
-	}
+	+C128_2MHZ_OFF_FOR_REU
+	sta DMA_CMD
+	+C128_2MHZ_ON_FOR_REU
 rts
 
 ; This came from Codebase, author unknown
@@ -72,9 +62,7 @@ REUCOMMAND_STASH    = $90   ; immediately, no reload
 REUCOMMAND_FETCH    = $91   ; immediately, no reload
 
 reu_get_size
-	!ifdef c128 {
-		+C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ
-	}
+	+C128_2MHZ_OFF_FOR_REU
 
 	ldx #0  ; pre-init
 	; first write signatures to banks in *descending* order (banks 255..0):
@@ -118,9 +106,7 @@ reu_get_size
 
 +	stx reu_highest_bank		; if 0, REU not detected at all.
 
-	!ifdef c128 {
-		+C128_RESTORE_2MHZ_IF_POSSIBLE
-	}
+	+C128_2MHZ_ON_FOR_REU
 rts
 
 set_registers_AXY ; setup REU registers (used for both reading and writing in size test only)

@@ -69,20 +69,9 @@ reu_fetch_row
 	!ifndef scpu {
 		lda #16
 		sta DMA_DAL
-
-		!ifndef c128 {
-			sty DMA_CMD
-		} else {
-		; on C128 we need to disable interrupts, lest the ISR fire while the clock
-		; is at 1 MHz... except: if there's a SCPU present, 1/2 MHz mode doesn't
-		; matter, the SCPU will automatically stretch the clock anyway.
-
-			sei
-			sta C128_VIC_CLOCK_SPEED
-			sty DMA_CMD
-			sty C128_VIC_CLOCK_SPEED
-			cli
-		}
+		+C128_2MHZ_OFF_FOR_REU
+		sty DMA_CMD
+		+C128_2MHZ_ON_FOR_REU
 	} else {
 		; on SCPU, we split the transfer into small pieces to minimize
 		; interference with the audio ISR's timing.
@@ -220,24 +209,12 @@ reu_run_fetch_and_mixer
 				lda #1										; 2
 				sta DMA_DAL									; 4
 
-				!ifdef c128 {
-					!ifndef scpu {
-						sei									; 2
-						dec C128_VIC_CLOCK_SPEED			; 7
-					}
-				}
-
 				; N below will vary by pitch, on average it'll be around 32
 				; on C64
 
+				+C128_2MHZ_OFF_FOR_REU
 				sty DMA_CMD									; 4 + N
-
-				!ifdef c128 {
-					!ifndef scpu {
-						sty C128_VIC_CLOCK_SPEED			; 4
-						cli									; 2
-					}
-				}
+				+C128_2MHZ_ON_FOR_REU
 
 				!if use_profiler {
 					+FETCH_PROFILER_B 7, .ftrk

@@ -224,10 +224,6 @@ player_init_visualizer
 +	jsr viz_waveform_init
 
 player_ui_finish
-	php
-	sei
-	jsr disable_roms
-
 	jsr backup_zero_page
 
 	+JSR_INDIRECT (audio_start_vec)
@@ -245,17 +241,29 @@ player_ui_finish
 	+JSR_INDIRECT (audio_stop_vec)
 
 	jsr keyboard_debounce
-
 	jsr restore_zero_page
-	jsr enable_kernal_only
-	plp
-
 	lda stereo_enable_temp
 	sta stereo_enable
 
+	; restore keyboard interrupt
+
+	sei
 	!ifndef c128 {
-		jsr set_standard_charset
+		jsr enable_kernal_only
+		jsr IOINIT
+	} else {
+		lda #255
+		sta VIC_RASTER_LOW
+		lda VIC_CONTROL_A
+		and #$7f
+		sta VIC_CONTROL_A
+		lda #$01
+		sta VIC_IRQ_MASK
+		jsr enable_kernal_only
 	}
+	cli
+
+	jsr set_standard_charset
 
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback

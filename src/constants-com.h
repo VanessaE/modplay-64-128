@@ -184,6 +184,10 @@
 
 	CIA1_PORT_A							= $dc00
 	CIA1_PORT_B							= $dc01
+	CIA1_DDR_A							= $dc02
+	CIA1_DDR_B							= $dc03
+	CIA1_TIMER_A_LOW					= $dc04
+	CIA1_TIMER_A_HIGH					= $dc05
 	CIA1_TIMER_B_LOW					= $dc06
 	CIA1_TIMER_B_HIGH					= $dc07
 	CIA1_TOD_TENTHS						= $dc08
@@ -201,8 +205,16 @@
 	CIA2_DDR_B							= $dd03
 	CIA2_TIMER_A_LOW					= $dd04
 	CIA2_TIMER_A_HIGH					= $dd05
+	CIA2_TIMER_B_LOW					= $dd06
+	CIA2_TIMER_B_HIGH					= $dd07
+	CIA2_TOD_TENTHS						= $dd08
+	CIA2_TOD_SECONDS					= $dd09
+	CIA2_TOD_MINUTES					= $dd0a
+	CIA2_TOD_HOURS						= $dd0b
+	CIA2_SDR							= $dd0c
 	CIA2_ICR							= $dd0d
 	CIA2_CRA							= $dd0e
+	CIA2_CRB							= $dd0f
 
 	DMA_CMD								= $df01
 
@@ -452,10 +464,10 @@ tempo_fine_adjust_constant = 159778
 
 	profiler_temp						!skip 1
 
-	irq_temp_a							!skip 1 ; use these for saving and
-	irq_temp_x							!skip 1 ; restoring .AXY during IRQ's
-	irq_temp_y							!skip 1
-	irq_temp_b							!skip 1
+	nmi_temp_a							!skip 1 ; use these for saving and
+	nmi_temp_x							!skip 1 ; restoring .AXY during IRQ's
+	nmi_temp_y							!skip 1
+	nmi_temp_b							!skip 1
 
 	!if * > $00f9 {
 			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"

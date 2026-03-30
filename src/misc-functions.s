@@ -1143,6 +1143,13 @@ check_sid_type_left
 	}
 
 	sei						;No disturbing interrupts
+	lda #0
+	sta CIA2_CRA
+	sta CIA2_CRB
+
+	lda #$03
+	sta CIA2_ICR
+	bit CIA2_ICR
 
 	jsr reset_sids
 
@@ -1241,6 +1248,13 @@ check_sid_type_right
 	}
 
 	sei
+	lda #0
+	sta CIA2_CRA
+	sta CIA2_CRB
+
+	lda #$0f
+	sta CIA2_ICR
+	bit CIA2_ICR
 
 	jsr reset_sids
 

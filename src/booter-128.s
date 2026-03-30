@@ -17,26 +17,6 @@
   +
 }
 
-; here in the booter, we can't assume that the machine can stay in 2 MHz mode
-; (the user may have booted in 40 column mode)
-; whereas in the main program it mostly will.
-
-!macro C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ {
-	!ifndef scpu {
-		lda C128_VIC_CLOCK_SPEED
-		pha
-		lda #0
-		sta C128_VIC_CLOCK_SPEED
-	}
-}
-
-!macro C128_RESTORE_2MHZ_IF_POSSIBLE {
-	!ifndef scpu {
-		pla
-		sta C128_VIC_CLOCK_SPEED
-	}
-}
-
 !convtab pet
 !cpu 6510
 
