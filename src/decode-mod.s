@@ -303,9 +303,6 @@ parse_instruments
 +	iny ; 24
 	lda (fill_copy_source),y
 	and #$0f
-	clc
-	adc #8
-	and #$0f
 	sta sample_default_fine_tunes,x
 
 	iny ; 25

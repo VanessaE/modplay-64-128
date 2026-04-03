@@ -112,6 +112,5 @@ run_effect_arpeggio
 
 set_arp_pitch_2_3
 	stx arpeggio_counters,y
-	jsr apply_fine_tuning		; uses the step rate values set above rather
-	ldx sequencer_temp_x		; than looking-up the "original" note
+	ldx sequencer_temp_x
 rts

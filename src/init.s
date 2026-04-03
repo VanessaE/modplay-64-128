@@ -447,11 +447,15 @@ semitones_table_origin
 		}
 	}
 
+; Since we're dealing with note periods, not frequencies,
+; the table has to be "inverted".
+
 fine_tuning_table_origin
-	!for ft, -8, 7 {
-		!zone {
-			!word int((one_eighth_semitone ^ ft) * 32768)
-		}
+	!for ft, 0, -7 {
+		!word int((one_eighth_semitone ^ ft) * 32768)
+	}
+	!for ft, 8, 1 {
+		!word int((one_eighth_semitone ^ ft) * 32768)
 	}
 
 sixteenth_semitones_table_lows_origin

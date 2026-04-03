@@ -45,15 +45,26 @@ set_slide_to_note
 	lda seq_current_row_data+1,x
 	and #$0f
 	ora seq_current_row_data+2,x
-	beq +
+	beq ++
+
+	lda current_fine_tune_values,y
+	bne +
 
 	lda seq_current_row_data+1,x
 	and #$0f
 	sta seq_pitch_slide_target_period_highs,y
 	lda seq_current_row_data+2,x
 	sta seq_pitch_slide_target_period_lows,y
+	jmp ++
 
-+	lda current_note_periods_lows,y
++	jsr calculate_fine_tuning
+
+	lda product+2
+	sta seq_pitch_slide_target_period_lows,y
+	lda product+3
+	sta seq_pitch_slide_target_period_highs,y
+
+++	lda current_note_periods_lows,y
 	cmp seq_pitch_slide_target_period_lows,y
 	lda current_note_periods_highs,y
 	sbc seq_pitch_slide_target_period_highs,y

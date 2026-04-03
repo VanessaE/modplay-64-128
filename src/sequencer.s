@@ -37,6 +37,8 @@ start_sequencer
 	sta current_note_periods_lows,x
 	sta current_note_periods_highs,x
 
+	sta current_fine_tune_values,x
+
 	sta current_steprates_fracts,x
 	sta current_steprates_ints,x
 
@@ -48,12 +50,6 @@ start_sequencer
 	sta current_sample_end_addr_lows,x
 	sta current_sample_end_addr_highs,x
 
-	dex
-	bpl -
-
-	lda #8
-	ldx #7
--	sta current_fine_tune_values,x
 	dex
 	bpl -
 
@@ -268,13 +264,24 @@ get_note_period
 	cmp #5
 	beq run_command
 
+	lda current_fine_tune_values,y
+	bne +
+
 	lda seq_current_row_data+1,x
 	and #$0f
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
+	jmp ++
 
-	jsr set_pitch_by_table_lookup
++	jsr calculate_fine_tuning
+
+	lda product+2
+	sta current_note_periods_lows,y
+	lda product+3
+	sta current_note_periods_highs,y
+
+++	jsr set_pitch_by_table_lookup
 	ldx seq_cur_track_data_offset
 	ldy seq_current_track
 

@@ -27,9 +27,6 @@ rts
 extcmd_set_fine_tune
 	lda seq_command_arguments,y
 	and #$0f
-	clc
-	adc #8
-	and #$0f
 	sta current_fine_tune_values,y
 rts
 

@@ -147,11 +147,22 @@ set_pitch_by_table_lookup
 	lda (utility_pointer),y
 	sta current_steprates_ints,x
 	ldy seq_current_track
+	+JSR_INDIRECT (do_selfmod_pitch_vec)
+rts
 
-apply_fine_tuning ; still needs a track number in .Y if called separately
-	lda current_fine_tune_values,y
-	cmp #8
-	beq doesnt_need_fine_tune
+; enter with .A = desired fine tune value
+; and .X = the index into the row data for the channel's period value
+; get the result from product+2/+3
+; this routine is .Y-safe.
+
+calculate_fine_tuning
+	pha
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta multiplicand_b+1
+	lda seq_current_row_data+2,x
+	sta multiplicand_b
+	pla
 
 	asl
 	tax
@@ -160,14 +171,8 @@ apply_fine_tuning ; still needs a track number in .Y if called separately
 	lda fine_tuning_table+1,x
 	sta multiplicand_a+1
 
-	lda current_steprates_fracts,y
-	sta multiplicand_b
-	lda current_steprates_ints,y
-	sta multiplicand_b+1
-
 	sec
 	jsr multiply_16x16
-	ldy seq_current_track
 
 	; multiplying the upper three bytes by 2 and then using the highest two
 	; bytes is the same as dividing the entire four-byte result by 32768
@@ -175,13 +180,4 @@ apply_fine_tuning ; still needs a track number in .Y if called separately
 	asl product+1
 	rol product+2
 	rol product+3
-
-	lda product+2
-	sta current_steprates_fracts,y
-	lda product+3
-	sta current_steprates_ints,y
-
-doesnt_need_fine_tune
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts
-
