@@ -81,7 +81,7 @@ start
 !source "src/misc-macros.s"
 !source "src/misc-functions.s"
 
-!if use_profiler {
+!ifdef use_profiler {
 	!source "src/profiler.s"
 }
 

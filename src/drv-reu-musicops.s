@@ -106,7 +106,7 @@ reu_run_fetch_and_mixer
 			!for reu_fetch_track, 0, 3 {
 			  !zone reu_fetchloop {
 
-				!if use_profiler {
+				!ifdef use_profiler {
 					+FETCH_PROFILER_A
 				}
  
@@ -216,7 +216,7 @@ reu_run_fetch_and_mixer
 				sty DMA_CMD									; 4 + N
 				+C128_2MHZ_ON_FOR_REU
 
-				!if use_profiler {
+				!ifdef use_profiler {
 					+FETCH_PROFILER_B 7, .ftrk
 				}
 			}

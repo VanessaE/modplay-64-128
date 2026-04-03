@@ -511,7 +511,11 @@ reu_driver_origin
 	}
 
 charset_alt_data
+!ifndef use_profiler {
 	!binary "etc/charset-64a.bin"
+} else {
+	!binary "etc/charset-64a-prof.bin"
+}
 
 splash_data
 	!binary "etc/splash-40.pet",,5 ; why 5?  because we don't need the .pet header 🙂

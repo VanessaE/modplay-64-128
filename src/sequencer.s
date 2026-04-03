@@ -311,7 +311,7 @@ run_command
 	lda start_effect_command_jump_table_lows,x
 	sta start_command_vec+1
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_A
 	}
 
@@ -319,7 +319,7 @@ start_command_vec					; start or initialize an effect command
 	jsr $1234						; (also for stuff that just runs once)
 	ldy seq_current_track
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_B 1
 	}
 
@@ -370,14 +370,14 @@ pre_tick_command
 	lda run_effect_command_jump_table_lows,x
 	sta run_command_pre_tick_vec+1
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_A
 	}
 
 run_command_pre_tick_vec			; run effect command if it needs tick-interval timing
 	jsr $1234
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_B 3
 	}
 
@@ -454,14 +454,14 @@ run_post_tick_command
 	lda run_effect_command_jump_table_lows,x
 	sta run_command_post_tick_vec+1
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_A
 	}
 
 run_command_post_tick_vec
 	jsr $1234
 
-	!if use_profiler {
+	!ifdef use_profiler {
 		+SEQ_PROFILER_B 5
 	}
 

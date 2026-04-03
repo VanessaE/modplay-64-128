@@ -4,26 +4,38 @@
 }
 
 !macro SEQ_PROFILER_B .line {
+	.addr	= VIC_SCREEN + 2 + .line * 40
+	.color	= VIC_COLOR_RAM + 2 + .line * 40
 
-	.addr	= $cc02 + .line * 40
-	.color	= $d802 + .line * 40
-
+	sec
 	lda VIC_RASTER_LOW
-
-	cmp profiler_temp
+	sbc profiler_temp
 	bcc .no_prof
+
+	stx .prof_x+1
 
 	ldy seq_current_track
 	ldx seq_commands,y
-	sbc profiler_temp
+
+	cmp #10
+	bcc +
+
+	adc #101		; if the carry is set it'll be +101+48+carry = +150
++	adc #48			; if the carry is clear it'll be +48
+
 	sta .addr,x
 	cmp .addr+40,x
-	bcc .no_prof
+	bcc .prof_exit
 
 	sta .addr+40,x
 	lda #1
 	sta .color,x
 	sta .color+40,x
+
+.prof_exit
+
+.prof_x	ldx #0
+
 .no_prof
 }
 
@@ -33,15 +45,20 @@
 }
 
 !macro FETCH_PROFILER_B .line, .chan {
-	.addr	= $cc02 + .line * 40 + .chan
-	.color	= $d802 + .line * 40 + .chan
+	.addr	= VIC_SCREEN + 2 + .line * 40 + .chan
+	.color	= VIC_COLOR_RAM + 2 + .line * 40 + .chan
 
+	sec
 	lda VIC_RASTER_LOW
-
-	cmp profiler_temp
+	sbc profiler_temp
 	bcc .no_prof
 
-	sbc profiler_temp
+	cmp #10
+	bcc +
+
+	adc #101
++	adc #48
+
 	sta .addr
 	cmp .addr+40
 	bcc .no_prof
@@ -77,27 +94,27 @@ profiler_draw_popup
 
 	ldx #15
 	lda #0
--	sta $cc2a,x
-	sta $cc52,x
-	sta $cc7a,x
-	sta $cca2,x
-	sta $ccca,x
-	sta $ccf2,x
-	sta $cd1a,x
-	sta $cd42,x
+-	sta VIC_SCREEN + 42,x
+	sta VIC_SCREEN + 82,x
+	sta VIC_SCREEN + 122,x
+	sta VIC_SCREEN + 162,x
+	sta VIC_SCREEN + 202,x
+	sta VIC_SCREEN + 242,x
+	sta VIC_SCREEN + 282,x
+	sta VIC_SCREEN + 322,x
 	dex
 	bpl -
 
 	ldx #15
 	lda #0
--	sta $d82a,x
-	sta $d852,x
-	sta $d87a,x
-	sta $d8a2,x
-	sta $d8ca,x
-	sta $d8f2,x
-	sta $d91a,x
-	sta $d942,x
+-	sta VIC_COLOR_RAM + 42,x
+	sta VIC_COLOR_RAM + 82,x
+	sta VIC_COLOR_RAM + 122,x
+	sta VIC_COLOR_RAM + 162,x
+	sta VIC_COLOR_RAM + 202,x
+	sta VIC_COLOR_RAM + 242,x
+	sta VIC_COLOR_RAM + 282,x
+	sta VIC_COLOR_RAM + 322,x
 	dex
 	bpl -
 rts

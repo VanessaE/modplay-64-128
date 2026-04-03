@@ -2,11 +2,19 @@ VERSION_MAJOR=0
 VERSION_MINOR=0
 BUILD_NO := $(shell git rev-list --count HEAD)
 
-use_profiler?=0
-
 OPTIONS=-Wno-label-indent -v3 --format cbm \
  -Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) \
- -Dbuild_no=$(BUILD_NO) -Duse_profiler=$(use_profiler)
+ -Dbuild_no=$(BUILD_NO)
+
+# define a space char as $(S)
+E:=
+S:=$(E) $(E)
+
+USE_PROFILER:=$(S)
+
+ifdef use_profiler
+	USE_PROFILER=$(S)-Duse_profiler=1$(S)
+endif
 
 TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
@@ -44,8 +52,8 @@ c64:
 	@echo -e '\nBuilding Modplay 64...\n'
 	acme $(OPTIONS) -o /tmp/mp.ignore.me -l /tmp/mp64.sym.initial src/constants-com.h
 
-	acme $(OPTIONS) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
-	acme $(OPTIONS) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
+	acme $(OPTIONS) $(USE_PROFILER) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
+	acme $(OPTIONS) $(USE_PROFILER) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
 
 	$(EXOMIZER) sfx 0x1800 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64.prg src/mp64.o
 	$(EXOMIZER) mem -o bin/mp64.main.prg src/mp64.main.o
@@ -69,8 +77,8 @@ c128:
 c64_scpu:
 	@echo -e '\nBuilding Modplay 64 (SuperCPU edition)...\n'
 
-	acme $(OPTIONS) -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
-	acme $(OPTIONS) -Dscpu=1 -o src/mp64.main-scpu.o -l /tmp/mp64+scpu-symbols.txt /tmp/mp64-s.sym src/modplay.s
+	acme $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
+	acme $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o src/mp64.main-scpu.o -l /tmp/mp64+scpu-symbols.txt /tmp/mp64-s.sym src/modplay.s
 
 	$(EXOMIZER) mem -o bin/mp64.main-scpu.prg src/mp64.main-scpu.o
 
@@ -79,8 +87,8 @@ c64_scpu:
 c64u:
 	@echo -e '\nBuilding Modplay 64 (C64 Ultimate/Ultimate64 edition)...\n'
 
-	acme $(OPTIONS) -Dc64u=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
-	acme $(OPTIONS) -Dc64u=1 -o src/mp64.main-c64u.o -l /tmp/mp64+c64u-symbols.txt /tmp/mp64-s.sym src/modplay.s
+	acme $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
+	acme $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o src/mp64.main-c64u.o -l /tmp/mp64+c64u-symbols.txt /tmp/mp64-s.sym src/modplay.s
 
 	$(EXOMIZER) mem -o bin/mp64.main-c64u.prg src/mp64.main-c64u.o
 

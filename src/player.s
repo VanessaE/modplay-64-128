@@ -206,7 +206,7 @@ no_player_ui
 	}
 
 player_init_visualizer
-	!if use_profiler {
+	!ifdef use_profiler {
 		jsr profiler_draw_popup
 	}
 
@@ -228,13 +228,19 @@ player_ui_finish
 
 	+JSR_INDIRECT (audio_start_vec)
 
-	!if use_profiler != 1 {
+	!ifdef use_profiler {
+		sei
+		jsr disable_roms
+	} else {
 		jsr isr_startup
 	}
 
 	jsr start_sequencer
 
-	!if use_profiler != 1 {
+	!ifdef use_profiler {
+		jsr enable_kernal_only
+		cli
+	} else {
 		jsr isr_shutdown
 	}
 

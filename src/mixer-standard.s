@@ -23,7 +23,7 @@ run_mixer_standard											; 6 to enter
 	txa														; 2
 	adc #16													; 2
 
-	!if use_profiler != 1 {
+	!ifndef use_profiler {
 	-	ldy audio_out_buf_index									; 3
 		cmp and_f0_table,y										; 4
 		beq -													; 3/2
