@@ -44,24 +44,24 @@ run_mixer_standard											; 6 to enter
 		; to alter one of them is easy to spot in the ML monitor at runtime.
 
 		!if .idx2 = 0 { mixer_std_rd_la_track_1 = * }
-		ldy $6100											; 4
+		ldy sample_data_buffer								; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_1 = * }
 		lda $8100,y											; 4
 
 		!if .idx2 = 0 { mixer_rd_la_track_4 = *}
-		ldy $6400											; 4
+		ldy sample_data_buffer+$0300						; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_4 = *}
 		adc $8400,y											; 4
 
 		sta audio_buffer_left,x								; 5
 
 		!if .idx2 = 0 { mixer_rd_la_track_2 = * }
-		ldy $6200											; 4
+		ldy sample_data_buffer+$0100						; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_2 = * }
 		lda $8200,y											; 4
 
 		!if .idx2 = 0 { mixer_rd_la_track_3 = * }
-		ldy $6300											; 4
+		ldy sample_data_buffer+$0200						; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_3 = * }
 		adc $8300,y											; 4
 
@@ -77,76 +77,11 @@ rts															; 6
 mixer_standard_loop_segment_length = mixer_standard_loop_close - mixer_standard_loop_open
 
 mixer_standard_set_vol_addrs
-	ldx mixer_standard_vol_addr_idx,y
-
-	!zone mixer_pitch_selfmod_idx_set {
-		!for .idx6, 0, 15 {
-			sta mixer_vol_std_addr_1 + mixer_standard_loop_segment_length * .idx6 + 2,x
-		}
-	}
+	+MIXER_VOL_SELFMOD_LOOP mixer_vol_std_addr_1, mixer_standard_loop_segment_length, mixer_standard_vol_addr_idx
 rts
 
 mixer_standard_do_selfmods_for_pitch_change
-  !zone mixer_pitch_selfmod_idx_set {
-	ldy seq_current_track
-
-	lda #0
-	sta utility_zpbk_counter
-	sta utility_zpbk_counter+1
-	sta utility_zpbk_counter+2
-
-	sta temp_zpbk_a
-	lda current_steprates_fracts,y
-	sta temp_zpbk_a+1
-
-	lda current_steprates_ints,y
-	lsr
-	ror temp_zpbk_a+1
-	ror temp_zpbk_a
-	lsr
-	ror temp_zpbk_a+1
-	ror temp_zpbk_a
-	lsr
-	ror temp_zpbk_a+1
-	ror temp_zpbk_a
-	lsr
-	ror temp_zpbk_a+1
-	ror temp_zpbk_a
-	sta temp_zpbk_a+2
-
-	ldx mixer_standard_read_addr_idx,y
-
-	clc
-	lda seq_current_track
-	adc #>sample_data_buffer
-
-	!for .idx4, 0, 15 {
-		!set .mixer_la_rd_addr_st = mixer_std_rd_la_track_1 + mixer_standard_loop_segment_length * .idx4
-		sta .mixer_la_rd_addr_st + 2,x
-	}
-
-	!for .idx5, 0, 15 {
-
-		!set .mixer_la_rd_addr_st = mixer_std_rd_la_track_1 + mixer_standard_loop_segment_length * .idx5
-
-		lda utility_zpbk_counter+2
-		sta .mixer_la_rd_addr_st + 1,x
-
-		lda utility_zpbk_counter
-		adc temp_zpbk_a
-		sta utility_zpbk_counter
-
-		lda utility_zpbk_counter+1
-		adc temp_zpbk_a+1
-		sta utility_zpbk_counter+1
-
-		lda utility_zpbk_counter+2
-		adc temp_zpbk_a+2
-		sta utility_zpbk_counter+2
-	  }
-	}
-
-	adc #1
+	+MIXER_PITCH_SELFMOD_LOOP mixer_std_rd_la_track_1, mixer_standard_loop_segment_length, mixer_standard_read_addr_idx
 rts
 
 mixer_standard_read_addr_idx

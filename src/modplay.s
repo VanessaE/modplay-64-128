@@ -144,6 +144,7 @@ rts
 
 !source "src/fxcmd-extended-misc.s"
 
+!source "src/mixer-common.s"
 !source "src/mixer-standard.s"
 !source "src/mixer-lowpass.s"
 
