@@ -334,8 +334,8 @@ header31_seek_to_pat_tbl		= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
 header15_seek_to_pat_data = header15_seek_to_pat_tbl + 128
 header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
 
-one_ten_thou_pal = int(985248 / 10000) - 1
-one_ten_thou_ntsc = int(1022727 / 10000) - 1
+pal_clock = 985248
+ntsc_clock = 1022727
 
 ; the pitch value sets the step rate table values that the mixer code adds to
 ; update its fetch pointers. the lookaheads will be based on 1/16 those rates.

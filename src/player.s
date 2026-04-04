@@ -207,7 +207,7 @@ no_player_ui
 
 player_init_visualizer
 	!ifdef use_profiler {
-		jsr profiler_draw_popup
+		jsr profiler_setup
 	}
 
 	clc
