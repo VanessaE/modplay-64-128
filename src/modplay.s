@@ -111,7 +111,6 @@ rts
 !source "src/decode-mod.s"
 
 !source "src/disk-ops.s"
-!source "src/uci-ops.s"
 !source "src/directory.s"
 
 !source "src/main-menu.s"
