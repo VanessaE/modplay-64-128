@@ -44,9 +44,11 @@ all:
 	@echo -e '\nFinished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)'
 
 clean:
-	rm -f bin/*
 	rm -f src/*.o
-	rm -f disk-images/*
+	rm -rf bin
+	rm -rf disk-images
+	mkdir -p bin
+	mkdir -p disk-images
 
 c64:
 	@echo -e '\nBuilding Modplay 64...\n'
@@ -117,7 +119,7 @@ else
 	$(eval PROGINTLV := 6)
 endif
 
-	$(eval DISK_IMG := disk-images/modplay$(MACHINE)v$(VERSION_MAJOR).$(DISK_FORMAT))
+	$(eval DISK_IMG := disk-images/modplay-$(MACHINE)-v$(VERSION_STRING)-build-$(BUILD_NO).$(DISK_FORMAT))
 
 	rm -f $(DISK_IMG)
 

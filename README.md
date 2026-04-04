@@ -30,3 +30,8 @@ My main goals, apart from not using BASIC anymore, are:
 * Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.
 
 This project is meant to be worked-on and built on Linux using common tools; you will need GNU make, ACME assembler, and cc1541 (not the "c1541" that comes with VICE).
+
+**DOWNLOADS:**
+
+Disk images can be found in the repository's **[Package Registry](https://gitlab.com/VanessaE/modplay-64-128/-/packages)** (or you can get there from the sidebar).
+
