@@ -72,10 +72,6 @@ start_sample
 
 	lda sample_default_loop_flags,x
 	sta current_track_loop_flags,y
-	bne +
-
-	; if no loop is defined, the sample's endpoint is the literal end of the
-	; sample.
 
 	lda sample_end_addresses_lows,x
 	sta current_sample_end_addr_lows,y
@@ -83,22 +79,11 @@ start_sample
 	sta current_sample_end_addr_mids,y
 	lda sample_end_addresses_highs,x
 	sta current_sample_end_addr_highs,y
-	jmp ++
-
-	; if there is a loop defined, its end address is used as the sample's
-	; endpoint, ignoring the sample data after that point.
-
-+	lda sample_loop_end_addresses_lows,x
-	sta current_sample_end_addr_lows,y
-	lda sample_loop_end_addresses_mids,x
-	sta current_sample_end_addr_mids,y
-	lda sample_loop_end_addresses_highs,x
-	sta current_sample_end_addr_highs,y
 
 	; if extended command #5 is called-for on this track and row, use
 	; its fine-tune value instead of the sample's default.
 
-++	lda seq_commands,y
+	lda seq_commands,y
 	cmp #14
 	bne +
 	lda seq_command_arguments,y

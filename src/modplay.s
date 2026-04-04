@@ -212,9 +212,6 @@ sample_lengths_highs				!skip 32
 sample_loop_start_addresses_lows	!skip 32
 sample_loop_start_addresses_mids	!skip 32
 sample_loop_start_addresses_highs	!skip 32
-sample_loop_end_addresses_lows		!skip 32
-sample_loop_end_addresses_mids		!skip 32
-sample_loop_end_addresses_highs		!skip 32
 sample_default_loop_flags			!skip 32
 sample_default_fine_tunes			!skip 32
 sample_default_volume_levels		!skip 32

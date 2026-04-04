@@ -195,12 +195,6 @@ reu_run_fetch_and_mixer
 				lda sample_loop_start_addresses_highs,y		; 5
 				sta current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_BANK								; 4
-				lda sample_loop_end_addresses_lows,y		; 5
-				sta .reu_samp_end_low_addr					; 4
-				lda sample_loop_end_addresses_mids,y		; 5
-				sta .reu_samp_end_mid_addr					; 4
-				lda sample_loop_end_addresses_highs,y		; 5
-				sta .reu_samp_end_high_addr					; 4
 				ldy #$91									; 2
 
 			.reu_fetch_sample_data

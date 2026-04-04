@@ -614,8 +614,6 @@ set_first_exp_pages_to_silence
 	+JSR_INDIRECT (stash_block_vec)
 rts
 
-; enter with .Y = sample number
-
 unroll_mod_sample_loops
 	ldy #15
 
@@ -652,7 +650,16 @@ unroll_one_loop
 	lda utility_pointer_b+2
 	sbc #0
 	bcc +
-	jmp unroll_next ; if so, just bail out
+
+	; if so, just copy its end addr to the sample end addr and bail out
+
+	lda sample_loop_end_addresses_lows,y
+	sta sample_end_addresses_lows,y
+	lda sample_loop_end_addresses_mids,y
+	sta sample_end_addresses_mids,y
+	lda sample_loop_end_addresses_highs,y
+	sta sample_end_addresses_highs,y
+	jmp unroll_next
 
 	; otherwise, fetch the loop data into the load buf
 	; the loop length becomes the stash/fetch size

@@ -99,6 +99,13 @@
 
 	zp_backup							= $1700
 
+	; these are only used once, during the loop-unroll-or-don't
+	; code when they're compared and/or updated, then they're discarded
+
+	sample_loop_end_addresses_lows		= zp_backup
+	sample_loop_end_addresses_mids		= zp_backup + 32
+	sample_loop_end_addresses_highs		= zp_backup + 64
+
 	program_load_decrunch_stub			= multab2hi
 
 	program_start						= $1800
