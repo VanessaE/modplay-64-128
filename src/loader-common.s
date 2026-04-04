@@ -1039,6 +1039,45 @@ unroll_more
 	sbc utility_pointer_b+2
 	bcc unroll_more
 
+	; Fill the load buffer with silence
+
+	ldx #0
+	lda #$80
+-	sta load_buffer,x
+	sta load_buffer+$0100,x
+	sta load_buffer+$0200,x
+	sta load_buffer+$0300,x
+	sta load_buffer+$0400,x
+	sta load_buffer+$0500,x
+	sta load_buffer+$0600,x
+	sta load_buffer+$0700,x
+	dex
+	bne -
+
+	; use that to fill the remaining space
+
+	; expansion_memory_target_pointer already points to the target addr
+
+	sec
+	lda #0
+	sbc expansion_memory_target_pointer
+	sta stash_size
+	lda sample_start_addresses_mids+1,y
+	sbc expansion_memory_target_pointer+1
+	cmp #9
+	bcc +
+	lda #0						; cap the size at 2kB just in case a start
+	sta stash_size				; address somehow wanders off into neverland
+	lda #8
++	sta stash_size+1
+
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+
+	+JSR_INDIRECT (stash_block_vec)
+
 unroll_next
 	dey
 	beq +
