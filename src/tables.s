@@ -4,8 +4,20 @@
 ; the resolution of the final numbers according to the needs of the audio
 ; driver.
 
-; enter with .A = desired output resolution
+; the pitch value sets the step rate table values that the mixer code adds to
+; update its fetch pointers. the lookaheads will be based on 1/16 those rates.
+;
+; for the pitch value, a larger value gives higher pitches
+; for the tempo value, a larger value gives a slower tempo
 
+pitch_fine_adjust_constant_pal = 58
+pitch_fine_adjust_constant_ntsc = 55
+
+tempo_fine_adjust_constant_pal = 153923
+tempo_fine_adjust_constant_ntsc = 159778
+
+
+; enter with .A = desired output resolution
 generate_volume_tables
 	lda #<volume_table_lower
 	sta fill_copy_target
@@ -112,13 +124,24 @@ generate_tempo_table
 
 	lda #0
 	sta dividend
-	lda #<tempo_fine_adjust_constant
-	sta dividend+1
-	lda #>tempo_fine_adjust_constant
-	sta dividend+2
-	lda #^tempo_fine_adjust_constant ; "^" means "bank" e.g. bits 16-23
-	sta dividend+3
 
+	bit pal_flag
+	bmi +
+
+	lda #<tempo_fine_adjust_constant_ntsc
+	sta dividend+1
+	lda #>tempo_fine_adjust_constant_ntsc
+	sta dividend+2
+	lda #^tempo_fine_adjust_constant_ntsc ; "^" means "bank" e.g. bits 16-23
+	jmp ++
+
++	lda #<tempo_fine_adjust_constant_pal
+	sta dividend+1
+	lda #>tempo_fine_adjust_constant_pal
+	sta dividend+2
+	lda #^tempo_fine_adjust_constant_pal ; "^" means "bank" e.g. bits 16-23
+
+++	sta dividend+3
 	lda product
 	sta divisor
 	lda product+1
@@ -141,8 +164,11 @@ generate_period_table
 	sei
 	jsr disable_roms
 
-	lda #pitch_fine_adjust_constant
-	sta multiplicand_a
+	lda #pitch_fine_adjust_constant_pal
+	bit pal_flag
+	bmi +
+	lda #pitch_fine_adjust_constant_ntsc
++	sta multiplicand_a
 	lda #0
 	sta multiplicand_a+1
 

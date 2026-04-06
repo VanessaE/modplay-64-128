@@ -337,13 +337,6 @@ header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
 pal_clock = 985248
 ntsc_clock = 1022727
 
-; the pitch value sets the step rate table values that the mixer code adds to
-; update its fetch pointers. the lookaheads will be based on 1/16 those rates.
-pitch_fine_adjust_constant = 57
-
-tempo_fine_adjust_constant = 159778
-
-
 ; ############################################################################
 ; FROM HERE ON DOWN ARE VARIABLES THAT CAN BE FREELY PLACED AND/OR REARRANGED
 ;
