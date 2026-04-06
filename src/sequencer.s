@@ -253,16 +253,6 @@ get_sample_number
 	ldy seq_current_track
 
 get_note_period
-	lda current_track_gate_flags,y
-
-	!ifdef use_profiler {				; if the profiler is compiled-in, 
-		bmi gnp							; the bpl below goes out of range.
-		jmp no_command_this_row_this_track
-	} else {
-		bpl no_command_this_row_this_track
-	}
-
-gnp
 	lda seq_current_row_data+1,x
 	and #$0f
 	ora seq_current_row_data+2,x		; if period is 0, keep using the
