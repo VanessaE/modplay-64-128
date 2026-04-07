@@ -18,9 +18,9 @@ reu_set_selfmod_and_mixer_vectors
 	sta reu_mixer_call_vec+2
 
 	lda #<mixer_standard_do_selfmods_for_pitch_change
-	sta reu_selfmod_init_vec+1
+	sta mixer_selfmod_pitch_change_vec+1
 	lda #>mixer_standard_do_selfmods_for_pitch_change
-	sta reu_selfmod_init_vec+2
+	sta mixer_selfmod_pitch_change_vec+2
 	rts
 
 +	lda #<run_mixer_lowpass
@@ -29,9 +29,9 @@ reu_set_selfmod_and_mixer_vectors
 	sta reu_mixer_call_vec+2
 
 	lda #<mixer_lowpass_do_selfmods_for_pitch_change
-	sta reu_selfmod_init_vec+1
+	sta mixer_selfmod_pitch_change_vec+1
 	lda #>mixer_lowpass_do_selfmods_for_pitch_change
-	sta reu_selfmod_init_vec+2
+	sta mixer_selfmod_pitch_change_vec+2
 rts
 
 reu_set_cycle_counts
@@ -86,7 +86,7 @@ rts
 ; THE ACTUAL FETCH ROUTINE
 ; The hard work happens here 🙂
 
-reu_fetch_loop_segment_length = reu_fetch_unroll_close - reu_fetch_unroll_open
+reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_start
 
 reu_run_fetch_and_mixer
 
@@ -102,16 +102,15 @@ reu_run_fetch_and_mixer
 		clc													; 2
 		ldy #$91											; 2
 
-		reu_fetch_unroll_open
 			!for reu_fetch_track, 0, 3 {
 			  !zone reu_fetchloop {
+				!set .ftrk = reu_fetch_track
+				!if .ftrk = 0 { !set reu_fetch_segment_start = * }
 
 				!ifdef use_profiler {
 					+FETCH_PROFILER_A
 				}
  
-				!set .ftrk = reu_fetch_track
-
 				!set .reu_steprate_fract_addr	= reu_cur_steprate_f + reu_fetch_loop_segment_length * .ftrk + 1
 				!set .reu_steprate_int_addr		= reu_cur_steprate_i + reu_fetch_loop_segment_length * .ftrk + 1
 				!set .reu_samp_end_low_addr		= reu_ckend_l + reu_fetch_loop_segment_length * .ftrk + 1
@@ -215,7 +214,7 @@ reu_run_fetch_and_mixer
 				}
 			}
 
-		!if reu_fetch_track = 0 { reu_fetch_unroll_close = * }
+		!if reu_fetch_track = 0 { reu_fetch_segment_close = * }
 		}
 
 	reu_mixer_call_vec
@@ -227,87 +226,74 @@ reu_run_fetch_and_mixer
 	jmp reu_fetch_main_loop									; 3
 
 +	stx audio_in_buf_index
-
-
 rts
 
-; =========================================================
-; === fetch loop self-mod setup routines ===
-; =========================================================
+; ====================================
+; === fetch loop self-mod routines ===
+; ====================================
 
-; SET-UP LOOKAHEAD INDEXES/ADDRESSES
-
-; This routine just sets up where in the above fetch loop segment the changes
-; will be made
-
-reu_fetch_selfmods_init
-	ldx seq_current_track
-
-	lda #(reu_fetch_unroll_close - reu_fetch_unroll_open)
-	jsr multiply_8x8
-
-	clc
-	lda #<reu_fetch_unroll_open
-	adc product
-	sta utility_pointer
-
-	lda #>reu_fetch_unroll_open
-	adc product+1
-	sta utility_pointer+1
-rts
-
-; This sets the self-mod steprate values that get added in the fetch routine,
-; which control each track's frequency, and sets the associated self-mods in
-; the mixer so that the lookahead code finds the right data.
-;
-; Always operates on the track number specified by seq_current_track
+; This plugs the step rate values into the fetch routine, and runs the
+; subroutine to set up the byte offsets in the mixer so it gets the right
+; data.
 
 reu_do_selfmods_for_pitch_change
-	jsr reu_fetch_selfmods_init
-
-	reu_selfmod_init_vec
-	  jsr $1234
-
-	; returns the total lookahead distance in .A
-
-	; fetch length addr
-	ldy #(reu_fetchlen - reu_fetch_unroll_open + 1)
-	sta (utility_pointer),y
-
 	ldx seq_current_track
+	lda reu_selfmod_fetch_segment_base_table,x
+	sta utility_pointer
+	lda reu_selfmod_fetch_segment_base_table+4,x
+	sta utility_pointer+1
 
 	; current steprate fract offset
-	ldy #(reu_cur_steprate_f - reu_fetch_unroll_open + 1)
+	ldy #(reu_cur_steprate_f - reu_fetch_segment_start + 1)
 	lda current_steprates_fracts,x
 	sta (utility_pointer),y
 
 	; current steprate int offset
-	ldy #(reu_cur_steprate_i - reu_fetch_unroll_open + 1)
+	ldy #(reu_cur_steprate_i - reu_fetch_segment_start + 1)
 	lda current_steprates_ints,x
+	sta (utility_pointer),y
+
+	mixer_selfmod_pitch_change_vec	; returns total lookahead distance in .A
+	  jsr $1234
+
+	; fetch length addr
+	ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
 	sta (utility_pointer),y
 rts
 
-; This simply sets the three self-mod immediate compares that look for the
-; end of the sample, in the fetch routine.
-;
-; Always operates on the track number specified by seq_current_track
+; This simply plugs the sample/loop end addresses into the fetch routine.
 
 reu_do_selfmods_for_instrument_change
-	jsr reu_fetch_selfmods_init
+	ldx seq_current_track
+	lda reu_selfmod_fetch_segment_base_table,x
+	sta utility_pointer
+	lda reu_selfmod_fetch_segment_base_table+4,x
+	sta utility_pointer+1
 
 	; sample pointer LSB end-check offset
-	ldy #(reu_ckend_l - reu_fetch_unroll_open + 1)
+	ldy #(reu_ckend_l - reu_fetch_segment_start + 1)
 	lda current_sample_end_addr_lows,x
 	sta (utility_pointer),y
 
 	; end-check mid byte
-	ldy #(reu_ckend_m - reu_fetch_unroll_open + 1)
+	ldy #(reu_ckend_m - reu_fetch_segment_start + 1)
 	lda current_sample_end_addr_mids,x
 	sta (utility_pointer),y
 
 	; end-check MSB
-	ldy #(reu_ckend_h - reu_fetch_unroll_open + 1)
+	ldy #(reu_ckend_h - reu_fetch_segment_start + 1)
 	lda current_sample_end_addr_highs,x
 	sta (utility_pointer),y
 rts
 }
+
+reu_selfmod_fetch_segment_base_table
+	!byte <reu_fetch_segment_start
+	!byte <(reu_fetch_segment_start + reu_fetch_loop_segment_length)
+	!byte <(reu_fetch_segment_start + reu_fetch_loop_segment_length*2)
+	!byte <(reu_fetch_segment_start + reu_fetch_loop_segment_length*3)
+
+	!byte >reu_fetch_segment_start
+	!byte >(reu_fetch_segment_start + reu_fetch_loop_segment_length)
+	!byte >(reu_fetch_segment_start + reu_fetch_loop_segment_length*2)
+	!byte >(reu_fetch_segment_start + reu_fetch_loop_segment_length*3)
