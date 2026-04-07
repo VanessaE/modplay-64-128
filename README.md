@@ -20,14 +20,16 @@ This repo exists as an attempt to remedy that.
 
 My main goals, apart from not using BASIC anymore, are:
 
-* Have just ONE codebase for all supported platforms, since 99.9% of the code can be the same all around
+* Have just ONE codebase for all supported platforms, since 99% of the code can be the same all around.
 * take advantage of things like conditional assembly, macros, split-up files, and so on -- things I just didn't do back in the old days.
 * Give the C128 variant the more-filled-out sequencer like the C64 version had (though for this project, I was forced to rewrite that code).
 * Give the C64 variant the nice Stereo-SID-Player-inspired user interface the C128 version had.
 * Improve the audio quality by using interrupt-driven, buffered audio output.
-* Improve the slow-as-molasses loader. 😛
-* Make the program more "modular" so that it's easy to add support for other hardware beyond SIDs, DigiMAX, REU, SuperCPU, etc.
+* Improve the slow-as-molasses loader. 😛  If you have an "Ultimate" device (U64, C64U, 1541U), the Command Interface is supported for faster loading.
+* Make the program more "modular" so that it's easy to add support for other audio and memory devices and other platforms/variants.
 * Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.
+
+**At the moment, as far as platforms go, this program supports oldskool C64's and C128's, with or without a SuperCPU (later version only), and it supports the C64 Ultimate and Ultimate64.  An REU of any size is required in all cases, which can be either the oldskool cartridge, or if your hardware has this feature built-in.**
 
 This project is meant to be worked-on and built on Linux using common tools; you will need GNU make, ACME assembler, and cc1541 (not the "c1541" that comes with VICE).
 
