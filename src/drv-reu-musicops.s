@@ -90,16 +90,15 @@ reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_star
 
 reu_run_fetch_and_mixer
 	lda #0													; 2
+	sta DMA_LOCAL_LO										; 4
 	sta DMA_LENGTH_HI										; 4
 	lda audio_in_buf_index									; 3
 	and #$f0												; 2
 	tax														; 2
 
 	reu_fetch_main_loop
-		lda #0												; 2
-		sta DMA_LOCAL_LO									; 4
 		clc													; 2
-		ldy #$91											; 2
+		ldy #$b1											; 2
 
 			!for reu_fetch_track, 0, 3 {
 			  !zone reu_fetchloop {
@@ -173,7 +172,7 @@ reu_run_fetch_and_mixer
 				jsr set_vol_addrs_only						; ~81 cycles
 				ldx temp_zpbk_b								; 3
 
-				ldy #$91									; 2
+				ldy #$b1									; 2
 				jmp .reu_end_of_track_fetch					; 3
 
 			.reu_sample_has_loop
@@ -189,7 +188,7 @@ reu_run_fetch_and_mixer
 				lda sample_loop_start_addresses_highs,y		; 5
 				sta current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_EXTERNAL_BANK						; 4
-				ldy #$91									; 2
+				ldy #$b1									; 2
 
 			.reu_fetch_sample_data
 
