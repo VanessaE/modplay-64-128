@@ -226,7 +226,7 @@ parse_instruments
 	lda (fill_copy_source),y
 
 	asl
-	sta utility_pointer_b						; double it:  # words to # bytes
+	sta utility_pointer_b					; double it:  # words to # bytes
 	sta sample_lengths_lows,x
 	rol utility_pointer_b+1
 	rol utility_pointer_b+2
@@ -280,9 +280,9 @@ parse_instruments
 	bcc +
 	inc parse_header_sample_pointer+2
 
-+	lda utility_pointer_b+1						; if this sample's len < 2 words,
++	lda utility_pointer_b+1					; if this sample's len < 2 words,
 	bne +									; zero-out its start addrs and
-	lda utility_pointer_b						; skip setting any attributes, now
+	lda utility_pointer_b					; skip setting any attributes, now
 	cmp #2									; that there's a valid addr to use
 	bcs +									; for the next sample's start addr
 
@@ -321,7 +321,7 @@ parse_instruments
 	lda #0
 	sta sample_default_loop_flags,x
 
-	lda utility_pointer_b+1						; if loop len > 1 word, flag this
+	lda utility_pointer_b+1					; if loop len > 1 word, flag this
 	bne +									; sample as loopable
 	lda utility_pointer_b
 	cmp #2
@@ -340,7 +340,7 @@ parse_instruments
 	lda (fill_copy_source),y
 
 	asl
-	sta utility_pointer_b						; double it:  # words to # bytes
+	sta utility_pointer_b					; double it:  # words to # bytes
 	rol utility_pointer_b+1
 	rol utility_pointer_b+2
 
@@ -363,7 +363,7 @@ parse_instruments
 	lda (fill_copy_source),y
 	sta utility_pointer_b
 
-	asl utility_pointer_b						; double it:  # words to # bytes
+	asl utility_pointer_b					; double it:  # words to # bytes
 	rol utility_pointer_b+1
 	rol utility_pointer_b+2
 

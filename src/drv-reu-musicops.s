@@ -89,12 +89,11 @@ rts
 reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_start
 
 reu_run_fetch_and_mixer
-
-	lda #0
-	sta DMA_DAH
-	lda audio_in_buf_index
-	and #$f0
-	tax
+	lda #0													; 2
+	sta DMA_DAH												; 4
+	lda audio_in_buf_index									; 3
+	and #$f0												; 2
+	tax														; 2
 
 	reu_fetch_main_loop
 		lda #0												; 2

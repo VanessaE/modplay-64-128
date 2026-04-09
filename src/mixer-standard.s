@@ -24,9 +24,9 @@ run_mixer_standard											; 6 to enter
 	adc #16													; 2
 
 	!ifndef use_profiler {
-	-	ldy audio_out_buf_index									; 3
-		cmp and_f0_table,y										; 4
-		beq -													; 3/2
+	-	ldy audio_out_buf_index								; 3
+		cmp and_f0_table,y									; 4
+		beq -												; 3/2
 	}
 
 	clc														; 2

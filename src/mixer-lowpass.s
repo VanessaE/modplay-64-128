@@ -24,14 +24,14 @@ rts
 ; Must enter with .X = the most recent 16-byte offset into the audio input
 ; buffer, which will be updated here
 
-run_mixer_lowpass								; 6 to enter
+run_mixer_lowpass											; 6 to enter
 	txa														; 2
 	adc #16													; 2
 
 	!ifndef use_profiler {
-	-	ldy audio_out_buf_index									; 3
-		cmp and_f0_table,y										; 4
-		beq -													; 3/2
+	-	ldy audio_out_buf_index								; 3
+		cmp and_f0_table,y									; 4
+		beq -												; 3/2
 	}
 
 	mixer_lowpass_loop_open
