@@ -225,15 +225,15 @@
 
 	DMA_CMD								= $df01
 
-	DMA_ADL								= $df02		; local address
-	DMA_ADH								= $df03
+	DMA_LOCAL_LO						= $df02		; local address
+	DMA_LOCAL_HI						= $df03
 
-	DMA_LO								= $df04		; REU address
-	DMA_HI								= $df05
-	DMA_BANK							= $df06
+	DMA_EXTERNAL_LO						= $df04		; REU address
+	DMA_EXTERNAL_HI						= $df05
+	DMA_EXTERNAL_BANK					= $df06
 
-	DMA_DAL								= $df07		; transfer length
-	DMA_DAH								= $df08
+	DMA_LENGTH_LO						= $df07		; transfer length
+	DMA_LENGTH_HI						= $df08
 
 	; 1541U-specific registers
 

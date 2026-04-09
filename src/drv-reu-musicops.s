@@ -50,25 +50,25 @@ rts
 reu_fetch_row
 	clc
 	lda utility_pointer_b
-	sta DMA_LO
+	sta DMA_EXTERNAL_LO
 	lda utility_pointer_b+1
-	sta DMA_HI
+	sta DMA_EXTERNAL_HI
 	lda utility_pointer_b+2
-	sta DMA_BANK
+	sta DMA_EXTERNAL_BANK
 
 	lda #<seq_current_row_data
-	sta DMA_ADL
+	sta DMA_LOCAL_LO
 	lda #>seq_current_row_data
-	sta DMA_ADH
+	sta DMA_LOCAL_HI
 
 	lda #0
-	sta DMA_DAH
+	sta DMA_LENGTH_HI
 
 	ldy #$91
 
 	!ifndef scpu {
 		lda #16
-		sta DMA_DAL
+		sta DMA_LENGTH_LO
 		+C128_2MHZ_OFF_FOR_REU
 		sty DMA_CMD
 		+C128_2MHZ_ON_FOR_REU
@@ -76,9 +76,9 @@ reu_fetch_row
 		; on SCPU, we split the transfer into small pieces to minimize
 		; interference with the audio ISR's timing.
 		lda #8
-		sta DMA_DAL
+		sta DMA_LENGTH_LO
 		sty DMA_CMD
-		sta DMA_DAL
+		sta DMA_LENGTH_LO
 		sty DMA_CMD
 	}
 rts
@@ -90,14 +90,14 @@ reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_star
 
 reu_run_fetch_and_mixer
 	lda #0													; 2
-	sta DMA_DAH												; 4
+	sta DMA_LENGTH_HI										; 4
 	lda audio_in_buf_index									; 3
 	and #$f0												; 2
 	tax														; 2
 
 	reu_fetch_main_loop
 		lda #0												; 2
-		sta DMA_ADL											; 4
+		sta DMA_LOCAL_LO									; 4
 		clc													; 2
 		ldy #$91											; 2
 
@@ -117,7 +117,7 @@ reu_run_fetch_and_mixer
 				!set .reu_samp_end_high_addr	= reu_ckend_h + reu_fetch_loop_segment_length * .ftrk + 1
 
 				lda #(>sample_data_buffer) + .ftrk			; 2
-				sta DMA_ADH									; 4
+				sta DMA_LOCAL_HI							; 4
 
 				lda current_sample_pointers_fracts + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_cur_steprate_f = * }
@@ -128,26 +128,26 @@ reu_run_fetch_and_mixer
 				!if .ftrk = 0 { !set reu_cur_steprate_i = * }
 				adc #0										; 2
 				sta current_sample_pointers_lows + .ftrk	; 3
-				sta DMA_LO									; 4
+				sta DMA_EXTERNAL_LO							; 4
 				bcc .reu_fix_dma_top_two_bytes				; 3/2
 
 				inc current_sample_pointers_mids + .ftrk	; 5
 				lda current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_HI									; 4
+				sta DMA_EXTERNAL_HI							; 4
 				bne .reu_fix_dma_top_byte					; 3/2
 
 				inc current_sample_pointers_highs + .ftrk	; 5
 				lda current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_BANK								; 4
+				sta DMA_EXTERNAL_BANK						; 4
 				jmp .reu_check_end							; 3
 
 			.reu_fix_dma_top_two_bytes
 				lda current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_HI									; 4
+				sta DMA_EXTERNAL_HI							; 4
 
 			.reu_fix_dma_top_byte
 				lda current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_BANK								; 4
+				sta DMA_EXTERNAL_BANK						; 4
 
 			.reu_check_end
 				lda current_sample_pointers_lows + .ftrk	; 3
@@ -186,20 +186,20 @@ reu_run_fetch_and_mixer
 				ldy current_sample_numbers + .ftrk			; 3
 				lda sample_loop_start_addresses_lows,y		; 5
 				sta current_sample_pointers_lows + .ftrk	; 3
-				sta DMA_LO									; 4
+				sta DMA_EXTERNAL_LO							; 4
 				lda sample_loop_start_addresses_mids,y		; 5
 				sta current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_HI									; 4
+				sta DMA_EXTERNAL_HI							; 4
 				lda sample_loop_start_addresses_highs,y		; 5
 				sta current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_BANK								; 4
+				sta DMA_EXTERNAL_BANK						; 4
 				ldy #$91									; 2
 
 			.reu_fetch_sample_data
 
 				!if .ftrk = 0 { !set reu_fetchlen = * }
 				lda #1										; 2
-				sta DMA_DAL									; 4
+				sta DMA_LENGTH_LO							; 4
 
 				; N below will vary by pitch, on average it'll be around 32
 				; on C64

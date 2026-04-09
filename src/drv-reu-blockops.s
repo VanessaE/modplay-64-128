@@ -7,21 +7,21 @@
 
 reu_fetch_block
 	lda expansion_transfer_local_addr
-	sta DMA_ADL
+	sta DMA_LOCAL_LO
 	lda expansion_transfer_local_addr+1
-	sta DMA_ADH
+	sta DMA_LOCAL_HI
 
 	lda expansion_memory_target_pointer
-	sta DMA_LO
+	sta DMA_EXTERNAL_LO
 	lda expansion_memory_target_pointer+1
-	sta DMA_HI
+	sta DMA_EXTERNAL_HI
 	lda expansion_memory_target_pointer+2
-	sta DMA_BANK
+	sta DMA_EXTERNAL_BANK
 
 	lda stash_size
-	sta DMA_DAL
+	sta DMA_LENGTH_LO
 	lda stash_size+1
-	sta DMA_DAH
+	sta DMA_LENGTH_HI
 
 	lda #$91
 
@@ -32,21 +32,21 @@ rts
 
 reu_stash_block
 	lda expansion_transfer_local_addr
-	sta DMA_ADL
+	sta DMA_LOCAL_LO
 	lda expansion_transfer_local_addr+1
-	sta DMA_ADH
+	sta DMA_LOCAL_HI
 
 	lda expansion_memory_target_pointer
-	sta DMA_LO
+	sta DMA_EXTERNAL_LO
 	lda expansion_memory_target_pointer+1
-	sta DMA_HI
+	sta DMA_EXTERNAL_HI
 	lda expansion_memory_target_pointer+2
-	sta DMA_BANK
+	sta DMA_EXTERNAL_BANK
 
 	lda stash_size
-	sta DMA_DAL
+	sta DMA_LENGTH_LO
 	lda stash_size+1
-	sta DMA_DAH
+	sta DMA_LENGTH_HI
 
 	lda #$90
 
@@ -112,16 +112,16 @@ rts
 set_registers_AXY ; setup REU registers (used for both reading and writing in size test only)
 	; A/X: c64 address
 	; Y: REU command
-	sta DMA_ADL
-	stx DMA_ADH
+	sta DMA_LOCAL_LO
+	stx DMA_LOCAL_HI
 	ldx #0
-	stx DMA_LO
-	stx DMA_HI
+	stx DMA_EXTERNAL_LO
+	stx DMA_EXTERNAL_HI
 	lda reu_banknum
-	sta DMA_BANK
+	sta DMA_EXTERNAL_BANK
 	lda #9 ; signature length
-	sta DMA_DAL
-	stx DMA_DAH
+	sta DMA_LENGTH_LO
+	stx DMA_LENGTH_HI
 	sty DMA_CMD
 rts
 }
