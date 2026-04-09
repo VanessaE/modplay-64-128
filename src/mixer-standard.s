@@ -20,6 +20,7 @@ rts
 ; buffer, which will be updated here
 
 run_mixer_standard											; 6 to enter
+	clc														; 2
 	txa														; 2
 	adc #16													; 2
 

@@ -110,13 +110,11 @@ reu_run_fetch_and_mixer
 					+FETCH_PROFILER_A
 				}
  
-				!set .reu_steprate_fract_addr	= reu_cur_steprate_f + reu_fetch_loop_segment_length * .ftrk + 1
-				!set .reu_steprate_int_addr		= reu_cur_steprate_i + reu_fetch_loop_segment_length * .ftrk + 1
-				!set .reu_samp_end_low_addr		= reu_ckend_l + reu_fetch_loop_segment_length * .ftrk + 1
-				!set .reu_samp_end_mid_addr		= reu_ckend_m + reu_fetch_loop_segment_length * .ftrk + 1
-				!set .reu_samp_end_high_addr	= reu_ckend_h + reu_fetch_loop_segment_length * .ftrk + 1
+				bit current_track_gate_flags + .ftrk
+				bmi +
+				jmp .reu_end_of_track_fetch
 
-				lda #(>sample_data_buffer) + .ftrk			; 2
+			+	lda #(>sample_data_buffer) + .ftrk			; 2
 				sta DMA_LOCAL_HI							; 4
 
 				lda current_sample_pointers_fracts + .ftrk	; 3
@@ -167,18 +165,16 @@ reu_run_fetch_and_mixer
 				clc											; 2
 				lda current_track_loop_flags + .ftrk		; 3
 				bne .reu_sample_has_loop					; 3/2
-				sta current_sample_pointers_lows + .ftrk	; 3
-				sta current_sample_pointers_mids + .ftrk	; 3
-				sta current_sample_pointers_highs + .ftrk	; 3
-				sta .reu_steprate_fract_addr				; 4
-				sta .reu_steprate_int_addr					; 4
+				sta current_track_gate_flags + .ftrk		; 3
+				ldy #.ftrk									; 2
+				lda #>volume_table_lower					; 2
 
-				sta .reu_samp_end_low_addr					; 4
-				sta .reu_samp_end_high_addr					; 4
-				lda #1										; 2
-				sta .reu_samp_end_mid_addr					; 4
+				stx temp_zpbk_b								; 3
+				jsr set_vol_addrs_only						; ~81 cycles
+				ldx temp_zpbk_b								; 3
 
-				jmp .reu_fetch_sample_data					; 3
+				ldy #$91									; 2
+				jmp .reu_end_of_track_fetch					; 3
 
 			.reu_sample_has_loop
 				lda #0										; 2
@@ -211,6 +207,10 @@ reu_run_fetch_and_mixer
 				!ifdef use_profiler {
 					+FETCH_PROFILER_B 7, .ftrk
 				}
+
+			.reu_end_of_track_fetch
+			; when a track is not gated, the code skips the whole fetch
+
 			}
 
 		!if reu_fetch_track = 0 { reu_fetch_segment_close = * }

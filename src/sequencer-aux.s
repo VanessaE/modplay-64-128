@@ -80,6 +80,12 @@ start_sample
 	lda sample_end_addresses_highs,x
 	sta current_sample_end_addr_highs,y
 
+	lda sample_default_loop_flags,x
+	sta current_track_loop_flags,y
+
+	lda #$80
+	sta current_track_gate_flags,y
+
 	; if extended command #5 is called-for on this track and row, use
 	; its fine-tune value instead of the sample's default.
 
@@ -107,6 +113,11 @@ rts
 ; enter with .Y = track number
 
 set_pitch_by_table_lookup
+	lda current_track_gate_flags,y
+	bmi +
+	rts
+
++	lda current_note_periods_lows,y
 	lda current_note_periods_lows,y
 	sta utility_pointer
 	lda current_note_periods_highs,y

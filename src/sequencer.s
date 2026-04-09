@@ -22,6 +22,7 @@ start_sequencer
 	sta current_cut_sample_ticks,x
 	sta current_delay_sample_ticks,x
 	sta current_track_loop_flags,x
+	sta current_track_gate_flags,x
 	sta current_vibrato_step_size_ints,x
 	sta current_vibrato_step_size_fracts,x
 	sta last_vibrato_rates,x
@@ -233,7 +234,7 @@ get_sample_number
 
 	tax									; only change the channel's volume if
 	lda sample_default_volume_levels,x	; the sample number changes.
-	jsr set_volume
+	jsr set_volume_skip_gate_check
 	ldx seq_cur_track_data_offset
 
 +	lda seq_current_row_data+1,x		; if period is 0, don't restart
@@ -253,6 +254,16 @@ get_sample_number
 	ldy seq_current_track
 
 get_note_period
+	lda current_track_gate_flags,y
+
+	!ifdef use_profiler {				; if the profiler is compiled-in, 
+		bmi gnp							; the bpl below will go out of range.
+		jmp no_command_this_row_this_track
+	} else {
+		bpl no_command_this_row_this_track
+	}
+
+gnp
 	lda seq_current_row_data+1,x
 	and #$0f
 	ora seq_current_row_data+2,x		; if period is 0, keep using the
@@ -361,6 +372,9 @@ next_tick
 
 next_track_pre_tick
 	ldy seq_current_track
+	lda current_track_gate_flags,y
+	bpl dont_run_pre_tick_command
+
 	ldx seq_commands,y					; commands 0-3, and 5 need to be run
 	cpx #5								; after the fetch/mixer routine, not
 	beq dont_run_pre_tick_command		; before.
@@ -369,7 +383,7 @@ next_track_pre_tick
 	cpx #16
 	bcs dont_run_pre_tick_command
 
-pre_tick_command
+	; run pre tick command
 	lda run_effect_command_jump_table_highs,x
 	beq dont_run_pre_tick_command
 
@@ -441,6 +455,10 @@ run_fetch_and_mixer_vec
 
 next_track_post_tick
 	ldy seq_current_track
+
+	lda current_track_gate_flags,y
+	bpl dont_run_post_tick_command
+
 	ldx seq_commands,y					; commands 0-3, and 5 need to be run here.
 	cpx #5
 	beq run_post_tick_command

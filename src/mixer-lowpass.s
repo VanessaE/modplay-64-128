@@ -25,6 +25,7 @@ rts
 ; buffer, which will be updated here
 
 run_mixer_lowpass											; 6 to enter
+	clc														; 2
 	txa														; 2
 	adc #16													; 2
 
@@ -33,6 +34,8 @@ run_mixer_lowpass											; 6 to enter
 		cmp and_f0_table,y									; 4
 		beq -												; 3/2
 	}
+
+	clc														; 2
 
 	mixer_lowpass_loop_open
 	  !for .idx2, 0, 15 {

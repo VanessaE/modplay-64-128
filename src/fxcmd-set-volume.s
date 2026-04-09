@@ -11,6 +11,11 @@ run_effect_set_volume
 	lda seq_command_arguments,y
 
 set_volume
+	ldx current_track_gate_flags,y
+	bmi set_volume_skip_gate_check
+	rts
+
+set_volume_skip_gate_check
 	sta current_sample_volume_levels,y
 	ldx track_current_enable_flags,y
 	bmi +
