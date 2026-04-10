@@ -413,8 +413,12 @@ load_sample_data
 .load_next_sample
 	inc sample_number_count
 	ldy sample_number_count
+	cpy num_samples_to_load
+	bcc +
+	beq +
+	jmp .ldr_done
 
-	lda sample_lengths_lows,y			; if the length is 0, it's an empty
++	lda sample_lengths_lows,y			; if the length is 0, it's an empty
 	ora sample_lengths_mids,y			; sample slot (duh 🙂)
 	ora sample_lengths_highs,y
 	bne ++
@@ -489,7 +493,8 @@ load_sample_data
 	bne .load_next_sample_block			; if not, keep loading...
 
 	lda utility_counter					; is the remainder just 0?  (e.g. sample
-	beq .chk_more_samples				; is a multiple of 256 bytes)
+	bne .load_rest_of_sample			; is a multiple of 256 bytes)
+	jmp .load_next_sample
 
 .load_rest_of_sample					; if neither, load the exact number of remaining bytes
 	ldy #0
@@ -531,12 +536,6 @@ load_sample_data
 
 	lda STATUS
 	bne .ldr_done
-
-.chk_more_samples
-	ldy num_samples_to_load
-	dey
-	cpy sample_number_count
-	bcc .ldr_done
 	jmp .load_next_sample
 
 .ldr_done
