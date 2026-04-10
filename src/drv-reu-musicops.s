@@ -109,9 +109,9 @@ reu_run_fetch_and_mixer
 					+FETCH_PROFILER_A
 				}
  
-				bit current_track_gate_flags + .ftrk
-				bmi +
-				jmp .reu_end_of_track_fetch
+				bit current_track_gate_flags + .ftrk		; 3
+				bmi +										; 3/2
+				jmp .reu_end_of_track_fetch					; 3
 
 			+	lda #(>sample_data_buffer) + .ftrk			; 2
 				sta DMA_LOCAL_HI							; 4
