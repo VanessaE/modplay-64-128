@@ -178,7 +178,10 @@ menu_text_dos_cmd_b
 	!text LGRY,"commands",RETURN,0
 menu_text_info_popup
 	!fill 4,RIGHT
-	!text RIGHT,GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
+	!text RIGHT,GRN,"[",YEL,"I",GRN,"]",LGRY," System and",RETURN,0
+menu_text_info_popup_b
+	!fill 9,RIGHT
+	!text LGRY,"Song Info",RETURN,0
 
 ;##### Menu page C
 
@@ -225,7 +228,7 @@ info_popup_msg
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Expansion RAM usage:",RETURN
-	!fill 5,DOWN
+	!fill 8,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
 !ifdef c64u {
@@ -363,6 +366,17 @@ no_file_loaded_msg
 	!byte $80+20
 		!text LBLU,"[No file is loaded]"
 	!byte 0
+
+for_instr_list_msg
+	!text " for i"
+instr_list_msg
+	!text "nstrument list"
+	!byte 0
+
+more_msg
+	!text RETURN,RETURN
+	!fill 16,RIGHT
+	!text LGRN,"* More *",0
 
 current_file_tracks_msg
 	!text LBLU," tracks / ",CYAN,0

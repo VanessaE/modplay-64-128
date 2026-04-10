@@ -17,8 +17,6 @@
 	filter_col		= 24
 	dith_en_row		= 4
 	dith_en_col		= 22
-	info_anykey_row	= 15
-	info_anykey_col	= 14
 	info_plat_row	= 2
 	info_plat_col	= 13
 	info_expram_row	= 6
@@ -31,8 +29,12 @@
 	info_files_col	= 26
 	info_ram_use_row = 7
 	info_ram_use_col = 24
-	build_no_row	= 13
+	build_no_row	= 16
 	build_no_col	= 13
+	info_anykey_row	= 18
+	info_anykey_col	= 14
+	info_instlist_row = 0
+	info_instlist_col = 13
 } else ifdef c64u {
 	rpt_row			= 9
 	rpt_col			= 34
@@ -52,22 +54,24 @@
 	dith_en_col		= 33
 	scr_en_row		= 9
 	scr_en_col		= 30
-	info_anykey_row	= 20
-	info_anykey_col	= 14
-	info_plat_row	= 7
+	info_plat_row	= 5
 	info_plat_col	= 13
-	info_expram_row	= 11
+	info_expram_row	= 9
 	info_expram_col	= 23
-	info_lsid_row	= 8
+	info_lsid_row	= 6
 	info_lsid_col	= 13
-	info_rsid_row	= 9
+	info_rsid_row	= 7
 	info_rsid_col	= 14
-	info_files_row	= 10
+	info_files_row	= 8
 	info_files_col	= 26
-	info_ram_use_row = 12
+	info_ram_use_row = 10
 	info_ram_use_col = 24
-	build_no_row	= 18
+	build_no_row	= 19
 	build_no_col	= 13
+	info_anykey_row	= 21
+	info_anykey_col	= 14
+	info_instlist_row = 3
+	info_instlist_col = 13
 } else {
 	rpt_row			= 9
 	rpt_col			= 34
@@ -87,22 +91,24 @@
 	dith_en_col		= 33
 	scr_en_row		= 9
 	scr_en_col		= 30
-	info_anykey_row	= 20
-	info_anykey_col	= 14
-	info_plat_row	= 7
+	info_plat_row	= 5
 	info_plat_col	= 13
-	info_expram_row	= 11
+	info_expram_row	= 9
 	info_expram_col	= 23
-	info_lsid_row	= 8
+	info_lsid_row	= 6
 	info_lsid_col	= 13
-	info_rsid_row	= 9
+	info_rsid_row	= 7
 	info_rsid_col	= 14
-	info_files_row	= 10
+	info_files_row	= 8
 	info_files_col	= 26
-	info_ram_use_row = 12
+	info_ram_use_row = 10
 	info_ram_use_col = 24
-	build_no_row	= 18
+	build_no_row	= 19
 	build_no_col	= 13
+	info_anykey_row	= 21
+	info_anykey_col	= 14
+	info_instlist_row = 3
+	info_instlist_col = 13
 }
 
 show_repeat_mode
@@ -735,6 +741,7 @@ show_system_info_popup
 	jsr check_sid_type_right
 
 	jsr draw_medium_popup
+
 	lda #0
 	ldx #<info_popup_msg
 	ldy #>info_popup_msg
@@ -973,10 +980,273 @@ show_system_info_popup
 	ldy #>build_no
 	jsr print_uint16
 
+	lda #YEL
+	jsr CHROUT
+
+	ldx current_file_type
+	beq +
+
 	clc
 	ldx #info_anykey_row
-	ldy #info_anykey_col
+	ldy #info_anykey_col-11 ; "Press any key for instrument list"
 	jsr PLOT
 
+	lda #0
+	ldx #<press_key_msg
+	ldy #>press_key_msg
+	jsr print_msg
+
+	lda #0
+	ldx #<for_instr_list_msg
+	ldy #>for_instr_list_msg
+	jsr print_msg
+
+	jsr wait_key
+
+	jsr list_instrument_names
+
++	!ifdef c128 {
+		lda #info_anykey_col
+
+		ldx current_file_type
+		cpx #2
+		bcc +
+
+		clc
+		adc #8
+	+	tay
+	} else {
+		ldy #info_anykey_col
+		clc
+	}
+
+	ldx #info_anykey_row
+	jsr PLOT
+
+	lda #YEL
+	jsr CHROUT
+
 	jsr press_any_key
+rts
+
+list_instrument_names
+	!ifdef c128 {
+		ldx current_file_type
+		cpx #1
+		beq +
+		lda #31
+		sta temp_abs_b
+		jsr draw_medium_wide_popup
+		jmp ++
+
+	+	lda #15
+		sta temp_abs_b
+		jsr draw_medium_popup
+	++
+	} else {
+		ldx current_file_type
+		lda #15
+		cpx #1
+		beq +
+
+		lda #31
+	+	sta temp_abs_b
+
+		jsr draw_medium_popup
+	}
+
+	jsr print_instr_list_msg
+
+	lda #1
+	sta temp_abs_x
+
+	lda #<string_buffer
+	sta expansion_transfer_local_addr
+	lda #>string_buffer
+	sta expansion_transfer_local_addr+1
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+	sta stash_size+1
+	lda exp_instr_names_start_page
+	sta expansion_memory_target_pointer+1
+
+	lda #32
+	sta stash_size
+
+.inst_cnt
+	+JSR_INDIRECT (fetch_block_vec)
+
+	lda #RETURN
+	jsr CHROUT
+	lda #RIGHT
+	jsr CHROUT
+
+	!ifndef c128 {
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		lda #LBLU
+	} else {
+		ldx current_file_type
+		cpx #1
+		bne +
+
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+		jsr CHROUT
+
+	+	lda #DCYN
+	}
+
+	jsr CHROUT
+
+	!ifdef c128 {
+		ldx temp_abs_x
+		cpx #17
+		bcc .inscnt_lft_col
+		beq +
+		bcs ++
+
+	+	lda #HOME
+		jsr CHROUT
+		lda #DOWN
+		jsr CHROUT
+		jsr CHROUT
+		lda #RIGHT
+		jsr CHROUT
+
+	++	ldy #26
+		lda #RIGHT
+	-	jsr CHROUT
+		dey
+		bne -
+
+		lda #$aa ; "|" graphic, but at the right edge
+		jsr CHROUT
+		lda #" "
+		jsr CHROUT
+	}
+
+.inscnt_lft_col
+	ldx temp_abs_x
+	cpx #10
+	bcs +
+
+	lda #" "
+	jsr CHROUT
+	ldx temp_abs_x
+	sec
+
++	ldy #0
+	jsr print_uint16
+
+	lda #":"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+
+	lda #CYAN
+	jsr CHROUT
+
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr get_string_length
+	sty temp_abs_y
+
+	lda #22
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr print_msg_ascii
+
+	sec
+	lda #22
+	sbc temp_abs_y
+	beq +
+
+	tay
+
+	lda #LBLU
+	jsr CHROUT
+
+	lda #"."
+-	jsr CHROUT
+	dey
+	bne -
+
++	clc
+	lda expansion_memory_target_pointer
+	adc #32
+	sta expansion_memory_target_pointer
+	bcc +
+	inc expansion_memory_target_pointer+1
+
++	inc temp_abs_x
+
+	!ifndef c128 {
+		lda current_file_type
+		cmp #1
+		beq +
+
+		ldx temp_abs_x
+		cpx #16
+		bne +
+
+		lda #0
+		ldx #<more_msg
+		ldy #>more_msg
+		jsr print_msg
+
+		jsr wait_key
+
+		jsr draw_medium_popup
+		jsr print_instr_list_msg
+	 +
+	}
+
+	dec temp_abs_b
+	beq +
+	jmp .inst_cnt
+  +
+rts
+
+print_instr_list_msg
+
+	!ifdef c128 {
+		lda #info_instlist_col
+
+		ldx current_file_type
+		cpx #1
+		clc
+		beq +
+
+		adc #8
+	+	tay
+	} else {
+		ldy #info_instlist_col
+		clc
+	}
+
+	ldx #info_instlist_row
+	jsr PLOT
+
+	lda #LGRN
+	jsr CHROUT
+	lda #"I"
+	jsr CHROUT
+
+	lda #0
+	ldx #<instr_list_msg
+	ldy #>instr_list_msg
+	jsr print_msg
+
+	lda #RETURN
+	jsr CHROUT
 rts

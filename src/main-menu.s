@@ -414,6 +414,12 @@ draw_menu_page_b
 	sec
 	jsr print_menu_line
 
+	!ifndef c128 {
+		ldx #<menu_text_info_popup_b
+		ldy #>menu_text_info_popup_b
+		jsr print_menu_line
+	}
+
 	jsr show_input_device
 rts
 

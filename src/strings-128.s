@@ -154,7 +154,7 @@ menu_text_dos_cmd
 	!text GRN,"[",YEL,"@",GRN,"]",LGRY," Send DOS commands",RETURN,0
 menu_text_info_popup
 	!fill 8,RIGHT
-	!text GRN,"[",YEL,"I",GRN,"]",LGRY," System Info",RETURN,0
+	!text GRN,"[",YEL,"I",GRN,"]",LGRY," System and Song Info",RETURN,0
 
 ;##### Menu page C
 
@@ -186,7 +186,7 @@ info_popup_msg
 	!text RIGHT,RIGHT,RIGHT,"Files in current list:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Expansion RAM size:",RETURN
 	!text RIGHT,RIGHT,RIGHT,"Expansion RAM usage:",RETURN
-	!fill 5,DOWN
+	!fill 8,DOWN
 	!text RIGHT,RIGHT,RIGHT,"Build ID:",0
 
 !ifdef scpu {
@@ -275,6 +275,15 @@ no_list_loaded_msg
 
 no_file_loaded_msg
 	!text LBLU,"[No file has been loaded yet]",0
+
+for_instr_list_msg
+	!text " for i"
+instr_list_msg
+	!text "nstrument list"
+	!byte 0
+
+more_msg
+	!text LGRN,"* More *",0
 
 current_file_msg
 	!text LBLU,"Current file: ",0

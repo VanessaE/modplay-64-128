@@ -677,6 +677,7 @@ press_any_key ; display "press key" message and wait for keypress
 	sec
 	jsr print_msg
 
+wait_key
 -	jsr GETIN
 	beq -
 rts
