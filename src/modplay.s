@@ -26,6 +26,12 @@
 	}
 }
 
+!ifdef scpu {
+	turbo_available = 1
+} else ifdef c64u {
+	turbo_available = 1
+}
+
 !convtab pet
 !cpu 6510
 

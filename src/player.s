@@ -1,9 +1,8 @@
-; this file will hold the outline of the actual player
+; this file holds the "outline" of the actual player
 
 start_main_player
+
 	!ifdef scpu {
-		lda #0
-		sta supercpu_turbo_available
 
 		bit supercpu_detected
 		bpl +
@@ -23,16 +22,32 @@ start_main_player
 	-	bit SCPU_JD_TURBO_SWITCH
 		bvs -
 
-		lda #$80
-		sta supercpu_turbo_available
-	  +
+	+	sta SCPU_TURBO_ON
+		sta SCPU_ENABLE_HW_REGS
+
+		!ifdef c128 {
+			lda #%10000100				; disable all local RAM echoing
+		} else {
+			lda #%01000100				; optimize:  only echo $c000-$ffff to
+		}
+
+		sta SCPU_OPTIMIZATION_MODE	; local RAM
+		sta SCPU_DISABLE_HW_REGS
 	}
 
-	!ifdef badlines_exist {
-		bit enable_screen_on_playback
-		bmi +
-		jmp no_player_ui
-	  +
+	!ifdef turbo_available {
+		lda #0
+		sta allow_regen_msg
+	} else {
+		lda #$80
+		sta allow_regen_msg
+
+		!ifndef c128 {
+			bit enable_screen_on_playback
+			bmi +
+			jmp no_player_ui
+		  +
+		}
 	}
 
 	!ifndef c128 {
@@ -151,23 +166,6 @@ start_main_player
 	jsr print_msg
 
 no_player_ui
-	!ifndef c128 {
-		!ifdef scpu {
-			bit SCPU_PRESENT
-			bmi +
-
-			sta SCPU_TURBO_ON
-			sta SCPU_ENABLE_HW_REGS
-			lda #%10000100					; disable all local RAM echoing
-			sta SCPU_OPTIMIZATION_MODE
-			sta SCPU_DISABLE_HW_REGS
-		  +
-		} else {
-			lda #$80
-			sta allow_regen_msg
-		}
-	}
-
 	lda stereo_enable
 	sta stereo_enable_temp
 
@@ -179,21 +177,25 @@ no_player_ui
 	lda #0
 	sta stereo_enable
 
-+	jsr init_audio_driver
++	!ifndef c128 {
+		!ifdef scpu {
+			sta SCPU_ENABLE_HW_REGS
+			lda #%10000100					; disable all local RAM echoing
+			sta SCPU_OPTIMIZATION_MODE
+			sta SCPU_DISABLE_HW_REGS
+		}
+	}
+
+	jsr init_audio_driver
 	jsr reu_set_selfmod_and_mixer_vectors
 	jsr regenerate_tables_if_needed
 
 	!ifndef c128 {
 		!ifdef scpu {
-			bit SCPU_PRESENT
-			bmi +
-
-			sta SCPU_TURBO_ON
 			sta SCPU_ENABLE_HW_REGS
 			lda #%01000100				; optimize:  only echo $c000-$ffff to
 			sta SCPU_OPTIMIZATION_MODE	; local RAM
 			sta SCPU_DISABLE_HW_REGS
-		  +
 		}
 	}
 

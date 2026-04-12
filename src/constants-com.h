@@ -650,7 +650,6 @@ ntsc_clock = 1022727
 	num_columns							!skip 1
 
 	supercpu_detected					!skip 1
-	supercpu_turbo_available			!skip 1
 
 	multiplicand_a						!skip 2 ; these first two are only
 	multiplicand_b						!skip 2 ; used by 16x16 multiply

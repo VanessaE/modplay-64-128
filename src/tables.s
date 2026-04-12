@@ -350,12 +350,13 @@ regenerate_tables_if_needed
 	bne +
 	rts
 
-+	!ifndef scpu {
-		!ifndef c64u {
-			bit allow_regen_msg
-			bpl no_msgs1
++	bit allow_regen_msg
+	bpl no_msgs1
 
+	!ifndef scpu {
+		!ifndef c64u {
 			!ifndef c128 {
+
 				bit enable_screen_on_playback	; because if it's enabled, the display will
 				bmi +							; have switched to the alt charset by this point.
 
@@ -369,6 +370,11 @@ regenerate_tables_if_needed
 			+	ldx #player_popup_top_row+9
 				ldy #player_popup_left_column
 			++	clc
+				jsr PLOT
+			} else {
+				ldx #player_popup_top_row+9
+				ldy #player_popup_left_column
+				clc
 				jsr PLOT
 			}
 
