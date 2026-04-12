@@ -366,8 +366,8 @@ regenerate_tables_if_needed
 				ldy #short_popup_left_column
 				jmp ++
 
-			+	ldx #medium_popup_top_row+9
-				ldy #medium_popup_left_column
+			+	ldx #player_popup_top_row+9
+				ldy #player_popup_left_column
 			++	clc
 				jsr PLOT
 			}

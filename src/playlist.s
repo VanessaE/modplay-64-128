@@ -1078,7 +1078,7 @@ print_now_playing_msg
 	adc #5		; length of " of " (with spaces) and the trailing colon
 
 	tay
-	lda #medium_popup_width
+	lda #player_popup_width
 	jsr center_string_by_len_val
 	jmp .npl1b
 

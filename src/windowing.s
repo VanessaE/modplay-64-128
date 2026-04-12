@@ -30,7 +30,15 @@ bottom_edge_char			= $60
 
 	medium_popup_left_column		= 4
 	medium_popup_width				= 36
-	medium_popup_height				= 18
+	medium_popup_height				= 16
+
+	player_popup_left_column		= 4
+	player_popup_width				= 36
+	player_popup_height				= 15
+
+	info_popup_left_column			= 4
+	info_popup_width				= 36
+	info_popup_height				= 18
 
 	tall_popup_left_column			= 4
 	tall_popup_width				= 30
@@ -50,11 +58,19 @@ bottom_edge_char			= $60
 
 	medium_popup_left_column		= 0
 	medium_popup_width				= 40
-	medium_popup_height				= 18
+	medium_popup_height				= 16
 
-	medium_wide_popup_left_column	= 0
-	medium_wide_popup_width			= 56
-	medium_wide_popup_height		= 18
+	player_popup_left_column		= 0
+	player_popup_width				= 40
+	player_popup_height				= 15
+
+	info_popup_left_column			= 0
+	info_popup_width				= 40
+	info_popup_height				= 18
+
+	info_wide_popup_left_column		= 0
+	info_wide_popup_width			= 56
+	info_wide_popup_height			= 18
 
 	tall_popup_left_column			= 0
 	tall_popup_width				= 30
@@ -82,16 +98,30 @@ medium_popup_top_row				= (24 - medium_popup_height) / 2
 medium_popup_bottom_row				= (24 + medium_popup_height) / 2
 medium_popup_right_column			= medium_popup_left_column + medium_popup_width - 1
 
+player_popup_top_row				= (24 - player_popup_height) / 2
+player_popup_bottom_row				= (24 + player_popup_height) / 2
+player_popup_right_column			= player_popup_left_column + player_popup_width - 1
+
+info_popup_top_row					= (24 - info_popup_height) / 2
+info_popup_bottom_row				= (24 + info_popup_height) / 2
+info_popup_right_column				= info_popup_left_column + info_popup_width - 1
+
 !ifdef c128 {
 	medium_popup_left_col_real		= 40 - (medium_popup_width / 2)
 	medium_popup_right_col_real		= 40 + (medium_popup_width / 2)
 
-	medium_wide_popup_top_row		= (24 - medium_wide_popup_height) / 2
-	medium_wide_popup_bottom_row	= (24 + medium_wide_popup_height) / 2
-	medium_wide_popup_right_column	= medium_wide_popup_left_column + medium_wide_popup_width - 1
+	player_popup_left_col_real		= 40 - (player_popup_width / 2)
+	player_popup_right_col_real		= 40 + (player_popup_width / 2)
 
-	medium_wide_popup_left_col_real = 40 - (medium_wide_popup_width / 2)
-	medium_wide_popup_right_col_real = 40 + (medium_wide_popup_width / 2)
+	info_popup_left_col_real		= 40 - (info_popup_width / 2)
+	info_popup_right_col_real		= 40 + (info_popup_width / 2)
+
+	info_wide_popup_top_row			= (24 - info_wide_popup_height) / 2
+	info_wide_popup_bottom_row		= (24 + info_wide_popup_height) / 2
+	info_wide_popup_right_column	= info_wide_popup_left_column + info_wide_popup_width - 1
+
+	info_wide_popup_left_col_real	= 40 - (info_wide_popup_width / 2)
+	info_wide_popup_right_col_real	= 40 + (info_wide_popup_width / 2)
 }
 
 tall_popup_top_row					= (24 - tall_popup_height) / 2 - 1
@@ -160,6 +190,18 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #medium_popup_bottom_row
 		ldx #medium_popup_right_col_real
+		jsr WINDOW
+	rts
+
+	set_window_player_popup
+		jsr FULLW
+		clc
+		lda #player_popup_top_row
+		ldx #player_popup_left_col_real
+		jsr WINDOW
+		sec
+		lda #player_popup_bottom_row
+		ldx #player_popup_right_col_real
 		jsr WINDOW
 	rts
 
@@ -352,6 +394,18 @@ draw_short_popup
 	jsr draw_window
 rts
 
+draw_info_popup
+	ldx #info_popup_height
+	ldy #info_popup_width
+	jsr draw_window
+rts
+
+draw_player_popup
+	ldx #player_popup_height
+	ldy #player_popup_width
+	jsr draw_window
+rts
+
 draw_medium_popup
 	ldx #medium_popup_height
 	ldy #medium_popup_width
@@ -359,9 +413,9 @@ draw_medium_popup
 rts
 
 !ifdef c128 {
-	draw_medium_wide_popup
-		ldx #medium_wide_popup_height
-		ldy #medium_wide_popup_width
+	draw_info_wide_popup
+		ldx #info_wide_popup_height
+		ldy #info_wide_popup_width
 		jsr draw_window
 	rts
 }

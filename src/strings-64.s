@@ -293,7 +293,17 @@ medium_popup_top_line
 	!byte 4,DOWN
 	!byte 0
 
+player_popup_top_line
+	!byte $81,HOME
+	!byte 4,DOWN
+	!byte 0
+
 medium_popup_next_line
+	!byte $81,RETURN
+	!byte 2,RIGHT
+	!byte 0
+
+player_popup_next_line
 	!byte $81,RETURN
 	!byte 2,RIGHT
 	!byte 0

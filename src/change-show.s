@@ -740,7 +740,7 @@ rts
 show_system_info_popup
 	jsr check_sid_type_right
 
-	jsr draw_medium_popup
+	jsr draw_info_popup
 
 	lda #0
 	ldx #<info_popup_msg
@@ -1036,12 +1036,12 @@ list_instrument_names
 		beq +
 		lda #31
 		sta temp_abs_b
-		jsr draw_medium_wide_popup
+		jsr draw_info_wide_popup
 		jmp ++
 
 	+	lda #15
 		sta temp_abs_b
-		jsr draw_medium_popup
+		jsr draw_info_popup
 	++
 	} else {
 		ldx current_file_type
@@ -1052,7 +1052,7 @@ list_instrument_names
 		lda #31
 	+	sta temp_abs_b
 
-		jsr draw_medium_popup
+		jsr draw_info_popup
 	}
 
 	jsr print_instr_list_msg
@@ -1206,7 +1206,7 @@ list_instrument_names
 
 		jsr wait_key
 
-		jsr draw_medium_popup
+		jsr draw_info_popup
 		jsr print_instr_list_msg
 	 +
 	}

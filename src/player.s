@@ -57,17 +57,17 @@ start_main_player
 
 	!ifndef c128 {
 		lda #0
-		ldx #<medium_popup_top_line
-		ldy #>medium_popup_top_line
+		ldx #<player_popup_top_line
+		ldy #>player_popup_top_line
 		sec
 		jsr print_msg_rle
 
 		lda #0
-		ldx #<medium_popup_next_line
-		ldy #>medium_popup_next_line
+		ldx #<player_popup_next_line
+		ldy #>player_popup_next_line
 		jsr print_msg_rle
 	} else {
-		jsr set_window_medium_popup
+		jsr set_window_player_popup
 		clc
 		ldx #0
 		ldy #0
