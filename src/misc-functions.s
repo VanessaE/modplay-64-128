@@ -108,28 +108,31 @@ rts
 ;# ZERO-PAGE OPERATIONS #
 ;########################
 
-backup_zero_page
+; Always call the swap in pairs, once to "back-up" KERNAL/system zero page
+; and then again later to restore it
+
+swap_zero_page
 	ldx #2
 -	lda $00,x
-	sta zp_backup,x
+	pha
+	lda zero_page_swap_area,x
+	sta $00,x
+	pla
+	sta zero_page_swap_area,x
 	inx
 	bne -
+rts
 
+; this should only be used at player start, after swapping-out the
+; KERNAL/system zero page contents.
+
+erase_zero_page
 	lda #0
 	ldx #2
 -	sta $00,x
 	inx
 	bne -
 rts
-
-restore_zero_page
-	ldx #2
--	lda zp_backup,x
-	sta $00,x
-	inx
-	bne -
-rts
-
 
 ;######################
 ;# NUMERIC_OPERATIONS #
@@ -1413,6 +1416,14 @@ enable_8580_digiboost_right
 	sta (utility_pointer),y
 rts
 
+; enter with .A = byte to fill with
+fill_audio_buffers
+	ldy #0
+-	sta audio_buffer_left,y
+	sta audio_buffer_right,y
+	iny
+	bne -
+rts
 
 keyboard_debounce
 	lda #0						; drive all columns low on CIA

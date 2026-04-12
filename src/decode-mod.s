@@ -492,11 +492,7 @@ skip_sample
 	; to erase the instrument names area
 
 	lda #0
-	ldy #0
--	sta audio_buffer_left,y
-	sta audio_buffer_right,y
-	iny
-	bne -
+	jsr fill_audio_buffers
 
 	lda #0
 	sta expansion_memory_target_pointer

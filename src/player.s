@@ -226,7 +226,8 @@ player_init_visualizer
 +	jsr viz_waveform_init
 
 player_ui_finish
-	jsr backup_zero_page
+	jsr swap_zero_page	; KERNAL -> swap, don't care swap -> active
+	jsr erase_zero_page	; wipe "active" ZP, hence don't care 😉
 
 	+JSR_INDIRECT (audio_start_vec)
 
@@ -249,7 +250,8 @@ player_ui_finish
 	+JSR_INDIRECT (audio_stop_vec)
 
 	jsr keyboard_debounce
-	jsr restore_zero_page
+	jsr swap_zero_page ; KERNAL swap -> active, player/don't care -> swap
+
 	lda stereo_enable_temp
 	sta stereo_enable
 

@@ -362,7 +362,7 @@ between_songs_msg
 	!byte 0
 
 main_player_now_playing_msg
-	!text CYAN,"Now playing"
+	!text LGRN,"Now playing"
 	!byte 0
 
 main_player_of_msg
@@ -371,7 +371,7 @@ main_player_of_msg
 
 main_player_file_msg
 	!fill 8,RIGHT
-	!text "Filename: ",LBLU
+	!text CYAN,"Filename: ",LBLU
 	!byte 0
 
 main_player_title_msg
@@ -407,12 +407,34 @@ main_player_regen_tables_msg
 	!text "          and tempo tables..."
 	!byte 0
 
-	main_player_keys_msg
-		!byte RIGHT
-		!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip  "
-		!text LBLU,"[",CYAN,"F7",LBLU,"/",CYAN,"Stop",LBLU,"] ",CYAN,"Quit  "
-		!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
-		!byte 0
+main_player_keys_msg
+	!byte RIGHT
+	!text LBLU,"[",LGRN,"F7",LBLU,"] ",CYAN,"Skip  "
+	!text LBLU,"[",LGRN,"Esc",GRN,"/",LGRN,"Stop",LBLU,"] ",CYAN,"Quit  "
+	!text LBLU,"[",LGRN,"1",GRN,"-",LGRN,"4",LBLU,"] ",CYAN,"Mute",RETURN
+	!fill 11,RIGHT
+	!text LBLU,"[",LGRN,"Space",LBLU,"] ",CYAN,"Pause",LBLU,"/",CYAN,"resume"
+	!byte 0
+
+; the screen row/col are actual positions on screen
+; but this msg will be printed within a window
+; so it needs negative offsets
+
+paused_msg
+	!byte $81,HOME
+	!byte visualizer_screen_row-3, DOWN
+	!byte visualizer_screen_column-6, RIGHT
+	!byte $80+2,WHT,$ac
+	!byte 8,$60
+	!byte $80+2,$bb,RETURN
+	!byte visualizer_screen_column-6, RIGHT
+	!byte $80+15
+		!text $e1,YEL," Paused ",LGRY,RVSON,$e1,RVSOFF,RETURN
+	!byte visualizer_screen_column-6, RIGHT
+	!byte $80+2,LGRY,$bc
+	!byte 8,$60
+	!byte $81,$be
+	!byte 0
 
 loader_erase_kbs_msg
 	!byte GRN

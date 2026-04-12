@@ -480,7 +480,7 @@ sample_player_msg
 	!byte 0
 
 main_player_now_playing_msg
-	!text CYAN,"Now playing"
+	!text LGRN,"Now playing"
 	!byte 0
 
 main_player_of_msg
@@ -489,7 +489,7 @@ main_player_of_msg
 
 main_player_file_msg
 	!fill 6,RIGHT
-	!text "Filename: ",LBLU
+	!text CYAN,"Filename: ",LBLU
 	!byte 0
 
 main_player_title_msg
@@ -527,10 +527,28 @@ main_player_regen_tables_msg
 	!text "pitch and tempo tables...",RETURN,0
 
 main_player_keys_msg
-	!fill 2,RIGHT
-	!text LBLU,"[",CYAN,"Spc",LBLU,"] ",CYAN,"Skip "
-	!text LBLU,"[",CYAN,"F7",LBLU,"/",CYAN,"Stop",LBLU,"] ",CYAN,"Quit "
-	!text LBLU,"[",CYAN,"1",LBLU,"-",CYAN,"4",LBLU,"] ",CYAN,"Mute"
+	!fill 4,RIGHT
+	!text LBLU,"[",LGRN,"F7",LBLU,"] ",CYAN,"Skip "
+	!text LBLU,"[",LGRN,"Stop",LBLU,"] ",CYAN,"Quit "
+	!text LBLU,"[",LGRN,"1",GRN,"-",LGRN,"4",LBLU,"] ",CYAN,"Mute",RETURN
+	!fill 10,RIGHT
+	!text LBLU,"[",LGRN,"Space",LBLU,"] ",CYAN,"Pause",LBLU,"/",CYAN,"resume"
+	!byte 0
+
+paused_msg
+	!byte $81,HOME
+	!byte visualizer_screen_row+1, DOWN
+	!byte visualizer_screen_column+13, RIGHT
+	!byte $80+2,WHT,$ac
+	!byte 8,$60
+	!byte $80+2,$bb,RETURN
+	!byte visualizer_screen_column+13, RIGHT
+	!byte $80+13
+		!text $7d,YEL," Paused ",MGRY,$7d,RETURN
+	!byte visualizer_screen_column+13, RIGHT
+	!byte $80+2,MGRY,$bc
+	!byte 8,$60
+	!byte $81,$be
 	!byte 0
 
 !ifdef scpu {

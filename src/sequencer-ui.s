@@ -202,7 +202,16 @@ key_pressed
 	lda #%11111110			; column 0 low
 	sta CIA1_PORT_A
 	lda CIA1_PORT_B
-	cmp #%11110111			; look for row 3, F7 key
+	cmp #%11110111			; look for row 3, F7 key (skip this song)
+	bne +
+	lda #1
+	sta seq_abort_flag
+	rts
+
++	lda #%01111111			; column 7 low
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
+	cmp #%01111111			; loop for row 7, Run/Stop (abort whole playlist)
 	bne +
 
 .pui_abort_list
@@ -210,17 +219,9 @@ key_pressed
 	sta seq_abort_flag
 	rts
 
-+	lda #%01111111			; column 7 low
-	sta CIA1_PORT_A
-	lda CIA1_PORT_B
-	cmp #%01111111			; loop for row 7, Run/Stop
-	beq .pui_abort_list
-
-	cmp #%11101111			; look for row 4, spacebar
++	cmp #%11101111			; look for row 4, spacebar (pause)
 	bne +
-	lda #1
-	sta seq_abort_flag
-	rts
+	jmp pause_player
 
 +	cmp #%11111110			; row 0, the "1" key
 	bne +
@@ -243,8 +244,10 @@ key_pressed
 
 +	cmp #%11110111			; row 3, the "4" key
 	!ifndef c128 {
-		bne exit_player_keyscan
-		ldy #3
+		beq +
+		jmp exit_player_keyscan
+
+	+	ldy #3
 		jmp toggle_enable_track
 	} else {
 		bne +
@@ -257,8 +260,8 @@ key_pressed
 		sta C128_EXTRA_KEYS
 		lda CIA1_PORT_B
 		cmp #%11111110			; Row 0, the "Esc" key
-		bne exit_player_keyscan
-		jmp .pui_abort_list
+		beq .pui_abort_list
+		jmp exit_player_keyscan
 	}
 
 toggle_enable_track
@@ -276,14 +279,133 @@ toggle_enable_track
 
 ++	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl exit_player_keyscan
+		bmi +
+		jmp exit_player_keyscan
+	  +
 	}
 
 	lda visualizer_mode
-	bne exit_player_keyscan
-	jsr viz_row_data_show_track_mute
+	beq +
+	jmp exit_player_keyscan
+
++	jsr viz_row_data_show_track_mute
+	jmp exit_player_keyscan
+
+
+pause_player
+	lda #$7f						; disable timer A interrupt, but leave the
+	sta CIA2_ICR					; timer itself running, so that IT stays
+									; in sync with the raster (if applicable)
+
+	bit CIA1_TOD_HOURS				; we can't stop the TOD, so just save
+	lda CIA1_TOD_MINUTES			; the elapsed M:S.t and restore it later
+	sta TOD_clock_temps+2
+	lda CIA1_TOD_SECONDS
+	sta TOD_clock_temps+1
+	lda CIA1_TOD_TENTHS
+	sta TOD_clock_temps
+
+	lda #0
+	sta CIA1_TOD_HOURS
+	sta CIA1_TOD_MINUTES
+	sta CIA1_TOD_SECONDS
+	sta CIA1_TOD_TENTHS
+
+	lda #$80
+	jsr fill_audio_buffers
+
+	+JSR_INDIRECT (audio_stop_vec)
+
+	!ifdef badlines_exist {
+		bit enable_screen_on_playback
+		bpl .pause_noviz1			; don't clear viz area if screen is off
+	}
+
+	jsr visualizer_clear_area
+
+	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
+	jsr enable_kernal_only
+
+	sec
+	lda #0
+	ldx #<paused_msg
+	ldy #>paused_msg
+	jsr print_msg_rle
+
+	jsr disable_roms
+	jsr swap_zero_page				; player swap -> active, KERNAL -> swap
+
+.pause_noviz1
+	lda #%11101111
+-	cmp CIA1_PORT_B					; wait for user to release the spacebar
+	beq -
+
+	lda #2							; wait 0.2s, to debounce spacebar
+-	cmp CIA1_TOD_TENTHS
+	bne -
+
+	lda #%11101111					; wait for user to tap the spacebar again
+-	cmp CIA1_PORT_B
+	bne -
+
+-	cmp CIA1_PORT_B
+	beq -
+
+	!ifdef badlines_exist {
+		bit enable_screen_on_playback
+		bpl .pause_noviz2			; don't clear viz area if screen is off
+	}
+
+	jsr visualizer_clear_area
+
+	lda visualizer_mode				; don't redraw viz area if it's in
+	bne .pause_noviz2				; waveforms mode
+
+	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
+	jsr enable_kernal_only
+
+	clc
+	ldx #visualizer_screen_row
+	ldy #visualizer_screen_column
+	jsr PLOT
+
+	jsr viz_row_data_init
+
+	jsr disable_roms
+	jsr swap_zero_page				; player swap -> active, KERNAL -> swap
+
+	ldx current_song_pos
+	ldy pattern_table,x
+
+	ldx seq_current_row
+	jsr viz_row_data_pattern_preload
+
+	lda #<visualizer_line_6
+	sta utility_pointer
+	lda #>visualizer_line_6
+	sta utility_pointer+1
+
+	inx
+	inx
+	inx
+	jsr viz_row_data_fetch_and_print
+
+.pause_noviz2
+
+	+JSR_INDIRECT (audio_start_vec)
+
+	lda #$81						; enable timer A interrupt
+	sta CIA2_ICR
+
+	lda #0
+	sta CIA1_TOD_HOURS
+	lda TOD_clock_temps+2
+	sta CIA1_TOD_MINUTES
+	lda TOD_clock_temps+1
+	sta CIA1_TOD_SECONDS
+	lda TOD_clock_temps
+	sta CIA1_TOD_TENTHS
 
 exit_player_keyscan
 	lda #0
 rts
-

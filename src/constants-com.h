@@ -97,14 +97,14 @@
 	mah_table_6581						= $1500
 	mah_table_8580						= $1600
 
-	zp_backup							= $1700
+	zero_page_swap_area					= $1700
 
 	; these are only used once, during the loop-unroll-or-don't
 	; code when they're compared and/or updated, then they're discarded
 
-	sample_loop_end_addresses_lows		= zp_backup
-	sample_loop_end_addresses_mids		= zp_backup + 32
-	sample_loop_end_addresses_highs		= zp_backup + 64
+	sample_loop_end_addresses_lows		= zero_page_swap_area
+	sample_loop_end_addresses_mids		= zero_page_swap_area + 32
+	sample_loop_end_addresses_highs		= zero_page_swap_area + 64
 
 	program_load_decrunch_stub			= multab2hi
 
@@ -706,6 +706,9 @@ ntsc_clock = 1022727
 
 	supercpu_last_free_page				!skip 1
 	supercpu_last_free_bank				!skip 1
+
+	TOD_clock_temps						!skip 4 ; used by song pause to keep
+												; the time right
 
 	; various program indirect JMP/JSR vectors
 

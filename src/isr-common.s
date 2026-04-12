@@ -110,12 +110,8 @@ isr_startup
 	sta CIA1_CRB
 	sta CIA2_CRB
 
-	ldy #0
 	lda #$80
--	sta audio_buffer_left,y
-	sta audio_buffer_right,y
-	iny
-	bne -
+	jsr fill_audio_buffers
 
 	sec
 	lda isr_trigger_interval
@@ -290,7 +286,6 @@ fixcycle					; we are now at cycle 5 of line 255
 
   irq_lockout
 rti
-
 ; ##### end of ISR Init
 
 
