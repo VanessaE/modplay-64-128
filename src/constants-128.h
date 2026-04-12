@@ -117,9 +117,3 @@ splash_ver_pos_row					= 9
 screen_width						= 80
 screen_base_addr					= VDC_SCREEN
 color_mem_base_addr					= VDC_ATTRIBUTES
-
-visualizer_area_width				= 38
-visualizer_area_height				= 6
-
-visualizer_screen_column			= 21
-visualizer_screen_row				= 12

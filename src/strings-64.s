@@ -295,7 +295,7 @@ medium_popup_top_line
 
 player_popup_top_line
 	!byte $81,HOME
-	!byte 4,DOWN
+	!byte 3,DOWN
 	!byte 0
 
 medium_popup_next_line

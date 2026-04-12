@@ -78,9 +78,3 @@ splash_ver_pos_row					= 8
 screen_width						= 40
 screen_base_addr					= VIC_SCREEN
 color_mem_base_addr					= VIC_COLOR_RAM
-
-visualizer_area_width				= 36
-visualizer_area_height				= 6
-
-visualizer_screen_column			= 2
-visualizer_screen_row				= 13

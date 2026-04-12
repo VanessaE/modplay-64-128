@@ -34,7 +34,7 @@ bottom_edge_char			= $60
 
 	player_popup_left_column		= 4
 	player_popup_width				= 36
-	player_popup_height				= 15
+	player_popup_height				= 16
 
 	info_popup_left_column			= 4
 	info_popup_width				= 36
@@ -62,7 +62,7 @@ bottom_edge_char			= $60
 
 	player_popup_left_column		= 0
 	player_popup_width				= 40
-	player_popup_height				= 15
+	player_popup_height				= 16
 
 	info_popup_left_column			= 0
 	info_popup_width				= 40

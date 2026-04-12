@@ -2,9 +2,21 @@
 ; visualizer mode
 
 !ifndef c128 {
+	visualizer_area_width				= 36
+	visualizer_area_height				= 6
+
+	visualizer_screen_column			= 2
+	visualizer_screen_row				= 12
+
 	visualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
 	visualizer_width = 36
 } else {
+	visualizer_area_width				= 38
+	visualizer_area_height				= 6
+
+	visualizer_screen_column			= 21
+	visualizer_screen_row				= 12
+
 	visualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 	visualizer_width = 40
 }

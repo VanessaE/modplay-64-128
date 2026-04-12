@@ -521,7 +521,7 @@ splash_data
 	!binary "etc/splash-40.pet",,5 ; why 5?  because we don't need the .pet header 🙂
 
 loader_background_data
-	!binary "etc/loaderbg-64-marq.pet",,5
+	!binary "etc/loaderbg-64.pet",,5
 
 player_background_data
-	!binary "etc/playerbg-64-marq.pet",,5
+	!binary "etc/playerbg-64.pet",,5
