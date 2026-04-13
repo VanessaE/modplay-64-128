@@ -31,6 +31,10 @@ My main goals, apart from not using BASIC anymore, are:
 
 **At the moment, as far as platforms go, this program supports oldskool C64's and C128's, with or without a SuperCPU (later version only), and it supports the C64 Ultimate and Ultimate64.  An REU of any size is required in all cases, which can be either the oldskool cartridge, or if your hardware has this feature built-in.**
 
+Ultimate64 users:  If you have real SID chips installed, or their modern replacements such as ARM2SID, FPGASID, etc., you **must** have firmware v3.14e or higher, as it contains a critical feature fix.  Plus, you'll be able to use the Mahoney driver for clean, crisp almost-8-bit audio.  If you are not using the SID sockets at all, then older firmware versions should be fine (but you'll only have 4-bit audio).
+
+C64 Ultimate users: sorry folks, Commodore's latest firmware (1.1.0, after the renumbering) will not suffice, it doesn't have the fix.  Unless you're willing to disable your SIDs and live with 4-bit audio, you'll have to wait for them to catch up, or you can run the Ultimate64 v3.14e or later firmware, which seems to work just fine (but be aware, you'll lose keyboard lighting on machines so-equipped, and the menus won't be as you're used to, and you'll have to source new ROM image files).
+
 This project is meant to be worked-on and built on Linux using common tools; you will need GNU make, ACME assembler, and cc1541 (not the "c1541" that comes with VICE).
 
 **DOWNLOADS:**
