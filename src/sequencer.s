@@ -15,19 +15,19 @@ start_sequencer
 	ldx #7
 -	sta current_sample_numbers,x
 
-	sta seq_pitch_slide_target_period_lows,x
-	sta seq_pitch_slide_target_period_highs,x
+	sta current_pitch_slide_target_lows,x
+	sta current_pitch_slide_target_highs,x
 
-	sta retrigger_rates,x
-	sta cut_sample_ticks,x
-	sta delay_sample_ticks,x
+	sta current_retrigger_rates,x
+	sta current_cut_sample_ticks,x
+	sta current_delay_sample_ticks,x
 	sta current_track_loop_flags,x
 	sta current_vibrato_step_size_ints,x
 	sta current_vibrato_step_size_fracts,x
 	sta last_vibrato_rates,x
 	sta last_vibrato_amplitudes,x
 	sta current_tremolo_step_sizes,x
-	sta volume_slide_rates,x
+	sta current_volume_slide_rates,x
 	sta seq_commands,x
 	sta seq_prev_commands,x
 	sta seq_command_arguments,x

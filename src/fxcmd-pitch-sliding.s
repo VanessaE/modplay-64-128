@@ -19,9 +19,9 @@ set_slide_up ; that is, decreasing the note period
 	lda #$80
 	sta current_pitch_bend_dirs,y
 	lda #57
-	sta seq_pitch_slide_target_period_lows,y
+	sta current_pitch_slide_target_lows,y
 	lda #0
-	sta seq_pitch_slide_target_period_highs,y
+	sta current_pitch_slide_target_highs,y
 	lda seq_command_arguments,y
 	sta current_pitch_slide_rates,y
 	rts
@@ -30,9 +30,9 @@ set_slide_down ; increase the note period
 	lda #0
 	sta current_pitch_bend_dirs,y
 	lda #<1712
-	sta seq_pitch_slide_target_period_lows,y
+	sta current_pitch_slide_target_lows,y
 	lda #>1712
-	sta seq_pitch_slide_target_period_highs,y
+	sta current_pitch_slide_target_highs,y
 	lda seq_command_arguments,y
 	sta current_pitch_slide_rates,y
 	rts
@@ -52,22 +52,22 @@ set_slide_to_note
 
 	lda seq_current_row_data+1,x
 	and #$0f
-	sta seq_pitch_slide_target_period_highs,y
+	sta current_pitch_slide_target_highs,y
 	lda seq_current_row_data+2,x
-	sta seq_pitch_slide_target_period_lows,y
+	sta current_pitch_slide_target_lows,y
 	jmp ++
 
 +	jsr calculate_fine_tuning
 
 	lda product+2
-	sta seq_pitch_slide_target_period_lows,y
+	sta current_pitch_slide_target_lows,y
 	lda product+3
-	sta seq_pitch_slide_target_period_highs,y
+	sta current_pitch_slide_target_highs,y
 
 ++	lda current_note_periods_lows,y
-	cmp seq_pitch_slide_target_period_lows,y
+	cmp current_pitch_slide_target_lows,y
 	lda current_note_periods_highs,y
-	sbc seq_pitch_slide_target_period_highs,y
+	sbc current_pitch_slide_target_highs,y
 	lda #0
 	ror
 	sta current_pitch_bend_dirs,y
@@ -97,9 +97,9 @@ slide_pitch_up
 	sta current_note_periods_highs,y	; pitch could underflow the period past
 										; breaking the limit check below
 
-	lda seq_pitch_slide_target_period_lows,y
+	lda current_pitch_slide_target_lows,y
 	cmp current_note_periods_lows,y
-	lda seq_pitch_slide_target_period_highs,y
+	lda current_pitch_slide_target_highs,y
 	sbc current_note_periods_highs,y
 	bcs stop_pitch_slide
 	jmp set_pitch_by_table_lookup
@@ -114,16 +114,16 @@ slide_pitch_down
 	sta current_note_periods_highs,y
 
 	lda current_note_periods_lows,y
-	cmp seq_pitch_slide_target_period_lows,y
+	cmp current_pitch_slide_target_lows,y
 	lda current_note_periods_highs,y
-	sbc seq_pitch_slide_target_period_highs,y
+	sbc current_pitch_slide_target_highs,y
 	bcs stop_pitch_slide
 	jmp set_pitch_by_table_lookup
 
 stop_pitch_slide
-	lda seq_pitch_slide_target_period_lows,y
+	lda current_pitch_slide_target_lows,y
 	sta current_note_periods_lows,y
-	lda seq_pitch_slide_target_period_highs,y
+	lda current_pitch_slide_target_highs,y
 	sta current_note_periods_highs,y
 	lda #0
 	sta current_pitch_slide_rates,y

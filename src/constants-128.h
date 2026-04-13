@@ -14,8 +14,7 @@
 	c128_vdc_has_64k				= $61
 	main_menu_cache_is_valid		= $62
 
-	expansion_transfer_local_addr	= $c9 ; through $cb
-	; the third byte will always be 0, but SCPU RAM driver will need this later.
+	; free: $c9 through $cb
 
 	; C128 KERNAL indirect routines from $02a2 to $02ff
 	; System vectors and variables from $0300 to $03ff

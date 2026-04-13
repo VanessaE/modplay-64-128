@@ -57,9 +57,13 @@
 
 	utility_pointer_b					= $50 ; through $52
 
-	utility_pointer						= $fa ; and $fb
+	utility_pointer						= $f7 ; and $f8
 	fill_copy_source					= utility_pointer + 2
 	fill_copy_target					= fill_copy_source + 2
+
+	; the third byte here will always be 0, but SCPU RAM driver
+	; will need this later and it has to be in zero page
+	expansion_transfer_local_addr		= $fd ; through $ff
 
 	; END OF ZERO PAGE
 
@@ -76,10 +80,15 @@
 	; on C64, $1000-$101f is free space
 
 !addr {
-	semitones_table						= $1020
 
-	control_code_flags_table_low		= $1040
-	control_code_flags_table_high		= $1060
+	current_note_periods_fracts			= $1020 ; 8x3 bytes, 
+	current_note_periods_lows			= $1028 ; ¯¯\ fracts only used by vibrato,
+	current_note_periods_highs			= $1030 ;    \__ otherwise it's ignored
+
+	fine_tuning_table					= $1038 ; 32 bytes
+	current_fine_tune_values			= $1058 ; 8 bytes
+
+	semitones_table						= $1060
 	pattern_table						= $1080
 
 	; on C128, these next two pages can only be used by transient stuff
@@ -94,10 +103,7 @@
 
 	multab2hi							= $1300 ; 2 pages
 
-	mah_table_6581						= $1500
-	mah_table_8580						= $1600
-
-	zero_page_swap_area					= $1700
+	zero_page_swap_area					= $1500
 
 	; these are only used once, during the loop-unroll-or-don't
 	; code when they're compared and/or updated, then they're discarded
@@ -108,7 +114,7 @@
 
 	program_load_decrunch_stub			= multab2hi
 
-	program_start						= $1800
+	program_start						= $1600
 
 	; main program code starts here, followed by more tables and buffers,
 	; then comes all the "high-memory" stuff -- see below and
@@ -116,15 +122,16 @@
 
 	; Under-KERNAL-ROM stuff
 
-	; free:  $fa00-faff
-
-	note_names_table					= $fb00 ; 240 bytes + waste
+	mah_table_6581						= $fa00
+	mah_table_8580						= $fb00
 
 	divide_by_16_table					= $fc00 ; 1 page
 
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_fracts					= $fd00 ; 1 page
 	tempo_table_lows					= $fe00 ; 1 page
+
+	note_names_table					= $ff08 ; 240 bytes
 
 	; KERNAL/System vectors
 
@@ -414,7 +421,7 @@ ntsc_clock = 1022727
 
 	!byte 0
 	!if * > $0050 {
-			!error "Backed-up-zero-page variables, first middle part exceeds $0050 by ", * - $0050, " bytes!"
+			!error "Backed-up-zero-page variables, lower middle part exceeds $0050 by ", * - $0050, " bytes!"
 	}
 
 	; utility_pointer_b uses $50 through $52
@@ -427,7 +434,7 @@ ntsc_clock = 1022727
 	sequencer_temp_b					!skip 2 ; /   as one 4-byte temp
 
 	!if * > $0059 {
-			!error "Backed-up-zero-page variables, second middle part exceeds $0059 by ", * - $0059, " bytes!"
+			!error "Backed-up-zero-page variables, upper middle part exceeds $0059 by ", * - $0059, " bytes!"
 	}
 
 	; remainder, load pointer and other random stuff uses $59-$5b
@@ -451,6 +458,7 @@ ntsc_clock = 1022727
 	current_vibrato_fundamental_period_highs !skip 8
 	current_vibrato_top_period_lows		!skip 8
 	current_vibrato_top_period_highs	!skip 8
+
 	current_vibrato_step_size_fracts	!skip 8
 	current_vibrato_step_size_ints		!skip 8
 
@@ -469,13 +477,16 @@ ntsc_clock = 1022727
 	nmi_temp_y							!skip 1
 	nmi_temp_b							!skip 1
 
-	!if * > $00f9 {
-			!error "Backed-up-zero-page variables, upper part exceeds $00f9 by ", * - $00f9, " bytes!"
+	; about 5 bytes free here
+
+	!if * > $00f6 {
+		!error "Backed-up-zero-page variables, top part exceeds $f6 by ", * - $00f6, " bytes!"
 	}
 
-	; in-/out-of-Zero-Page-backup dual-use variables in $fa through $ff,
-	; see above.
-	; ### End of Zero Page backup
+	; in-/out-of-Zero-Page-backup multi-use
+	; variables in $f7 through $ff, see above.
+
+	; ### End of backup-mode Zero Page variables
 
 
 	; ####################################################
@@ -487,25 +498,14 @@ ntsc_clock = 1022727
 		* = $0200
 	}
 
-	; sequencer/player variables -- most of these are 8 bytes each
 	; anything stored here will not be wiped with zeroes by init
 	; so only use it for stuff that is initialized explicitly, or which
 	; needs to be passed along from the booter.
 
 	low_memory_area = *
-	string_buffer_backup				= low_memory_area ; 48 bytes
 
-	current_note_periods_fracts			!skip 8 ; only used by vibrato, everything
-	current_note_periods_lows			!skip 8 ; ¯¯\__ else ignores this one
-	current_note_periods_highs			!skip 8
-
-	seq_current_row_data				!skip 32
-	seq_commands						!skip 8
-	seq_prev_commands					!skip 8
-	seq_command_arguments				!skip 8
-	seq_prev_command_arguments			!skip 8
-	seq_pitch_slide_target_period_lows	!skip 8
-	seq_pitch_slide_target_period_highs !skip 8
+	sixteenth_semitones_table_lows		!skip 16
+	sixteenth_semitones_table_highs		!skip 16
 
 	expansion_memory_start_page			!skip 1
 	exp_instr_names_start_page			!skip 1
@@ -517,14 +517,21 @@ ntsc_clock = 1022727
 	exp_file_data_start_page			!skip 1
 	highest_exp_addresss_used			!skip 3
 
-	fine_tuning_table					!skip 32
-	current_fine_tune_values			!skip 8
-
 	c64u_detect							!skip 1
 
 	UCI_LAST_SA							!skip 1
 	UCI_LAST_CMD						!skip 1
 	UCI_PENDING_CMD						!skip 1
+
+	string_buffer						!skip 48
+	string_buffer_backup				!skip 48
+	uint16_string_buffer				!skip 8 ; (1 unused byte)
+	uint16_string_buf_trim				!skip 8 ; (1 unused byte)
+
+	raster_len							!skip 1
+	pal_flag							!skip 1
+
+	; there's about 43 bytes free here on C64 (on C128 it's all full).
 
 	!ifndef c128 {
 		!if * > $03ff {
@@ -567,13 +574,7 @@ ntsc_clock = 1022727
 	isr_trigger_interval				!skip 2
 	last_isr_trigger_interval			!skip 2
 
-	raster_len							!skip 1
-	pal_flag							!skip 1
 	boot_device							!skip 1
-
-	string_buffer						!skip 48
-	uint16_string_buffer				!skip 8 ; (1 unused byte)
-	uint16_string_buf_trim				!skip 8 ; (1 unused byte)
 
 	current_dir_name					!skip 17
 	current_file_name					!skip 17
@@ -597,26 +598,6 @@ ntsc_clock = 1022727
 	old_STOP_vec						!skip 2
 	parse_header_sample_pointer			!skip 3
 
-	volume_slide_rates					!skip 8
-
-	arpeggio_extra_note_first_fracts	!skip 8
-	arpeggio_extra_note_first_ints		!skip 8
-	arpeggio_extra_note_second_fracts	!skip 8
-	arpeggio_extra_note_second_ints		!skip 8
-
-	retrigger_rates						!skip 8
-
-	sixteenth_semitones_table_lows		!skip 16
-	sixteenth_semitones_table_highs		!skip 16
-
-	last_vibrato_rates					!skip 8
-	last_vibrato_amplitudes				!skip 8
-
-	cut_sample_ticks					!skip 8
-	delay_sample_ticks					!skip 8
-
-	current_tremolo_step_sizes			!skip 8
-
 	progress_bar_row					!skip 1
 	progress_bar_column					!skip 1
 	progress_bar_max_length				!skip 1
@@ -638,8 +619,6 @@ ntsc_clock = 1022727
 	volume_tables_resolution			!skip 1
 	last_volume_tables_resolution		!skip 1
 	allow_regen_msg						!skip 1
-
-	seq_abort_flag						!skip 1
 
 	top_row_pos							!skip 1
 	bottom_row_pos						!skip 1
@@ -741,7 +720,37 @@ ntsc_clock = 1022727
 	playlist_file_sizes_highs			!skip 256
 	playlist_file_flags					!skip 256
 
+	seq_current_row_data				!skip 32
+	seq_commands						!skip 8
+	seq_prev_commands					!skip 8
+	seq_command_arguments				!skip 8
+	seq_prev_command_arguments			!skip 8
+
+	seq_abort_flag						!skip 1
+
+	last_vibrato_rates					!skip 8
+	last_vibrato_amplitudes				!skip 8
+
+	current_cut_sample_ticks			!skip 8
+	current_delay_sample_ticks			!skip 8
+
+	current_volume_slide_rates			!skip 8
+
 	current_sample_numbers				!skip 8
+
+	current_arp_extra_note_1st_fracts	!skip 8
+	current_arp_extra_note_1st_ints		!skip 8
+	current_arp_extra_note_2nd_fracts	!skip 8
+	current_arp_extra_note_2nd_ints		!skip 8
+
+	current_tremolo_step_sizes			!skip 8
+
+	current_retrigger_rates				!skip 8
+
+	current_pitch_slide_target_lows		!skip 8
+	current_pitch_slide_target_highs	!skip 8
+
+	; about 64 bytes free here on both machines
 
 	!if * > $0fff {
 			!error "Main variables zone exceeds $0fff by ", * - $0fff, " bytes!"

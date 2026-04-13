@@ -28,26 +28,6 @@ gray_out
 	}
 rts
 
-; we only need the checkerboard graphic in the blur-out routine, because
-; everything to be translated is a reverse char, hence nearly-full-cell glyph
-
-!ifndef c128 {
-	blur_out
-		ldy #0
-	-	!for .page, 0, 3 {
-			lda #151
-			lda VIC_SCREEN + .page*256,y
-			cmp #128
-			bcc +
-			lda #102
-			sta VIC_SCREEN + .page*256,y 
-		  +
-		}
-		dey
-		bne -
-	rts
-}
-
 set_standard_charset
 	!ifndef c128 {
 		+C64_NORMAL_SCREEN

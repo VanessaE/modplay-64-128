@@ -15,9 +15,6 @@
 
 	reu_highest_bank				= $57
 
-	expansion_transfer_local_addr	= $f7 ; through $f9
-	; the third byte will always be 0, but SCPU RAM driver will need this later.
-
 	; System vectors from $0300 to $0333
 
 	ascii_to_petscii_table			= $0a00 ; 1 page
@@ -29,7 +26,7 @@
 	volume_table_lower				= $a600 ; 38 pages \__ 64 pages/16 kB, split
 	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
 
-	VIC_SCREEN						= $cc00
+	VIC_SCREEN						= $cc00 ; (between the volume table halves)
 
 	; ========================================================================
 	; From here on down are hard-coded KERNAL/system variables and such

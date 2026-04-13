@@ -37,22 +37,6 @@
 
 * = program_start
 
-; here in the main program, always go back to 2 MHz mode after an REU xfer
-; no need to store and recall the previous speed setting.
-
-!macro C128_STORE_CLOCK_IF_NEEDED_AND_SET_1MHZ {
-	!ifndef scpu {
-		lda #0
-		sta C128_VIC_CLOCK_SPEED
-	}
-}
-
-!macro C128_RESTORE_2MHZ_IF_POSSIBLE {
-	!ifndef scpu {
-		inc C128_VIC_CLOCK_SPEED
-	}
-}
-
 start
 	jsr init
 

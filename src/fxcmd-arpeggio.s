@@ -51,9 +51,9 @@ start_effect_arpeggio
 	; use the middle two bytes of the product to divide it back down.
 
 	lda product+1
-	sta arpeggio_extra_note_first_fracts,y
+	sta current_arp_extra_note_1st_fracts,y
 	lda product+2
-	sta arpeggio_extra_note_first_ints,y
+	sta current_arp_extra_note_1st_ints,y
 
 	lda seq_command_arguments,y
 	and #$0f
@@ -69,9 +69,9 @@ start_effect_arpeggio
 	jsr multiply_16x16
 
 	lda product+1
-	sta arpeggio_extra_note_second_fracts,y
+	sta current_arp_extra_note_2nd_fracts,y
 	lda product+2
-	sta arpeggio_extra_note_second_ints,y
+	sta current_arp_extra_note_2nd_ints,y
 
 	lda #2
 	sta arpeggio_counters,y
@@ -89,17 +89,17 @@ run_effect_arpeggio
 	cpx #1
 	bne +
 
-	lda arpeggio_extra_note_first_fracts,y
+	lda current_arp_extra_note_1st_fracts,y
 	sta current_steprates_fracts,y
-	lda arpeggio_extra_note_first_ints,y
+	lda current_arp_extra_note_1st_ints,y
 	sta current_steprates_ints,y
 	jmp set_arp_pitch_2_3
 
 +	cpx #2
 	bne +
-	lda arpeggio_extra_note_second_fracts,y
+	lda current_arp_extra_note_2nd_fracts,y
 	sta current_steprates_fracts,y
-	lda arpeggio_extra_note_second_ints,y
+	lda current_arp_extra_note_2nd_ints,y
 	sta current_steprates_ints,y
 	jmp set_arp_pitch_2_3
 
