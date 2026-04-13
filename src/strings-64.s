@@ -531,8 +531,11 @@ main_player_keys_msg
 	!text LBLU,"[",LGRN,"F7",LBLU,"] ",CYAN,"Skip "
 	!text LBLU,"[",LGRN,"Stop",LBLU,"] ",CYAN,"Quit "
 	!text LBLU,"[",LGRN,"1",GRN,"-",LGRN,"4",LBLU,"] ",CYAN,"Mute",RETURN
-	!fill 10,RIGHT
-	!text LBLU,"[",LGRN,"Space",LBLU,"] ",CYAN,"Pause",LBLU,"/",CYAN,"resume"
+	!fill 2,RIGHT
+	!text LBLU,"[",LGRN,"Spc",LBLU,"] ",CYAN,"Pause "
+	!text LBLU,"[",LGRN,"P",GRN,"/",LGRN,"N",LBLU,"] "
+	!text CYAN,"Pr",LBLU,"/",CYAN,"Nx Pat "
+	!text LBLU,"[",LGRN,"V",LBLU,"] ",CYAN,"Viz."
 	!byte 0
 
 paused_msg

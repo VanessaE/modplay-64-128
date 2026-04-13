@@ -199,7 +199,56 @@ key_pressed
 		sta C128_EXTRA_KEYS
 	}
 
-	lda #%11111110			; column 0 low
+	lda #%11110111			; column 3 low
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
+	cmp #%01111111			; Look for row 7, the "V" key
+	bne +
+	lda visualizer_mode
+	eor #$01
+	sta visualizer_mode
+	lda #$7f						; disable timer A interrupt, but leave the
+	sta CIA2_ICR					; timer itself running, so that IT stays
+									; in sync with the raster (if applicable)
+
+	jsr player_ui_re_init
+
+	lda #$81						; re-nable timer A interrupt
+	sta CIA2_ICR
+
+	jmp exit_player_keyscan
+
++	lda #%11011111			; column 5 low
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
+	cmp #%11111101			; Look for row 1, the "P" key
+	bne ++
+
+	ldx current_song_pos
+	beq +
+	dex
+	stx pos_jump_target_pattern
+	pla						; discard return address
+	pla
+	jmp next_pattern
+
++	pla
+	pla
+	jmp start_sequencer		; special case: if already song pos 0, restart song
+
+++	lda #%11101111			; column 4 low
+	sta CIA1_PORT_A
+	lda CIA1_PORT_B
+	cmp #%01111111			; Look for row 7, the "N" key
+	bne +
+
+	lda #$ff
+	sta pos_jump_target_pattern
+	pla
+	pla
+	jmp next_pattern
+
++	lda #%11111110			; column 0 low
 	sta CIA1_PORT_A
 	lda CIA1_PORT_B
 	cmp #%11110111			; look for row 3, F7 key (skip this song)
@@ -293,9 +342,8 @@ toggle_enable_track
 
 
 pause_player
-	lda #$7f						; disable timer A interrupt, but leave the
-	sta CIA2_ICR					; timer itself running, so that IT stays
-									; in sync with the raster (if applicable)
+	lda #$7f						; disable timer A interrupt
+	sta CIA2_ICR
 
 	bit CIA1_TOD_HOURS				; we can't stop the TOD, so just save
 	lda CIA1_TOD_MINUTES			; the elapsed M:S.t and restore it later
@@ -320,8 +368,6 @@ pause_player
 		bit enable_screen_on_playback
 		bpl .pause_noviz1			; don't clear viz area if screen is off
 	}
-
-	jsr visualizer_clear_area
 
 	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
 	jsr enable_kernal_only
@@ -356,12 +402,36 @@ pause_player
 		bpl .pause_noviz2			; don't clear viz area if screen is off
 	}
 
+	jsr player_ui_re_init
+
+.pause_noviz2
+	+JSR_INDIRECT (audio_start_vec)
+
+	lda #$81						; enable timer A interrupt
+	sta CIA2_ICR
+
+	lda #0
+	sta CIA1_TOD_HOURS
+	lda TOD_clock_temps+2
+	sta CIA1_TOD_MINUTES
+	lda TOD_clock_temps+1
+	sta CIA1_TOD_SECONDS
+	lda TOD_clock_temps
+	sta CIA1_TOD_TENTHS
+
+exit_player_keyscan
+	lda #0
+rts
+
+player_ui_re_init
 	jsr visualizer_clear_area
 
-	lda visualizer_mode				; don't redraw viz area if it's in
-	bne .pause_noviz2				; waveforms mode
+	lda visualizer_mode
+	beq +
+	jsr viz_waveform_init
+	jmp .player_ui_re_init_exit
 
-	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
++	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
 	jsr enable_kernal_only
 
 	clc
@@ -389,23 +459,6 @@ pause_player
 	inx
 	inx
 	jsr viz_row_data_fetch_and_print
-
-.pause_noviz2
-
-	+JSR_INDIRECT (audio_start_vec)
-
-	lda #$81						; enable timer A interrupt
-	sta CIA2_ICR
-
-	lda #0
-	sta CIA1_TOD_HOURS
-	lda TOD_clock_temps+2
-	sta CIA1_TOD_MINUTES
-	lda TOD_clock_temps+1
-	sta CIA1_TOD_SECONDS
-	lda TOD_clock_temps
-	sta CIA1_TOD_TENTHS
-
-exit_player_keyscan
-	lda #0
+  .player_ui_re_init_exit
 rts
+

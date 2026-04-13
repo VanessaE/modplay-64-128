@@ -412,8 +412,11 @@ main_player_keys_msg
 	!text LBLU,"[",LGRN,"F7",LBLU,"] ",CYAN,"Skip  "
 	!text LBLU,"[",LGRN,"Esc",GRN,"/",LGRN,"Stop",LBLU,"] ",CYAN,"Quit  "
 	!text LBLU,"[",LGRN,"1",GRN,"-",LGRN,"4",LBLU,"] ",CYAN,"Mute",RETURN
-	!fill 11,RIGHT
-	!text LBLU,"[",LGRN,"Space",LBLU,"] ",CYAN,"Pause",LBLU,"/",CYAN,"resume"
+
+	!text LBLU,"[",LGRN,"Spc",LBLU,"] ",CYAN,"Pause "
+	!text LBLU,"[",LGRN,"P",GRN,"/",LGRN,"N",LBLU,"] "
+	!text CYAN,"Prev",DCYN,"/",CYAN,"Next Pat "
+	!text LBLU,"[",LGRN,"V",LBLU,"] ",CYAN,"Viz."
 	!byte 0
 
 ; the screen row/col are actual positions on screen
