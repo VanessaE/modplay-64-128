@@ -113,7 +113,9 @@ start_sequencer
 	ldx number_of_song_positions
 	dex
 
-	jsr print_num_song_pos
+	!ifndef use_profiler {
+		jsr print_num_song_pos
+	}
 
 	lda #0
 	beq nple
@@ -139,7 +141,9 @@ nple
 	sta seq_current_pattern_number
 	tay
 
-	jsr print_song_pos_pat_num
+	!ifndef use_profiler {
+		jsr print_song_pos_pat_num
+	}
 
 	lda visualizer_mode
 	bne next_row_no_scroll
@@ -166,6 +170,7 @@ next_row
 	jsr viz_row_data_scroll
 
 next_row_no_scroll
+
 	ldx current_song_pos
 	ldy pattern_table,x
 
@@ -201,6 +206,7 @@ next_row_no_scroll
 seq_fetch_row_data
 	ldx seq_current_row
 	jsr fetch_row_data
+
 	jsr print_row_num
 
 +	ldy #0
