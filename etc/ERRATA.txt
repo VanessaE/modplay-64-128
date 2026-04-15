@@ -157,16 +157,6 @@
   end), file sizes aren't shown properly at bottom when scrolling with cursor
   keys (but page up/down, top/bottom, and C128 are all fine).
 
-* C64: there is some kind of slowdown happening relating to arpeggios and/or
-  high pitches, but it only happens with one or two songs (Cybernoid 1 for
-  instance), and only on C64 + User Port DigiMAX, and only when playing in
-  stereo.  And, it only seems to affect speed/tempo, not note pitches, so the
-  actual output sample rate isn't changing.  doesn't seem to affect C128 or
-  SCPU at all.
-
-  Best guess, the REU code is simply fetching too much data and slowing
-  everything down because there's no limiter.
-
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 
