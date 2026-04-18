@@ -165,15 +165,10 @@ reu_run_fetch_and_mixer
 				lda current_track_loop_flags + .ftrk		; 3
 				bne .reu_sample_has_loop					; 3/2
 				sta current_track_gate_flags + .ftrk		; 3
-				ldy #.ftrk									; 2
-				lda #>volume_table_lower					; 2
-
-				stx temp_zpbk_b								; 3
-				jsr set_vol_addrs_only						; ~81 cycles
-				ldx temp_zpbk_b								; 3
-
-				ldy #$b1									; 2
-				jmp .reu_end_of_track_fetch					; 3
+				sta DMA_EXTERNAL_LO							; 4
+				sta DMA_EXTERNAL_HI							; 4
+				sta DMA_EXTERNAL_BANK						; 4
+				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop
 				lda #0										; 2
