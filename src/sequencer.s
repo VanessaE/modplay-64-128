@@ -96,9 +96,9 @@ start_sequencer
 
 	lda #0
 	sta mixer_countdown_fract
-
 	sta current_song_pos
 	sta seq_current_row
+	sta current_active_tracks_count
 
 	lda CIA1_CRB	; ensure that the next few STA's reset the TOD clock
 	and #$7f
@@ -304,6 +304,15 @@ gnp
 
 run_command
 
+	!ifdef badlines_exist {
+		bit enable_screen_on_playback
+		bpl dont_print_track_count
+	}
+
+	jsr print_track_count
+	ldy seq_current_track
+
+dont_print_track_count
 	; if the command is invalid, there's nothing to do at this point 😛
 
 	ldx seq_commands,y
@@ -422,6 +431,7 @@ dont_run_pre_tick_command
 	; run every 4 rasters, that's only 4 thousandths of a second variance per
 	; song tick).
 
+reset_mixer_loop_count
 	clc
 	lda mixer_countdown_fract
 	adc mixer_loops_per_tick_fract

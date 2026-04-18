@@ -385,16 +385,16 @@ main_player_hline
 	!byte 0
 
 main_player_song_pos_pat_msg
-	!fill 5,RIGHT
-	!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
-	!text DCYN," -- "
-	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
+	!byte RIGHT
+	!text CYAN,"Song Pos: ",DCYN,"  ",LBLU,"/",DCYN,"    "
+	!text CYAN,"Patt: ",DCYN,"    "
+	!text CYAN,"Tracks: ",DCYN," ",LBLU,"/",DCYN,"4",RETURN
 	!byte 0
 
 main_player_row_speed_time
-	!text CYAN,"  Row: ",LBLU,"   ",DCYN,"- "
-	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",DCYN,"- "
-	!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
+	!text CYAN,"  Row: ",DCYN,"   ",LBLU,"- "
+	!text CYAN,"Speed: ",DCYN,"  ",LBLU,"/",DCYN,"   ",LBLU,"- "
+	!text CYAN,"Time: ",DCYN,"00",LBLU,":",DCYN,"00",RETURN
 	!byte 0
 
 main_player_regen_tables_msg

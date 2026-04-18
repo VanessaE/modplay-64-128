@@ -168,6 +168,7 @@ reu_run_fetch_and_mixer
 				sta DMA_EXTERNAL_LO							; 4
 				sta DMA_EXTERNAL_HI							; 4
 				sta DMA_EXTERNAL_BANK						; 4
+				dec current_active_tracks_count				; 5
 				jmp .reu_fetch_sample_data					; 3
 
 			.reu_sample_has_loop

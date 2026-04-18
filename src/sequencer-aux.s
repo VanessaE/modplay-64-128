@@ -83,13 +83,17 @@ start_sample
 	lda sample_default_loop_flags,x
 	sta current_track_loop_flags,y
 
+	lda current_track_gate_flags,y
+	bmi +
+
+	inc current_active_tracks_count
 	lda #$80
 	sta current_track_gate_flags,y
 
 	; if extended command #5 is called-for on this track and row, use
 	; its fine-tune value instead of the sample's default.
 
-	lda seq_commands,y
++	lda seq_commands,y
 	cmp #14
 	bne +
 	lda seq_command_arguments,y

@@ -3,9 +3,9 @@
 ; ===========================
 
 !ifndef c128 {
-	print_nsp_target = VIC_SCREEN + 9*40 + 18
+	print_nsp_target = VIC_SCREEN + 9*40 + 16
 } else {
-	print_nsp_target = VDC_SCREEN + 9*80 + 38
+	print_nsp_target = VDC_SCREEN + 9*80 + 34
 }
 
 print_num_song_pos
@@ -26,11 +26,11 @@ print_num_song_pos
 rts
 
 !ifndef c128 {
-	print_sp_target = VIC_SCREEN + 9*40 + 15
-	print_pn_target = VIC_SCREEN + 9*40 + 33
+	print_sp_target = VIC_SCREEN + 9*40 + 13
+	print_pn_target = VIC_SCREEN + 9*40 + 25
 } else {
-	print_sp_target = VDC_SCREEN + 9*80 + 35
-	print_pn_target = VDC_SCREEN + 9*80 + 53
+	print_sp_target = VDC_SCREEN + 9*80 + 31
+	print_pn_target = VDC_SCREEN + 9*80 + 44
 }
 
 print_song_pos_pat_num ; enter with .X = song position
@@ -173,6 +173,42 @@ print_elapsed_time
 	}
 
 	bit CIA1_TOD_TENTHS; read tenths to un-latch the time
+rts
+
+!ifndef c128 {
+	print_trks_target = VIC_SCREEN + 9*40 + 34
+} else {
+	print_trks_target = VDC_SCREEN + 9*80 + 56
+}
+
+print_track_count
+	!ifndef c128 {
+		lda current_active_tracks_count
+		clc
+		adc #$30
+		sta print_trks_target
+	} else {
+		+VDC_UPD_RDY_WAIT
+
+		lda #18
+		sta VDC_ADDR
+		lda #>print_trks_target
+		sta VDC_DATA
+
+		lda #19
+		sta VDC_ADDR
+		lda #<print_trks_target
+		sta VDC_DATA
+
+		lda #31
+		sta VDC_ADDR
+
+		lda current_active_tracks_count
+		clc
+		adc #$30
+
+		jsr vdc_write_ram
+	}
 rts
 
 seq_check_keyboard

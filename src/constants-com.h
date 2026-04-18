@@ -363,6 +363,7 @@ ntsc_clock = 1022727
 
 	current_track_loop_flags			!skip 8
 	current_track_gate_flags			!skip 8
+	current_active_tracks_count			!skip 1
 
 	arpeggio_counters					!skip 8 ; zero page is mandatory for this one (STX $ZP,Y)
 
@@ -477,7 +478,7 @@ ntsc_clock = 1022727
 	nmi_temp_y							!skip 1
 	nmi_temp_b							!skip 1
 
-	; about 5 bytes free here
+	; should be about 5 bytes free here
 
 	!if * > $00f6 {
 		!error "Backed-up-zero-page variables, top part exceeds $f6 by ", * - $00f6, " bytes!"

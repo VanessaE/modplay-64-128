@@ -504,17 +504,17 @@ main_player_hline
 	!byte 0
 
 main_player_song_pos_pat_msg
-	!fill 5,RIGHT
-	!text CYAN,"Song Pos: ",LBLU,"  ",CYAN,"/",LBLU,"  "
-	!text BLUE," -- "
-	!text CYAN,"Pattern: ",LBLU,"  ",RETURN
+	!fill 3,RIGHT
+	!text CYAN,"Song Pos: ",LBLU,"  ",BLUE,"/",LBLU,"   "
+	!text CYAN,"Patt: ",LBLU,"   "
+	!text CYAN,"Trks: ",LBLU," ",BLUE,"/",LBLU,"4",RETURN
 	!byte 0
 
 main_player_row_speed_time
 	!fill 2,RIGHT
 	!text CYAN,"Row: ",LBLU,"   ",BLUE,"- "
-	!text CYAN,"Speed: ",LBLU,"  ",CYAN,"/",LBLU,"   ",BLUE,"- "
-	!text CYAN,"Time: ",LBLU,"00",CYAN,":",LBLU,"00",RETURN
+	!text CYAN,"Speed: ",LBLU,"  ",BLUE,"/",LBLU,"   ",BLUE,"- "
+	!text CYAN,"Time: ",LBLU,"00",BLUE,":",LBLU,"00",RETURN
 	!byte 0
 
 main_player_regen_tables_msg
