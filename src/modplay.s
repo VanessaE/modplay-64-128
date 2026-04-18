@@ -138,8 +138,17 @@ rts
 !source "src/mixer-lowpass.s"
 
 !source "src/viz-common.s"
-!source "src/viz-row-data.s"
-!source "src/viz-waveforms.s"
+
+!ifdef c64u {
+	!source "src/viz-row-data-64.s"
+	!source "src/viz-waveforms-c64u.s"
+} else ifdef c128 {
+	!source "src/viz-row-data-128.s"
+	!source "src/viz-waveforms-128.s"
+} else {
+	!source "src/viz-row-data-64.s"
+	!source "src/viz-waveforms-64.s"
+}
 
 !source "src/screen-fx.s"
 !source "src/windowing.s"

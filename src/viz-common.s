@@ -10,8 +10,11 @@
 
 	visualizer_base_addr = VIC_SCREEN + screen_width * visualizer_screen_row + visualizer_screen_column
 	visualizer_width = 36
+
+	visualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
+
 } else {
-	visualizer_area_width				= 38
+	visualizer_area_width				= 40
 	visualizer_area_height				= 6
 
 	visualizer_screen_column			= 21
@@ -19,6 +22,8 @@
 
 	visualizer_base_addr = screen_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 	visualizer_width = 40
+
+	visualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column - 1
 }
 
 visualizer_line_2 = visualizer_base_addr + screen_width
@@ -26,8 +31,6 @@ visualizer_line_3 = visualizer_base_addr + screen_width*2
 visualizer_line_4 = visualizer_base_addr + screen_width*3
 visualizer_line_5 = visualizer_base_addr + screen_width*4
 visualizer_line_6 = visualizer_base_addr + screen_width*5
-
-visualizer_colors_base_addr = color_mem_base_addr + screen_width * visualizer_screen_row + visualizer_screen_column
 
 visualizer_colors_row_3 = visualizer_colors_base_addr + screen_width*2
 

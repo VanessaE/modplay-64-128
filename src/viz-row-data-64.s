@@ -1,5 +1,5 @@
-; This file contains the row data visualizer (e.g. music/sequencer data,
-; similar to what Protracker shows)
+; This file contains the C64/C64U row data visualizer (e.g. music/sequencer
+; data, similar to what Protracker shows)
 
 ; print the column dividers and pre-fill the colors
 ;
@@ -116,17 +116,6 @@ viz_row_data_fetch_and_print
 	sty temp_abs_y2
 
 	jsr fetch_row_data
-
-	!ifdef c128 { ; only display the row # on C128, C64 screen is too small
-		jsr vdc_ram_rw_setup
-
-		txa
-		jsr display_byte_hex_direct
-
-		; perform a dummy read to skip ahead one byte
-		+VDC_UPD_RDY_WAIT
-		bit VDC_DATA
-	}
 
 	!for .viz_tr, 0, 3 {
 		; get/print note name
@@ -291,80 +280,41 @@ rts
 ; track_current_enable_flags + .Y
 
 viz_row_data_show_track_mute
-	!ifndef c128 {
-		sty temp_abs_y2
-		clc
-		lda #<visualizer_colors_row_3
-		adc viz_row_data_mute_color_cols,y
-		sta utility_pointer
-		lda #>visualizer_colors_row_3
-		adc #0
-		sta utility_pointer+1
-		lda track_current_enable_flags,y
-		eor #$80
-		clc
-		rol
-		rol
-		adc #1
-		ldy #viz_row_data_mute_colors_width
-	-	sta (utility_pointer),y
-		dey
-		bpl -
-		ldy temp_abs_y2
-	} else {
-		clc
-		lda #<visualizer_colors_row_3
-		adc viz_row_data_mute_color_cols,y
-		sta fill_copy_target
-		lda #>visualizer_colors_row_3
-		adc #0
-		sta fill_copy_target+1
-		clc
-		lda track_current_enable_flags,y
-		bpl +
-		lda #7
-	+	adc #8
-		ldx #viz_row_data_mute_colors_width
-		jsr vdc_block_fill
-	}
+	sty temp_abs_y2
+	clc
+	lda #<visualizer_colors_row_3
+	adc viz_row_data_mute_color_cols,y
+	sta utility_pointer
+	lda #>visualizer_colors_row_3
+	adc #0
+	sta utility_pointer+1
+	lda track_current_enable_flags,y
+	eor #$80
+	clc
+	rol
+	rol
+	adc #1
+	ldy #viz_row_data_mute_colors_width
+-	sta (utility_pointer),y
+	dey
+	bpl -
+	ldy temp_abs_y2
 rts
 
-!ifndef c128 {
-	viz_row_data_mute_color_cols
-		!byte 0,9,18,27
-	viz_row_data_mute_colors_width = 7
-} else {
-	viz_row_data_mute_color_cols
-		!byte 3,12,21,30
-	viz_row_data_mute_colors_width = 8
-}
+viz_row_data_mute_color_cols
+	!byte 0,9,18,27
+viz_row_data_mute_colors_width = 7
 
 viz_row_data_colors
-	!ifndef c128 {
-		; dk. gray, lt. blue, white, lt. blue, lt. blue, dk. gray
-		!byte $0b, $0e, $01, $0e, $0e, $0b
-	} else {
-		; dk. gray, dk. cyan, white, dk. cyan, dk. cyan, dk. gray
-		!byte $01, $06, $0f, $06, $06, $01
-	}
+
+	; dk. gray, lt. blue, white, lt. blue, lt. blue, dk. gray
+	!byte $0b, $0e, $01, $0e, $0e, $0b
 
 viz_row_data_dividers_msg
-	!ifndef c128 {
-		!fill 10,RIGHT
-		!byte LGRY,$7d
-		!fill 8,RIGHT
-		!byte $7d
-		!fill 8,RIGHT
-		!byte $7d,RETURN
-		!byte 0
-	} else {
-		!fill 3,RIGHT
-		!byte LGRY,$7d
-		!fill 8,RIGHT
-		!byte $7d
-		!fill 8,RIGHT
-		!byte $7d
-		!fill 8,RIGHT
-		!byte $7d,RETURN
-		!byte 0
-	}
+	!fill 10,RIGHT
+	!byte LGRY,$7d
+	!fill 8,RIGHT
+	!byte $7d
+	!fill 8,RIGHT
+	!byte $7d,RETURN
+	!byte 0

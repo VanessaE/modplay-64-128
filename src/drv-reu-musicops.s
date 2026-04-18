@@ -108,7 +108,7 @@ reu_run_fetch_and_mixer
 				!ifdef use_profiler {
 					+FETCH_PROFILER_A
 				}
- 
+
 				bit current_track_gate_flags + .ftrk		; 3
 				bmi +										; 3/2
 				jmp .reu_end_of_track_fetch					; 3
@@ -218,6 +218,10 @@ reu_run_fetch_and_mixer
 	reu_mixer_call_vec
 	; this will be set to one of the mixer routines
 	  jsr $1234												; 6
+
+	!ifdef c64u {
+		jsr viz_waveform_c64u_fill_cache
+	}
 
 	dec mixer_countdown										; 5
 	beq +													; 3/2

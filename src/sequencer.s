@@ -430,33 +430,36 @@ dont_run_pre_tick_command
 	adc #0
 	sta mixer_countdown
 
-run_fetch_and_mixer_vec
-	jsr $1234
+	run_fetch_and_mixer_vec
+		jsr $1234
 
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl no_wave_plot
 	}
 
 	lda visualizer_mode
-	beq +
+	beq no_wave_plot
 
-	!ifndef c128 {
+	!ifdef c64u {
+		; no counter -- run it every tick
+	} else ifdef c128 {
+		dec do_viz_plot
+		lda do_viz_plot
+		bne no_wave_plot
+		lda #2
+		sta do_viz_plot
+	} else {
 		lda do_viz_plot
 		eor #$80
 		sta do_viz_plot
-		bpl +
-	} else {
-		dec do_viz_plot
-		lda do_viz_plot
-		bne +
-		lda #2
-		sta do_viz_plot
+		bpl no_wave_plot
 	}
 
 	jsr viz_waveform_plot
 
-+	ldy #0
+no_wave_plot
+	ldy #0
 	sty seq_current_track
 
 next_track_post_tick
