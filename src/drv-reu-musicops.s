@@ -69,9 +69,9 @@ reu_fetch_row
 	!ifndef scpu {
 		lda #16
 		sta DMA_LENGTH_LO
-		+C128_2MHZ_OFF_FOR_REU
+		+C128_STA_CLOCK_FOR_REU
 		sty DMA_CMD
-		+C128_2MHZ_ON_FOR_REU
+		+C128_INC_CLOCK_FOR_REU
 	} else {
 		; on SCPU, we split the transfer into small pieces to minimize
 		; interference with the audio ISR's timing.
@@ -101,117 +101,183 @@ reu_run_fetch_and_mixer
 		ldy #$b1											; 2
 		lda #>sample_data_buffer							; 2
 
-			!for reu_fetch_track, 0, 3 {
-			  !zone reu_fetchloop {
-				!set .ftrk = reu_fetch_track
-				!if .ftrk = 0 { !set reu_fetch_segment_start = * }
+		!for reu_fetch_track, 0, 3 {
+		  !zone reu_fetchloop {
 
-				!ifdef use_profiler {
-					+FETCH_PROFILER_A
-					lda #>sample_data_buffer
-				}
+			!set .ftrk = reu_fetch_track
+			!if .ftrk = 0 { !set reu_fetch_segment_start = * }
 
-				!if .ftrk = 0 { ; this conditional MUST have the same code length
-					sta DMA_LOCAL_HI						; 4
-				} else {
-					inc DMA_LOCAL_HI						; 5
-				}
-
-				bit current_track_gate_flags + .ftrk		; 3
-				bmi +										; 3/2
-				jmp .reu_end_of_track_fetch					; 3
-
-			+	lda current_sample_pointers_fracts + .ftrk	; 3
-				!if .ftrk = 0 { !set reu_cur_steprate_f = * }
-				adc #0										; 2
-				sta current_sample_pointers_fracts + .ftrk	; 3
-
-				lda current_sample_pointers_lows + .ftrk	; 3
-				!if .ftrk = 0 { !set reu_cur_steprate_i = * }
-				adc #0										; 2
-				sta current_sample_pointers_lows + .ftrk	; 3
-				sta DMA_EXTERNAL_LO							; 4
-				bcc .reu_fix_dma_top_two_bytes				; 3/2
-
-				inc current_sample_pointers_mids + .ftrk	; 5
-				lda current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_EXTERNAL_HI							; 4
-				bne .reu_fix_dma_top_byte					; 3/2
-
-				inc current_sample_pointers_highs + .ftrk	; 5
-				lda current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_EXTERNAL_BANK						; 4
-				bcs .reu_check_end							; 3 (always branches)
-
-			.reu_fix_dma_top_two_bytes
-				lda current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_EXTERNAL_HI							; 4
-
-			.reu_fix_dma_top_byte
-				lda current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_EXTERNAL_BANK						; 4
-
-			.reu_check_end
-				lda current_sample_pointers_lows + .ftrk	; 3
-				!if .ftrk = 0 { !set reu_ckend_l = * }
-				cmp #0										; 2
-
-				lda current_sample_pointers_mids + .ftrk	; 3
-				!if .ftrk = 0 { !set reu_ckend_m = * }
-				sbc #0										; 2
-
-				lda current_sample_pointers_highs + .ftrk	; 3
-				!if .ftrk = 0 { !set reu_ckend_h = * }
-				sbc #0										; 2
-
-				bcc .reu_fetch_sample_data					; 3/2
-
-				clc											; 2
-				lda current_track_loop_flags + .ftrk		; 3
-				bne .reu_sample_has_loop					; 3/2
-				sta current_track_gate_flags + .ftrk		; 3
-				sta DMA_EXTERNAL_LO							; 4
-				sta DMA_EXTERNAL_HI							; 4
-				sta DMA_EXTERNAL_BANK						; 4
-				dec current_active_tracks_count				; 5
-				bcc .reu_fetch_sample_data					; 3 (always branches)
-
-			.reu_sample_has_loop
-				lda #0										; 2
-				sta current_sample_pointers_fracts + .ftrk	; 3
-				ldy current_sample_numbers + .ftrk			; 3
-				lda sample_loop_start_addresses_lows,y		; 5
-				sta current_sample_pointers_lows + .ftrk	; 3
-				sta DMA_EXTERNAL_LO							; 4
-				lda sample_loop_start_addresses_mids,y		; 5
-				sta current_sample_pointers_mids + .ftrk	; 3
-				sta DMA_EXTERNAL_HI							; 4
-				lda sample_loop_start_addresses_highs,y		; 5
-				sta current_sample_pointers_highs + .ftrk	; 3
-				sta DMA_EXTERNAL_BANK						; 4
-				ldy #$b1									; 2
-
-			.reu_fetch_sample_data
-
-				!if .ftrk = 0 { !set reu_fetchlen = * }
-				lda #1										; 2
-				sta DMA_LENGTH_LO							; 4
-
-				; N below will vary by pitch, on average it'll be around 32
-				; on C64
-
-				+C128_2MHZ_OFF_FOR_REU
-				sty DMA_CMD									; 4 + N
-				+C128_2MHZ_ON_FOR_REU
-
-				!ifdef use_profiler {
-					+FETCH_PROFILER_B 7, .ftrk
-				}
-
-			.reu_end_of_track_fetch
-			; when a track is not gated, the code skips the whole fetch
-
+			!ifdef use_profiler {
+				+FETCH_PROFILER_A
+				lda #>sample_data_buffer
 			}
+
+			; this conditional MUST have the same code length both ways
+
+			!if .ftrk = 0 {
+				sta DMA_LOCAL_HI						; 4
+			} else {
+				inc DMA_LOCAL_HI						; 5
+			}
+
+			bit current_track_gate_flags + .ftrk		; 3
+			bmi +										; 3/2
+			jmp .reu_end_of_track_fetch					; 3
+
+		+	lda current_fetch_loop_ofl_amounts + .ftrk	; 3
+			beq +										; 3/2
+			jmp .reu_do_two_part_fetch					; 3
+
+		+	lda current_sample_pointers_fracts + .ftrk	; 3
+			!if .ftrk = 0 { !set reu_cur_steprate_f = * }
+			adc #0										; 2
+			sta current_sample_pointers_fracts + .ftrk	; 3
+
+			lda current_sample_pointers_lows + .ftrk	; 3
+			sta DMA_EXTERNAL_LO							; 4
+			!if .ftrk = 0 { !set reu_cur_steprate_i_a = * }
+			adc #0										; 2
+			sta current_sample_pointers_lows + .ftrk	; 3
+			bcc .reu_fix_hi_and_bank					; 3/2
+
+			lda current_sample_pointers_mids + .ftrk	; 3
+			sta DMA_EXTERNAL_HI							; 4
+			inc current_sample_pointers_mids + .ftrk	; 5
+			bne .reu_fix_bank							; 3/2
+
+			lda current_sample_pointers_highs + .ftrk	; 3
+			sta DMA_EXTERNAL_BANK						; 4
+			inc current_sample_pointers_highs + .ftrk	; 5
+			bcs .reu_do_full_fetch						; 3 (always branches)
+
+		.reu_fix_hi_and_bank
+			lda current_sample_pointers_mids + .ftrk	; 3
+			sta DMA_EXTERNAL_HI							; 4
+
+		.reu_fix_bank
+			lda current_sample_pointers_highs + .ftrk	; 3
+			sta DMA_EXTERNAL_BANK						; 4
+
+		.reu_do_full_fetch
+			!if .ftrk = 0 { !set reu_fetchlen = * }
+			lda #1										; 2
+			sta DMA_LENGTH_LO							; 4
+
+			; N below will vary by pitch, on average it'll be around 32
+			; on C64
+
+			+C128_DEC_CLOCK_FOR_REU
+			sty DMA_CMD									; 4 + N
+			+C128_STY_CLOCK_FOR_REU
+
+		.reu_sample_end_check
+			!if .ftrk = 0 { !set reu_ckend_l_a = * }
+			lda #0										; 2
+			cmp current_sample_pointers_lows + .ftrk	; 3
+
+			!if .ftrk = 0 { !set reu_ckend_m = * }
+			lda #0										; 2
+			sbc current_sample_pointers_mids + .ftrk	; 3
+
+			!if .ftrk = 0 { !set reu_ckend_h = * }
+			lda #0										; 2
+			sbc current_sample_pointers_highs + .ftrk	; 3
+
+			bcc +										; 2/3
+			jmp .reu_end_of_track_fetch					; 3
+
+		+	lda current_track_loop_flags + .ftrk		; 3
+			bne .reu_sample_has_loop					; 3/2
+
+			sta current_track_gate_flags + .ftrk		; 3
+			sta DMA_EXTERNAL_LO							; 4
+			sta DMA_EXTERNAL_HI							; 4
+			sta DMA_EXTERNAL_BANK						; 4
+			dec current_active_tracks_count				; 5
+
+			lda reu_fetchlen + reu_fetch_loop_segment_length * .ftrk + 1 ; 4
+			sta DMA_LENGTH_LO							; 4
+
+			+C128_DEC_CLOCK_FOR_REU
+			sty DMA_CMD									; 4 + N
+			+C128_STY_CLOCK_FOR_REU
+
+			clc											; 2
+			bcc .reu_end_of_track_fetch					; 3 (always branches...duh 🙂 )
+
+		.reu_sample_has_loop
+			sec											; 2
+			lda current_sample_pointers_lows + .ftrk	; 3
+			!if .ftrk = 0 { !set reu_ckend_l_b = * }
+			sbc #0										; 2
+			sta current_fetch_loop_ofl_amounts + .ftrk	; 3
+			jmp .reu_end_of_track_fetch					; 3
+
+		.reu_do_two_part_fetch
+			sec											; 2
+			!if .ftrk = 0 { !set reu_cur_steprate_i_b = * }
+			lda #0										; 2
+			sbc current_fetch_loop_ofl_amounts + .ftrk	; 3
+			beq .reu_no_tail							; 2/3
+
+			sta DMA_LENGTH_LO							; 4
+
+			lda current_sample_pointers_lows + .ftrk	; 3
+			sta DMA_EXTERNAL_LO							; 4
+			lda current_sample_pointers_mids + .ftrk	; 3
+			sta DMA_EXTERNAL_HI							; 4
+			lda current_sample_pointers_highs + .ftrk	; 3
+			sta DMA_EXTERNAL_BANK						; 4
+
+			; non-autoload mode, we want to extend this fetch with the next
+			ldy #$91									; 2
+
+			+C128_DEC_CLOCK_FOR_REU
+			sty DMA_CMD									; 4 + N - overflow
+			+C128_STY_CLOCK_FOR_REU
+
+		.reu_no_tail
+			lda current_fetch_loop_ofl_amounts + .ftrk	; 3
+			sta DMA_LENGTH_LO							; 4
+
+			ldy current_sample_numbers + .ftrk			; 3
+			lda sample_loop_start_addresses_lows,y		; 5
+			sta DMA_EXTERNAL_LO							; 4
+			lda sample_loop_start_addresses_mids,y		; 5
+			sta DMA_EXTERNAL_HI							; 4
+			lda sample_loop_start_addresses_highs,y		; 5
+			sta DMA_EXTERNAL_BANK						; 4
+
+			ldy #$b1									; 2
+
+			+C128_DEC_CLOCK_FOR_REU
+			sty DMA_CMD									; 4 + overflow
+			+C128_STY_CLOCK_FOR_REU
+
+			lda #0										; 2
+			sta current_sample_pointers_fracts + .ftrk	; 3
+
+			ldy current_sample_numbers + .ftrk			; 3
+			clc											; 2
+			lda sample_loop_start_addresses_lows,y		; 5
+			adc current_fetch_loop_ofl_amounts + .ftrk	; 3
+			sta current_sample_pointers_lows + .ftrk	; 3
+			lda sample_loop_start_addresses_mids,y		; 5
+			adc #0
+			sta current_sample_pointers_mids + .ftrk	; 3
+			lda sample_loop_start_addresses_highs,y		; 5
+			adc #0
+			sta current_sample_pointers_highs + .ftrk	; 3
+
+			lda #0										; 2
+			sta current_fetch_loop_ofl_amounts + .ftrk	; 3
+
+			ldy #$b1									; 2
+
+		.reu_end_of_track_fetch
+		; when a track is not gated, the code skips the whole fetch
+
+		}
 
 		!if reu_fetch_track = 0 { reu_fetch_segment_close = * }
 		}
@@ -252,8 +318,10 @@ reu_do_selfmods_for_pitch_change
 	sta (utility_pointer),y
 
 	; current steprate int offset
-	ldy #(reu_cur_steprate_i - reu_fetch_segment_start + 1)
 	lda current_steprates_ints,x
+	ldy #(reu_cur_steprate_i_a - reu_fetch_segment_start + 1)
+	sta (utility_pointer),y
+	ldy #(reu_cur_steprate_i_b - reu_fetch_segment_start + 1)
 	sta (utility_pointer),y
 
 	mixer_selfmod_pitch_change_vec	; returns total lookahead distance in .A
@@ -273,9 +341,13 @@ reu_do_selfmods_for_instrument_change
 	lda reu_selfmod_fetch_segment_base_table+4,x
 	sta utility_pointer+1
 
-	; sample pointer LSB end-check offset
-	ldy #(reu_ckend_l - reu_fetch_segment_start + 1)
+	; sample pointer LSB offset, for both the sample end check
+	; and for the loop overflow calculation
 	lda current_sample_end_addr_lows,x
+
+	ldy #(reu_ckend_l_a - reu_fetch_segment_start + 1)
+	sta (utility_pointer),y
+	ldy #(reu_ckend_l_b - reu_fetch_segment_start + 1)
 	sta (utility_pointer),y
 
 	; end-check mid byte

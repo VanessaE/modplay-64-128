@@ -38,6 +38,25 @@
   each sample, leading to clicks and pops as the sample cycles through the
   loop.
 
+* C128 (maybe C64 also): there's still a bug in the looping, either end or
+  beginning is being calculated wrong at load time, or perhaps the 2-part
+  fetch isn't working right, or it could be a loop unrolling bug.  Ticking
+  sounds in "Crazy Sexy Cool" in the lead "meow-wow-wow"-sounding sample in
+  song position 0C/15 or so.  Similarly, it can be heard in the bassline in
+  the opening pattern of "Contraception", or say the bassline in the opening
+  pattern of "Bodveizer".
+
+* C128 (maybe also C64):  every now and then a voice will "BEEP!" when it
+  should go silent after a sample ends.  Kinda rare, maybe not predictable.
+  An example happens right at the beginning of song position 19/2A in
+  "Bodveizer" (must use warp mode to get there, skipping ahead with "N" will
+  cause the bug not to manifest).  Pretty sure this is a fault in the gating
+  code.
+
+* The C128 build is still only able to do 9.56 kHz on PAL right now, which is
+  about 15% slower than my goal, despite all the savings between the gating
+  and the sequencer optimizations.  More optimizations are needed.
+
 * Sequencer/fetcher/mixer:  need to eliminate that busy-wait that happens
   between the fetcher and mixer -- surely SOMETHING could be run there
   instead of waiting (every cycle spent here is a cycle that can't be used
@@ -76,7 +95,7 @@
   Apart from the actual sequencer code, it will also be this ISR's job to
   scan the keyboard, update the UI, and handle exiting from the player on
   Stop or F7.
-    
+
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is
   loaded, iterate through the instrument samples, creating downsampled
   versions of each, averaging the sample data at 2:1, 4:1, 8:1, and 16:1

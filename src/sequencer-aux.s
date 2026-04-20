@@ -64,6 +64,7 @@ start_sample
 +	lda #0
 	sta current_sample_pointers_fracts,y
 	sta current_sample_pointers_lows,y
+	sta current_fetch_loop_ofl_amounts,y
 
 	lda sample_default_loop_flags,x
 	sta current_track_loop_flags,y

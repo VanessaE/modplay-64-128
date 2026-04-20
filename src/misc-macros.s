@@ -263,21 +263,39 @@
 	}
 }
 
-; these two turbo macros only take effect on C128 sans SCPU, because with
+; these turbo macros only take effect on C128 sans SCPU, because with
 ; that device, the turbo clock is automatically stretched as on the C64.
+; and we allow for STA/STY/INC/DEC because in some cases it's possible to
+; save a cycle (e.g. DEC clock: STY DMA_CMD: STY clock)
 
-!macro C128_2MHZ_OFF_FOR_REU {
-	!ifdef c128 {
-		!ifndef scpu {
-			dec C128_VIC_CLOCK_SPEED			; 5, 7 or 20
+	!macro C128_DEC_CLOCK_FOR_REU {
+		!ifdef c128 {
+			!ifndef scpu {
+				dec C128_VIC_CLOCK_SPEED			; 5, 7 or 20
+			}
 		}
 	}
-}
 
-!macro C128_2MHZ_ON_FOR_REU {
-	!ifdef c128 {
-		!ifndef scpu {
-			inc C128_VIC_CLOCK_SPEED			; 5, 9 or 20
+	!macro C128_INC_CLOCK_FOR_REU {
+		!ifdef c128 {
+			!ifndef scpu {
+				inc C128_VIC_CLOCK_SPEED			; 5, 9 or 20
+			}
 		}
 	}
-}
+
+	!macro C128_STA_CLOCK_FOR_REU {
+		!ifdef c128 {
+			!ifndef scpu {
+				sta C128_VIC_CLOCK_SPEED			; 4, 5 or 20
+			}
+		}
+	}
+
+	!macro C128_STY_CLOCK_FOR_REU {
+		!ifdef c128 {
+			!ifndef scpu {
+				sty C128_VIC_CLOCK_SPEED			; 4, 5 or 20
+			}
+		}
+	}

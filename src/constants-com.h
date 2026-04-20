@@ -417,7 +417,7 @@ ntsc_clock = 1022727
 	mixer_loops_per_tick				!skip 1
 	mixer_countdown_fract				!skip 1
 	mixer_countdown						!skip 1
-	isr_minimum_times_before_fetch		!skip 8
+
 	current_sample_volume_levels		!skip 8
 
 	!byte 0
@@ -467,12 +467,12 @@ ntsc_clock = 1022727
 	current_pitch_bend_dirs				!skip 8 ; 0=pitching down, $80=pitching up
 												; ¯¯\__ vibrato uses this also
 
-	profiler_temp						!skip 1
-
 	nmi_temp_a							!skip 1 ; use these for saving and
 	nmi_temp_x							!skip 1 ; restoring .AXY during IRQ's
 	nmi_temp_y							!skip 1
 	nmi_temp_b							!skip 1
+
+	current_fetch_loop_ofl_amounts		!skip 8
 
 	; should be about 8 bytes free here
 
@@ -691,6 +691,8 @@ ntsc_clock = 1022727
 
 	TOD_clock_temps						!skip 4 ; used by song pause to keep
 												; the time right
+
+	profiler_temp						!skip 1
 
 	; various program indirect JMP/JSR vectors
 

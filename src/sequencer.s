@@ -54,6 +54,8 @@ start_sequencer
 	sta current_sample_end_addr_lows,x
 	sta current_sample_end_addr_highs,x
 
+	sta current_fetch_loop_ofl_amounts,x
+
 	dex
 	bpl -
 
