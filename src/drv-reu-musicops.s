@@ -99,6 +99,7 @@ reu_run_fetch_and_mixer
 	reu_fetch_main_loop
 		clc													; 2
 		ldy #$b1											; 2
+		lda #>sample_data_buffer							; 2
 
 			!for reu_fetch_track, 0, 3 {
 			  !zone reu_fetchloop {
@@ -107,16 +108,20 @@ reu_run_fetch_and_mixer
 
 				!ifdef use_profiler {
 					+FETCH_PROFILER_A
+					lda #>sample_data_buffer
+				}
+
+				!if .ftrk = 0 { ; this conditional MUST have the same code length
+					sta DMA_LOCAL_HI						; 4
+				} else {
+					inc DMA_LOCAL_HI						; 5
 				}
 
 				bit current_track_gate_flags + .ftrk		; 3
 				bmi +										; 3/2
 				jmp .reu_end_of_track_fetch					; 3
 
-			+	lda #(>sample_data_buffer) + .ftrk			; 2
-				sta DMA_LOCAL_HI							; 4
-
-				lda current_sample_pointers_fracts + .ftrk	; 3
+			+	lda current_sample_pointers_fracts + .ftrk	; 3
 				!if .ftrk = 0 { !set reu_cur_steprate_f = * }
 				adc #0										; 2
 				sta current_sample_pointers_fracts + .ftrk	; 3
@@ -136,7 +141,7 @@ reu_run_fetch_and_mixer
 				inc current_sample_pointers_highs + .ftrk	; 5
 				lda current_sample_pointers_highs + .ftrk	; 3
 				sta DMA_EXTERNAL_BANK						; 4
-				jmp .reu_check_end							; 3
+				bcs .reu_check_end							; 3 (always branches)
 
 			.reu_fix_dma_top_two_bytes
 				lda current_sample_pointers_mids + .ftrk	; 3
@@ -169,7 +174,7 @@ reu_run_fetch_and_mixer
 				sta DMA_EXTERNAL_HI							; 4
 				sta DMA_EXTERNAL_BANK						; 4
 				dec current_active_tracks_count				; 5
-				jmp .reu_fetch_sample_data					; 3
+				bcc .reu_fetch_sample_data					; 3 (always branches)
 
 			.reu_sample_has_loop
 				lda #0										; 2
