@@ -31,59 +31,6 @@
   each sample, leading to clicks and pops as the sample cycles through the
   loop.
 
-  Possible solution, should be fairly CPU-cheap:
-
-	next_channel
-		do the add as if to update the live pointer,
-		  but store the result ints in a temp variable
-		  (and store the result fract in live)
-		compare temp var with sample end, page first, then bank
-
-		if either/or don't match:
-			copy temp variable ints to REU regs
-			  and to live pointer ints
-			execute a full transfer
-			<--
-
-		else page + bank are near the sample end, so...
-
-			if sample has no loop:
-				non-looped samples will have their end addrs set by the
-				  decoder to the start of the second full silence page that
-				  follows every sample, so the fetcher will have already ran
-				  through the whole thing by now.  NEED TWO PAGES OF SILENCE
-				  AT SAMPLE END.
-				so just kill the sample.
-				<--
-
-			else sample has a loop, so:
-				looped samples will have their endpoints set to exactly the
-				  end of the loop, so while we're in the last page, we still
-				  have to play-out the rest of the sample.
-				subtract the temp var low byte from the loop end low byte
-
-				if the result does not indicate end or overflow:
-					copy temp variable ints to REU regs
-					  and to live pointer ints
-					execute full xfer
-					<--
-
-				else
-					store the temp-minus-end result as an overflow value
-					subtract this overflow value from original xfer len
-					copy temp variable ints to REU regs
-					execute xfer of just that amount
-
-					reset REU regs to loop start
-					set live pointer ints to end of overflow + 1,
-
-					execute xfer of just the overflow amount
-					<--
-				fi
-			fi
-		fi
-	move on to next_channel or exit
-
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is
   loaded, iterate through the instrument samples, creating downsampled
   versions of each, averaging the sample data at 2:1, 4:1, 8:1, and 16:1
