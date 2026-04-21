@@ -267,10 +267,10 @@ rts
 
 viz_row_data_show_track_mute
 	clc
-	lda #<visualizer_colors_row_3
+	lda #<(visualizer_colors_row_3 + 1)
 	adc viz_row_data_mute_color_cols,y
 	sta fill_copy_target
-	lda #>visualizer_colors_row_3
+	lda #>(visualizer_colors_row_3 + 1)
 	adc #0
 	sta fill_copy_target+1
 	clc
