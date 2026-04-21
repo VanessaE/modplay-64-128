@@ -168,13 +168,13 @@ dac_stop
 dac_isr_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
-	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 	clc							; 2
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
 
 .da1 sta $1234					; 4
+	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
@@ -184,12 +184,12 @@ dac_isr_mono					; 7 cycles coming in
 dac_isr_stereo					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
-	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
 .da2 sta $1234					; 4
 	lda audio_buffer_right,x	; 4
 .db  sta $1234					; 4 / will be set to right DAC addr + $18, above
+	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 or 10
@@ -198,7 +198,6 @@ dac_isr_stereo					; 7 cycles coming in
 dac_isr_stereo_user_port		; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
-	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 .dca lda #0						; 2
 	sta CIA2_PORT_A				; 4
@@ -208,6 +207,7 @@ dac_isr_stereo_user_port		; 7 cycles coming in
 	sta CIA2_PORT_A				; 4
 	lda audio_buffer_right,x	; 4
 	sta CIA2_PORT_B				; 4
+	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26

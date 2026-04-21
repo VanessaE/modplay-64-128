@@ -108,13 +108,13 @@ rts
 sid_isr_4b_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
-	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 	clc							; 2
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
 	ror							; 2
 	sta SID_VOLUME				; 4
+	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
@@ -124,12 +124,12 @@ sid_isr_4b_mono					; 7 cycles coming in
 sid_isr_4b_stereo				; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
-	inc audio_out_buf_index		; 5
 	ldx audio_out_buf_index		; 3
 	lda audio_buffer_left,x		; 4
 	sta SID_VOLUME				; 4
 	lda audio_buffer_right,x	; 4
 .s2a sta $1234					; 4 / will be set to right SID addr + $18, above
+	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26
