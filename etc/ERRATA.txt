@@ -31,6 +31,45 @@
   each sample, leading to clicks and pops as the sample cycles through the
   loop.
 
+* Sequencer/fetcher/mixer:  need to eliminate that busy-wait that happens
+  between the fetcher and mixer -- surely SOMETHING could be run there
+  instead of waiting (every cycle spent here is a cycle that can't be used
+  for the sequencer, UI, or anything else other than the audio ISR).
+
+  Idea: the sequencer already needs to be converted to run in an IRQ, really
+  it's needed this for some time anyway, so do that.
+
+  Make the fetcher and mixer be the "idle loop" or "main loop" or whatever
+  it's traditionally called, so that its code runs continuously "underneath"
+  the audio and sequencer interrupts:
+
+  - Open main loop
+  - CLI
+  - do literally ANYthing that can be done here.
+  - check for space in the audio ring buffer
+    if there's no room, just spin here.
+  - SEI
+  - run the 16-byte mixer loop to fill up that space
+  - CLI
+  - do the fetch loop setup
+  - do whatever else that can be done here.
+  - SEI
+  - run the inner fetch loop to update all four tracks.
+  - close the main loop, cycle back to the CLI and wait for space.
+
+  In theory, if there were only the CLI and SEI flanking the space check,
+  then at worst this could cause up to about a 1400 cycle delay in firing the
+  sequencer ISR (150ish cycles of fetch code plus 200 cycles of REU activity,
+  times 4 channels), but that's only 0.00142 seconds (PAL), which would be
+  completely inaudible.
+
+  In practice, it would be serviced variously during both that interval and
+  the interval where the fetch loop setup is run.
+
+  Apart from the actual sequencer code, it will also be this ISR's job to
+  scan the keyboard, update the UI, and handle exiting from the player on
+  Stop or F7.
+    
 * Loader: Add a mipmap-like feature with filtering.  After the whole file is
   loaded, iterate through the instrument samples, creating downsampled
   versions of each, averaging the sample data at 2:1, 4:1, 8:1, and 16:1
