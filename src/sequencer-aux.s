@@ -164,6 +164,7 @@ calculate_fine_tuning
 	sta multiplicand_b
 	pla
 
+fine_tuning_mult_b_is_preset
 	asl
 	tax
 	lda fine_tuning_table,x

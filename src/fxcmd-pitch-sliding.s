@@ -42,29 +42,38 @@ set_slide_to_note
 	asl
 	asl
 	tax
-	lda seq_current_row_data+1,x
+	lda seq_current_row_data+1,x ; period
 	and #$0f
 	ora seq_current_row_data+2,x
-	beq ++
+	beq sp_no_ft
 
 	lda current_fine_tune_values,y
-	bne +
+	bne set_ft
 
 	lda seq_current_row_data+1,x
 	and #$0f
 	sta current_pitch_slide_target_highs,y
 	lda seq_current_row_data+2,x
 	sta current_pitch_slide_target_lows,y
-	jmp ++
+	jmp sp_no_ft
 
-+	jsr calculate_fine_tuning
+set_ft
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta multiplicand_b+1
+	lda seq_current_row_data+2,x
+	sta multiplicand_b
+
+	lda current_fine_tune_values,y
+	jsr fine_tuning_mult_b_is_preset
 
 	lda product+2
 	sta current_pitch_slide_target_lows,y
 	lda product+3
 	sta current_pitch_slide_target_highs,y
 
-++	lda current_note_periods_lows,y
+sp_no_ft
+	lda current_note_periods_lows,y
 	cmp current_pitch_slide_target_lows,y
 	lda current_note_periods_highs,y
 	sbc current_pitch_slide_target_highs,y
@@ -125,8 +134,6 @@ stop_pitch_slide
 	sta current_note_periods_lows,y
 	lda current_pitch_slide_target_highs,y
 	sta current_note_periods_highs,y
-	lda #0
-	sta current_pitch_slide_rates,y
 	jmp set_pitch_by_table_lookup
 
 ; continue pitch slide and add volume slide

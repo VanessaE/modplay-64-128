@@ -243,15 +243,15 @@ get_sample_number
 	jsr set_volume_skip_gate_check
 	ldx seq_cur_track_data_offset
 
-+	lda seq_current_row_data+1,x		; if period is 0, don't restart
-	and #$0f							; the sample
-	ora seq_current_row_data+2,x
++	lda seq_commands,y					; if slide-to-note is in effect, just
+	cmp #3								; ignore the given period and don't
+	beq run_command						; re-start the sample
+	cmp #5								; ditto for pitch slide + volume slide
 	beq run_command
 
-	lda seq_commands,y					; if slide-to-note is in effect, just
-	cmp #3								; ignore the sample number and don't
-	beq get_note_period					; re-start the sample
-	cmp #5								; ditto for pitch slide + volume slide
+	lda seq_current_row_data+1,x		; in any other case, if period is 0
+	and #$0f							; don't restart the sample
+	ora seq_current_row_data+2,x
 	beq get_note_period
 
 	lda current_sample_numbers,y
@@ -262,14 +262,8 @@ get_sample_number
 get_note_period
 	lda seq_current_row_data+1,x
 	and #$0f
-	ora seq_current_row_data+2,x		; if period is 0, keep using the
-	beq run_command						; previous note/pitch
-
-	lda seq_commands,y					; for commands 3 and 5, the given
-	cmp #3								; period is a parameter to the
-	beq run_command						; command, to be used later.
-	cmp #5
-	beq run_command
+	ora seq_current_row_data+2,x		; otherwise, if period is 0, keep
+	beq run_command						; using the previous note/pitch
 
 	lda current_fine_tune_values,y
 	bne +
@@ -323,10 +317,6 @@ dont_print_track_count
 	sta current_vibrato_top_period_highs,y
 
 	; if the command and its param is all 0's, there's nothing else to do.
-
-	txa
-	ora seq_command_arguments,y
-	beq no_command_this_row_this_track
 
 +	lda start_effect_command_jump_table_highs,x
 	beq no_command_this_row_this_track
