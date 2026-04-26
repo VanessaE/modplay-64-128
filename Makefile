@@ -25,10 +25,12 @@ TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
 VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
 
+# change these to point to your tools.
+
 MKDIR=/usr/bin/mkdir
 SORT=/usr/bin/sort
 ACME=/usr/bin/acme
-CC1541=/usr/bin/cc1541 # change this to point to your copy
+CC1541=/usr/bin/cc1541 
 EXOMIZER=/home/vanessa/Commodore-related/Software/PC-tools/exomizer/src/exomizer
 
 PRE_DECRUNCH_128=bit $d7 bpl notvdc lda \#$0b sta $d011 lda \#1 sta $d030 notvdc: nop
@@ -130,8 +132,6 @@ endif
 	$(eval DISK_IMG := disk-images/modplay-$(MACHINE)-v$(VERSION_STRING)-build-$(BUILD_NO).$(DISK_FORMAT))
 
 	$(RM) $(DISK_IMG)
-
-	export DISK_IMG
 
 	$(CC1541) -n 'modplay $(MACHINE) v$(VERSION_STRING)' -i '$(VERSION_ID)' \
 																		$(DISK_IMG)
