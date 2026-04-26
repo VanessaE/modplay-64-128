@@ -6,6 +6,11 @@ OPTIONS=-Wno-label-indent -v3 --format cbm \
  -Dversion_major=$(VERSION_MAJOR) -Dversion_minor=$(VERSION_MINOR) \
  -Dbuild_no=$(BUILD_NO)
 
+define NEWLINE
+
+
+endef
+
 # define a space char as $(S)
 E:=
 S:=$(E) $(E)
@@ -20,13 +25,16 @@ TMPDIR=/tmp/mp-trim-ws-compress-tmp
 VERSION_STRING=$(VERSION_MAJOR).$(VERSION_MINOR)
 VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
 
-CC1541=/home/vanessa/.local/bin/cc1541 # change this to point to your copy
+MKDIR=/usr/bin/mkdir
+SORT=/usr/bin/sort
+ACME=/usr/bin/acme
+CC1541=/usr/bin/cc1541 # change this to point to your copy
 EXOMIZER=/home/vanessa/Commodore-related/Software/PC-tools/exomizer/src/exomizer
 
 PRE_DECRUNCH_128=bit $d7 bpl notvdc lda \#$0b sta $d011 lda \#1 sta $d030 notvdc: nop
 
 all:
-	rm -f "$(TMPDIR)/*"
+	$(RM) "$(TMPDIR)/*"
 
 	$(MAKE) clean
 
@@ -41,70 +49,70 @@ all:
 
 	$(MAKE) gen_mod_disks
 
-	@echo -e '\nFinished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)'
+	$(info $(NEWLINE)Finished, version $(VERSION_MAJOR).$(VERSION_MINOR), build #$(BUILD_NO)')
 
 clean:
-	rm -f src/*.o
-	rm -rf bin
-	rm -rf disk-images
-	mkdir -p bin
-	mkdir -p disk-images
+	$(RM) src/*.o
+	$(RM) -r bin
+	$(RM) -r disk-images
+	$(MKDIR) -p bin
+	$(MKDIR) -p disk-images
 
 c64:
-	@echo -e '\nBuilding Modplay 64...\n'
-	acme $(OPTIONS) -o /tmp/mp.ignore.me -l /tmp/mp64.sym.initial src/constants-com.h
+	$(info $(NEWLINE)Building Modplay 64...$(NEWLINE))
+	$(ACME) $(OPTIONS) -o /tmp/mp.ignore.me -l /tmp/mp64.sym.initial src/constants-com.h
 
-	acme $(OPTIONS) $(USE_PROFILER) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
-	acme $(OPTIONS) $(USE_PROFILER) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -o src/mp64.main.o -l /tmp/mp64-symbols.txt /tmp/mp64.sym.initial src/modplay.s
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -o src/mp64.o /tmp/mp64.sym.initial src/booter-64.s
 
 	$(EXOMIZER) sfx 0x1600 -s 'lda #81 sta $$07e7' -X 'sty $$dbe7' -o bin/mp64.prg src/mp64.o
 	$(EXOMIZER) mem -o bin/mp64.main.prg src/mp64.main.o
 
-	sort -dbf /tmp/mp64-symbols.txt > etc/mp64-symbols.txt
+	$(SORT) -dbf /tmp/mp64-symbols.txt > etc/mp64-symbols.txt
 
 c128:
-	@echo -e '\nBuilding Modplay 128...\n'
-	acme $(OPTIONS) -Dc128=1 -o /tmp/mp.ignore.me -l /tmp/mp128.sym.initial src/constants-com.h
+	$(info $(NEWLINE)Building Modplay 128...$(NEWLINE))
+	$(ACME) $(OPTIONS) -Dc128=1 -o /tmp/mp.ignore.me -l /tmp/mp128.sym.initial src/constants-com.h
 
-	acme $(OPTIONS) -Dc128=1 -o src/mp128.main.o -l /tmp/mp128-symbols.txt /tmp/mp128.sym.initial src/modplay.s
-	acme $(OPTIONS) -Dc128=1 -o src/mp128.o /tmp/mp128.sym.initial src/booter-128.s
+	$(ACME) $(OPTIONS) -Dc128=1 -o src/mp128.main.o -l /tmp/mp128-symbols.txt /tmp/mp128.sym.initial src/modplay.s
+	$(ACME) $(OPTIONS) -Dc128=1 -o src/mp128.o /tmp/mp128.sym.initial src/booter-128.s
 
-	acme $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o src/c128-boot-sect.s
+	$(ACME) $(OPTIONS) -Dc128=1 --format plain -o src/c128-boot-sect.o src/c128-boot-sect.s
 
 	$(EXOMIZER) sfx 0x1600 -t 128 -s '$(value PRE_DECRUNCH_128)' -o bin/mp128.prg src/mp128.o
 	$(EXOMIZER) mem -o bin/mp128.main.prg src/mp128.main.o
 
-	sort -dbf /tmp/mp128-symbols.txt > etc/mp128-symbols.txt
+	$(SORT) -dbf /tmp/mp128-symbols.txt > etc/mp128-symbols.txt
 
 c64_scpu:
-	@echo -e '\nBuilding Modplay 64 (SuperCPU edition)...\n'
+	$(info $(NEWLINE)Building Modplay 64 (SuperCPU edition)...$(NEWLINE))
 
-	acme $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
-	acme $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o src/mp64.main-scpu.o -l /tmp/mp64+scpu-symbols.txt /tmp/mp64-s.sym src/modplay.s
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o src/mp64.main-scpu.o -l /tmp/mp64+scpu-symbols.txt /tmp/mp64-s.sym src/modplay.s
 
 	$(EXOMIZER) mem -o bin/mp64.main-scpu.prg src/mp64.main-scpu.o
 
-	sort -dbf /tmp/mp64+scpu-symbols.txt > etc/mp64+scpu-symbols.txt
+	$(SORT) -dbf /tmp/mp64+scpu-symbols.txt > etc/mp64+scpu-symbols.txt
 
 c64u:
-	@echo -e '\nBuilding Modplay 64 (C64 Ultimate/Ultimate64 edition)...\n'
+	$(info $(NEWLINE)Building Modplay 64 (C64 Ultimate/Ultimate64 edition)...$(NEWLINE))
 
-	acme $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
-	acme $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o src/mp64.main-c64u.o -l /tmp/mp64+c64u-symbols.txt /tmp/mp64-s.sym src/modplay.s
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o /tmp/mp.ignore.me -l /tmp/mp64-s.sym src/constants-com.h
+	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o src/mp64.main-c64u.o -l /tmp/mp64+c64u-symbols.txt /tmp/mp64-s.sym src/modplay.s
 
 	$(EXOMIZER) mem -o bin/mp64.main-c64u.prg src/mp64.main-c64u.o
 
-	sort -dbf /tmp/mp64+c64u-symbols.txt > etc/mp64+c64u-symbols.txt
+	$(SORT) -dbf /tmp/mp64+c64u-symbols.txt > etc/mp64+c64u-symbols.txt
 
 c128_scpu:
-	@echo -e '\nBuilding Modplay 128 (SuperCPU edition)...\n'
+	$(info $(NEWLINE)Building Modplay 128 (SuperCPU edition)...$(NEWLINE))
 
-	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp128-s.sym src/constants-com.h
-	acme $(OPTIONS) -Dc128=1 -Dscpu=1 -o src/mp128.main-scpu.o -l /tmp/mp128+scpu-symbols.txt /tmp/mp128-s.sym src/modplay.s
+	$(ACME) $(OPTIONS) -Dc128=1 -Dscpu=1 -o /tmp/mp.ignore.me -l /tmp/mp128-s.sym src/constants-com.h
+	$(ACME) $(OPTIONS) -Dc128=1 -Dscpu=1 -o src/mp128.main-scpu.o -l /tmp/mp128+scpu-symbols.txt /tmp/mp128-s.sym src/modplay.s
 
 	$(EXOMIZER) mem -o bin/mp128.main-scpu.prg src/mp128.main-scpu.o
 
-	sort -dbf /tmp/mp128+scpu-symbols.txt > etc/mp128+scpu-symbols.txt
+	$(SORT) -dbf /tmp/mp128+scpu-symbols.txt > etc/mp128+scpu-symbols.txt
 
 gen_release_disk_image:
 
@@ -121,7 +129,7 @@ endif
 
 	$(eval DISK_IMG := disk-images/modplay-$(MACHINE)-v$(VERSION_STRING)-build-$(BUILD_NO).$(DISK_FORMAT))
 
-	rm -f $(DISK_IMG)
+	$(RM) $(DISK_IMG)
 
 	export DISK_IMG
 

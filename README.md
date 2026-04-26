@@ -35,7 +35,12 @@ Ultimate64 users:  If you have real SID chips installed, or their modern replace
 
 C64 Ultimate users: sorry folks, Commodore's latest firmware (1.1.0, after the renumbering) will not suffice, it doesn't have the fix.  Unless you're willing to disable your SIDs and live with 4-bit audio, you'll have to wait for them to catch up, or you can run the Ultimate64 v3.14e or later firmware, which seems to work just fine (but be aware, you'll lose keyboard lighting on machines so-equipped, and the menus won't be as you're used to, and you'll have to source new ROM image files).
 
-This project is meant to be worked-on and built on Linux using common tools; you will need GNU make, ACME assembler, and cc1541 (not the "c1541" that comes with VICE).
+This project is meant to be worked-on and built on Linux using common tools.  You will need:
+
+* GNU make (any recent version should be fine)
+* ACME assembler (v0.97 or newer)
+* exomizer (v3.1.1 or newer, just the cruncher tool, the decruncher is part of this source tree)
+* cc1541 (v4.2 or later, and not the "c1541" that comes with VICE)
 
 **DOWNLOADS:**
 
