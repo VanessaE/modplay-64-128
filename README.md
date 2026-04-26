@@ -42,6 +42,8 @@ This project is meant to be worked-on and built on Linux using common tools.  Yo
 * exomizer (v3.1.1 or newer, just the cruncher tool, the decruncher is part of this source tree)
 * cc1541 (v4.2 or later, and not the "c1541" that comes with VICE)
 
+To build it, just cd into the top level directory and do `make -f Makefile-linux`.  Disk images and individual binaries will be left in directories so-named.
+
 **DOWNLOADS:**
 
 Disk images can be found in the repository's **[Package Registry](https://gitlab.com/VanessaE/modplay-64-128/-/packages)** (or you can get there from the sidebar).

@@ -27,6 +27,9 @@ VERSION_ID=$(VERSION_MAJOR)$(VERSION_MINOR)
 
 # change these to point to your tools.
 
+THIS_MAKEFILE := $(lastword $(MAKEFILE_LIST))
+MAKE=/usr/bin/make -f $(THIS_MAKEFILE)
+
 MKDIR=/usr/bin/mkdir
 SORT=/usr/bin/sort
 ACME=/usr/bin/acme
