@@ -136,6 +136,6 @@ reu_sig_candidate_start
 	!text $ff,"icanhaz?"; same length as above
 
 reu_not_found_msg
-	!text RED,LOWER,CLR,"No REU found!",RETURN,RETURN,0
+	!text LOWER,CLR,"No REU found!",RETURN,RETURN,0
 
 !align 255,0,0

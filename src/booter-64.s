@@ -50,6 +50,9 @@ boot_start
 	lda reu_highest_bank
 	bne +
 
+	lda #LRED
+	jsr CHROUT
+
 	ldx #<reu_not_found_msg
 	ldy #>reu_not_found_msg
 	jsr local_print_msg

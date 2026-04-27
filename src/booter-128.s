@@ -53,7 +53,16 @@ boot_start
 
 	jsr reu_get_size
 	lda reu_highest_bank
-	bne +
+	bne ++
+
+	lda #LRED
+
+	bit kernal_4080_mode
+	bmi +
+
+	lda #YEL
+
++	jsr CHROUT
 
 	ldx #<reu_not_found_msg
 	ldy #>reu_not_found_msg
@@ -61,7 +70,7 @@ boot_start
 
 	- jmp -
 
-+	lda #0
+++	lda #0
 	sta VIC_BORDER
 	sta VIC_BACKGROUND
 	lda #WHT ; FIXME -- this should be #BLK
