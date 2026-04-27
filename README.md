@@ -44,6 +44,8 @@ This project is meant to be worked-on and built on Linux using common tools.  Yo
 
 To build it, just cd into the top level directory and do `make -f Makefile-linux`.  Disk images and individual binaries will be left in directories so-named.
 
+There is also a Makefile for Windows, if you're crazy enough to try to build on that platform. 😉  You'll need MinGW, but otherwise it should work more or less the same way as on Linux.  For further details, see [the specific README](README-windows.txt) for that OS.
+
 **DOWNLOADS:**
 
 Disk images can be found in the repository's **[Package Registry](https://gitlab.com/VanessaE/modplay-64-128/-/packages)** (or you can get there from the sidebar).
