@@ -62,11 +62,6 @@ start_sample
 	sta current_sample_pointers_highs,y
 
 +	lda #0
-	sta current_vibrato_step_size_ints,y
-	sta current_vibrato_step_size_fracts,y
-	sta current_tremolo_step_sizes,y
-	sta current_volume_slide_rates,y
-	sta current_pitch_slide_rates,y
 	sta current_sample_pointers_fracts,y
 	sta current_sample_pointers_lows,y
 

@@ -23,16 +23,19 @@ start_sequencer
 	sta current_delay_sample_ticks,x
 	sta current_track_loop_flags,x
 	sta current_track_gate_flags,x
-	sta current_vibrato_step_size_ints,x
-	sta current_vibrato_step_size_fracts,x
+
+	sta current_vibrato_step_sizes_ints,x
+	sta current_vibrato_step_sizes_fracts,x
+	sta current_vibrato_fundamental_periods_lows,x
+	sta current_vibrato_fundamental_periods_highs,x
 	sta last_vibrato_rates,x
 	sta last_vibrato_amplitudes,x
+
 	sta current_tremolo_step_sizes,x
 	sta current_volume_slide_rates,x
 	sta seq_commands,x
 	sta seq_prev_commands,x
 	sta seq_command_arguments,x
-	sta seq_prev_command_arguments,x
 
 	sta current_note_periods_fracts,x
 	sta current_note_periods_lows,x
@@ -222,6 +225,9 @@ next_track_this_row
 ; split each row, each track's four data bytes into their different components
 
 get_command								; ...and its parameters.
+	lda seq_commands,y
+	sta seq_prev_commands,y
+
 	lda seq_current_row_data+3,x
 	sta seq_command_arguments,y
 	lda seq_current_row_data+1,x
@@ -297,28 +303,18 @@ run_command
 	ldy seq_current_track
 
 dont_print_track_count
-	; if the command is invalid, there's nothing to do at this point 😛
-
 	ldx seq_commands,y
+
+	jsr stop_vibrato_check ; (.X and .Y are preserved)
+
+	; if the current command is invalid, there's nothing to do. 😛
+
 	cpx #16
 	bcs no_command_this_row_this_track
 
-	; if there IS a command, and isn't one of the two vibrato variants, set
-	; vibrato top point to 0 so that the next time one of those commands is
-	; run, the routine will know it's a new call.
-
-	cpx #4
-	beq +
-	cpx #6
-	beq +
-
-	lda #0
-	sta current_vibrato_top_period_lows,y
-	sta current_vibrato_top_period_highs,y
-
 	; if the command and its param is all 0's, there's nothing else to do.
 
-+	lda start_effect_command_jump_table_highs,x
+	lda start_effect_command_jump_table_highs,x
 	beq no_command_this_row_this_track
 	sta start_command_vec+2
 	lda start_effect_command_jump_table_lows,x

@@ -29,20 +29,20 @@
 
 ; expects a track number in .Y
 
+
 start_effect_vibrato
+	; if the fundamental pitch is zero, this must be a new vibrato run, so
+	; pick up a new fundamental period, reset the period stepping direction,
+	; and calculate a new top point and step size against that.
 
-	; if the top point is zero, this must be a new vibrato run, so pick up a
-	; a new fundamental period, reset the period stepping direction, and
-	; calculate a new top point and step size.
-
-	lda current_vibrato_top_period_lows,y
-	ora current_vibrato_top_period_highs,y
+	lda current_vibrato_fundamental_periods_lows,y
+	ora current_vibrato_fundamental_periods_highs,y
 	bne +
 
 	lda current_note_periods_lows,y
-	sta current_vibrato_fundamental_period_lows,y
+	sta current_vibrato_fundamental_periods_lows,y
 	lda current_note_periods_highs,y
-	sta current_vibrato_fundamental_period_highs,y
+	sta current_vibrato_fundamental_periods_highs,y
 
 	lda #0
 	sta current_note_periods_fracts,y
@@ -67,9 +67,9 @@ start_effect_vibrato
 	lda sixteenth_semitones_table_highs,x
 	sta multiplicand_a+1
 
-	lda current_vibrato_fundamental_period_lows,y
+	lda current_vibrato_fundamental_periods_lows,y
 	sta multiplicand_b
-	lda current_vibrato_fundamental_period_highs,y
+	lda current_vibrato_fundamental_periods_highs,y
 	sta multiplicand_b+1
 
 	sec
@@ -84,20 +84,20 @@ start_effect_vibrato
 	lda product+3
 	rol 
 
-	sta current_vibrato_top_period_highs,y
+	sta current_vibrato_top_periods_highs,y
 	lda product+2
-	sta current_vibrato_top_period_lows,y
+	sta current_vibrato_top_periods_lows,y
 
 	; if the requested amplitude would put the top period at less than 57,
 	; cap it.
 
 	cmp #57
-	lda current_vibrato_top_period_highs,y
+	lda current_vibrato_top_periods_highs,y
 	sbc #0
 	bcs +
 
 	lda #57
-	sta current_vibrato_top_period_lows,y
+	sta current_vibrato_top_periods_lows,y
 
 +	lda seq_commands,y					; if we got here via command #6, then
 	cmp #6								; we *must* use the previous rate
@@ -110,16 +110,15 @@ start_effect_vibrato
 +	lda last_vibrato_rates,y
 
 ++	sta last_vibrato_rates,y
-	sta multiplicand_a
+	tax
 
 	; since the "top" of a vibrato is its highest pitch, that will be a
 	; shorter period value than its fundamental period, so subtract the top
 	; from the fundamental to get the real amplitude.
 
 	sec
-	lda current_vibrato_fundamental_period_lows,y
-	sbc current_vibrato_top_period_lows,y
-	sta multiplicand_b
+	lda current_vibrato_fundamental_periods_lows,y
+	sbc current_vibrato_top_periods_lows,y
 
 	; Since the highest amplitude value represents almost one full semitone,
 	; and the longest period in the table is 1712, the maximum possible
@@ -128,7 +127,6 @@ start_effect_vibrato
 	; the upper byte of the subtract will thus always be zero, and since the
 	; rate value maxes-out at 15, we can just do an 8x8 multiply now.
 
-	sec
 	jsr multiply_8x8
 	ldy seq_current_track
 
@@ -140,18 +138,18 @@ start_effect_vibrato
 	asl product
 	lda product+1
 	rol
-	sta current_vibrato_step_size_ints,y
+	sta current_vibrato_step_sizes_ints,y
 
 	lda product
-	sta current_vibrato_step_size_fracts,y
+	sta current_vibrato_step_sizes_fracts,y
 rts
 
 ; this routine is very similar to pitch sliding, it just uses a different
 ; set of variables, and puts the current period fraction value to use
 
 run_effect_vibrato
-	lda current_vibrato_top_period_lows,y
-	ora current_vibrato_top_period_highs,y
+	lda current_vibrato_fundamental_periods_lows,y
+	ora current_vibrato_fundamental_periods_highs,y
 	bne +
 	rts
 
@@ -161,28 +159,28 @@ run_effect_vibrato
 vibrato_pitching_up
 	sec
 	lda current_note_periods_fracts,y
-	sbc current_vibrato_step_size_fracts,y
+	sbc current_vibrato_step_sizes_fracts,y
 	sta current_note_periods_fracts,y
 	lda current_note_periods_lows,y
-	sbc current_vibrato_step_size_ints,y
+	sbc current_vibrato_step_sizes_ints,y
 	sta current_note_periods_lows,y
 	lda current_note_periods_highs,y
 	sbc #0
 	sta current_note_periods_highs,y
 
 	lda current_note_periods_lows,y
-	cmp current_vibrato_top_period_lows,y
+	cmp current_vibrato_top_periods_lows,y
 	lda current_note_periods_highs,y
-	sbc current_vibrato_top_period_highs,y
+	sbc current_vibrato_top_periods_highs,y
 	bcs +
 
 	lda #0
 	sta current_pitch_bend_dirs,y
 
 	sta current_note_periods_fracts,y
-	lda current_vibrato_top_period_lows,y
+	lda current_vibrato_top_periods_lows,y
 	sta current_note_periods_lows,y
-	lda current_vibrato_top_period_highs,y
+	lda current_vibrato_top_periods_highs,y
 	sta current_note_periods_highs,y
 
 +	jmp set_pitch_by_table_lookup
@@ -190,19 +188,19 @@ vibrato_pitching_up
 vibrato_pitching_down
 	clc
 	lda current_note_periods_fracts,y
-	adc current_vibrato_step_size_fracts,y
+	adc current_vibrato_step_sizes_fracts,y
 	sta current_note_periods_fracts,y
 	lda current_note_periods_lows,y
-	adc current_vibrato_step_size_ints,y
+	adc current_vibrato_step_sizes_ints,y
 	sta current_note_periods_lows,y
 	lda current_note_periods_highs,y
 	adc #0
 	sta current_note_periods_highs,y
 
 	lda current_note_periods_lows,y
-	cmp current_vibrato_fundamental_period_lows,y
+	cmp current_vibrato_fundamental_periods_lows,y
 	lda current_note_periods_highs,y
-	sbc current_vibrato_fundamental_period_highs,y
+	sbc current_vibrato_fundamental_periods_highs,y
 	bcc +
 
 	lda #$80
@@ -210,9 +208,9 @@ vibrato_pitching_down
 
 	lda #0
 	sta current_note_periods_fracts,y
-	lda current_vibrato_fundamental_period_lows,y
+	lda current_vibrato_fundamental_periods_lows,y
 	sta current_note_periods_lows,y
-	lda current_vibrato_fundamental_period_highs,y
+	lda current_vibrato_fundamental_periods_highs,y
 	sta current_note_periods_highs,y
 
 +	jmp set_pitch_by_table_lookup
@@ -225,4 +223,53 @@ rts
 run_effect_vibrato_plus_volume_slide
 	jsr run_effect_vibrato
 	jsr run_effect_volume_slide
+rts
+
+
+; if there is a command, and isn't one of the two vibrato variants, but
+; the previous command was, this signals the end of a vibrato, so we'll need
+; to either reset the current note back to now-ending vibrato's fundamental
+; period, or if a new period was given in this row, use that, and then in
+; either case zero-out the old fundamental so that the next time either
+; command is run, it'll signal a new vibrato.
+
+; enter with .X = current command number and .Y = track number
+
+stop_vibrato_check
+	cpx #4
+	beq vib_do_nothing
+	cpx #6
+	beq vib_do_nothing
+
+	lda seq_prev_commands,y
+
+	cmp #4
+	beq vib_stop
+	cmp #6
+	bne vib_do_nothing
+
+vib_stop
+	ldx seq_cur_track_data_offset
+	lda seq_current_row_data+1,x
+	and #$0f
+	ora seq_current_row_data+2,x
+	bne vib_dont_reset_current_period
+
+;	inc $d020
+
+	lda current_vibrato_fundamental_periods_lows,y
+	sta current_note_periods_lows,y
+	lda current_vibrato_fundamental_periods_highs,y
+	sta current_note_periods_highs,y
+
+vib_dont_reset_current_period
+	lda #0
+	sta current_vibrato_fundamental_periods_lows,y
+	sta current_vibrato_fundamental_periods_highs,y
+
+	jsr set_pitch_by_table_lookup
+	ldy seq_current_track
+	ldx seq_commands,y
+
+vib_do_nothing
 rts

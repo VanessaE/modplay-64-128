@@ -455,21 +455,17 @@ ntsc_clock = 1022727
 	current_sample_end_addr_mids		!skip 8
 	current_sample_end_addr_highs		!skip 8
 
-	current_vibrato_fundamental_period_lows  !skip 8
-	current_vibrato_fundamental_period_highs !skip 8
-	current_vibrato_top_period_lows		!skip 8
-	current_vibrato_top_period_highs	!skip 8
+	current_vibrato_fundamental_periods_lows  !skip 8
+	current_vibrato_fundamental_periods_highs !skip 8
+	current_vibrato_top_periods_lows		!skip 8
+	current_vibrato_top_periods_highs	!skip 8
 
-	current_vibrato_step_size_fracts	!skip 8
-	current_vibrato_step_size_ints		!skip 8
+	current_vibrato_step_sizes_fracts	!skip 8
+	current_vibrato_step_sizes_ints		!skip 8
 
 	current_pitch_slide_rates			!skip 8
 	current_pitch_bend_dirs				!skip 8 ; 0=pitching down, $80=pitching up
 												; ¯¯\__ vibrato uses this also
-
-	last_seconds						!skip 1
-	do_viz_plot							!skip 1
-	seq_key_debounce					!skip 1
 
 	profiler_temp						!skip 1
 
@@ -478,7 +474,7 @@ ntsc_clock = 1022727
 	nmi_temp_y							!skip 1
 	nmi_temp_b							!skip 1
 
-	; should be about 5 bytes free here
+	; should be about 8 bytes free here
 
 	!if * > $00f6 {
 		!error "Backed-up-zero-page variables, top part exceeds $f6 by ", * - $00f6, " bytes!"
@@ -725,7 +721,6 @@ ntsc_clock = 1022727
 	seq_commands						!skip 8
 	seq_prev_commands					!skip 8
 	seq_command_arguments				!skip 8
-	seq_prev_command_arguments			!skip 8
 
 	seq_abort_flag						!skip 1
 
@@ -752,7 +747,11 @@ ntsc_clock = 1022727
 	current_pitch_slide_target_lows		!skip 8
 	current_pitch_slide_target_highs	!skip 8
 
-	; about 64 bytes free here on both machines
+	last_seconds						!skip 1
+	do_viz_plot							!skip 1
+	seq_key_debounce					!skip 1
+
+	; about 72 bytes free here on both machines
 
 	!if * > $0fff {
 			!error "Main variables zone exceeds $0fff by ", * - $0fff, " bytes!"
