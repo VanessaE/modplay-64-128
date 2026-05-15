@@ -139,10 +139,6 @@
 * BOTH: strings that should be centered are off by one: disk name is 1 to the
   left, file size in loader is 1 to the right.
 
-* C64: if list is positioned not to fill the pane (e.g. close to start or
-  end), file sizes aren't shown properly at bottom when scrolling with cursor
-  keys (but page up/down, top/bottom, and C128 are all fine).
-
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 

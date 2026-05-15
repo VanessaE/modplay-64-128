@@ -497,13 +497,23 @@ scroll_add_row
 	adc #playlist_half_page_size
 	cmp playlist_length
 	bcc print_it
-	rts
+
+	!ifndef c128 {
+		jmp show_file_size
+	} else {
+		rts
+	}
 
 +	sec
 	lda playlist_scroll_pos
 	sbc #playlist_half_page_size
 	bcs print_it
-	rts
+
+	!ifndef c128 {
+		jmp show_file_size
+	} else {
+		rts
+	}
 
 print_it
 	sta playlist_print_file_counter
@@ -513,11 +523,11 @@ print_it
 
 	!ifdef c128 {
 		ldx playlist_print_file_counter
-		jsr append_file_size
+		jmp append_file_size
 	} else {
-		jsr show_file_size
+		jmp show_file_size
 	}
-rts
+
 
 erase_file_list
 	lda #0

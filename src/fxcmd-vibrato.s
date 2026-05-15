@@ -255,8 +255,6 @@ vib_stop
 	ora seq_current_row_data+2,x
 	bne vib_dont_reset_current_period
 
-;	inc $d020
-
 	lda current_vibrato_fundamental_periods_lows,y
 	sta current_note_periods_lows,y
 	lda current_vibrato_fundamental_periods_highs,y
