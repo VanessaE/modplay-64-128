@@ -165,9 +165,10 @@ check_menu_key_home
 	beq check_menu_key_clr
 	lda #0
 	sta playlist_scroll_pos
+	jsr display_playlist
+
 	lda #0
 	sta main_menu_cache_is_valid
-	lda #3
 	rts
 
 check_menu_key_clr
@@ -181,9 +182,9 @@ check_menu_key_clr
 	cmp playlist_scroll_pos
 	beq check_menu_key_minus
 	sta playlist_scroll_pos
+	jsr display_playlist
 	lda #0
 	sta main_menu_cache_is_valid
-	lda #3
 	rts
 
 check_menu_key_minus
