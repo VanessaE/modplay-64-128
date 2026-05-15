@@ -134,8 +134,6 @@
 	set "loaded file is mipmapped" to true
 	exit
 
-* C128: cursor-left in main menu triggers switch pages code
-
 * BOTH: strings that should be centered are off by one: disk name is 1 to the
   left, file size in loader is 1 to the right.
 

@@ -658,10 +658,17 @@ calc_filename_address
 	tay
 rts
 
-check_com_key ; check if C= key is pressed, wait for release
-	lda #$7f ; column 7 low
+; check if C= key is pressed, wait for release
+
+check_com_key
+	!ifdef c128 {
+		lda #%11111111			; make sure extra columns K0-2 are high
+		sta C128_EXTRA_KEYS
+	}
+
+	lda #%01111111 ; column 7 low
 	sta CIA1_PORT_A
-	lda #$df ; look for row 5
+	lda #%11011111 ; look for row 5
 	cmp CIA1_PORT_B
 	bne .ck_out
 
