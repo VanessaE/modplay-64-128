@@ -400,13 +400,17 @@ pause_player
 
 	+JSR_INDIRECT (audio_stop_vec)
 
-	!ifdef badlines_exist {
-		bit enable_screen_on_playback
-		bpl .pause_noviz1			; don't clear viz area if screen is off
-	}
-
 	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
 	jsr enable_kernal_only
+
+	!ifdef badlines_exist {
+		bit enable_screen_on_playback
+		bmi +
+		lda #CLR
+		jsr CHROUT
+ 		jsr enable_vic_screen
+ 	  +
+	}
 
 	sec
 	lda #0
@@ -417,7 +421,6 @@ pause_player
 	jsr disable_roms
 	jsr swap_zero_page				; player swap -> active, KERNAL -> swap
 
-.pause_noviz1
 	lda #%11101111
 -	cmp CIA1_PORT_B					; wait for user to release the spacebar
 	beq -
@@ -435,7 +438,10 @@ pause_player
 
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl .pause_noviz2			; don't clear viz area if screen is off
+		bmi +
+ 		jsr disable_vic_screen
+ 		jmp .pause_noviz2
+ 	  +
 	}
 
 	jsr player_ui_re_init
