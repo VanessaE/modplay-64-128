@@ -166,6 +166,10 @@ start_main_player
 	jsr print_msg
 
 no_player_ui
+	lda audio_driver			; do second SID check only on drivers 1 and 2
+	cmp #3
+	bcs +
+
 	lda stereo_enable
 	sta stereo_enable_temp
 
@@ -252,12 +256,16 @@ player_ui_finish
 	jsr keyboard_debounce
 	jsr swap_zero_page ; KERNAL swap -> active, player/don't care -> swap
 
+	lda audio_driver
+	cmp #3
+	bcs +
+
 	lda stereo_enable_temp
 	sta stereo_enable
 
 	; restore keyboard interrupt
 
-	sei
++	sei
 	!ifndef c128 {
 		jsr enable_kernal_only
 		jsr IOINIT
