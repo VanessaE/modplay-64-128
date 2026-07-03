@@ -240,12 +240,7 @@ player_ui_finish
 	jsr keyboard_debounce
 	jsr swap_zero_page ; KERNAL swap -> active, player/don't care -> swap
 
-	lda audio_driver
-	cmp #3
-	bcs +
-
-	lda stereo_enable_temp
-	sta stereo_enable
+	jsr restore_stereo_enable
 
 	; restore keyboard interrupt
 

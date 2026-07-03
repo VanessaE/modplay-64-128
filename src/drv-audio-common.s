@@ -427,19 +427,29 @@ right_sid_is_ultisid
 rts
 
 force_mono_if_no_second_sid
+	lda #$ff
+	sta stereo_enable_temp
+
 	lda audio_driver			; do second SID check only on drivers 1 and 2
 	cmp #3
 	bcs +
-
-	lda stereo_enable
-	sta stereo_enable_temp
 
 	jsr check_sid_type_right	; if this returns with .A being some value
 	beq +						; other than 0 or $80, there's no right SID
 	cmp #$80					; at the configured address
 	beq +
 
+	lda stereo_enable
+	sta stereo_enable_temp
 	lda #0
+	sta stereo_enable
+  +
+rts
+
+restore_stereo_enable
+	lda stereo_enable_temp
+	cmp #$ff
+	beq +
 	sta stereo_enable
   +
 rts
