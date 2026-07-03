@@ -166,26 +166,7 @@ no_player_ui
 	jsr force_mono_if_no_second_sid
 	jsr init_audio_driver
 	jsr reu_set_selfmod_and_mixer_vectors
-
-	!ifndef c128 {
-		!ifdef scpu {
-			sta SCPU_ENABLE_HW_REGS
-			lda #%10000100					; disable all local RAM echoing
-			sta SCPU_OPTIMIZATION_MODE
-			sta SCPU_DISABLE_HW_REGS
-		}
-	}
-
 	jsr regenerate_tables_if_needed
-
-	!ifndef c128 {
-		!ifdef scpu {
-			sta SCPU_ENABLE_HW_REGS
-			lda #%01000100				; optimize:  only echo $c000-$ffff to
-			sta SCPU_OPTIMIZATION_MODE	; local RAM
-			sta SCPU_DISABLE_HW_REGS
-		}
-	}
 
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback

@@ -324,6 +324,16 @@ generate_note_number_lookup_table
 rts
 
 regenerate_tables_if_needed
+
+	!ifndef c128 {
+		!ifdef scpu {
+			sta SCPU_ENABLE_HW_REGS
+			lda #%10000100					; disable all local RAM echoing
+			sta SCPU_OPTIMIZATION_MODE
+			sta SCPU_DISABLE_HW_REGS
+		}
+	}
+
 	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
 	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
 	+JSR_INDIRECT (audio_set_resolution_vec)
@@ -348,7 +358,7 @@ regenerate_tables_if_needed
 	lda volume_tables_resolution
 	cmp last_volume_tables_resolution 
 	bne .regen_at_least_one_table
-	rts
+	jmp .regen_tables_exit
 
 .regen_at_least_one_table
 	bit allow_regen_msg
@@ -400,7 +410,7 @@ no_msgs1
 	bne +
 	lda isr_trigger_interval+1
 	cmp last_isr_trigger_interval+1
-	beq ++
+	beq .regen_tables_exit
 
 +	lda isr_trigger_interval
 	sta last_isr_trigger_interval
@@ -409,5 +419,15 @@ no_msgs1
 
 	jsr generate_tempo_table
 	jsr generate_period_table
-  ++
+
+.regen_tables_exit
+
+	!ifndef c128 {
+		!ifdef scpu {
+			sta SCPU_ENABLE_HW_REGS
+			lda #%01000100				; optimize:  only echo $c000-$ffff to
+			sta SCPU_OPTIMIZATION_MODE	; local RAM
+			sta SCPU_DISABLE_HW_REGS
+		}
+	}
 rts
