@@ -288,17 +288,17 @@ check_menu_key_s
 	cmp #$53
 	bne check_menu_key_a
 
+	lda audio_driver
+	cmp #3
+	bcs +
+
 	jsr toggle_stereo_mode
-	jsr show_stereo_mode
-	bcc +
 
 	lda current_menu_page
 	cmp #2
 	bne +
 
-	lda #0
-	sta main_menu_cache_is_valid
-
+	jsr draw_menu_right_pane_contents
 +	lda #0
 rts
 
