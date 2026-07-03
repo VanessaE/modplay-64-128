@@ -63,31 +63,35 @@ start_sequencer
 	dex
 	bpl -
 
-	lda #$80
-	ldx #7
--	sta track_current_enable_flags,x
-	dex
-	bpl -
-
 	lda #2
 	sta do_viz_plot
 
 	lda #$ff
 	sta pos_jump_target_pattern
 
-; caution:  do not init more than 4 tracks here until the fetch and mixer
-; loops have been expanded to handle it, will cause mem corruption
+; caution:  do not init more than 4 tracks in the selfmod and volume loops
+; below until the fetch and mixer loops have been expanded to handle it, will
+; cause mem corruption.
 
-	lda #3
+	lda #3 ; see above
 	sta seq_current_track
 -	+JSR_INDIRECT (do_selfmod_pitch_vec)
 	+JSR_INDIRECT (do_selfmod_instrument_vec)
 	dec seq_current_track
 	bpl -
 
-	ldy #3
+	; enable flags need to be set before the volume loop is run, otherwise
+	; the set-volume call will just exit out without doing anything
+
+	lda #$80
+	ldx #7
+-	sta track_current_enable_flags,x
+	dex
+	bpl -
+
+	ldy #3 ; see above
 -	lda #64
-	jsr set_volume
+	jsr set_volume_skip_gate_check
 	dey
 	bpl -
 
