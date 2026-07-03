@@ -195,7 +195,6 @@ change_input_device
 	jsr show_input_device
 rts
 
-
 show_stereo_mode
 	lda current_menu_page
 	cmp #2
@@ -377,11 +376,12 @@ rts
 change_audio_addr
 	lda audio_driver
 	cmp #3
-	bcs +
+	bcs .ch_dac_addr
 	jsr change_sid_addr
 	rts
 
-+	jsr change_dac_addr
+.ch_dac_addr
+	jsr change_dac_addr
 rts
 
 change_sid_addr
@@ -392,48 +392,55 @@ change_sid_addr
 	php
 	lda stereo_sid_addr+1
 	plp
-	bne .ck_dac
+	bne .set_sid_dac_addr
 
 	cmp #$d4
-	bne +
+	bne .ck_d5_or_d6
+
 	!ifndef c128 {			; $d500-$d6ff reserved on C128
 		lda #$d5
+		bne .set_sid_dac_addr
 	} else {
 		lda #$d7
+		bne .set_sid_dac_addr
 	}
-	bne .ck_dac
+
+	.ck_d5_or_d6
 
 	!ifndef c128 {
-	+	cmp #$d5
-		bne +
+		cmp #$d5
+		bne .ck_d6
 		lda #$d6
-		bne .ck_dac
-
-	+	cmp #$d6
-		bne +
+		bne .set_sid_dac_addr
+	.ck_d6
+		cmp #$d6
+		bne .ck_d7
 		lda #$d7
-		bne .ck_dac
+		bne .set_sid_dac_addr
 	}
 
-+	cmp #$d7
-	bne +
+.ck_d7
+	cmp #$d7
+	bne .ck_de
 	lda #$de
-	bne .ck_dac
+	bne .set_sid_dac_addr
 
-+	cmp #$de
-	bne +
+.ck_de
+	cmp #$de
+	bne .ck_df
 	lda #$20
 	sta stereo_sid_addr		; $df00-$df1f is reserved for REU
 	lda #$df
-	bne .ck_dac
+	bne .set_sid_dac_addr
 
-+	cmp #$df
-	bne .ck_dac
+.ck_df
+	cmp #$df
+	bne .set_sid_dac_addr
 	lda #$20
 	sta stereo_sid_addr		; obviously, $d400-$d420 is reserved also :P
 	lda #$d4
 
-.ck_dac
+.set_sid_dac_addr
 	sta stereo_sid_addr+1
 	cmp dac_addr+1
 	bne .show
@@ -443,18 +450,19 @@ change_sid_addr
 
 .show
 	jsr show_sid_addr
-+ rts
+rts
 
 change_dac_addr
 	lda dac_addr+1
 	cmp #$dd			; if $ddxx, don't add $20 -- $dd01 only, or skip to $dexx
-	bne +
+	bne .da_add_20
 	lda #0
 	sta dac_addr
 	lda #$de
 	bne .ck_sid
 
-+	clc
+.da_add_20
+	clc
 	lda dac_addr
 	adc #$20
 	sta dac_addr
@@ -463,15 +471,16 @@ change_dac_addr
 	plp
 	bne .ck_sid
 
-+	cmp #$de
-	bne +
+	cmp #$de
+	bne .da_ck_df
 	lda #$20
 	sta dac_addr		; $df00-$df1f is reserved for REU
 	lda #$df
 	bne .ck_sid
 
-+	cmp #$df
-	bne +
+.da_ck_df
+	cmp #$df
+	bne .da_no_chg
 	lda #$01
 	sta dac_addr
 	lda #$dd
@@ -486,7 +495,9 @@ change_dac_addr
 
 .show2
 	jsr show_dac_addr
-+ rts
+
+.da_no_chg
+rts
 
 show_filter_setting
 	lda current_menu_page
@@ -593,11 +604,12 @@ rts
 		!ifndef c128 {
 			lda audio_driver
 			cmp #1
-			beq ++
+			beq +
 			dex
+		  +
 		}
 
-	++	clc
+		clc
 		ldy #scr_en_col
 		jsr PLOT
 		lda #0
@@ -864,7 +876,7 @@ show_system_info_popup
 	jsr CHROUT
 
 	ldx current_file_type
-	beq +
+	beq .wait_key_after_instr_names
 
 	clc
 	ldx #info_anykey_row
@@ -885,7 +897,9 @@ show_system_info_popup
 
 	jsr list_instrument_names
 
-+	!ifdef c128 {
+	.wait_key_after_instr_names
+
+	!ifdef c128 {
 		lda #info_anykey_col
 
 		ldx current_file_type
@@ -922,7 +936,7 @@ list_instrument_names
 	+	lda #15
 		sta temp_abs_b
 		jsr draw_info_popup
-	++
+	  ++
 	} else {
 		ldx current_file_type
 		lda #15

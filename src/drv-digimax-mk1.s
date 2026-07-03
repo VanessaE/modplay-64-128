@@ -120,7 +120,8 @@ digimax_mk1_start
 	lda CIA2_DDR_A
 	ora #%00001100
 	sta CIA2_DDR_A
-+ rts
+  +
+rts
 
 digimax_mk1_mute
 rts
@@ -134,7 +135,8 @@ digimax_mk1_stop
 	and #%11110111
 	ora #%00000100
 	sta CIA2_PORT_A
-+ rts
+  +
+rts
 
 digimax_isr_mk1_ep				; 7 cycles coming in
 	+NMI_SAVE_AX				; 6

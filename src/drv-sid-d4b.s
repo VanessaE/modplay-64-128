@@ -64,19 +64,20 @@ sid_4bit_dithered_set_isr_cycle_count
 		!ifndef c128 {
 			lda #65
 			bit stereo_enable
-			bpl +
+			bpl .sid_4b_set_count
 			lda #87
 		} else {
 			lda #68 / 2
 			bit stereo_enable
-			bpl +
+			bpl .sid_4b_set_count
 			lda #92 / 2
 		}
 	} else {
 		lda #7
 	}
 
-+	sta audio_driver_isr_cycle_count
+.sid_4b_set_count
+	sta audio_driver_isr_cycle_count
 rts
 
 sid_4bit_dithered_set_volume_table_resolution

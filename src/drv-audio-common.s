@@ -140,7 +140,7 @@ show_audio_driver
 	ldy #>audio_driver_1_txt
 	sec
 	jsr print_msg
-	jmp adrv_app
+	jmp .adrv_app
 
 +	cmp #2
 	bne +
@@ -149,7 +149,7 @@ show_audio_driver
 	ldy #>audio_driver_2_txt
 	sec
 	jsr print_msg
-	jmp adrv_app
+	jmp .adrv_app
 
 +	cmp #3
 	bne +
@@ -158,18 +158,18 @@ show_audio_driver
 	ldy #>audio_driver_3_txt
 	sec
 	jsr print_msg
-	jmp adrv_app
+	jmp .adrv_app
 
 +	cmp #4
-	bne adrv_app
+	bne .adrv_app
 	lda #0
 	ldx #<audio_driver_4_txt
 	ldy #>audio_driver_4_txt
 	sec
 	jsr print_msg
 
-adrv_app
- 	lda #GRN
+.adrv_app
+	lda #GRN
 	jsr CHROUT
 	lda #")"
 	jsr CHROUT
@@ -442,6 +442,7 @@ force_mono_if_no_second_sid
 
 	lda #0
 	sta stereo_enable
+  +
 rts
 
 enable_8580_digiboost_left
