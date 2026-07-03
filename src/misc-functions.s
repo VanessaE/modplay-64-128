@@ -151,8 +151,7 @@ print_uint16
 	ldx #<uint16_string_buf_trim
 	ldy #>uint16_string_buf_trim
 	sec
-	jsr print_msg
-	rts
+	jmp print_msg
 
 +	lda #0
 	ldx #<uint16_string_buffer

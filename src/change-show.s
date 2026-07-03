@@ -219,16 +219,14 @@ show_stereo_mode
 	ldx #<mode_on_msg
 	ldy #>mode_on_msg
 	sec
-	jsr print_msg
-	rts
+jmp print_msg
 
 .menu_st_off
 	lda #0
 	ldx #<mode_off_msg
 	ldy #>mode_off_msg
 	sec
-	jsr print_msg
-	rts
+jmp print_msg
 
 .menu_st_always_on
 	lda #DGRY
@@ -238,8 +236,7 @@ show_stereo_mode
 	ldx #<mode_always_on_msg
 	ldy #>mode_always_on_msg
 	clc
-	jsr print_msg
-	rts
+jmp print_msg
 
 .menu_st_unavail
 	lda #DGRY
@@ -373,8 +370,7 @@ change_audio_addr
 	lda audio_driver
 	cmp #3
 	bcs .ch_dac_addr
-	jsr change_sid_addr
-	rts
+jmp change_sid_addr
 
   .ch_dac_addr
 jmp change_dac_addr
@@ -518,8 +514,7 @@ show_filter_setting
 	ldx #<mode_on_msg
 	ldy #>mode_on_msg
 	sec
-	jsr print_msg
-	rts
+	jmp print_msg
 
 +	lda #0
 	ldx #<mode_off_msg
@@ -584,8 +579,7 @@ rts
 		lda enable_screen_on_playback
 		eor #$80
 		sta enable_screen_on_playback
-		jsr show_screen_enable
-	rts
+	jmp show_screen_enable
 
 	show_screen_enable
 		lda current_menu_page
@@ -619,8 +613,7 @@ rts
 		ldy #>mode_off_msg
 
 	++	sec
-		jsr print_msg
-	rts
+	jmp print_msg
 }
 
 show_system_info_popup

@@ -972,8 +972,7 @@ rts
 		ldx #<kb_msg
 		ldy #>kb_msg
 		sec
-		jsr print_msg
-	rts
+	jmp print_msg
 
 } else {
 

@@ -206,13 +206,11 @@ draw_menu_right_pane_contents
 
 	lda current_menu_page
 	bne +
-	jsr draw_menu_page_a
-	rts
+	jmp draw_menu_page_a
 
 +	cmp #1
 	bne +
-	jsr draw_menu_page_b
-	rts
+	jmp draw_menu_page_b
 
   +
 jmp draw_menu_page_c

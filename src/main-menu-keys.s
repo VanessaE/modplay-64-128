@@ -5,8 +5,7 @@ get_menu_key
 	jsr check_com_key
 	beq get_menu_key ; a zero exit means the C= key was not pressed
 
-	jsr switch_pages
-	rts
+jmp switch_pages
 
 check_menu_key_up
 	cmp #$91

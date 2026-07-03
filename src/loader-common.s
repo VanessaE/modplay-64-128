@@ -1085,8 +1085,7 @@ rts
 loader_get_one_byte
 	bit load_device_can_use_uci
 	bmi +
-	jsr CHRIN
-	rts
+	jmp CHRIN
   +
 jmp uci_get_byte
 

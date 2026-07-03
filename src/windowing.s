@@ -154,8 +154,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #21
 		ldx #30
-		jsr WINDOW
-	rts
+	jmp WINDOW
 
 	set_window_menu_pane
 		jsr FULLW
@@ -166,8 +165,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #16
 		ldx #74
-		jsr WINDOW
-	rts
+	jmp WINDOW
 
 	set_window_infobox
 		jsr FULLW
@@ -178,8 +176,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #22
 		ldx #74
-		jsr WINDOW
-	rts
+	jmp WINDOW
 
 	set_window_mini_popup
 		jsr FULLW
@@ -190,8 +187,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #mini_popup_bottom_row
 		ldx #mini_popup_right_col_real
-		jsr WINDOW
-	rts
+	jmp WINDOW
 
 	set_window_medium_popup
 		jsr FULLW
@@ -202,8 +198,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #medium_popup_bottom_row
 		ldx #medium_popup_right_col_real
-		jsr WINDOW
-	rts
+	jmp WINDOW
 
 	set_window_player_popup
 		jsr FULLW
@@ -214,9 +209,7 @@ text_input_popup_right_column		= text_input_popup_left_column + text_input_popup
 		sec
 		lda #player_popup_bottom_row
 		ldx #player_popup_right_col_real
-		jsr WINDOW
-	rts
-
+	jmp WINDOW
 }
 
 ; enter with .X/.Y = rows/columns of the INTERIOR (analogous to the PLOT call)
@@ -428,8 +421,7 @@ jmp draw_window
 	draw_info_wide_popup
 		ldx #info_wide_popup_height
 		ldy #info_wide_popup_width
-		jsr draw_window
-	rts
+	jmp draw_window
 }
 
 draw_tall_popup

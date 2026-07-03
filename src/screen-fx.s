@@ -369,10 +369,7 @@ rts
 		clc
 		adc #4
 		sta expansion_memory_target_pointer+1
-
-		jsr reu_stash_block
-
-	rts
+	jmp reu_stash_block
 
 	vic_retrieve_main_menu_from_reu
 		jsr vic_set_copy_size
@@ -593,8 +590,7 @@ rts
 
 		+JSR_INDIRECT (fetch_block_vec)
 
-		jsr vdc_bg_upload_text
-	rts
+	jmp vdc_bg_upload_text
 
 	vdc_retrieve_player_bg_from_reu
 		jsr vdc_set_fetch_size
@@ -625,8 +621,7 @@ rts
 
 		+JSR_INDIRECT (fetch_block_vec)
 
-		jsr vdc_bg_upload_text
-	rts
+	jmp vdc_bg_upload_text
 
 	vdc_copy_loader_bg_from_cache
 

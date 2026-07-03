@@ -287,8 +287,7 @@ check_for_64k_vdc
 	lda #CLR
 	jsr CHROUT
 	jsr DLCHR				; and re-initialize the default charset
-	jsr booter_vdc_unblank
-	rts
+jmp booter_vdc_unblank
 
 .not_64k
 	lda #0
