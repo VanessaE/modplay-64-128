@@ -438,15 +438,18 @@ draw_menu_page_c
 	jsr print_menu_line
 
 	; display stereo mode
+
+	lda #2
+	cmp audio_driver	; carry will be clear if driver > 2
+
 	ldx #<menu_text_stereo
 	ldy #>menu_text_stereo
-	sec
 	jsr print_menu_line
 
 	; display either SID or DAC address, if SID addr, only if stereo is on.
 	lda audio_driver
 	cmp #3
-	beq not_sid_menu
+	bcs not_sid_menu
 
 	lda stereo_enable
 	rol

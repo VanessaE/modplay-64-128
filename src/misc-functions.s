@@ -1350,24 +1350,26 @@ rts
 
 init_audio_driver
 	lda audio_driver
-	cmp #3
+
+	cmp #4
 	bne +
-	jsr dac_driver_init
-	rts
+	jmp digimax_mk1_driver_init
+
++	cmp #3
+	bne +
+	jmp dac_driver_init
 
 +	cmp #2
 	bne +
-	jsr sid_mahoney_driver_init
-	rts
+	jmp sid_mahoney_driver_init
 
 +	bit dither_enable
 	bpl +
 
-	jsr sid_4bit_dithered_driver_init
-	rts
+	jmp sid_4bit_dithered_driver_init
 
-+	jsr sid_4bit_driver_init
-rts
+  +
+jmp sid_4bit_driver_init
 
 reset_sids
 	lda #0

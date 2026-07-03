@@ -1,7 +1,5 @@
-; Audio driver for 8-bit DAC output
-; either plain old single DAC at some address for mono, or User Port or
-; Expansion Port DigiMAX for stereo.
-;
+; Audio driver for single 8-bit DAC output
+
 ; This is audio driver #3
 
 !zone dac_driver {
@@ -10,6 +8,9 @@
 ; routines below.
 
 dac_driver_init
+	lda #0
+	sta stereo_enable
+
 	lda #<dac_set_volume_table_resolution
 	sta audio_set_resolution_vec
 	lda #>dac_set_volume_table_resolution
@@ -36,119 +37,43 @@ dac_driver_init
 	sta audio_stop_vec+1
 
 	lda dac_addr
-	sta .da1+1
-	sta .da2+1
+	sta .da+1
 	lda dac_addr+1
-	sta .da1+2
-	sta .da2+2
-
-	bit stereo_enable
-	bmi is_stereo_dac
+	sta .da+2
 
 	lda #<dac_isr_mono
 	sta audio_isr_vec
 	lda #>dac_isr_mono
 	sta audio_isr_vec+1
-	rts
-
-is_stereo_dac
-	lda dac_addr+1
-	cmp #$dd
-	bne not_up_stereo
-
-	lda CIA2_PORT_A
-	and #%11110011
-	ora #%00001000
-	sta .dca+1
-
-	ora #%00000100
-	sta .dcb+1
-
-	lda #<dac_isr_stereo_user_port
-	sta audio_isr_vec
-	lda #>dac_isr_stereo_user_port
-	sta audio_isr_vec+1
-	rts
-
-not_up_stereo
-	clc
-	lda dac_addr
-	adc #1
-	sta .db+1
-	lda dac_addr+1
-	adc #0
-	sta .db+2
-
-	lda #<dac_isr_stereo
-	sta audio_isr_vec
-	lda #>dac_isr_stereo
-	sta audio_isr_vec+1
 rts
 
 dac_set_isr_cycle_count
 	!ifndef scpu {
-		bit stereo_enable
-		bmi .sicc_st
-
 		!ifndef c128 {
 			lda #50
 		} else {
 			lda #52 / 2
 		}
-
-		jmp .sicc_out
-
-	.sicc_st
-		ldx dac_addr+1
-		cpx #$dd
-		beq .sicc_st_up
-
-		!ifndef c128 {
-			lda #52
-		} else {
-			lda #(55 + 1) / 2
-		}
-
-		jmp .sicc_out
-
-	.sicc_st_up
-
-		!ifndef c128 {
-			lda #64
-		} else {
-			lda #(69 + 1) / 2
-		}
-
 	} else {
 		lda #8
 	}
 
-.sicc_out
 	sta audio_driver_isr_cycle_count
 rts
 
 dac_set_volume_table_resolution
-	lda #7
-	bit stereo_enable
-	bmi +
 	lda #6
-+	sta volume_tables_resolution
+	sta volume_tables_resolution
 rts
 
 dac_start
 	lda #$ff
 	sta CIA2_DDR_B
 
-	bit stereo_enable
-	bpl +
-	lda dac_addr+1
-	cmp #$dd
-	bne +
-
 	lda CIA2_DDR_A
 	ora #%00001100
 	sta CIA2_DDR_A
-+ rts
+rts
 
 dac_mute
 rts
@@ -172,44 +97,11 @@ dac_isr_mono					; 7 cycles coming in
 	lda audio_buffer_left,x		; 4
 	adc audio_buffer_right,x	; 4
 
-.da1 sta $1234					; 4
+.da sta $1234					; 4
 	inc audio_out_buf_index		; 5
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
 								; 26 on SCPU
-
-
-dac_isr_stereo					; 7 cycles coming in
-	+NMI_SAVE_AX				; 6
-
-	ldx audio_out_buf_index		; 3
-	lda audio_buffer_left,x		; 4
-.da2 sta $1234					; 4
-	lda audio_buffer_right,x	; 4
-.db  sta $1234					; 4 / will be set to right DAC addr + $18, above
-	inc audio_out_buf_index		; 5
-
-	+NMI_RESTORE_AX				; 6
-+NMI_EXIT						; 9 or 10
-
-
-dac_isr_stereo_user_port		; 7 cycles coming in
-	+NMI_SAVE_AX				; 6
-
-	ldx audio_out_buf_index		; 3
-.dca lda #0						; 2
-	sta CIA2_PORT_A				; 4
-	lda audio_buffer_left,x		; 4
-	sta CIA2_PORT_B				; 4
-.dcb lda #0						; 2
-	sta CIA2_PORT_A				; 4
-	lda audio_buffer_right,x	; 4
-	sta CIA2_PORT_B				; 4
-	inc audio_out_buf_index		; 5
-
-	+NMI_RESTORE_AX				; 6
-+NMI_EXIT						; 9, 11, or 26
-
 
 }

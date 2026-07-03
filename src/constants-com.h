@@ -553,8 +553,12 @@ ntsc_clock = 1022727
 	load_device							!skip 1
 	stereo_sid_addr						!skip 2
 	dac_addr							!skip 2
-	audio_driver						!skip 1 ; 1=4-bit SID, 2=Mahoney, 3=DAC
+	; for the audio driver: 1 = 4-bit SID, 2 = Mahoney,
+	; 3 = mono 8-bit DAC, 4 = DigiMAX Mk1
+	audio_driver						!skip 1 
 	ram_driver							!skip 1
+	; Stereo enable is only used with SIDs.  With DAC or DigiMAX
+	; mono or stereo is enforced according to the device. 
 	stereo_enable						!skip 1
 	filter_setting						!skip 1 ; 0=none, $80=lowpass
 	visualizer_mode						!skip 1 ; 0=row data, 1=waveforms

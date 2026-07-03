@@ -306,13 +306,18 @@ check_menu_key_a
 	cmp #$41
 	bne check_menu_key_f
 
+	lda audio_driver
+	cmp #3
+	bcs +
+
 	bit stereo_enable
-	bpl +
-	jsr change_audio_addr
+	bpl ++
+
++	jsr change_audio_addr
 	lda #0
 	bcc +
 	sta main_menu_cache_is_valid
-+	rts
+++	rts
 
 check_menu_key_f
 	cmp #$46

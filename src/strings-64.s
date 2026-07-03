@@ -252,12 +252,16 @@ info_popup_8580_msg
 
 ; ##### Menu misc.
 
-mode_on_txt
-	!text GRN,"(",WHT,"On ",GRN,")",0
-mode_off_txt
+mode_on_msg
+	!text GRN,"(",WHT,"On",GRN,") ",0
+mode_off_msg
 	!text GRN,"(",LGRY,"Off",GRN,")",0
+
+mode_always_on_msg
+	!text "(Always)",0
 na_msg
 	!text DGRY,"(N/A)",0
+
 not_present_msg
 	!text DGRY,"not present",0
 kb_msg
@@ -341,12 +345,30 @@ scanning_dir_msg
 	!fill 15,RIGHT
 	!text "found #",0
 
+choose_audio_msg
+	!byte $81,HOME
+	!byte 9,DOWN
+	!byte 14,RIGHT
+	!byte $80+14
+		!text CYAN,"Choose audio",RETURN
+	!byte 17,RIGHT
+	!byte $89
+		!text "driver:",RETURN
+	!byte 0
+
+choose_aud_driver_pos
+	!byte RETURN
+	!fill 13,RIGHT
+	!byte 0
+
 audio_driver_1_txt
 	!text "SID 4-bit",0
 audio_driver_2_txt
 	!text "SID Mahoney",0
 audio_driver_3_txt
-	!text "DAC 8-bit",0
+	!text "8-bit DAC",0
+audio_driver_4_txt
+	!text "DigiMAX Mk1",0
 
 ram_driver_0_txt
 	!text "17xx REU",0
@@ -430,22 +452,6 @@ dirname_background
 	!byte $82,RVSON,CYAN
 	!byte 16," "
 	!byte 16,LEFT
-	!byte 0
-
-choose_audio_msg
-	!byte $81,HOME
-	!byte 9,DOWN
-	!byte 14,RIGHT
-	!byte $80+14
-		!text CYAN,"Choose audio",RETURN
-	!byte 17,RIGHT
-	!byte $89
-		!text "driver:",RETURN
-	!byte 0
-
-choose_aud_driver_pos
-	!byte RETURN
-	!fill 13,RIGHT
 	!byte 0
 
 between_songs_msg

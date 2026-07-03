@@ -133,12 +133,12 @@ show_repeat_mode
 +	bit repeat_mode
 	bpl +
 
-	ldx #<mode_on_txt
-	ldy #>mode_on_txt
+	ldx #<mode_on_msg
+	ldy #>mode_on_msg
 	jmp ++
 
-+	ldx #<mode_off_txt
-	ldy #>mode_off_txt
++	ldx #<mode_off_msg
+	ldy #>mode_off_msg
 
 ++	sec
 	jsr print_msg
@@ -154,7 +154,7 @@ toggle_repeat
 choose_audio_driver
 	jsr gray_out
 	clc
-	jsr draw_mini_popup
+	jsr draw_audio_popup
 
 	lda #0
 	ldx #<choose_audio_msg
@@ -233,18 +233,57 @@ choose_audio_driver
 	sec
 	jsr print_msg
 
+	lda #0
+	ldx #<choose_aud_driver_pos
+	ldy #>choose_aud_driver_pos
+	sec
+	jsr print_msg
+
+	jsr CHROUT
+	lda #GRN
+	jsr CHROUT
+	lda #"4"
+	jsr CHROUT
+	lda #")"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+	lda #LGRN
+	jsr CHROUT
+
+	lda #0
+	ldx #<audio_driver_4_txt
+	ldy #>audio_driver_4_txt
+	sec
+	jsr print_msg
+
+
 -	jsr GETIN
 	beq -
 
 	cmp #$31
 	bcc -
 
-	cmp #$34
+	cmp #$35
 	bcs -
 
-	and #$03
+	and #$07
 	sta audio_driver
-	lda current_menu_page
+
+	cmp #3
+	bne +
+
+	lda #0
+	sta stereo_enable
+	jmp ++
+
++	cmp #4
+	bne ++
+
+	lda #$80
+	sta stereo_enable
+
+++	lda current_menu_page
 	cmp #2
 	bne +
 	lda #0
@@ -338,10 +377,19 @@ show_audio_driver
 	jmp adrv_app
 
 +	cmp #3
-	bne adrv_app
+	bne +
 	lda #0
 	ldx #<audio_driver_3_txt
 	ldy #>audio_driver_3_txt
+	sec
+	jsr print_msg
+	jmp adrv_app
+
++	cmp #4
+	bne adrv_app
+	lda #0
+	ldx #<audio_driver_4_txt
+	ldy #>audio_driver_4_txt
 	sec
 	jsr print_msg
 
@@ -364,25 +412,62 @@ show_stereo_mode
 	ldx #stereo_row
 	ldy #stereo_col
 	jsr PLOT
-	bit stereo_enable
-	bpl +
 
+	lda audio_driver
+	cmp #3
+	beq .menu_st_unavail
+
+	cmp #4
+	beq .menu_st_always_on
+
+	bit stereo_enable
+	bpl .menu_st_off
+
+.menu_st_on
 	lda #0
-	ldx #<mode_on_txt
-	ldy #>mode_on_txt
+	ldx #<mode_on_msg
+	ldy #>mode_on_msg
 	sec
 	jsr print_msg
 	rts
 
-+	lda #0
-	ldx #<mode_off_txt
-	ldy #>mode_off_txt
+.menu_st_off
+	lda #0
+	ldx #<mode_off_msg
+	ldy #>mode_off_msg
 	sec
+	jsr print_msg
+	rts
+
+.menu_st_always_on
+	lda #DGRY
+	jsr CHROUT
+
+	lda #0
+	ldx #<mode_always_on_msg
+	ldy #>mode_always_on_msg
+	clc
+	jsr print_msg
+	rts
+
+.menu_st_unavail
+	lda #DGRY
+	jsr CHROUT
+
+	lda #0
+	ldx #<na_msg
+	ldy #>na_msg
+	clc
 	jsr print_msg
 rts
 
 toggle_stereo_mode
-	lda stereo_enable
+	lda audio_driver
+	cmp #3
+	bcc +
+	rts
+
++	lda stereo_enable
 	eor #$80
 	sta stereo_enable
 rts
@@ -400,7 +485,7 @@ show_sid_addr
 	jsr PLOT
 	ldx audio_driver
 	cpx #3
-	bne +
+	bcc +
 	rts
 
 +	bit stereo_enable
@@ -450,7 +535,7 @@ show_dac_addr
 
 	ldx audio_driver						; allow changing DAC address
 	cpx #3
-	beq +
+	bcs +
 	rts
 
 +	lda #GRN
@@ -497,7 +582,7 @@ rts
 change_audio_addr
 	lda audio_driver
 	cmp #3
-	beq +
+	bcs +
 	jsr change_sid_addr
 	rts
 
@@ -629,15 +714,15 @@ show_filter_setting
 	bpl +
 
 	lda #0
-	ldx #<mode_on_txt
-	ldy #>mode_on_txt
+	ldx #<mode_on_msg
+	ldy #>mode_on_msg
 	sec
 	jsr print_msg
 	rts
 
 +	lda #0
-	ldx #<mode_off_txt
-	ldy #>mode_off_txt
+	ldx #<mode_off_msg
+	ldy #>mode_off_msg
 	sec
 	jsr print_msg
 rts
@@ -670,12 +755,12 @@ show_dithering_setting
 	bit dither_enable
 	bpl +
 
-	ldx #<mode_on_txt
-	ldy #>mode_on_txt
+	ldx #<mode_on_msg
+	ldy #>mode_on_msg
 	jmp ++
 
-+	ldx #<mode_off_txt
-	ldy #>mode_off_txt
++	ldx #<mode_off_msg
+	ldy #>mode_off_msg
 ++	sec
 	jsr print_msg
 rts
@@ -725,12 +810,12 @@ rts
 		bit enable_screen_on_playback
 		bpl +
 
-		ldx #<mode_on_txt
-		ldy #>mode_on_txt
+		ldx #<mode_on_msg
+		ldy #>mode_on_msg
 		jmp ++
 
-	+	ldx #<mode_off_txt
-		ldy #>mode_off_txt
+	+	ldx #<mode_off_msg
+		ldy #>mode_off_msg
 
 	++	sec
 		jsr print_msg

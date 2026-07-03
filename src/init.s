@@ -509,7 +509,7 @@ default_config
 	!ifdef c64u {
 		!byte 8					; default device
 		!word $d420				; default stereo SID addr
-		!word $dd01				; default DigiMAX/DAC addr
+		!word $dd01				; default DAC addr
 		!byte 1					; default audio driver (SID 4-bit)
 		!byte 1					; default RAM driver (REU)
 		!byte $80				; default Stereo mode (on)
@@ -521,7 +521,7 @@ default_config
 	} else {
 		!byte 8					; default device
 		!word $d700				; default stereo SID addr
-		!word $dd01				; default DigiMAX/DAC addr
+		!word $dd01				; default DAC addr
 		!byte 2					; default audio driver (SID Mahoney method)
 		!byte 1					; default RAM driver (REU)
 		!byte $80				; default Stereo mode (on)

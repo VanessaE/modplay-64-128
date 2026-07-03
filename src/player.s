@@ -191,6 +191,21 @@ no_player_ui
 	}
 
 	jsr init_audio_driver
+
+
+	lda #CLR
+	jsr CHROUT
+	lda audio_driver
+	ora #$30
+	jsr CHROUT
+	lda stereo_enable
+	ora #$30
+	jsr CHROUT
+	lda volume_tables_resolution
+	ora #$30
+	jsr CHROUT
+
+
 	jsr reu_set_selfmod_and_mixer_vectors
 	jsr regenerate_tables_if_needed
 

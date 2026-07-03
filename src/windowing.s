@@ -24,6 +24,10 @@ bottom_edge_char			= $60
 	mini_popup_width				= 18
 	mini_popup_height				= 6
 
+	audio_popup_left_column			= 10
+	audio_popup_width				= 18
+	audio_popup_height				= 9
+
 	short_popup_left_column			= 4
 	short_popup_width				= 30
 	short_popup_height				= 5
@@ -51,6 +55,10 @@ bottom_edge_char			= $60
 	mini_popup_left_column			= 0
 	mini_popup_width				= 30
 	mini_popup_height				= 6
+
+	audio_popup_left_column			= 0
+	audio_popup_width				= 30
+	audio_popup_height				= 8
 
 	short_popup_left_column			= 0
 	short_popup_width				= 30
@@ -93,6 +101,10 @@ mini_popup_right_column				= mini_popup_left_column + mini_popup_width - 1
 	mini_popup_left_col_real		= 40 - (mini_popup_width / 2)
 	mini_popup_right_col_real		= 40 + (mini_popup_width / 2)
 }
+
+audio_popup_top_row					= (24 - audio_popup_height) / 2
+audio_popup_bottom_row				= (24 + audio_popup_height) / 2
+audio_popup_right_column				= audio_popup_left_column + audio_popup_width - 1
 
 medium_popup_top_row				= (24 - medium_popup_height) / 2
 medium_popup_bottom_row				= (24 + medium_popup_height) / 2
@@ -385,6 +397,12 @@ rts
 draw_mini_popup
 	ldx #mini_popup_height
 	ldy #mini_popup_width
+	jsr draw_window
+rts
+
+draw_audio_popup
+	ldx #audio_popup_height
+	ldy #audio_popup_width
 	jsr draw_window
 rts
 

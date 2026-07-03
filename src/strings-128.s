@@ -205,12 +205,16 @@ info_popup_8580_msg
 
 ; ##### Menu misc.
 
-mode_on_txt
-	!text GRN,"(",WHT,"On ",GRN,")",0
-mode_off_txt
+mode_on_msg
+	!text GRN,"(",WHT,"On",GRN,") ",0
+mode_off_msg
 	!text GRN,"(",LGRY,"Off",GRN,")",0
+
+mode_always_on_msg
+	!text "(Always On)",0
 na_msg
 	!text DGRY,"(N/A)",0
+
 not_present_msg
 	!text DGRY,"not present",0
 kb_msg
@@ -255,12 +259,25 @@ scanning_dir_msg
 	!fill 10,RIGHT
 	!text "found #",0
 
+choose_audio_msg
+	!byte 5,RIGHT
+	!byte $80+24
+		!text DOWN,CYAN,"Choose audio driver:",RETURN
+	!byte 0
+
+choose_aud_driver_pos
+	!byte RETURN
+	!fill 3,RIGHT
+	!byte 0
+
 audio_driver_1_txt
 	!text "SID 4-bit",0
 audio_driver_2_txt
 	!text "SID Mahoney method",0
 audio_driver_3_txt
-	!text "DAC/DigiMAX 8-bit",0
+	!text "Simple 8-bit DAC",0
+audio_driver_4_txt
+	!text "DigiMAX Mk1",0
 
 user_msg
 	!text "UserP",0
@@ -336,17 +353,6 @@ dirname_background
 playlist_filename_background
 	!byte 22," "
 	!byte $83,ESC,"j",RIGHT
-	!byte 0
-
-choose_audio_msg
-	!byte 5,RIGHT
-	!byte $80+24
-		!text DOWN,CYAN,"Choose audio driver:",RETURN
-	!byte 0
-
-choose_aud_driver_pos
-	!byte RETURN
-	!fill 4,RIGHT
 	!byte 0
 
 sample_player_msg

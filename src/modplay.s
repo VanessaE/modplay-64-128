@@ -113,6 +113,7 @@ rts
 !source "src/drv-sid-d4b.s"
 !source "src/drv-sid-mah.s"
 !source "src/drv-dac.s"
+!source "src/drv-digimax-mk1.s"
 
 !source "src/drv-reu-blockops.s"
 !source "src/drv-reu-musicops.s"
