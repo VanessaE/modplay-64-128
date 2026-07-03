@@ -296,8 +296,8 @@ check_for_64k_vdc
 	jsr vdc_set_4416_mode
 	lda #CLR
 	jsr CHROUT
-	jsr booter_vdc_unblank
-rts
+jmp booter_vdc_unblank
+
 
 booter_vdc_blank
 	+VDC_BLANK
@@ -386,8 +386,7 @@ upload_screens_to_vdc_cache
 
 	lda #0
 	ldx #>player_background_attrs_end
-	jsr vdc_upload
-rts
+jmp vdc_upload
 
 copy_screens_to_reu
 	lda #<2000
@@ -448,8 +447,7 @@ copy_screens_to_reu
 	adc #8
 	sta expansion_memory_target_pointer+1
 
-	jsr reu_stash_block
-rts
+	jmp reu_stash_block
 
 program_load_decrunch_stub_origin
 	!pseudopc program_load_decrunch_stub {

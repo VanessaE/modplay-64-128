@@ -214,8 +214,9 @@ draw_menu_right_pane_contents
 	jsr draw_menu_page_b
 	rts
 
-+	jsr draw_menu_page_c
-rts
+  +
+jmp draw_menu_page_c
+
 
 erase_menu_right_pane_contents
 	!ifdef c128 {
@@ -332,8 +333,7 @@ draw_menu_page_a
 	sec
 	jsr print_menu_line
 
-	jsr show_repeat_mode
-rts
+jmp show_repeat_mode
 
 draw_menu_page_b
 	!ifndef c128 {
@@ -420,8 +420,8 @@ draw_menu_page_b
 		jsr print_menu_line
 	}
 
-	jsr show_input_device
-rts
+jmp show_input_device
+
 
 draw_menu_page_c
 	!ifndef c128 {
@@ -535,8 +535,7 @@ print_menu_line
 		ldx temp_abs_x
 		ldy temp_abs_y
 	}
-	jsr print_msg
-rts
+jmp print_msg
 
 !ifndef c128 {
 	nfcol = 19
@@ -782,8 +781,7 @@ populate_info_box
 	ldx #<kb_msg
 	ldy #>kb_msg
 	sec
-	jsr print_msg
-rts
+jmp print_msg
 
 print_filetype
 	lda current_file_type

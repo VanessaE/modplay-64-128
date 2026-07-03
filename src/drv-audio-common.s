@@ -188,9 +188,7 @@ print_num_paren
 	lda #" "
 	jsr CHROUT
 	lda #LGRN
-	jsr CHROUT
-rts
-
+jmp CHROUT
 
 reset_sids
 	lda #0

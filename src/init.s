@@ -383,8 +383,8 @@ final_clear_copy
 	sta fill_copy_target
 	lda #>clear_main_memory
 	sta fill_copy_target+1
-	jsr copy_code
-rts
+jmp copy_code
+
 
 clear_main_memory_origin
 	lda #<end_of_mid_mem_tables

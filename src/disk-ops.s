@@ -40,9 +40,8 @@ read_err_channel
 	cpy #39
 	bne -
 
-.close
-	jsr close_file
-rts
+  .close
+jmp close_file
 
 
 !ifndef c128 {
@@ -134,8 +133,7 @@ only_read_err_chan
 		jsr CHROUT
 	}
 
-	jsr press_any_key
-rts
+jmp press_any_key
 
 request_filename
 	jsr gray_out
@@ -166,8 +164,7 @@ request_filename
 	lda #">"
 	jsr CHROUT
 	ldy #input_limit
-	jsr get_text_input
-rts
+jmp get_text_input
 
 get_free_disk_space
 	lda #"$"
@@ -203,8 +200,7 @@ get_free_disk_space
 	jsr CHRIN				; blocks free MSB
 	sta disk_free_space+1
 
-	jsr close_file
-rts
+jmp close_file
 
 open_file			; enter with .A = filename len, .X/.Y = filename addr
 	php
@@ -241,14 +237,12 @@ open_file			; enter with .A = filename len, .X/.Y = filename addr
 	jmp close_file
 
 +	ldx #2
-	jsr CHKIN
-rts
+jmp CHKIN
 
 close_file
 	lda #2			; filenumber 2
 	jsr CLOSE
-	jsr CLRCH
-rts
+jmp CLRCH
 
 save_config
 	jsr gray_out
@@ -332,8 +326,7 @@ save_config
 	lda #save_addr
 	ldx #<cfg_data_end
 	ldy #>cfg_data_end
-	jsr SAVE
-rts
+jmp SAVE
 
 default_error_message
 	!text "Error #",0

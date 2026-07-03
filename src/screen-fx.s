@@ -60,8 +60,7 @@ clear_screen_early	; redirect the KERNAL and clear
 		sta VDC_VM3
 	}
 	lda #CLR
-	jsr CHROUT
-rts
+jmp CHROUT
 
 scroll_area_down
 	sec

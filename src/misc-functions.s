@@ -158,8 +158,8 @@ print_uint16
 	ldx #<uint16_string_buffer
 	ldy #>uint16_string_buffer
 	sec
-	jsr print_msg
-rts
+jmp print_msg
+
 
 ; from Codebase64:
 ; https://codebase64.org/doku.php?id=base:int16_and_uint16_conversion_to_string

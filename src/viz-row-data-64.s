@@ -96,8 +96,7 @@ viz_row_data_pattern_preload
 	lda #>visualizer_line_5
 	sta utility_pointer+1
 	inx
-	jsr viz_row_data_fetch_and_print
-rts
+jmp viz_row_data_fetch_and_print
 
 ; fetch and print one song data row, with the row number in .X
 viz_row_data_fetch_and_print

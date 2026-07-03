@@ -140,13 +140,13 @@ stop_pitch_slide
 
 start_effect_pitch_slide_plus_volume_slide
 	jsr start_effect_pitch_slide
-	jsr start_effect_volume_slide
-rts
+jmp start_effect_volume_slide
+
 
 run_effect_pitch_slide_plus_volume_slide
 	jsr run_effect_pitch_slide
-	jsr run_effect_volume_slide
-rts
+jmp run_effect_volume_slide
+
 
 ; Extended commands, fine pitch slide up/down
 

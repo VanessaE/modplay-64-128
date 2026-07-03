@@ -308,9 +308,8 @@ load_directory
 +	pla						; pull the last return, exit directly from here
 	pla						; if there was an error
 
-.fin
-	jsr close_file
-rts
+  .fin
+jmp close_file
 
 ; display the loaded file list in the left pane
 
@@ -346,8 +345,7 @@ display_disk_name
 	jsr print_msg
 
 	lda #RVSOFF
-	jsr CHROUT
-rts
+jmp CHROUT
 
 display_playlist
 	!ifdef c128 {
@@ -750,8 +748,7 @@ enqueue_file
 	lda #playlist_middle_row
 	sta screen_row_to_print_at
 	clc
-	jsr direct_print_single_entry
-rts
+jmp direct_print_single_entry
 
 playlist_page_down
 	clc
@@ -764,8 +761,8 @@ playlist_page_down
 	cmp playlist_scroll_pos
 	bcs +
 	sta playlist_scroll_pos
-+	jsr display_playlist
-rts
+  +
+jmp display_playlist
 
 playlist_page_up
 	sec
@@ -774,8 +771,7 @@ playlist_page_up
 	bcs +
 	lda #0
 +	sta playlist_scroll_pos
-	jsr display_playlist
-rts
+jmp display_playlist
 
 ; this expects the file entry number in the list in .X
 ; and set screen_row_to_print_at to the line number to print on
@@ -1132,8 +1128,7 @@ print_now_playing_msg
 
 	lda #RETURN
 	jsr CHROUT
-	jsr CHROUT
-rts
+jmp CHROUT
 
 playlist_get_selection_counts
 	lda #0

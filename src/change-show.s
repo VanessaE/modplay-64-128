@@ -137,8 +137,7 @@ show_repeat_mode
 	ldy #>mode_off_msg
 
 ++	sec
-	jsr print_msg
-rts
+jmp print_msg
 
 toggle_repeat
 	lda repeat_mode
@@ -191,9 +190,7 @@ change_input_device
 
 +	jsr check_drive_presence
 	bne change_input_device
-
-	jsr show_input_device
-rts
+jmp show_input_device
 
 show_stereo_mode
 	lda current_menu_page
@@ -252,8 +249,7 @@ show_stereo_mode
 	ldx #<na_msg
 	ldy #>na_msg
 	clc
-	jsr print_msg
-rts
+jmp print_msg
 
 toggle_stereo_mode
 	lda audio_driver
@@ -380,9 +376,8 @@ change_audio_addr
 	jsr change_sid_addr
 	rts
 
-.ch_dac_addr
-	jsr change_dac_addr
-rts
+  .ch_dac_addr
+jmp change_dac_addr
 
 change_sid_addr
 	clc
@@ -448,9 +443,9 @@ change_sid_addr
 	cmp dac_addr
 	beq change_sid_addr		; skip forward again if the new SID addr matches the DAC addr
 
-.show
-	jsr show_sid_addr
-rts
+  .show
+jmp show_sid_addr
+
 
 change_dac_addr
 	lda dac_addr+1
@@ -530,15 +525,14 @@ show_filter_setting
 	ldx #<mode_off_msg
 	ldy #>mode_off_msg
 	sec
-	jsr print_msg
-rts
+jmp print_msg
 
 change_filter_setting
 	lda filter_setting
 	eor #$80
 	sta filter_setting
-	jsr show_filter_setting
-rts
+jmp show_filter_setting
+
 
 show_dithering_setting
 	lda current_menu_page
@@ -568,8 +562,8 @@ show_dithering_setting
 +	ldx #<mode_off_msg
 	ldy #>mode_off_msg
 ++	sec
-	jsr print_msg
-rts
+jmp print_msg
+
 
 change_dithering_setting
 	lda audio_driver
@@ -920,8 +914,8 @@ show_system_info_popup
 	lda #YEL
 	jsr CHROUT
 
-	jsr press_any_key
-rts
+jmp press_any_key
+
 
 list_instrument_names
 	!ifdef c128 {
@@ -1142,5 +1136,4 @@ print_instr_list_msg
 	jsr print_msg
 
 	lda #RETURN
-	jsr CHROUT
-rts
+jmp CHROUT

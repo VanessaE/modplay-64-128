@@ -250,14 +250,14 @@ file_size_okay
 	jsr load_pattern_data
 	jsr load_sample_data
 
-	jsr unroll_mod_sample_loops
-rts
+jmp unroll_mod_sample_loops
+
 
 abort_load
 	lda #0
 	sta current_file_type
-	jsr press_any_key
-rts
+jmp press_any_key
+
 
 load_mod_header ; and also the first pattern if it's a 15-sample mod
 	lda #0
@@ -738,8 +738,8 @@ loader_add_progress_bar
 	lda #(progbar_len * 8)
 	ldx #progbar_column
 	ldy #progbar_row
-	jsr draw_empty_progress_bar
-rts
+jmp draw_empty_progress_bar
+
 
 loader_update_progress
 	jsr loader_print_loading_speed
@@ -760,8 +760,7 @@ loader_update_progress
 	jsr divide_24by24
 
 	lda quotient
-	jsr update_progress_bar
-rts
+jmp update_progress_bar
 
 loader_print_loading_speed
 	bit CIA1_TOD_HOURS; read hours to latch the time
@@ -873,8 +872,7 @@ loader_print_loading_speed
 	ldx #<loader_kbs_msg
 	ldy #>loader_kbs_msg
 	sec
-	jsr print_msg
-rts
+jmp print_msg
 
 set_first_exp_pages_to_silence
 	lda #2
@@ -1089,8 +1087,8 @@ loader_get_one_byte
 	bmi +
 	jsr CHRIN
 	rts
-+	jsr uci_get_byte
-rts
+  +
+jmp uci_get_byte
 
 print_generic_load_error
 	lda #"E"

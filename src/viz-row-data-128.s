@@ -85,8 +85,7 @@ viz_row_data_pattern_preload
 	lda #>visualizer_line_5
 	sta utility_pointer+1
 	inx
-	jsr viz_row_data_fetch_and_print
-rts
+jmp viz_row_data_fetch_and_print
 
 ; fetch and print one song data row, with the row number in .X
 viz_row_data_fetch_and_print
@@ -279,8 +278,7 @@ viz_row_data_show_track_mute
 	lda #7
 +	adc #8
 	ldx #viz_row_data_mute_colors_width
-	jsr vdc_block_fill
-rts
+jmp vdc_block_fill
 
 viz_row_data_mute_color_cols
 	!byte 3,12,21,30

@@ -30,8 +30,7 @@ loader_uci_get_1kb
 	inc load_pointer+1
 	jsr loader_uci_get_block_keep_ptr
 	inc load_pointer+1
-	jsr loader_uci_get_block_keep_ptr
-rts
+jmp loader_uci_get_block_keep_ptr
 
 }
 

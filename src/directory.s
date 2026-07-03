@@ -165,23 +165,21 @@ dir_finish
 		jsr print_msg
 	}
 
-	jsr press_any_key
-rts
+jmp press_any_key
+
 
 dir_open
 	lda #1
 	ldx #<dirname
 	ldy #>dirname
 	sec
-	jsr open_file
-rts						; will exit with carry set if it can't open
+jmp open_file		; will exit with carry set if it can't open
 
 dir_open_for_cmd_prompt
 	ldx #<string_buffer
 	ldy #>string_buffer
 	sec
-	jsr open_file
-rts						; will exit with carry set if it can't open
+jmp open_file		; will exit with carry set if it can't open
 
 dir_read_entry_size
 	jsr CHRIN	; LSB
@@ -193,8 +191,7 @@ dir_read_entry_size
 	pla
 	tax
 	jsr uint16_to_string
-	jsr trim_num
-rts
+jmp trim_num
 
 dir_read_line
 	jsr clear_string_buffer

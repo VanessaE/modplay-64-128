@@ -55,8 +55,8 @@ sid_4bit_dithered_driver_init
 	lda #>sid_isr_4b_dithered_stereo
 	sta audio_isr_vec+1
 
-	jsr reset_sids
-rts
+jmp reset_sids
+
 
 sid_4bit_dithered_set_isr_cycle_count
 
@@ -102,8 +102,8 @@ sid_4bit_dithered_start
 	lda #$81						; voice 3 waveform = noise + gate
 	sta SID_VOICE3_CR
 
-	jsr sid_apply_digi_boost
-rts
+jmp sid_apply_digi_boost
+
 
 sid_4bit_dithered_mute
 rts

@@ -217,13 +217,12 @@ vibrato_pitching_down
 
 start_effect_vibrato_plus_volume_slide
 	jsr start_effect_vibrato
-	jsr start_effect_volume_slide
-rts
+jmp start_effect_volume_slide
+
 
 run_effect_vibrato_plus_volume_slide
 	jsr run_effect_vibrato
-	jsr run_effect_volume_slide
-rts
+jmp run_effect_volume_slide
 
 
 ; if there is a command, and isn't one of the two vibrato variants, but

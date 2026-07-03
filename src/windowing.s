@@ -397,38 +397,32 @@ rts
 draw_mini_popup
 	ldx #mini_popup_height
 	ldy #mini_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_audio_popup
 	ldx #audio_popup_height
 	ldy #audio_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_short_popup
 	ldx #short_popup_height
 	ldy #short_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_info_popup
 	ldx #info_popup_height
 	ldy #info_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_player_popup
 	ldx #player_popup_height
 	ldy #player_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_medium_popup
 	ldx #medium_popup_height
 	ldy #medium_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 !ifdef c128 {
 	draw_info_wide_popup
@@ -441,11 +435,9 @@ rts
 draw_tall_popup
 	ldx #tall_popup_height
 	ldy #tall_popup_width
-	jsr draw_window
-rts
+jmp draw_window
 
 draw_text_input_popup
 	ldx #text_input_popup_height
 	ldy #text_input_popup_width
-	jsr draw_window
-rts
+jmp draw_window

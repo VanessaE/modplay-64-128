@@ -45,8 +45,8 @@ sid_mahoney_driver_init
 	lda #>sid_isr_mahoney_stereo
 	sta audio_isr_vec+1
 
-	jsr reset_sids
-rts
+jmp reset_sids
+
 
 sid_mahoney_set_isr_cycle_count
 	!ifndef scpu {

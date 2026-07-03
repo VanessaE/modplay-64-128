@@ -55,8 +55,8 @@ sid_4bit_driver_init
 	lda #>sid_isr_4b_stereo
 	sta audio_isr_vec+1
 
-	jsr reset_sids
-rts
+jmp reset_sids
+
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
 
@@ -88,8 +88,7 @@ rts
 
 sid_4bit_start
 	jsr reset_sids
-	jsr sid_apply_digi_boost
-rts
+jmp sid_apply_digi_boost
 
 sid_4bit_mute
 rts
