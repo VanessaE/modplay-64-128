@@ -445,7 +445,9 @@ force_mono_if_no_second_sid
   +
 rts
 
-enable_8580_digiboost_left
+sid_apply_digi_boost
+	bit sid_type_left
+	bpl +
 	lda #$ff
 	sta SID_VOICE1_ENV_SR
 	sta SID_VOICE2_ENV_SR
@@ -453,9 +455,13 @@ enable_8580_digiboost_left
 	lda #$49
 	sta SID_VOICE1_CR
 	sta SID_VOICE2_CR
-rts
+	rts
 
-enable_8580_digiboost_right
++	bit stereo_enable
+	bpl +
+	bit sid_type_right
+	bpl +
+
 	lda stereo_sid_addr
 	sta utility_pointer
 	lda stereo_sid_addr+1
@@ -472,6 +478,7 @@ enable_8580_digiboost_right
 	sta (utility_pointer),y
 	ldy #$0b
 	sta (utility_pointer),y
+  +
 rts
 
 init_audio_driver

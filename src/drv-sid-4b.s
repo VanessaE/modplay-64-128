@@ -88,18 +88,7 @@ rts
 
 sid_4bit_start
 	jsr reset_sids
-
-	bit sid_type_left
-	bpl +
-	jsr enable_8580_digiboost_left
-
-+	bit stereo_enable
-	bpl +
-	bit sid_type_right
-	bpl +
-
-	jsr enable_8580_digiboost_right
-  +
+	jsr sid_apply_digi_boost
 rts
 
 sid_4bit_mute

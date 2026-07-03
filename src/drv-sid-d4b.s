@@ -102,17 +102,7 @@ sid_4bit_dithered_start
 	lda #$81						; voice 3 waveform = noise + gate
 	sta SID_VOICE3_CR
 
-	bit stereo_enable
-	bpl +
-
-	bit sid_type_right
-	bpl +
-	jsr enable_8580_digiboost_right
-
-+	bit sid_type_left
-	bpl +
-	jsr enable_8580_digiboost_left
-  +
+	jsr sid_apply_digi_boost
 rts
 
 sid_4bit_dithered_mute
