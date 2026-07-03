@@ -345,16 +345,17 @@ no_command_this_row_this_track
 next_tick
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl .next_tick_no_ui
 	}
 
 	lda CIA1_TOD_SECONDS
 	cmp last_seconds
-	beq +
+	beq .next_tick_no_ui
 	sta last_seconds
 	jsr print_elapsed_time
 
-+	jsr seq_check_keyboard
+.next_tick_no_ui
+	jsr seq_check_keyboard
 	beq +
 	jmp stop_song
 

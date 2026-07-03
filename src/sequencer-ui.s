@@ -11,7 +11,7 @@
 print_num_song_pos
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl .no_print_num_pos
 	}
 
 	lda #<print_nsp_target
@@ -22,7 +22,8 @@ print_num_song_pos
 	dex
 	txa
 	jsr display_byte_hex_direct
-  +
+
+.no_print_num_pos
 rts
 
 !ifndef c128 {
@@ -36,7 +37,7 @@ rts
 print_song_pos_pat_num ; enter with .X = song position
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl .no_print_pat_pos
 	}
 
 	lda #<print_sp_target
@@ -52,7 +53,8 @@ print_song_pos_pat_num ; enter with .X = song position
 	sta utility_pointer+1
 	lda seq_current_pattern_number
 	jsr display_byte_hex_direct
-  +
+
+.no_print_pat_pos
 rts
 
 !ifndef c128 {
@@ -64,7 +66,7 @@ rts
 print_row_num
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl .no_print_row_num
 	}
 
 	lda #<print_rn_target
@@ -73,7 +75,8 @@ print_row_num
 	sta utility_pointer+1
 	lda seq_current_row
 	jsr display_byte_hex_direct
-  +
+
+.no_print_row_num
 rts
 
 !ifndef c128 {
@@ -87,7 +90,7 @@ rts
 print_song_speed
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
-		bpl +
+		bpl .no_print_speed
 	}
 
 	lda #<print_sst_target
@@ -103,7 +106,8 @@ print_song_speed
 	sta utility_pointer+1
 	lda seq_tempo_bpm
 	jsr display_byte_hex_direct
-  +
+
+.no_print_speed
 rts
 
 print_elapsed_time

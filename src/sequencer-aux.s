@@ -90,19 +90,21 @@ start_sample
 
 +	lda seq_commands,y
 	cmp #14
-	bne +
+	bne .not_ext_5
 	lda seq_command_arguments,y
 	and #$f0
 	cmp #$50
-	bne +
+	bne .not_ext_5
 
 	jsr extcmd_set_fine_tune
-	jmp ++
+	jmp .apply_default_ft
 
-+	lda sample_default_fine_tunes,x
+.not_ext_5
+	lda sample_default_fine_tunes,x
 	sta current_fine_tune_values,y
 
-++	+JSR_INDIRECT (do_selfmod_instrument_vec)
+.apply_default_ft
+	+JSR_INDIRECT (do_selfmod_instrument_vec)
 
 	ldy seq_current_track
 	ldx current_sample_numbers,y

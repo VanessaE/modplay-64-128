@@ -775,9 +775,10 @@ copy_main_menu_to_cache_quick
 		bit c128_vdc_has_64k
 		bmi +
 		rts
+	  +
 	}
 
-+	bit main_menu_cache_is_valid
+	bit main_menu_cache_is_valid
 	bpl +
 	rts
 

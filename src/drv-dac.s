@@ -87,7 +87,8 @@ dac_stop
 	and #%11110111
 	ora #%00000100
 	sta CIA2_PORT_A
-+ rts
+  +
+rts
 
 dac_isr_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6

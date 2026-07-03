@@ -55,7 +55,8 @@ get_string_length
 	beq +
 	iny
 	bne -
-+ rts
+  +
+rts
 
 ; call with .X/.Y = address of string
 ; .A = width of area to display in
@@ -79,7 +80,8 @@ center_string_by_len_val	; or enter here with known string length in .Y
 -	jsr CHROUT
 	dey
 	bne -
-+ rts
+  +
+rts
 
 strip_trailing_spaces
 	ldx #0
@@ -319,7 +321,8 @@ get_num_length
 	bne +
 	dey
 	bne -
-+ rts
+  +
+rts
 
 
 ;###################
@@ -723,35 +726,41 @@ get_text_input
 		beq +
 		sta temp_abs_c
 		jsr upd_cursor
+	  +
 	}
-+	jsr GETIN
+
+	jsr GETIN
 	beq .nxt
 
 	!ifdef c128 {
 		cmp #$1b ; Esc
-		bne +
-		beq ++
+		bne .get_input_ck_stop
+		beq .get_input_exit_empty
 	}
 
-+	pha
+.get_input_ck_stop
+	pha
 	jsr STOP ; check for Run/Stop
-	bne +
+	bne .get_input_ck_return
 	pla
 
-++	jsr clear_string_buffer
+.get_input_exit_empty
+	jsr clear_string_buffer
 	ldy #0
 	sec
 	rts
 
-+	pla
-	cmp #$0d ; return
-	bne +
+.get_input_ck_return
+	pla
+	cmp #$0d
+	bne .get_input_ck_del
 	ldy temp_abs_b
 	clc
 	rts
 
-+	cmp #$14 ; delete
-	bne +
+.get_input_ck_del
+	cmp #$14
+	bne .get_input_ck_printable
 	ldy temp_abs_b
 	beq .nxt
 	lda #0
@@ -766,7 +775,8 @@ get_text_input
 	jsr upd_cursor
 	jmp .nxt
 
-+	cmp #$20
+.get_input_ck_printable
+	cmp #$20
 	bcc .nxt
 	cmp #$80
 	bcc .st
@@ -781,11 +791,13 @@ get_text_input
 	iny
 	sty temp_abs_b
 	cmp #$22 ; quote
-	bne +
+	bne .get_input_print_char
 	jsr CHROUT
 	jsr CHROUT
 	lda #LEFT
-+	jsr CHROUT
+
+.get_input_print_char
+	jsr CHROUT
 	jsr upd_cursor
 	jmp .nxt
 
@@ -1074,7 +1086,7 @@ to_hex
 	cmp #10
 	bcs +
 	adc #$30
-rts
+	rts
 
 +	clc
 	adc #$37
@@ -1086,7 +1098,7 @@ to_hex_caps
 	cmp #10
 	bcs +
 	adc #$30
-rts
+	rts
 
 +	clc
 	adc #$57

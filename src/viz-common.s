@@ -120,7 +120,7 @@ visualizer_print_char
 		ldy #0
 		sta (utility_pointer),y
 	+	inc utility_pointer
-		bne ++
+		bne .viz_print_char_restore_a
 		inc utility_pointer+1
 	} else {
 		lda temp_abs_b
@@ -130,12 +130,13 @@ visualizer_print_char
 		; perform a dummy read to skip ahead one byte
 		+VDC_UPD_RDY_WAIT
 		bit VDC_DATA
-		jmp ++
+		jmp .viz_print_char_restore_a
 
 	+	jsr vdc_write_ram
 	}
 
-++	lda temp_abs_b
+.viz_print_char_restore_a
+	lda temp_abs_b
 rts
 
 ; blank-out a line of the visualizer display pointed to by fill_copy_target
@@ -160,7 +161,7 @@ visualizer_erase_row
 
 		!ifndef c128 {
 			cmp #RIGHT
-			beq ++
+			beq .viz_erase_iny
 			sta (utility_pointer),y
 		} else {
 			cmp #RIGHT
@@ -168,12 +169,13 @@ visualizer_erase_row
 
 			+VDC_UPD_RDY_WAIT
 			bit VDC_DATA ; do a read to skip the byte, and it's guaranteed to be non-zero
-			jmp ++
+			jmp .viz_erase_iny
 
 		+	jsr vdc_write_ram
 		}
 
-	++	iny
+	.viz_erase_iny
+		iny
 		cpy #visualizer_area_width
 	bne vre_loop
 

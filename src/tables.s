@@ -339,18 +339,19 @@ regenerate_tables_if_needed
 
 	lda isr_trigger_interval
 	cmp last_isr_trigger_interval
-	bne +
+	bne .regen_at_least_one_table
 
 	lda isr_trigger_interval+1
 	cmp last_isr_trigger_interval+1
-	bne +
+	bne .regen_at_least_one_table
 
 	lda volume_tables_resolution
 	cmp last_volume_tables_resolution 
-	bne +
+	bne .regen_at_least_one_table
 	rts
 
-+	bit allow_regen_msg
+.regen_at_least_one_table
+	bit allow_regen_msg
 	bpl no_msgs1
 
 	!ifndef scpu {

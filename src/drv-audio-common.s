@@ -267,7 +267,7 @@ check_sid_type_left
 	ror
 	eor #$80
 	sta sid_type_left
-	jmp +
+	jmp .ls_not_ultisid
 
 left_sid_is_ultisid
 	lda #0
@@ -275,7 +275,8 @@ left_sid_is_ultisid
 	lda #$80
 	sta ultisid_detect_left
 
-+	!ifdef scpu {
+.ls_not_ultisid
+	!ifdef scpu {
 		sta SCPU_TURBO_ON
 	} else ifdef c64u {
 		lda #15+128

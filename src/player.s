@@ -3,12 +3,8 @@
 start_main_player
 
 	!ifdef scpu {
-
-		bit supercpu_detected
-		bpl +
-
 		bit SCPU_JD_TURBO_SWITCH
-		bvc +
+		bvc .scpu_turbo_sw_is_on
 
 		clc
 		jsr draw_mini_popup
@@ -22,7 +18,8 @@ start_main_player
 	-	bit SCPU_JD_TURBO_SWITCH
 		bvs -
 
-	+	sta SCPU_TURBO_ON
+	.scpu_turbo_sw_is_on
+		sta SCPU_TURBO_ON
 		sta SCPU_ENABLE_HW_REGS
 
 		!ifdef c128 {
