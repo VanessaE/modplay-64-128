@@ -404,13 +404,12 @@ main_player_row_speed_time
 	!byte 0
 
 main_player_regen_tables_msg
-	!byte UP,HOME
-	!fill 9,DOWN
+	!byte UP,HOME,DOWN
 	!byte YEL
-	!text "        A player setting changed", RETURN
-	!text "      that altered the sample rate,",RETURN
-	!text "          re-generating pitch",RETURN
-	!text "          and tempo tables..."
+	!text "   A player setting changed", RETURN
+	!text "    that altered the sample",RETURN
+	!text "  rate, re-generating pitch",RETURN
+	!text "      and tempo tables..."
 	!byte 0
 
 main_player_keys_msg

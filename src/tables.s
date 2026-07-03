@@ -366,28 +366,13 @@ regenerate_tables_if_needed
 
 	!ifndef scpu {
 		!ifndef c64u {
-			!ifndef c128 {
+			jsr gray_out
+			jsr draw_short_popup
 
-				bit enable_screen_on_playback	; because if it's enabled, the display will
-				bmi +							; have switched to the alt charset by this point.
-
-				jsr gray_out
-				jsr draw_short_popup
-
-				ldx #short_popup_top_row+1
-				ldy #short_popup_left_column
-				jmp ++
-
-			+	ldx #player_popup_top_row+9
-				ldy #player_popup_left_column
-			++	clc
-				jsr PLOT
-			} else {
-				ldx #player_popup_top_row+9
-				ldy #player_popup_left_column
-				clc
-				jsr PLOT
-			}
+			ldx #short_popup_top_row+1
+			ldy #short_popup_left_column
+			clc
+			jsr PLOT
 
 			lda #0
 			ldx #<main_player_regen_tables_msg

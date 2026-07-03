@@ -32,20 +32,20 @@ start_main_player
 		sta SCPU_DISABLE_HW_REGS
 	}
 
+
+	jsr force_mono_if_no_second_sid
+	jsr init_audio_driver
+	jsr reu_set_selfmod_and_mixer_vectors
+
 	!ifdef turbo_available {
 		lda #0
-		sta allow_regen_msg
 	} else {
 		lda #$80
-		sta allow_regen_msg
-
-		!ifndef c128 {
-			bit enable_screen_on_playback
-			bmi +
-			jmp no_player_ui
-		  +
-		}
 	}
+
+	sta allow_regen_msg
+	jsr regenerate_tables_if_needed
+
 
 	!ifndef c128 {
 		jsr set_alt_charset
@@ -163,11 +163,6 @@ start_main_player
 	jsr print_msg
 
 no_player_ui
-	jsr force_mono_if_no_second_sid
-	jsr init_audio_driver
-	jsr reu_set_selfmod_and_mixer_vectors
-	jsr regenerate_tables_if_needed
-
 	!ifdef badlines_exist {
 		bit enable_screen_on_playback
 		bmi player_init_visualizer
