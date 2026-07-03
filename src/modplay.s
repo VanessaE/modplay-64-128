@@ -109,6 +109,7 @@ rts
 !source "src/playlist.s"
 
 !source "src/isr-common.s"
+!source "src/drv-audio-common.s"
 !source "src/drv-sid-4b.s"
 !source "src/drv-sid-d4b.s"
 !source "src/drv-sid-mah.s"

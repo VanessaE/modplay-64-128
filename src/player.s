@@ -166,22 +166,11 @@ start_main_player
 	jsr print_msg
 
 no_player_ui
-	lda audio_driver			; do second SID check only on drivers 1 and 2
-	cmp #3
-	bcs +
+	jsr force_mono_if_no_second_sid
+	jsr init_audio_driver
+	jsr reu_set_selfmod_and_mixer_vectors
 
-	lda stereo_enable
-	sta stereo_enable_temp
-
-	jsr check_sid_type_right	; if this returns with .A being some value
-	beq +						; other than 0 or $80, there's no right SID
-	cmp #$80					; at the configured address
-	beq +
-
-	lda #0
-	sta stereo_enable
-
-+	!ifndef c128 {
+	!ifndef c128 {
 		!ifdef scpu {
 			sta SCPU_ENABLE_HW_REGS
 			lda #%10000100					; disable all local RAM echoing
@@ -190,23 +179,6 @@ no_player_ui
 		}
 	}
 
-	jsr init_audio_driver
-
-
-	lda #CLR
-	jsr CHROUT
-	lda audio_driver
-	ora #$30
-	jsr CHROUT
-	lda stereo_enable
-	ora #$30
-	jsr CHROUT
-	lda volume_tables_resolution
-	ora #$30
-	jsr CHROUT
-
-
-	jsr reu_set_selfmod_and_mixer_vectors
 	jsr regenerate_tables_if_needed
 
 	!ifndef c128 {

@@ -5,8 +5,6 @@
 	rpt_col			= 31
 	dev_row			= 4
 	dev_col			= 32
-	adrv_row		= 1
-	adrv_col		= 5
 	stereo_row		= 2
 	stereo_col		= 19
 	sidaddr_row		= 3
@@ -77,8 +75,6 @@
 	rpt_col			= 34
 	dev_row			= 8
 	dev_col			= 34
-	adrv_row		= 3
-	adrv_col		= 23
 	stereo_row		= 4
 	stereo_col		= 30
 	sidaddr_row		= 6
@@ -151,146 +147,6 @@ toggle_repeat
 	jsr show_repeat_mode
 + rts
 
-choose_audio_driver
-	jsr gray_out
-	clc
-	jsr draw_audio_popup
-
-	lda #0
-	ldx #<choose_audio_msg
-	ldy #>choose_audio_msg
-	sec
-	jsr print_msg_rle
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
-	lda #GRN
-	jsr CHROUT
-	lda #"1"
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	lda #" "
-	jsr CHROUT
-	lda #LGRN
-	jsr CHROUT
-
-	lda #0
-	ldx #<audio_driver_1_txt
-	ldy #>audio_driver_1_txt
-	sec
-	jsr print_msg
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
-	jsr CHROUT
-	lda #GRN
-	jsr CHROUT
-	lda #"2"
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	lda #" "
-	jsr CHROUT
-	lda #LGRN
-	jsr CHROUT
-
-	lda #0
-	ldx #<audio_driver_2_txt
-	ldy #>audio_driver_2_txt
-	sec
-	jsr print_msg
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
-	jsr CHROUT
-	lda #GRN
-	jsr CHROUT
-	lda #"3"
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	lda #" "
-	jsr CHROUT
-	lda #LGRN
-	jsr CHROUT
-
-	lda #0
-	ldx #<audio_driver_3_txt
-	ldy #>audio_driver_3_txt
-	sec
-	jsr print_msg
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
-	jsr CHROUT
-	lda #GRN
-	jsr CHROUT
-	lda #"4"
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	lda #" "
-	jsr CHROUT
-	lda #LGRN
-	jsr CHROUT
-
-	lda #0
-	ldx #<audio_driver_4_txt
-	ldy #>audio_driver_4_txt
-	sec
-	jsr print_msg
-
-
--	jsr GETIN
-	beq -
-
-	cmp #$31
-	bcc -
-
-	cmp #$35
-	bcs -
-
-	and #$07
-	sta audio_driver
-
-	cmp #3
-	bne +
-
-	lda #0
-	sta stereo_enable
-	jmp ++
-
-+	cmp #4
-	bne ++
-
-	lda #$80
-	sta stereo_enable
-
-++	lda current_menu_page
-	cmp #2
-	bne +
-	lda #0
-	sta main_menu_cache_is_valid
-  +
-rts
-
 show_input_device
 	lda current_menu_page
 	cmp #1
@@ -339,67 +195,6 @@ change_input_device
 	jsr show_input_device
 rts
 
-show_audio_driver
-	lda current_menu_page
-	cmp #2
-	beq +
-	clc
-	rts
-
-+	clc
-	ldx #adrv_row
-	ldy #adrv_col
-	jsr PLOT
-	lda #GRN
-	jsr CHROUT
-	lda #"("
-	jsr CHROUT
-	lda #WHT
-	jsr CHROUT
-	lda audio_driver
-	cmp #1
-	bne +
-
-	lda #0
-	ldx #<audio_driver_1_txt
-	ldy #>audio_driver_1_txt
-	sec
-	jsr print_msg
-	jmp adrv_app
-
-+	cmp #2
-	bne +
-	lda #0
-	ldx #<audio_driver_2_txt
-	ldy #>audio_driver_2_txt
-	sec
-	jsr print_msg
-	jmp adrv_app
-
-+	cmp #3
-	bne +
-	lda #0
-	ldx #<audio_driver_3_txt
-	ldy #>audio_driver_3_txt
-	sec
-	jsr print_msg
-	jmp adrv_app
-
-+	cmp #4
-	bne adrv_app
-	lda #0
-	ldx #<audio_driver_4_txt
-	ldy #>audio_driver_4_txt
-	sec
-	jsr print_msg
-
-adrv_app
- 	lda #GRN
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	sec
-rts
 
 show_stereo_mode
 	lda current_menu_page
