@@ -191,3 +191,24 @@
 	<algorithm> if you set the mappings this way 8bit->4bit, you should get
 				better results overall
 	<algorithm> but thats also dependant on the mod itself too
+
+Some bug reports/notes from janh:
+
+[07-06 21:17] <janh> VanessaE, ok some result, #1 - the vibrato appears to be too slow, so that the sound detunes. they arent too fast, they are too slow, even at only 404
+[07-06 21:18] <janh> ofcourse, this has to do with the bpm..
+
+[07-06 21:19] <janh> VanessaE, 1-2 slides, seem to work flawless
+
+[07-06 21:20] <janh> ok, another observation: fast vibratos dont detune, slow one do
+
+[07-06 21:21] <janh> VanessaE, and looping samples loop too fast, it also has to do with bpm
+
+[07-06 21:27] <janh> VanessaE, and this: when Axx sustain is on, and there is no sample nr but just 0, it should sustain the sound. not stop it
+[07-06 21:29] <janh> C-3 00 A07         the sound cuts off, it shoudl not.   C-3 01 A07 is a regular note hit and initializes the sample, then it should be allowed to loop, even if the next note is C-4 00 xxx
+[07-06 21:30] <janh> for reference, play cream of the earth by romeo knight
+[07-06 21:30] <janh> and examine the chords
+[07-06 21:30] <janh> if you get that right, then over 50% of jogeir mods will be happy
+
+[07-06 21:33] <janh> VanessaE, a 0 instrument note hit has always been a note hit, but at the current sample position, from previous note
+[07-06 21:34] <janh> so those 0 samples, must start from where the execute/loop has reached
+[07-06 21:34] <janh> it is often used to make echoes
