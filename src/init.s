@@ -331,6 +331,8 @@ init
 	lda #0
 	sta allow_regen_msg
 
+	jsr set_cia2_cra_default_val
+
 	jsr init_audio_driver
 	jsr check_sid_type_left
 	jsr check_sid_type_right

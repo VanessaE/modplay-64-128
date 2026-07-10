@@ -278,6 +278,8 @@ audio_driver_3_txt
 	!text "Simple 8-bit DAC",0
 audio_driver_4_txt
 	!text "DigiMAX Mk1",0
+audio_driver_5_txt
+	!text "DigiMAX Mk2",0
 
 user_msg
 	!text "UserP",0

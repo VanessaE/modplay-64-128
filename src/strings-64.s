@@ -369,6 +369,8 @@ audio_driver_3_txt
 	!text "8-bit DAC",0
 audio_driver_4_txt
 	!text "DigiMAX Mk1",0
+audio_driver_5_txt
+	!text "DigiMAX Mk2",0
 
 ram_driver_0_txt
 	!text "17xx REU",0

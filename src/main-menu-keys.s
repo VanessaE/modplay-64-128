@@ -306,8 +306,11 @@ check_menu_key_a
 	bne check_menu_key_f
 
 	lda audio_driver
+	cmp #5
+	beq ++
+
 	cmp #3
-	bcs +
+	bcs + 
 
 	bit stereo_enable
 	bpl ++

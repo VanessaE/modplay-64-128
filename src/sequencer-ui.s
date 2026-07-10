@@ -404,6 +404,15 @@ pause_player
 
 	+JSR_INDIRECT (audio_stop_vec)
 
+	!ifndef use_profiler {
+		lda audio_driver
+		cmp #5
+		bne +
+
+		jsr isr_reset_timers_interrupts
+	  +
+	}
+
 	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
 	jsr enable_kernal_only
 
@@ -451,10 +460,23 @@ pause_player
 	jsr player_ui_re_init
 
 .pause_noviz2
-	+JSR_INDIRECT (audio_start_vec)
 
-	lda #$81						; enable timer A interrupt
-	sta CIA2_ICR
+	!ifndef use_profiler {
+		lda audio_driver
+		cmp #5
+		beq +
+
+		+JSR_INDIRECT (audio_start_vec)
+		lda #$81						; enable timer A interrupt
+		sta CIA2_ICR
+		jmp ++
+
+	+	jsr isr_reset_timers_interrupts ; for the DigiMAX Mk2 we have to 
+		+JSR_INDIRECT (audio_start_vec) ; take special care to restart it.
+		jsr isr_startup
+		jmp ++
+	++
+	}
 
 	lda #0
 	sta CIA1_TOD_HOURS
@@ -505,6 +527,7 @@ player_ui_re_init
 	inx
 	inx
 	jsr viz_row_data_fetch_and_print
+
   .player_ui_re_init_exit
 rts
 

@@ -554,7 +554,7 @@ ntsc_clock = 1022727
 	stereo_sid_addr						!skip 2
 	dac_addr							!skip 2
 	; for the audio driver: 1 = 4-bit SID, 2 = Mahoney,
-	; 3 = mono 8-bit DAC, 4 = DigiMAX Mk1
+	; 3 = mono 8-bit DAC, 4 = DigiMAX Mk1, 5 = DigiMAX Mk2
 	audio_driver						!skip 1 
 	ram_driver							!skip 1
 	; Stereo enable is only used with SIDs.  With DAC or DigiMAX
@@ -574,6 +574,7 @@ ntsc_clock = 1022727
 	ram_driver_fetch_cycle_count		!skip 1
 	isr_trigger_interval				!skip 2
 	last_isr_trigger_interval			!skip 2
+	cia_cra_startup_val					!skip 1
 
 	boot_device							!skip 1
 

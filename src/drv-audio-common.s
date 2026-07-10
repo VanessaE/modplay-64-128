@@ -21,24 +21,12 @@ choose_audio_driver
 	sec
 	jsr print_msg_rle
 
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
 	lda #1
 	jsr print_num_paren
 
 	lda #0
 	ldx #<audio_driver_1_txt
 	ldy #>audio_driver_1_txt
-	sec
-	jsr print_msg
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
 	sec
 	jsr print_msg
 
@@ -51,24 +39,12 @@ choose_audio_driver
 	sec
 	jsr print_msg
 
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
-	sec
-	jsr print_msg
-
 	lda #3
 	jsr print_num_paren
 
 	lda #0
 	ldx #<audio_driver_3_txt
 	ldy #>audio_driver_3_txt
-	sec
-	jsr print_msg
-
-	lda #0
-	ldx #<choose_aud_driver_pos
-	ldy #>choose_aud_driver_pos
 	sec
 	jsr print_msg
 
@@ -81,13 +57,22 @@ choose_audio_driver
 	sec
 	jsr print_msg
 
+	lda #5
+	jsr print_num_paren
+
+	lda #0
+	ldx #<audio_driver_5_txt
+	ldy #>audio_driver_5_txt
+	sec
+	jsr print_msg
+
 -	jsr GETIN
 	beq -
 
 	cmp #$31
 	bcc -
 
-	cmp #$35
+	cmp #$36
 	bcs -
 
 	and #$07
@@ -113,6 +98,28 @@ choose_audio_driver
 	sta main_menu_cache_is_valid
   +
 rts
+
+print_num_paren
+	pha
+
+	lda #0
+	ldx #<choose_aud_driver_pos
+	ldy #>choose_aud_driver_pos
+	sec
+	jsr print_msg
+
+	lda #GRN
+	jsr CHROUT
+
+	pla
+	ora #$30
+	jsr CHROUT
+	lda #")"
+	jsr CHROUT
+	lda #" "
+	jsr CHROUT
+	lda #LGRN
+jmp CHROUT
 
 show_audio_driver
 	lda current_menu_page
@@ -161,10 +168,18 @@ show_audio_driver
 	jmp .adrv_app
 
 +	cmp #4
-	bne .adrv_app
+	bne +
 	lda #0
 	ldx #<audio_driver_4_txt
 	ldy #>audio_driver_4_txt
+	sec
+	jsr print_msg
+
++	cmp #5
+	bne .adrv_app
+	lda #0
+	ldx #<audio_driver_5_txt
+	ldy #>audio_driver_5_txt
 	sec
 	jsr print_msg
 
@@ -175,20 +190,6 @@ show_audio_driver
 	jsr CHROUT
 	sec
 rts
-
-print_num_paren
-	pha
-	lda #GRN
-	jsr CHROUT
-	pla
-	ora #$30
-	jsr CHROUT
-	lda #")"
-	jsr CHROUT
-	lda #" "
-	jsr CHROUT
-	lda #LGRN
-jmp CHROUT
 
 reset_sids
 	lda #0
@@ -493,7 +494,11 @@ rts
 init_audio_driver
 	lda audio_driver
 
-	cmp #4
+	cmp #5
+	bne +
+	jmp digimax_mk2_driver_init
+
++	cmp #4
 	bne +
 	jmp digimax_mk1_driver_init
 
@@ -512,5 +517,18 @@ init_audio_driver
 
   +
 jmp sid_4bit_driver_init
+
+
+set_cia2_cra_default_val
+	lda #$11			; when the ISR starts, this will start timer A in
+						; continuous mode, counting Phi2 cycles, no PB6 output
+
+	ldx audio_driver	; and if it's DigiMAX Mk2, keep SP2 in output mode
+	cpx #5
+	bne +
+	ora #$40
+
++	sta cia_cra_startup_val
+rts
 
 }

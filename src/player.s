@@ -193,12 +193,13 @@ player_ui_finish
 	jsr swap_zero_page	; KERNAL -> swap, don't care swap -> active
 	jsr erase_zero_page	; wipe "active" ZP, hence don't care 😉
 
+	jsr isr_reset_timers_interrupts
+
+	jsr set_cia2_cra_default_val
+
 	+JSR_INDIRECT (audio_start_vec)
 
-	!ifdef use_profiler {
-		sei
-		jsr disable_roms
-	} else {
+	!ifndef use_profiler {
 		jsr isr_startup
 	}
 
@@ -208,7 +209,14 @@ player_ui_finish
 		jsr enable_kernal_only
 		cli
 	} else {
-		jsr isr_shutdown
+		jsr isr_reset_timers_interrupts
+	}
+
+	!ifdef c128 {
+		lda #36
+		sta VDC_ADDR
+		lda #0
+		sta VDC_DATA
 	}
 
 	+JSR_INDIRECT (audio_stop_vec)

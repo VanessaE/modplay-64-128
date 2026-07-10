@@ -463,9 +463,13 @@ draw_menu_page_c
 	jmp ++
 
 not_sid_menu
-	ldx #<menu_text_dac_addr
-	ldy #>menu_text_dac_addr
+	cmp #5
 	sec
+	bne +
+	clc
+
++	ldx #<menu_text_dac_addr
+	ldy #>menu_text_dac_addr
 	jsr print_menu_line
 	!ifndef c128 {
 		ldx #<menu_text_dac_addr_b

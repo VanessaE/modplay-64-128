@@ -211,6 +211,9 @@ show_stereo_mode
 	cmp #4
 	beq .menu_st_always_on
 
+	cmp #5
+	beq .menu_st_always_on
+
 	bit stereo_enable
 	bpl .menu_st_off
 
@@ -325,6 +328,10 @@ show_dac_addr
 	bcs +
 	rts
 
++	cpx #5									; Except on DigiMAX Mk2 (always
+	bne +									; on the User Port)
+	rts
+
 +	lda #GRN
 	jsr CHROUT
 	lda #"("
@@ -369,8 +376,12 @@ rts
 change_audio_addr
 	lda audio_driver
 	cmp #3
-	bcs .ch_dac_addr
-jmp change_sid_addr
+	bcs +
+	jmp change_sid_addr
+
++	cmp #4
+	beq .ch_dac_addr
+	rts
 
   .ch_dac_addr
 jmp change_dac_addr

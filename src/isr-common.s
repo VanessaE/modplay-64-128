@@ -78,38 +78,7 @@ isr_set_interval
 +	sta isr_trigger_interval
 rts
 
-
 isr_startup
-	jsr enable_kernal_only
-
-	sei
-
-	; Disable CIA interrupts and the VIC raster IRQ, if there is one
-	lda #$7f
-	sta CIA1_ICR
-	sta CIA2_ICR
-	lda #0
-	sta VIC_IRQ_MASK
-
-	lda #<vic_raster_sync_stage_1
-	sta CPU_IRQ_vector
-	lda #>vic_raster_sync_stage_1
-	sta CPU_IRQ_vector+1
-
-	lda audio_isr_vec
-	sta CPU_NMI_vector
-	lda audio_isr_vec+1
-	sta CPU_NMI_vector+1
-
-	jsr disable_roms
-
-	; stop the three CIA timers we're not using
-
-	lda #0
-	sta CIA1_CRA
-	sta CIA1_CRB
-	sta CIA2_CRB
-
 	lda #$80
 	jsr fill_audio_buffers
 
@@ -126,8 +95,8 @@ isr_startup
 
 		lda #$81				; enable only the timer A interrupt
 		sta CIA2_ICR
-		lda #$11
-		sta CIA2_CRA			; start CIA 2 timer A
+		lda cia_cra_startup_val
+		sta CIA2_CRA
 
 	} else {
 
@@ -139,8 +108,8 @@ isr_startup
 
 		lda #$81			; enable timer A interrupt
 		sta CIA2_ICR
-		lda #$11			; start timer A in continuous mode,
-		sta CIA2_CRA		; counting Phi2 cycles, no output on PB6
+		lda cia_cra_startup_val
+		sta CIA2_CRA
 
 		bne ++
 
@@ -184,7 +153,7 @@ isr_startup
 			bne -					; async write cache.
 			lda #$81				; enable timer A interrupt
 			sta CIA2_ICR			; a CIA write takes 2, 1 MHz cycles
-			lda #$11
+			lda cia_cra_startup_val
 
 			sta CIA2_CRA			; start timer A
 									; we should now be on line 255, cycle 53.
@@ -195,9 +164,9 @@ isr_startup
 ; saves one cycle in the ISR's
 
 ++	!ifndef scpu {
-		lda CIA2_CRA			; set CIA2 serial register to output, so that
-		ora #%01000000			; we can store to it.
-		sta CIA2_CRA
+		lda CIA2_CRA			; set CIA2 serial register to input, so that
+		and #%10111111			; we can store to it without affecting the
+		sta CIA2_CRA			; hardware output line.
 		lda #$40				; $40 is the opcode for "RTI"
 		sta CIA2_SDR
 	}
@@ -266,11 +235,12 @@ fixcycle					; we are now at cycle 5 of line 255
 	lda (0,x)				; 6
 	lda (0,x)				; 6
 	lda (0,x)				; 6
-	lda (0,x)				; 6 / waste 42 cycles
+	nop						; 2
+	nop						; 2 / waste 40 cycles
 
 	lda #$81				; 2 enable timer A interrupt
 	sta CIA2_ICR			; 4
-	lda #$11				; 2
+	lda cia_cra_startup_val	; 4
 
 							; we should now be on cycle 55 of line 255, JUST
 							; past where the next bad line delay will end.
@@ -291,18 +261,31 @@ rti
 
 ; ##### just what it says on the tin, this stops the ISR and silences the audio
 
-isr_shutdown
-	lda #0
-	sta CIA2_CRA
-	sta CIA2_CRB
-
+isr_reset_timers_interrupts
+	; Disable CIA interrupts and the VIC raster IRQ, if there is one
 	lda #$7f
+	sta CIA1_ICR
 	sta CIA2_ICR
+	lda #0
+	sta VIC_IRQ_MASK
 
-	!ifdef c128 {
-		lda #36
-		sta VDC_ADDR
-		lda #0
-		sta VDC_DATA
-	}
+	lda #<vic_raster_sync_stage_1
+	sta CPU_IRQ_vector
+	lda #>vic_raster_sync_stage_1
+	sta CPU_IRQ_vector+1
+
+	lda audio_isr_vec
+	sta CPU_NMI_vector
+	lda audio_isr_vec+1
+	sta CPU_NMI_vector+1
+
+	jsr disable_roms
+
+	; stop the three CIA timers we're not using
+
+	lda #0
+	sta CIA1_CRA
+	sta CIA1_CRB
+	sta CIA2_CRB
 rts
+
