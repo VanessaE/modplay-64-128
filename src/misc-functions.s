@@ -660,6 +660,29 @@ calc_filename_address
 	tay
 rts
 
+; enter with .X = the file entry number in the playlist
+; set carry for PETSCII filename, clear for screen code 
+; returns it in the string buffer
+
+get_filename_from_exp_ram
+	jsr calc_filename_address
+	stx expansion_memory_target_pointer
+	sty expansion_memory_target_pointer+1
+	lda #0
+	sta expansion_memory_target_pointer+2
+
+	sta stash_size+1
+	lda #16
+	sta stash_size
+
+	lda #<string_buffer
+	sta expansion_transfer_local_addr
+	lda #>string_buffer
+	sta expansion_transfer_local_addr+1
+
+	+JSR_INDIRECT (fetch_block_vec)
+rts
+
 ; check if C= key is pressed, wait for release
 
 check_com_key

@@ -107,6 +107,9 @@ menu_text_up_down
 	!text LGRY," Scroll list",RETURN,0
 menu_text_load_and_play
 	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Load & Play",RETURN,0
+menu_text_or_change_dir
+	!fill 9,RIGHT
+	!text GRN,LGRY,"or chng. dir",RETURN,0
 menu_text_play_loaded
 	!fill 5,RIGHT
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play current",RETURN,0
@@ -573,6 +576,18 @@ paused_msg
 		!text "to the ON position"
 		!byte 0
 }
+
+dir_check_string
+	!text "cd:blahdeblah",0
+
+syntax_err_string
+	!text "syntax error",0
+
+up_to_parent_dir_string
+	!text "[Up, parent dir]",0
+
+item_is_directory_msg
+	!text LBLU,"  [Directory]",0
 
 mm_lo
 	!byte <line_2

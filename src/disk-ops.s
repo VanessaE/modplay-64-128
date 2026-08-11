@@ -328,5 +328,31 @@ save_config
 	ldy #>cfg_data_end
 jmp SAVE
 
+; Enter with .X/.Y = address of string to send
+; returns error channel status in string buffer
+
+send_dos_command
+	stx utility_pointer
+	sty utility_pointer+1
+
+	ldy #0
+-	lda (utility_pointer),y
+	beq +
+	iny
+	jmp -
+
++	tya
+	ora #$80
+
+	ldx utility_pointer
+	ldy utility_pointer+1
+
+	clc
+	jsr open_file
+	jsr close_file
+
+	jsr read_err_channel
+rts
+
 default_error_message
 	!text "Error #",0

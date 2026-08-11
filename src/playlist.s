@@ -19,14 +19,16 @@
 } else {
 	playlist_top_row			= 0
 	playlist_bottom_row			= 18
-	playlist_left_column		= 1
-	playlist_width				= 26
+	playlist_left_column		= 0
+	playlist_width				= 27
 	player_ui_header_right_count = 14
 	dirname_row					= 2
 	dirname_col					= 9
 	file_list_number_row		= 4
 	file_list_number_column		= 17
 	file_sizes_column			= 21
+
+	filename_column_width		= file_list_number_column
 
 	playlist_pane_base_addr = VDC_SCREEN + 3*80 + 5
 
@@ -44,7 +46,14 @@ playlist_middle_row = (playlist_bottom_row + playlist_top_row) / 2
 ; utility_pointer_c is used for the plain PETSCII versions
 
 load_directory
+	jsr check_for_dir_support
+
 	lda #0
+	tay
+-	sta playlist_file_flags,y
+	iny
+	bne -
+
 	sta playlist_scroll_pos
 	lda exp_petscii_filenames_start_page
 	sta utility_pointer_c+1
@@ -105,11 +114,29 @@ load_directory
 -	lda current_dir_name,x
 	beq +
 	cmp #$20
-	bne .next_entry
+	bne .insert_parent_option
 	lda #0
 	sta current_dir_name,x
 +	dex
 	bpl -
+
+.insert_parent_option
+
+	bit load_device_supports_dirs
+	bpl .next_entry
+
+	jsr clear_string_buffer
+
+	ldy #$ff				; drive supports dirs, so insert the "to parent"
+-	iny						; item as the first entry
+	lda up_to_parent_dir_string,y
+	sta string_buffer+32,y
+	bne -
+
+	lda #$20
+	sta playlist_file_flags
+
+	jmp .valid_filename
 
 .next_entry
 -	jsr CHRIN				; skip first two bytes of each dir entry
@@ -133,7 +160,25 @@ load_directory
 	jsr dir_file_unquote
 	bcs .next_entry				; carry set = no valid filename in the buffer
 
-	lda string_buffer+32		; filter-out the program's own binaries from
+	cmp #"d"					; did `unquote` return DIR filetype?
+	bne +
+
+	lda #$40					; mark this entry as a directory name then.
+	ldy playlist_length
+	sta playlist_file_flags,y
+
++	lda string_buffer+32		; filter-out "." and ".." if present.
+	cmp #"."
+	bne ++
+	lda string_buffer+33
+	beq +
+	cmp #"."
+	bne ++
+
++	sec
+	jmp .next_entry
+
+++	lda string_buffer+32		; filter-out the program's own binaries from
 	cmp #"m"					; the list.
 	bne .valid_filename
 	lda string_buffer+33
@@ -264,6 +309,11 @@ load_directory
 	lda playlist_file_sizes_lows,y
 	cmp #7					; discard any file less than 7 disk blocks long,
 	bcs + 					; it's all but impossible for a MOD to be that small.
+
+	lda playlist_file_flags,y ; but only for actual files, not dir entries.
+	and #$60
+	bne +
+
 	jmp .next_entry
 
 +	clc
@@ -654,7 +704,7 @@ prefill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
 		sta fill_copy_target+1
 		lda #main_fade2
-		ldx #26
+		ldx #playlist_width
 		jsr vdc_block_fill
 
 		lda #<(VDC_ATTRIBUTES+ 4*80+5)
@@ -662,13 +712,13 @@ prefill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+ 4*80+5)
 		sta fill_copy_target+1
 		lda #main_fade1
-		ldx #17
+		ldx #filename_column_width
 		jsr vdc_block_fill
 
 		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
-		ldx #3
+		ldx #4
 		lda #kb_fade
 		jsr vdc_block_fill_extend
 
@@ -678,13 +728,13 @@ prefill_playlist_colors
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
 			sta fill_copy_target+1
 			lda #main_color
-			ldx #17
+			ldx #filename_column_width
 			jsr vdc_block_fill
 
 			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
-			ldx #3
+			ldx #4
 			lda #kb_color
 			jsr vdc_block_fill_extend
 		}
@@ -694,7 +744,7 @@ prefill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+12*80+5)
 		sta fill_copy_target+1
 		lda #hl_color
-		ldx #26
+		ldx #playlist_width
 		jsr vdc_block_fill
 
 		!for .row, 13, 19 {
@@ -703,13 +753,13 @@ prefill_playlist_colors
 			lda #>(VDC_ATTRIBUTES+.row*80+5)
 			sta fill_copy_target+1
 			lda #main_color
-			ldx #17
+			ldx #filename_column_width
 			jsr vdc_block_fill
 
 			ldx #4
 			lda #num_color
 			jsr vdc_block_fill_extend
-			ldx #3
+			ldx #4
 			lda #kb_color
 			jsr vdc_block_fill_extend
 		}
@@ -719,13 +769,13 @@ prefill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+20*80+5)
 		sta fill_copy_target+1
 		lda #main_fade1
-		ldx #17
+		ldx #filename_column_width
 		jsr vdc_block_fill
 
 		ldx #4
 		lda #num_fade
 		jsr vdc_block_fill_extend
-		ldx #3
+		ldx #4
 		lda #kb_fade
 		jsr vdc_block_fill_extend
 
@@ -734,13 +784,14 @@ prefill_playlist_colors
 		lda #>(VDC_ATTRIBUTES+21*80+5)
 		sta fill_copy_target+1
 		lda #main_fade2
-		ldx #26
+		ldx #playlist_width
 		jsr vdc_block_fill
 	}
 rts
 
 enqueue_file
 	ldx playlist_scroll_pos
+
 	lda playlist_file_flags,x
 	eor #$80
 	sta playlist_file_flags,x
@@ -749,6 +800,57 @@ enqueue_file
 	sta screen_row_to_print_at
 	clc
 jmp direct_print_single_entry
+
+playlist_change_dir
+	ldx playlist_scroll_pos
+	lda playlist_file_flags,x
+	cmp #$20
+	beq .to_parent
+	cmp #$40
+	beq .change_dir
+	rts
+
+.to_parent
+	jsr clear_string_buffer
+	jsr insert_cd_string
+
+	lda #95 ; the 🠜 character
+	sta string_buffer+3
+
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr send_dos_command
+	rts
+
+.change_dir
+	jsr clear_string_buffer
+
+	ldx playlist_scroll_pos
+	sec
+	jsr get_filename_from_exp_ram
+
+	; move retrieved filename up by 3 chars
+	ldy #16
+-	lda string_buffer,y
+	sta string_buffer+3,y
+	dey
+	bpl -
+
+	jsr insert_cd_string
+
+	ldx #<string_buffer
+	ldy #>string_buffer
+	jsr send_dos_command
+rts
+
+insert_cd_string
+	lda #"c"
+	sta string_buffer
+	lda #"d"
+	sta string_buffer+1
+	lda #":"
+	sta string_buffer+2
+rts
 
 playlist_page_down
 	clc
@@ -817,10 +919,10 @@ direct_print_single_entry
 
 		clc
 		lda product
-		adc #<VDC_SCREEN + 6
+		adc #<VDC_SCREEN + 5
 		sta utility_pointer
 		lda product+1
-		adc #>VDC_SCREEN + 6
+		adc #>VDC_SCREEN + 5
 		sta utility_pointer+1
 	}
 
@@ -920,7 +1022,19 @@ rts
 		jsr print_msg_rle
 
 		ldx playlist_scroll_pos
-		lda playlist_file_sizes_highs,x
+		lda playlist_file_flags,x
+		and #($40+$20)
+		beq +
+
+		lda #0
+		ldx #<item_is_directory_msg
+		ldy #>item_is_directory_msg
+		sec
+		jsr print_msg
+
+		rts
+
++		lda playlist_file_sizes_highs,x
 		sta file_size_in_kb+1
 		lda playlist_file_sizes_lows,x
 
@@ -977,7 +1091,27 @@ rts
 } else {
 
 	append_file_size
-		lda playlist_file_sizes_highs,x
+		lda #31
+		sta VDC_ADDR
+
+		lda playlist_file_flags,x		; if this is the "parent dir" item,
+		cmp #$20						; don't print anything
+		bne +
+		rts
+
+	+	cmp #$40						; if this is a regular dir entry, we
+		bne ++							; want to add "[Dir] on the right
+
+		ldx #0
+	-	lda item_is_directory_msg,x
+		beq +
+		jsr vdc_write_ram
+		inx
+		jmp -
+
+	+	rts
+
+	++	lda playlist_file_sizes_highs,x
 		sta file_size_in_kb+1
 		lda playlist_file_sizes_lows,x
 
@@ -1028,6 +1162,12 @@ playlist_iterate
 playlist_load_next_file
 	lda #0
 	sta current_file_type
+
+	ldx playlist_scroll_pos
+	lda playlist_file_flags,x		; when iterating, skip any dirs that made
+	and #$60						; it into the playlist.
+	bne playlist_post_inc 
+
 	clc
 	jsr load_file_to_expansion
 	lda current_file_type

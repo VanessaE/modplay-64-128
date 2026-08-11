@@ -594,6 +594,7 @@ ntsc_clock = 1022727
 	loaded_bytes_count					!skip 3
 	header_loaded						!skip 1
 	load_device_can_use_uci				!skip 1
+	load_device_supports_dirs			!skip 1
 
 	main_memory_free_pages				!skip 1
 
@@ -720,7 +721,15 @@ ntsc_clock = 1022727
 	screen_row_to_print_at				!skip 1
 	playlist_file_sizes_lows			!skip 256
 	playlist_file_sizes_highs			!skip 256
+
 	playlist_file_flags					!skip 256
+
+	; flags explanation:
+	; 0 = empty
+	; 1 = there's "something" here, but what? 🙂
+	; $20 = this item is the parent dir option
+	; $40 = this item is a directory
+	; $80 = this is an enqueued file
 
 	seq_current_row_data				!skip 32
 	seq_commands						!skip 8

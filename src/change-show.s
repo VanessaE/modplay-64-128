@@ -115,7 +115,12 @@ show_repeat_mode
 
 +	clc
 	ldx #rpt_row
-	ldy #rpt_col
+
+	bit load_device_supports_dirs
+	bpl +
+	inx
+
++	ldy #rpt_col
 	jsr PLOT
 	lda #0
 	ldx playlist_length

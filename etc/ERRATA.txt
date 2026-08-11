@@ -5,10 +5,6 @@
 * actually add the other RAM drivers, including a constant for GeoRAM size,
   and make the selection option work :)
 
-* add a function to change directory: it shall read the current dir looking
-  for items with "DIR" filetype, offer a list thereof along with a ".." item,
-  using the audio buffers for scratch space.
-
 * C64: need to create a basic windowing framework comparable to what C128
   KERNAL does, so that text can't overflow outside of a popup.
 

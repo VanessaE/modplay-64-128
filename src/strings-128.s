@@ -31,8 +31,8 @@ line_2
 line_3
 	!byte 4,RIGHT
 	!byte $81,$b0
-	!byte 26,$60
-	!byte $83,$ae," ",$7d
+	!byte 27,$60
+	!byte $82,$ae,$7d
 	!byte 5,TAB
 	!byte 3,RIGHT
 	!byte $82,$7d,RETURN
@@ -42,8 +42,8 @@ lines_4_to_17_and_21_to_22
 	!byte 4,RIGHT
 	!byte $81,$7d
 	!byte 3,TAB
-	!byte 7,RIGHT
-	!byte $83,$7d," ",$7d
+	!byte 8,RIGHT
+	!byte $82,$7d,$7d
 	!byte 5,TAB
 	!byte 3,RIGHT
 	!byte $82,$7d,RETURN
@@ -53,8 +53,8 @@ lines_18_and_20
 	!byte 4,RIGHT
 	!byte $81,$7d
 	!byte 3,TAB
-	!byte 7,RIGHT
-	!byte $83,$7d," ",$ab
+	!byte 8,RIGHT
+	!byte $82,$7d,$ab
 	!byte 41,$60
 	!byte $82,$b3,RETURN
 	!byte 0
@@ -63,9 +63,9 @@ line_19
 	!byte 4,RIGHT
 	!byte $81,$7d
 	!byte 3,TAB
-	!byte 7,RIGHT
-	!byte $80+38
-		!byte $7d," ",$7d
+	!byte 8,RIGHT
+	!byte $80+37
+		!byte $7d,$7d
 		!text LGRY,TAB,"  Press",GRN," [",YEL,"C=",GRN,"]",LGRY," to switch pages"
 		!byte TAB
 	!byte 3,RIGHT
@@ -75,8 +75,8 @@ line_19
 line_23
 	!byte 4,RIGHT
 	!byte $81,$ad
-	!byte 26,$60
-	!byte $83,$bd," ",$7d
+	!byte 27,$60
+	!byte $82,$bd,$7d
 	!byte 5,TAB
 	!byte 3,RIGHT
 	!byte $82,$7d,RETURN
@@ -99,6 +99,9 @@ menu_text_up_down
 menu_text_load_and_play
 	!fill 3,RIGHT
 	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Load and play file",RETURN,0
+menu_text_or_change_dir
+	!fill 12,RIGHT
+	!text GRN,LGRY,"or change directory",RETURN,0
 menu_text_play_loaded
 	!fill 8,RIGHT
 	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play currently-loaded file",RETURN,0
@@ -471,6 +474,19 @@ status_line_pos
 		!text "to the ON position"
 		!byte 0
 }
+
+dir_check_string
+	!text "cd:blahdeblah",0
+
+syntax_err_string
+	!text "syntax error",0
+
+up_to_parent_dir_string
+	!text "[Up, parent dir]",0
+
+item_is_directory_msg
+	!scr "      [Dir]"
+	!byte 0
 
 mm_lo
 	!byte <line_2

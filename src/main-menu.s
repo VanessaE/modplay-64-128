@@ -258,6 +258,13 @@ draw_menu_page_a
 	ldy #>menu_text_load_and_play
 	jsr print_menu_line
 
+	bit load_device_supports_dirs
+	bpl ++
+
+	ldx #<menu_text_or_change_dir
+	ldy #>menu_text_or_change_dir
+	jsr print_menu_line
+
 ++	clc
 	lda current_file_type ; type 0 means nothing is loaded.
 	beq +

@@ -42,7 +42,14 @@ check_menu_key_space
 	bne check_menu_key_return
 	lda playlist_length
 	beq check_menu_key_return
-	jsr enqueue_file
+
++	ldx playlist_scroll_pos
+	lda playlist_file_flags,x
+	and #$60
+	beq +
+	jmp get_menu_key
+
++	jsr enqueue_file
 	lda #0
 	sta main_menu_cache_is_valid
 	rts
@@ -57,6 +64,15 @@ check_menu_key_f1
 	bne check_menu_key_f2
 	lda playlist_length
 	beq check_menu_key_f2
+
++	ldx playlist_scroll_pos
+	lda playlist_file_flags,x
+	and #$60
+	beq +
+
+	jsr playlist_change_dir
+	jmp .f5_load_dir
+
 +	jsr copy_main_menu_to_cache_quick
 	clc
 	jsr load_file_to_expansion
@@ -110,6 +126,8 @@ check_menu_key_f4
 check_menu_key_f5
 	cmp #$87
 	bne check_menu_key_f6
+
+.f5_load_dir
 	jsr load_directory
 	lda #0
 	sta main_menu_cache_is_valid

@@ -213,7 +213,7 @@ rts
 
 dir_file_unquote	; routine returns clear carry and a quote-less string at
 					; string buffer + 32, .X = length, else it exits with set carry
-
+					; if valid, then .A contains first char of file type
 	ldx #0
 -	lda string_buffer,x
 	cmp #$22				; look for the first quote mark
@@ -222,21 +222,43 @@ dir_file_unquote	; routine returns clear carry and a quote-less string at
 	cpx #16
 	bne -					; keep looking for up to 16 chars (max filename length)
 
+.duq_no_file
 	sec						; if we got that far, there's no filename,
 	ldy #0
+	tya
 	rts						; so tell caller to discard the string buffer.
 
 +	inx
 	ldy #0
 
 -	lda string_buffer,x
-	cmp #$22				; look for the next quote mark
-	beq +
+	cmp #$22				; look for the next quote mark.  Note: the file
+	beq +					; type comes 2 bytes after the closing quote
 	sta string_buffer+32,y
 	inx
 	iny
-	cpy #16					; give up if we hit the max
+	cpy #16					; give up if we hit the max filename length
 	bne -
++	txa
+	tay						; we want to preserve .X now, but we can clobber .Y
+
+-	iny						; search forward from the second quote for a non-
+	cpy #32					; space char.  Give up if >32 bytes (end of file
+	beq .duq_no_file		; name area), declare it as no file.
+
+	lda string_buffer,y
+	cmp #$20
+	beq -
+
+	; we nowe have the first char of file type
+
+	cmp #"d"				; if it isn't a "D", it can't be "DEL" or "DIR" 😛
+	beq +
+	lda string_buffer+1,y	; second char
+	cmp #"e"				; if it's an "E" then this is a "DEL" i.e.
+	beq .duq_no_file		; deleted file, so ignore it.
+	lda string_buffer,y
+
 +	clc
 rts
 
@@ -276,3 +298,43 @@ rts
 	  +
 	rts
 }
+
+; For this check, the program simply attempts to send `cd:blahdeblah`, which
+; is basically guaranteed to fail. 🙂  Then it checks the error channel to
+; see if the drive actually understood the command.  These are the returned
+; strings when the command is either invalid or the dir doesn't exist:
+;
+; 1541: 30, syntax error
+; 1571: 30, syntax error
+; 1581: 30, syntax error
+;
+; SD2IEC: 62, file not found
+; C64U SoftIEC: 71, directory error
+; VICE virtual fs: 62, file not found
+;
+; CMD FD w/1581 disk or HD disk with 15xx subpartition:  30, syntax error
+; CMD FD w/HD disk and native partition:  39, file not found
+; CMD HD:  39, file not found
+;
+; So anything that doesn't return "syntax error" should accept `cd` commands.
+; (the error code number and "track"/"sector" fields are ignored).
+
+check_for_dir_support
+	lda #0
+	sta load_device_supports_dirs
+
+	ldx #<dir_check_string
+	ldy #>dir_check_string
+	jsr send_dos_command
+
+	ldy #$ff
+-	iny
+	lda syntax_err_string,y
+	beq +
+	cmp string_buffer+3,y
+	beq -
+
+	lda #$80
+	sta load_device_supports_dirs
+  +
+rts
