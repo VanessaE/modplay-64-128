@@ -111,25 +111,25 @@ menu_text_add_to_list
 	!text LGRY," Add highlighted to playlist",RETURN,0
 menu_text_play_list
 	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F2",GRN,"]",LGRY," Play all items in playlist",RETURN,0
+	!text GRN,"[",YEL,"F2",GRN,"]",LGRY," Play selected files/playlist",RETURN,0
 menu_text_play_all
 	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F3",GRN,"]",LGRY," Play all items in directory",RETURN,0
+	!text GRN,"[",YEL,"F3",GRN,"]",LGRY," Play all items in file list",RETURN,0
 menu_text_repeat
 	!fill 7,RIGHT
 	!text GRN,"[",YEL,"F4",GRN,"]",LGRY," Toggle song repeat",RETURN,0
 menu_text_read_dir
 	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F5",GRN,"]",LGRY," Load new directory",RETURN,0
+	!text GRN,"[",YEL,"F5",GRN,"]",LGRY," Reload file list",RETURN,0
 menu_text_clear_playlist
 	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F6",GRN,"]",LGRY," Clear selections/playlist",RETURN,0
+	!text GRN,"[",YEL,"F6",GRN,"]",LGRY," Clear selected/playlist",RETURN,0
 menu_text_play_from_here
 	!fill 7,RIGHT
 	!text GRN,"[",YEL,"F7",GRN,"]",LGRY," Play all from highlighted",RETURN,0
 menu_text_exit
 	!fill 7,RIGHT
-	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Exit",0
+	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Quit",0
 
 ;##### Menu page B
 

@@ -103,48 +103,48 @@ prepend_top_margin
 ;##### Menu page A
 
 menu_text_up_down
-	!text RIGHT,GRN,"[",YEL,"Up",GRN,"/",YEL,"Dn",GRN,"]"
+	!text GRN,"[",YEL,"CRSR",GRN,"]"
 	!text LGRY," Scroll list",RETURN,0
 menu_text_load_and_play
-	!text GRN,"[",YEL,"Return",GRN,"]",LGRY," Load & Play",RETURN,0
+	!text GRN,"[",YEL,"Rtrn",GRN,"]",LGRY," Load & Play",RETURN,0
 menu_text_or_change_dir
-	!fill 9,RIGHT
-	!text GRN,LGRY,"or chng. dir",RETURN,0
+	!fill 7,RIGHT
+	!text GRN,LGRY,"or change dir.",RETURN,0
 menu_text_play_loaded
-	!fill 5,RIGHT
-	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play current",RETURN,0
+	!fill 3,RIGHT
+	!text GRN,"[",YEL,"P",GRN,"]",LGRY," Play currently",RETURN,0
 menu_text_play_loaded_b
-	!fill 9,RIGHT
+	!fill 7,RIGHT
 	!text LGRY,"loaded file",RETURN,0
 menu_text_add_to_list
-	!text GRN,RIGHT,"[",YEL,"Space",GRN,"]",LGRY," Add to list",RETURN,0
+	!text GRN,RIGHT,"[",YEL,"Spc",GRN,"]",LGRY," Add to playlst",RETURN,0
 menu_text_play_list
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F2",GRN,"]",LGRY," Play list",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F2",GRN,"]",LGRY," Run playlist",RETURN,0
 menu_text_play_all
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F3",GRN,"]",LGRY," Play all",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F3",GRN,"]",LGRY," Play all files",RETURN,0
 menu_text_repeat
-	!fill 4,RIGHT
+	!fill 2,RIGHT
 	!text GRN,"[",YEL,"F4",GRN,"]",LGRY," Repeat",RETURN,0
 menu_text_read_dir
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F5",GRN,"]",LGRY," Load new",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F5",GRN,"]",LGRY," Reload file",RETURN,0
 menu_text_read_dir_b
-	!fill 9,RIGHT
-	!text LGRY,"directory",RETURN,0
+	!fill 7,RIGHT
+	!text LGRY,"list",RETURN,0
 menu_text_clear_playlist
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F6",GRN,"]",LGRY," Clear list",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F6",GRN,"]",LGRY," Clear playlist",RETURN,0
 menu_text_play_from_here
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F7",GRN,"]",LGRY," Play from",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F7",GRN,"]",LGRY," Play all from",RETURN,0
 menu_text_play_from_here_b
-	!fill 9,RIGHT
+	!fill 7,RIGHT
 	!text LGRY,"highlighted",RETURN,0
 menu_text_exit
-	!fill 4,RIGHT
-	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Exit",RETURN,0
+	!fill 2,RIGHT
+	!text GRN,"[",YEL,"F8",GRN,"]",LGRY," Quit",RETURN,0
 
 ;##### Menu page B
 

@@ -35,7 +35,7 @@
 	info_instlist_col = 13
 } else ifdef c64u {
 	rpt_row			= 9
-	rpt_col			= 34
+	rpt_col			= 32
 	dev_row			= 8
 	dev_col			= 34
 	adrv_row		= 3
@@ -72,7 +72,7 @@
 	info_instlist_col = 13
 } else {
 	rpt_row			= 9
-	rpt_col			= 34
+	rpt_col			= 32
 	dev_row			= 8
 	dev_col			= 34
 	stereo_row		= 4
