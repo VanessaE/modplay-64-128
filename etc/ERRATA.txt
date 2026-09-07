@@ -22,6 +22,17 @@
 ##  KNOWN ISSUES  ##
 ####################
 
+* ALL:  The TOD clock gets set to 50 or 60 Hz mode based on detecting a PAL
+  machine, but this wouldn't account for machines that are running on mains
+  frequency different from what the video standard implies (for instance, a
+  PAL C64 running on 60 Hz mains in the US).  Instead, set 50 Hz mode
+  directly, reset the clock to 00:00:00.0, then execute a delay loop that
+  should last, say, 0.09 seconds.  After the loop ends, check the TOD tenths
+  register.  If it's still 0, the clock is indeed being driven by 50 Hz
+  mains.  If it's being driven by 60 Hz mains, the clock will be running too
+  fast and the tenths register will increment to 1 by the time the delay loop
+  ends.
+
 * Fetch code:  due to lookahead behavior, fetching the last bit of a loop
   usually ends up also fetching some amount of the silence at the end of
   each sample, leading to clicks and pops as the sample cycles through the
