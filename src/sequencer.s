@@ -93,8 +93,16 @@ start_sequencer
 
 	ldy #3 ; see above
 -	lda #64
-	jsr set_volume_skip_gate_check
+	jsr set_volume
 	dey
+	bpl -
+
+	; and then disable them again
+
+	lda #0
+	ldx #7
+-	sta track_current_enable_flags,x
+	dex
 	bpl -
 
 	lda #125
@@ -243,17 +251,12 @@ get_command								; ...and its parameters.
 	lsr
 	sta seq_commands,y
 
-get_sample_number
+get_sample_number_and_period
 	ldx seq_cur_track_data_offset
+
 	lda seq_current_row_data,x			; if sample number is 0, keep using
 	beq +								; the previous sample number
-
 	sta current_sample_numbers,y
-
-	tax									; only change the channel's volume if
-	lda sample_default_volume_levels,x	; the sample number changes.
-	jsr set_volume_skip_gate_check
-	ldx seq_cur_track_data_offset
 
 +	lda seq_commands,y					; if slide-to-note is in effect, just
 	cmp #3								; ignore the given period and don't
@@ -264,30 +267,28 @@ get_sample_number
 	lda seq_current_row_data+1,x		; in any other case, if period is 0
 	and #$0f							; don't restart the sample
 	ora seq_current_row_data+2,x
-	beq get_note_period
+	beq run_command
 
-	lda current_sample_numbers,y
+	lda current_sample_numbers,y		; new sample number? gate it...
 	jsr start_sample
-	ldx seq_cur_track_data_offset
-	ldy seq_current_track
 
-get_note_period
-	lda seq_current_row_data+1,x
-	and #$0f
-	ora seq_current_row_data+2,x		; otherwise, if period is 0, keep
-	beq run_command						; using the previous note/pitch
+	ldx current_sample_numbers,y		; ...set its default volume...
+	lda sample_default_volume_levels,x
+	jsr set_volume
+
+	ldx seq_cur_track_data_offset
 
 	lda current_fine_tune_values,y
 	bne +
 
-	lda seq_current_row_data+1,x
+	lda seq_current_row_data+1,x		; ...and apply the note period...
 	and #$0f
 	sta current_note_periods_highs,y
 	lda seq_current_row_data+2,x
 	sta current_note_periods_lows,y
 	jmp ++
 
-+	jsr calculate_fine_tuning
++	jsr calculate_fine_tuning			; ...with fine-tuning, if necessary.
 
 	lda product+2
 	sta current_note_periods_lows,y

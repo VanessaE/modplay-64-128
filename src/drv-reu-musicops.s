@@ -8,6 +8,8 @@
 ; this is the average fetch time, in cycles, per final output sample pair
 ; see full details in doc/timing-info.txt.
 
+reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_start
+
 reu_set_selfmod_and_mixer_vectors
 	lda filter_setting
 	bmi +
@@ -21,6 +23,12 @@ reu_set_selfmod_and_mixer_vectors
 	sta mixer_selfmod_pitch_change_vec+1
 	lda #>mixer_standard_do_selfmods_for_pitch_change
 	sta mixer_selfmod_pitch_change_vec+2
+
+	lda #<mixer_standard_set_vol_addrs
+	sta reu_mixer_silence_track+1
+	lda #>mixer_standard_set_vol_addrs
+	sta reu_mixer_silence_track+2
+
 	rts
 
 +	lda #<run_mixer_lowpass
@@ -32,6 +40,12 @@ reu_set_selfmod_and_mixer_vectors
 	sta mixer_selfmod_pitch_change_vec+1
 	lda #>mixer_lowpass_do_selfmods_for_pitch_change
 	sta mixer_selfmod_pitch_change_vec+2
+
+	lda #<mixer_lowpass_set_vol_addrs
+	sta reu_mixer_silence_track+1
+	lda #>mixer_lowpass_set_vol_addrs
+	sta reu_mixer_silence_track+2
+
 rts
 
 reu_set_cycle_counts
@@ -85,8 +99,6 @@ rts
 
 ; THE ACTUAL FETCH ROUTINE
 ; The hard work happens here 🙂
-
-reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_start
 
 reu_run_fetch_and_mixer
 	lda #0													; 2
@@ -189,21 +201,11 @@ reu_run_fetch_and_mixer
 		+	lda current_track_loop_flags + .ftrk		; 3
 			bne .reu_sample_has_loop					; 3/2
 
-			sta current_track_gate_flags + .ftrk		; 3
-			sta DMA_EXTERNAL_LO							; 4
-			sta DMA_EXTERNAL_HI							; 4
-			sta DMA_EXTERNAL_BANK						; 4
-			dec current_active_tracks_count				; 5
+			; .A = 0 implied
 
-			lda reu_fetchlen + reu_fetch_loop_segment_length * .ftrk + 1 ; 4
-			sta DMA_LENGTH_LO							; 4
-
-			+C128_DEC_CLOCK_FOR_REU
-			sty DMA_CMD									; 4 + N
-			+C128_STY_CLOCK_FOR_REU
-
-			clc											; 2
-			bcc .reu_end_of_track_fetch					; 3 (always branches...duh 🙂 )
+			ldy #.ftrk									; 2
+			jsr reu_silence_non_looping_track			; a lot 😕
+			jmp .reu_end_of_track_fetch					; 3
 
 		.reu_sample_has_loop
 			sec											; 2
@@ -360,6 +362,27 @@ reu_do_selfmods_for_instrument_change
 	lda current_sample_end_addr_highs,x
 	sta (utility_pointer),y
 rts
+
+; make sure .A = 0 on entry, .Y = track number
+
+reu_silence_non_looping_track
+	stx temp_zpbk_a								; 3
+
+	sta current_track_gate_flags,y				; 4
+	dec current_active_tracks_count				; 5
+
+	; the mixer volume selfmod loop needs
+	; the vol table high addr byte in .A
+
+	lda #>volume_table_lower					; 2
+
+	reu_mixer_silence_track
+	jsr $1234									; 3+6+84 cycles
+
+	ldx temp_zpbk_a								; 3
+	ldy #$b1									; 2
+rts
+
 }
 
 reu_selfmod_fetch_segment_base_table

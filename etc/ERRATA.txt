@@ -46,13 +46,6 @@
   the opening pattern of "Contraception", or say the bassline in the opening
   pattern of "Bodveizer".
 
-* C128 (maybe also C64):  every now and then a voice will "BEEP!" when it
-  should go silent after a sample ends.  Kinda rare, maybe not predictable.
-  An example happens right at the beginning of song position 19/2A in
-  "Bodveizer" (must use warp mode to get there, skipping ahead with "N" will
-  cause the bug not to manifest).  Pretty sure this is a fault in the gating
-  code.
-
 * The C128 build is still only able to do 9.56 kHz on PAL right now, which is
   about 15% slower than my goal, despite all the savings between the gating
   and the sequencer optimizations.  More optimizations are needed.

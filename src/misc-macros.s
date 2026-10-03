@@ -217,18 +217,6 @@
 	}
 }
 
-!macro JSR_INDIRECT .vec {
-	sta .reload_a+1
-	lda #>.ra
-	pha
-	lda #<.ra
-	pha
-.reload_a
-	lda #00
-	jmp (.vec)
-	.ra = * - 1
-}
-
 !macro NMI_SAVE_AX {			; 6 cycles
 	sta nmi_temp_a
 	stx nmi_temp_x
@@ -261,6 +249,18 @@
 	} else {
 		jmp CIA2_SDR
 	}
+}
+
+!macro JSR_INDIRECT .vec {
+	sta .reload_a+1
+	lda #>.ra
+	pha
+	lda #<.ra
+	pha
+.reload_a
+	lda #00
+	jmp (.vec)
+	.ra = * - 1
 }
 
 ; these turbo macros only take effect on C128 sans SCPU, because with

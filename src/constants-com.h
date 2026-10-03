@@ -696,6 +696,8 @@ ntsc_clock = 1022727
 
 	; various program indirect JMP/JSR vectors
 
+	!align 1,0  ; vectors need to avoid crossing $xxff
+
 	do_selfmod_pitch_vec				!skip 2
 	do_selfmod_instrument_vec			!skip 2
 
