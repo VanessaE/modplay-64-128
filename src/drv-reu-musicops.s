@@ -172,6 +172,7 @@ reu_run_fetch_and_mixer
 
 		.reu_do_full_fetch
 			!if .ftrk = 0 { !set reu_fetchlen = * }
+		.reu_this_fetchlen
 			lda #1										; 2
 			sta DMA_LENGTH_LO							; 4
 
@@ -216,8 +217,10 @@ reu_run_fetch_and_mixer
 			jmp .reu_end_of_track_fetch					; 3
 
 		.reu_do_two_part_fetch
+			dec current_fetch_loop_ofl_amounts + .ftrk	; 5 (flag is overflow + 1)
 			sec											; 2
 			!if .ftrk = 0 { !set reu_cur_steprate_i_b = * }
+		.reu_this_stepint
 			lda #0										; 2
 			sbc current_fetch_loop_ofl_amounts + .ftrk	; 3
 			beq .reu_no_tail							; 2/3
@@ -239,7 +242,11 @@ reu_run_fetch_and_mixer
 			+C128_STY_CLOCK_FOR_REU
 
 		.reu_no_tail
-			lda current_fetch_loop_ofl_amounts + .ftrk	; 3
+			lda .reu_this_fetchlen + 1					; 4
+			sec											; 2
+			sbc .reu_this_stepint + 1					; 4
+			clc											; 2
+			adc current_fetch_loop_ofl_amounts + .ftrk	; 3
 			sta DMA_LENGTH_LO							; 4
 
 			ldy current_sample_numbers + .ftrk			; 3
@@ -257,6 +264,7 @@ reu_run_fetch_and_mixer
 			+C128_STY_CLOCK_FOR_REU
 
 			lda #0										; 2
+			sta DMA_LOCAL_LO							; 4
 			sta current_sample_pointers_fracts + .ftrk	; 3
 
 			ldy current_sample_numbers + .ftrk			; 3
@@ -314,7 +322,16 @@ reu_do_selfmods_for_pitch_change
 	lda reu_selfmod_fetch_segment_base_table+4,x
 	sta utility_pointer+1
 
-	; current steprate fract offset
+	; for a looping sample, the end-check operands depend on the integer step
+	ldy current_track_loop_flags,x
+	beq +
+	ldy #(reu_cur_steprate_i_b - reu_fetch_segment_start + 1)
+	lda current_steprates_ints,x
+	cmp (utility_pointer),y
+	beq +
+	jsr reu_patch_end_check_operands
+
++		; current steprate fract offset
 	ldy #(reu_cur_steprate_f - reu_fetch_segment_start + 1)
 	lda current_steprates_fracts,x
 	sta (utility_pointer),y
@@ -343,9 +360,38 @@ reu_do_selfmods_for_instrument_change
 	lda reu_selfmod_fetch_segment_base_table+4,x
 	sta utility_pointer+1
 
+	jmp reu_patch_end_check_operands
+
+; Plugs the end address into the fetch routine's end check and loop overflow
+; calculation.  A looping sample's end is lowered by (integer step + 1), so the
+; block whose bytes would reach the end is flagged one block ahead, while its
+; data can still be spliced together from the loop's tail and head (see
+; .reu_do_two_part_fetch).  Otherwise the part of that block beyond the end
+; has already been mixed by the time the end is noticed.
+;
+; Enter with .X = track number, utility_pointer -> the track's fetch segment.
+; Clobbers .A, .Y, temp_zpbk_a
+
+reu_patch_end_check_operands
+	ldy current_track_loop_flags,x
+	beq .reu_ckend_plain
+
+	lda current_steprates_ints,x
+	sta temp_zpbk_a
+	clc								; (carry clear subtracts one more)
+	bcc .reu_ckend_sub
+
+.reu_ckend_plain
+	lda #0
+	sta temp_zpbk_a
+	sec
+
+.reu_ckend_sub
+	lda current_sample_end_addr_lows,x
+	sbc temp_zpbk_a
+
 	; sample pointer LSB offset, for both the sample end check
 	; and for the loop overflow calculation
-	lda current_sample_end_addr_lows,x
 
 	ldy #(reu_ckend_l_a - reu_fetch_segment_start + 1)
 	sta (utility_pointer),y
@@ -355,12 +401,42 @@ reu_do_selfmods_for_instrument_change
 	; end-check mid byte
 	ldy #(reu_ckend_m - reu_fetch_segment_start + 1)
 	lda current_sample_end_addr_mids,x
+	sbc #0
 	sta (utility_pointer),y
 
 	; end-check MSB
 	ldy #(reu_ckend_h - reu_fetch_segment_start + 1)
 	lda current_sample_end_addr_highs,x
+	sbc #0
 	sta (utility_pointer),y
+
+	; for a looping sample, flag (or unflag) the upcoming block against
+	; the new end address
+
+	ldy current_track_loop_flags,x
+	beq .reu_ckend_done
+
+	ldy #(reu_ckend_l_a - reu_fetch_segment_start + 1)
+	lda (utility_pointer),y
+	cmp current_sample_pointers_lows,x
+	ldy #(reu_ckend_m - reu_fetch_segment_start + 1)
+	lda (utility_pointer),y
+	sbc current_sample_pointers_mids,x
+	ldy #(reu_ckend_h - reu_fetch_segment_start + 1)
+	lda (utility_pointer),y
+	sbc current_sample_pointers_highs,x
+	lda #0
+	bcs .reu_ckend_set_ofl			; end >= pointer, so no overflow
+
+	sec
+	lda current_sample_pointers_lows,x
+	ldy #(reu_ckend_l_b - reu_fetch_segment_start + 1)
+	sbc (utility_pointer),y
+
+.reu_ckend_set_ofl
+	sta current_fetch_loop_ofl_amounts,x
+
+.reu_ckend_done
 rts
 
 ; make sure .A = 0 on entry, .Y = track number
