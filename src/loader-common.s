@@ -480,7 +480,7 @@ load_sample_data
 
 	lda utility_counter					; is the remainder just 0?  (e.g. sample
 	bne .load_rest_of_sample			; is a multiple of 256 bytes)
-	jmp .load_next_sample
+	jmp .add_blank_page
 
 .load_rest_of_sample					; if neither, load the exact number of remaining bytes
 	ldy #0
@@ -509,10 +509,11 @@ load_sample_data
 	+JSR_INDIRECT (stash_block_vec)		; store the result
 
 	inc expansion_memory_target_pointer+1
-	bne +
+	bne .add_blank_page
 	inc expansion_memory_target_pointer+2
 
-+	lda #$80							; create an entirely blank page
+.add_blank_page
+	lda #$80							; create an entirely blank page
 	ldy #0
 -	sta load_buffer,y
 	iny
