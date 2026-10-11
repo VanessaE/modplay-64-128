@@ -42,7 +42,7 @@ This project is meant to be worked-on and built on Linux using common tools.  Yo
 * exomizer (v3.1.1 or newer, just the cruncher tool, the decruncher is part of this source tree)
 * cc1541 (v4.2 or later, and not the "c1541" that comes with VICE)
 
-To build it, just cd into the top level directory and do `make -f Makefile-linux`.  Disk images and individual binaries will be left in directories so-named.
+To build it, just cd into the top level directory and just run `make` (or you could `make -f Makefile-linux`).  Disk images and individual binaries will be left in directories so-named.
 
 There is also a Makefile for Windows, if you're crazy enough to try to build on that platform. 😉  You'll need MinGW, but otherwise it should work more or less the same way as on Linux.  For further details, see [the specific README](README-windows.txt) for that OS.
 
