@@ -50,3 +50,8 @@ There is also a Makefile for Windows, if you're crazy enough to try to build on 
 
 Disk images can be found in the repository's **[Package Registry](https://gitlab.com/VanessaE/modplay-64-128/-/packages)** (or you can get there from the sidebar).
 
+**AI/LLM DISCLOSURE:**
+
+I would normally not be interested in (let alone advocate for) the use of AI tools for coding, but the simple fact of the matter is, they're getting pretty good these days, and I'm not getting any younger or any more energetic.  99% of the code in this project is hand-crafted by yours truly the old fashioned way (Steinway & Sons would be proud), less than 1% is third-party contributions, Codebase64, etc.
+
+With that being the case, I've decided not to worry about some minuscule fraction being AI contributions.  As long as proper effort has been put into making the code work first before turning to AI to add some polish, and as long as said polish is high quality, I guess I can live with that.
