@@ -50,6 +50,7 @@ fetch_row_data
 ; enter with .A = sample number, .Y = track number
 
 start_sample
+	sta current_sample_numbers,y
 	tax
 
 	lda seq_commands,y

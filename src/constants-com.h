@@ -751,6 +751,7 @@ ntsc_clock = 1022727
 	current_volume_slide_rates			!skip 8
 
 	current_sample_numbers				!skip 8
+	enqueued_sample_numbers				!skip 8
 	track_current_enable_flags			!skip 8
 
 	current_arp_extra_note_1st_fracts	!skip 8

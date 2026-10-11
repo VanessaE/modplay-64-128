@@ -14,6 +14,7 @@ start_sequencer
 
 	ldx #7
 -	sta current_sample_numbers,x
+	sta enqueued_sample_numbers,x
 
 	sta current_pitch_slide_target_lows,x
 	sta current_pitch_slide_target_highs,x
@@ -257,26 +258,26 @@ get_command								; ...and its parameters.
 
 get_sample_number_and_period
 	ldx seq_cur_track_data_offset
-
 	lda seq_current_row_data,x			; if sample number is 0, keep using
 	beq +								; the previous sample number
-	sta current_sample_numbers,y
 
+	sta enqueued_sample_numbers,y
+    
 +	lda seq_commands,y					; if slide-to-note is in effect, just
 	cmp #3								; ignore the given period and don't
-	beq run_command						; re-start the sample
+	beq slide_or_no_period_set_vol		; re-start the sample
 	cmp #5								; ditto for pitch slide + volume slide
-	beq run_command
+	beq slide_or_no_period_set_vol
 
 	lda seq_current_row_data+1,x		; in any other case, if period is 0
 	and #$0f							; don't restart the sample
 	ora seq_current_row_data+2,x
-	beq run_command
+	beq slide_or_no_period_set_vol
 
-	lda current_sample_numbers,y		; new sample number? gate it...
+	lda enqueued_sample_numbers,y		; new sample number? gate it...
 	jsr start_sample
 
-	ldx current_sample_numbers,y		; ...set its default volume...
+	ldx current_sample_numbers,y
 	lda sample_default_volume_levels,x
 	jsr set_volume
 
@@ -302,6 +303,17 @@ get_sample_number_and_period
 ++	jsr set_pitch_by_table_lookup
 	ldx seq_cur_track_data_offset
 	ldy seq_current_track
+	jmp run_command
+
+slide_or_no_period_set_vol
+	ldx seq_cur_track_data_offset
+	lda seq_current_row_data,x
+	beq run_command
+
+	ldx current_sample_numbers,y
+	beq run_command
+	lda sample_default_volume_levels,x
+	jsr set_volume
 
 run_command
 
@@ -379,11 +391,11 @@ next_track_pre_tick
 	bpl dont_run_pre_tick_command
 
 	ldx seq_commands,y					; commands 0-3, 5, and A/10 need to 
-	cpx #4								; run after the fetch/mixer routine,
+	cpx #10								; run after the fetch/mixer routine,
 	beq dont_run_pre_tick_command		; not before.
 	cpx #5
-	bcc dont_run_pre_tick_command
-	cpx #10
+	beq dont_run_pre_tick_command
+	cpx #4
 	bcc dont_run_pre_tick_command
 	cpx #16
 	bcs dont_run_pre_tick_command
@@ -468,13 +480,14 @@ next_track_post_tick
 	lda current_track_gate_flags,y
 	bpl dont_run_post_tick_command
 
-	ldx seq_commands,y					; commands 0-3, and 5 need to be run here.
+	ldx seq_commands,y					; commands 0-3, 5, and A/10 need to
+	cpx #10								; be run here.
+	beq run_post_tick_command
 	cpx #5
 	beq run_post_tick_command
 	cpx #4
 	bcc run_post_tick_command
-	cpx #16
-	bcs dont_run_post_tick_command
+	jmp dont_run_post_tick_command
 
 run_post_tick_command
 	lda seq_ticks_counter				; post-tick commands only run N-1 times

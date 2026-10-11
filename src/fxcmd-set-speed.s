@@ -5,12 +5,16 @@
 
 run_effect_set_speed
 	lda seq_command_arguments,y
-	cmp #33
-	bcc +
+	bne +
+	lda #1
+	jmp ++
+
++	cmp #33
+	bcc ++
 	sta seq_tempo_bpm
 	bcs set_mixer_loops_per_tick
 
-+	sta seq_ticks_per_division
+++	sta seq_ticks_per_division
 
 set_mixer_loops_per_tick
 	ldx seq_tempo_bpm
