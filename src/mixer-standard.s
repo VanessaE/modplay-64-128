@@ -6,9 +6,9 @@
 mixer_standard_set_cycle_count
 	!ifndef scpu {
 		!ifndef c128 {
-			lda #47
+			lda #46
 		} else {
-			lda #48 / 2
+			lda #46 / 2
 		}
 	} else {
 		lda #3
@@ -23,6 +23,7 @@ run_mixer_standard											; 6 to enter
 	clc														; 2
 	txa														; 2
 	adc #16													; 2
+	sta .mix_std_xplus16 + 1								; 4
 
 	!ifndef use_profiler {
 	-	ldy audio_out_buf_index								; 3
@@ -54,7 +55,7 @@ run_mixer_standard											; 6 to enter
 		!if .idx2 = 0 { mixer_vol_std_addr_4 = *}
 		adc $8400,y											; 4
 
-		sta audio_buffer_left,x								; 5
+		sta audio_buffer_left + .idx2,x						; 5
 
 		!if .idx2 = 0 { mixer_rd_la_track_2 = * }
 		ldy sample_data_buffer+$0100						; 4
@@ -66,11 +67,14 @@ run_mixer_standard											; 6 to enter
 		!if .idx2 = 0 { mixer_vol_std_addr_3 = * }
 		adc $8300,y											; 4
 
-		sta audio_buffer_right,x							; 5
+		sta audio_buffer_right + .idx2,x					; 5
 
-		inx													; 2
 	  !if .idx2 = 0 { !set mixer_standard_loop_close = * }
 	}
+
+	.mix_std_xplus16
+		ldx #0												; 2
+
 rts															; 6
 
 ; Mixer self-mod stuff

@@ -11,9 +11,9 @@
 mixer_lowpass_set_cycle_count
 	!ifndef scpu {
 		!ifndef c128 {
-			lda #62
+			lda #63
 		} else {
-			lda #62 / 2
+			lda #63 / 2
 		}
 	} else {
 		lda #3
@@ -60,7 +60,7 @@ run_mixer_lowpass											; 6 to enter
 		!if .idx2 = 0 { mixer_lowpass_vol_addr_4 = *}
 		adc $8400,y											; 4
 
-		adc audio_buffer_left,x								; 4
+		adc audio_buffer_left,x								; 5
 		ror													; 2
 		sta temp_zpbk_b										; 3
 
@@ -75,12 +75,12 @@ run_mixer_lowpass											; 6 to enter
 		!if .idx2 = 0 { mixer_lowpass_vol_addr_3 = * }
 		adc $8300,y											; 4
 
-		adc audio_buffer_right,x							; 4
+		adc audio_buffer_right,x							; 5
 		inx													; 2
 		ror													; 2
-		sta audio_buffer_right,x							; 4
+		sta audio_buffer_right,x							; 5
 		lda temp_zpbk_b										; 3
-		sta audio_buffer_left,x								; 4
+		sta audio_buffer_left,x								; 5
 
 	  !if .idx2 = 0 { !set mixer_lowpass_loop_close = * }
 	}
