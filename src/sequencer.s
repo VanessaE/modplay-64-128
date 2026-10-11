@@ -378,10 +378,12 @@ next_track_pre_tick
 	lda current_track_gate_flags,y
 	bpl dont_run_pre_tick_command
 
-	ldx seq_commands,y					; commands 0-3, and 5 need to be run
-	cpx #5								; after the fetch/mixer routine, not
-	beq dont_run_pre_tick_command		; before.
-	cpx #4
+	ldx seq_commands,y					; commands 0-3, 5, and A/10 need to 
+	cpx #4								; run after the fetch/mixer routine,
+	beq dont_run_pre_tick_command		; not before.
+	cpx #5
+	bcc dont_run_pre_tick_command
+	cpx #10
 	bcc dont_run_pre_tick_command
 	cpx #16
 	bcs dont_run_pre_tick_command
