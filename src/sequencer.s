@@ -165,6 +165,9 @@ nple
 	lda visualizer_mode
 	bne next_row_no_scroll
 
+	lda pattern_break_target_row
+	bne apply_pat_break
+
 	jsr viz_row_data_pattern_preload
 	jmp next_row_no_scroll
 
@@ -187,12 +190,13 @@ next_row
 	jsr viz_row_data_scroll
 
 next_row_no_scroll
-
 	ldx current_song_pos
 	ldy pattern_table,x
 
 	lda pattern_break_target_row
 	beq ++
+
+apply_pat_break
 	and #$7f
 	sta seq_current_row
 
