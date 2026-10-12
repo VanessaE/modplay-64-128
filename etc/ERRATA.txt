@@ -22,6 +22,9 @@
 ##  KNOWN ISSUES  ##
 ####################
 
+* ALL:  going up one level to parent directory seems to crash the program
+  after loading its contents.
+
 * ALL:  The TOD clock gets set to 50 or 60 Hz mode based on detecting a PAL
   machine, but this wouldn't account for machines that are running on mains
   frequency different from what the video standard implies (for instance, a

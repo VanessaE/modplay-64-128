@@ -235,7 +235,7 @@ but if it is [14], then the second nibble is used as well.
           # Note by VanessaE: the above is partly wrong - Most players   #
           # take this value as the full number of 256-byte pages to skip,#
           # not in part or in whole as some count of words.  A value of  #
-          # $10 for instance should skip4096 bytes, not 8192.            #
+          # $10 for instance should skip 4096 bytes, not 8192.           #
           ################################################################
 
 [10]: Volume slide
