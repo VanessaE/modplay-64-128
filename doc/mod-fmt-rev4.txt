@@ -231,6 +231,13 @@ but if it is [14], then the second nibble is used as well.
      still playing on this channel, it should be retriggered to the new
      offset using the current volume.
 
+          ################################################################
+          # Note by VanessaE: the above is partly wrong - Most players   #
+          # take this value as the full number of 256-byte pages to skip,#
+          # not in part or in whole as some count of words.  A value of  #
+          # $10 for instance should skip4096 bytes, not 8192.            #
+          ################################################################
+
 [10]: Volume slide
      Where [10][x][y] means "either slide the volume up x*(ticks - 1) or
      slide the volume down y*(ticks - 1)". If both x and y are non-zero,
