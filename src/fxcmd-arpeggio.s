@@ -36,7 +36,7 @@ start_effect_arpeggio
 	lsr
 	lsr
 	lsr
-	and #$0e ; we want the note offset * 2
+	and #$1e ; we want the note offset * 2
 	tax
 	lda semitones_table,x
 	sta multiplicand_b
@@ -73,7 +73,7 @@ start_effect_arpeggio
 	lda product+2
 	sta current_arp_extra_note_2nd_ints,y
 
-	lda #2
+	lda #0
 	sta arpeggio_counters,y
 rts
 
