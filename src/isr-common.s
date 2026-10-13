@@ -247,21 +247,23 @@ fixcycle					; we are now at cycle 5 of line 255
 
 	sta CIA2_CRA			; 4 / start timer A
 
-	lda #<irq_lockout		; make sure IRQs can never do anything again
+	lda #<lockout_interrupts ; make sure IRQs can never do anything again
 	sta CPU_IRQ_vector		; if somehow they manage to run.
-	lda #>irq_lockout
+	lda #>lockout_interrupts
 	sta CPU_IRQ_vector+1
 
 .s1a lda #0					; restore .A
-
-  irq_lockout
 rti
+
 ; ##### end of ISR Init
 
 
 ; ##### just what it says on the tin, this stops the ISR and silences the audio
 
 isr_reset_timers_interrupts
+	sei
+	jsr enable_kernal_only
+
 	; Disable CIA interrupts and the VIC raster IRQ, if there is one
 	lda #$7f
 	sta CIA1_ICR
@@ -279,13 +281,12 @@ isr_reset_timers_interrupts
 	lda audio_isr_vec+1
 	sta CPU_NMI_vector+1
 
-	jsr disable_roms
-
 	; stop the three CIA timers we're not using
 
 	lda #0
 	sta CIA1_CRA
 	sta CIA1_CRB
 	sta CIA2_CRB
-rts
 
+	jsr disable_roms
+rts

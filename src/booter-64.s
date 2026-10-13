@@ -38,15 +38,10 @@ boot_start
 
 	+ENABLE_KERNAL_ONLY
 
-	ldx #0
--	lda reu_driver_origin,x
-	sta reu_driver,x
-	inx
-	bne -
-
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
+
 	lda reu_highest_bank
 	bne +
 
@@ -508,10 +503,8 @@ turbo_broken_msg_2
 	!text "and set it to \"Turbo Registers\"."
 	!byte 0
 
-reu_driver_origin
-	!pseudopc reu_driver {
-		!source "src/drv-reu-blockops.s"
-	}
+!source "src/drv-reu-blockops.s"
+!source "src/reu-size-test.s"
 
 charset_alt_data
 !ifndef use_profiler {

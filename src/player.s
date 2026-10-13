@@ -1,6 +1,7 @@
 ; this file holds the "outline" of the actual player
 
 start_main_player
+	jsr disable_roms
 
 	!ifdef scpu {
 		bit SCPU_JD_TURBO_SWITCH
@@ -32,20 +33,35 @@ start_main_player
 		sta SCPU_DISABLE_HW_REGS
 	}
 
-
 	jsr force_mono_if_no_second_sid
 	jsr init_audio_driver
 	jsr reu_set_selfmod_and_mixer_vectors
 
-	!ifdef turbo_available {
+	!ifndef turbo_available {
+		bit allow_regen_msg
+		bpl +
+
+		jsr enable_kernal_only
+		jsr gray_out
+
+		jsr draw_short_popup
+
+		ldx #short_popup_top_row+1
+		ldy #short_popup_left_column
+		clc
+		jsr PLOT
+
 		lda #0
-	} else {
-		lda #$80
+		ldx #<main_player_regen_tables_msg
+		ldy #>main_player_regen_tables_msg
+		sec
+		jsr print_msg
+	  +
 	}
 
-	sta allow_regen_msg
+	jsr disable_roms
 	jsr regenerate_tables_if_needed
-
+	jsr enable_kernal_only
 
 	!ifndef c128 {
 		jsr set_alt_charset
@@ -190,10 +206,10 @@ player_init_visualizer
 +	jsr viz_waveform_init
 
 player_ui_finish
-	jsr swap_zero_page	; KERNAL -> swap, don't care swap -> active
-	jsr erase_zero_page	; wipe "active" ZP, hence don't care 😉
+	jsr isr_reset_timers_interrupts ; disables IRQ's and banks all ROMs out.
 
-	jsr isr_reset_timers_interrupts
+	jsr swap_zero_page				; KERNAL -> swap, don't care swap -> active
+	jsr erase_zero_page				; wipe "active" ZP, hence don't care 😉
 
 	jsr set_cia2_cra_default_val
 
@@ -205,10 +221,7 @@ player_ui_finish
 
 	jsr start_sequencer
 
-	!ifdef use_profiler {
-		jsr enable_kernal_only
-		cli
-	} else {
+	!ifndef use_profiler {
 		jsr isr_reset_timers_interrupts
 	}
 
@@ -220,6 +233,9 @@ player_ui_finish
 	}
 
 	+JSR_INDIRECT (audio_stop_vec)
+
+	jsr enable_kernal_only
+	cli
 
 	jsr keyboard_debounce
 	jsr swap_zero_page ; KERNAL swap -> active, player/don't care -> swap

@@ -38,7 +38,11 @@
 * = program_start
 
 start
-	jsr init
+	jsr init							; the ROMs were disabled at init end
+	jsr regenerate_tables_if_needed		; this goes here because it'll
+										; overwrite the init code.
+
+	jsr enable_kernal_only
 
 	!ifndef c128 {
 		!ifdef scpu {
@@ -47,7 +51,7 @@ start
 
 			sta SCPU_TURBO_ON
 			sta SCPU_ENABLE_HW_REGS
-			lda #%01000100				; optimize:  only echo $c000-$ffff to 
+			lda #%01000100				; optimize:  only echo $c000-$ffff to
 			sta SCPU_OPTIMIZATION_MODE	; local RAM
 			sta SCPU_DISABLE_HW_REGS
 		  +
@@ -65,11 +69,13 @@ start
 
 ; additional code goes here
 
-; functions and macro calls used as functions must be placed here at the
-; start, otherwise they'll end up under BASIC-LOW ROM on the C128
+; functions, macro calls used as functions, and code used at init time must
+; be placed here at the start, otherwise they could end up under BASIC-LOW
+; ROM on the C128
 
 !source "src/misc-macros.s"
 !source "src/misc-functions.s"
+!source "src/tables.s"
 
 !ifdef use_profiler {
 	!source "src/profiler.s"
@@ -95,6 +101,9 @@ disable_vic_screen
 	+DISABLE_VIC_SCREEN
 rts
 
+lockout_interrupts ; any interrupt that gets here exits unacknowledged
+rti
+
 !source "src/loader-common.s"
 !source "src/loader-standard.s"
 !source "src/loader-uci.s"
@@ -108,39 +117,25 @@ rts
 !source "src/change-show.s"
 !source "src/playlist.s"
 
-!source "src/isr-common.s"
-!source "src/drv-audio-common.s"
-!source "src/drv-sid-4b.s"
-!source "src/drv-sid-d4b.s"
-!source "src/drv-sid-mah.s"
-!source "src/drv-dac.s"
-!source "src/drv-digimax-mk1.s"
-!source "src/drv-digimax-mk2.s"
+!source "src/screen-fx.s"
+!source "src/windowing.s"
 
 !source "src/drv-reu-blockops.s"
-!source "src/drv-reu-musicops.s"
 
 !source "src/player.s"
-!source "src/sequencer.s"
-!source "src/sequencer-aux.s"
-!source "src/sequencer-ui.s"
 
-!source "src/fxcmd-arpeggio.s"
-!source "src/fxcmd-pitch-sliding.s"
-!source "src/fxcmd-set-sample-offset.s"
-!source "src/fxcmd-volume-sliding.s"
-!source "src/fxcmd-set-volume.s"
-!source "src/fxcmd-patbreak-posjump.s"
-!source "src/fxcmd-set-speed.s"
-!source "src/fxcmd-vibrato.s"
+!source "src/isr-common.s"
 
-!source "src/fxcmd-extended-misc.s"
-
+!source "src/drv-audio-common.s"
 !source "src/mixer-common.s"
-!source "src/mixer-standard.s"
-!source "src/mixer-lowpass.s"
 
 !source "src/viz-common.s"
+!source "src/sequencer-ui.s"
+!source "src/fxcmd-set-volume.s"
+!source "src/fxcmd-set-sample-offset.s"
+!source "src/fxcmd-extended-misc.s"
+
+; see under-kernal.s for the rest of the code
 
 !ifdef c64u {
 	!source "src/viz-row-data-64.s"
@@ -152,12 +147,6 @@ rts
 	!source "src/viz-row-data-64.s"
 	!source "src/viz-waveforms-64.s"
 }
-
-!source "src/screen-fx.s"
-!source "src/windowing.s"
-
-!source "src/tables.s"
-
 
 ; generic text/PETSCII stuff that's used by multiple functions goes here
 
@@ -187,20 +176,13 @@ dirname
 
 ; --------------------------------------------------------------------------
 ; from here on down are transient tables and buffers and whatnot. the init
-; code takes about 2.1 kB, so anything placed in that first part of this zone
-; must remain untouched until after init exits to the main menu, otherwise
-; init will end up overwriting itself and crashing. 😛
+; code and under-KERNAL stuff take about 10 kB, but the volume table alone is
+; 16 kB, so almost the entire init and under-kernal code will be overwritten
+; the first time that's generated (the first bit gets nuked when a file is
+; loaded).
 
-!align 255,0,$ea
-
-init_begin
-!source "src/init.s"
-init_end
-
-load_buffer							= init_begin	; 2 kB
-sample_data_buffer					= init_begin	; 2 kB, overlapped
-
-* = load_buffer + 2048
+; careful with the table/vars placement, C128 KERNAL-low starts at $c000
+; so anything that needs it banked-in has to come early in this section.
 
 sample_start_addresses_mids			!skip 32
 sample_start_addresses_highs		!skip 32
@@ -217,23 +199,30 @@ sample_default_loop_flags			!skip 32
 sample_default_fine_tunes			!skip 32
 sample_default_volume_levels		!skip 32
 
-; ----------------------------------------
-; anything from here on down can be stuff
-; that init is responsible for generating.
+!align 255,0,0
 
-and_f0_table						!skip 256
+init_begin
+!source "src/init.s"
+!source "src/under-kernal.s"
 
-viz_note_number_lookup_table		!skip 7*256
+; volume table is a whopping 64 pages (16 kB)
 
-steprate_lookup_table				!skip 14*256
+volume_table						= init_begin
 
-; ---------------------------------------------------------------------
-; anything below this point will be wiped clean just before init exits.
+; load/sample buffer is 2 kB, overlapped
+load_buffer							= volume_table + 64*256
+sample_data_buffer					= load_buffer
 
-end_of_mid_mem_tables = *
+ascii_to_petscii_table				= load_buffer + 2048
+and_f0_table						= ascii_to_petscii_table + 256
+viz_note_number_lookup_table		= and_f0_table + 256
+steprate_lookup_table				= viz_note_number_lookup_table + 7*256
+divide_by_16_table					= steprate_lookup_table + 14*256
 
-!if init_end > and_f0_table {
-	!error "Init routines overlap init-writeable area (`and_f0_table`) by ", and_f0_table - init_end, " bytes!"
+end_of_mid_mem_tables				= divide_by_16_table + 256
+
+!if end_of_mid_mem_tables > main_mem_free_end {
+	!error "Mid-memory tables overlap high memory area by ", main_mem_free_end - end_of_mid_mem_tables, " bytes!"
 }
 
 ; ----------------------------------------------------------------------

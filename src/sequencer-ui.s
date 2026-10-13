@@ -359,7 +359,7 @@ toggle_enable_track
 	sta track_current_enable_flags,y
 	bmi +
 
-	lda #>volume_table_lower
+	lda #>volume_table
 	jsr set_vol_addrs_only
 	jmp ++
 

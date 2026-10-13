@@ -22,15 +22,6 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	main_mem_free_end				= $a800
-
-	reu_driver						= $a800
-
-	ascii_to_petscii_table			= $a900 ; 1 page
-
-	volume_table_lower				= $aa00 ; 38 pages \__ 64 pages/16 kB, split
-	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
-
 	; =================================================================
 	; From here on down are hard-coded KERNAL/system variables and such
 

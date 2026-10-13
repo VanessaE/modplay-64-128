@@ -4,13 +4,17 @@
 ;# ROM SWITCHING #
 ;#################
 
+; see also misc-macros.s near line 140
+
 !ifdef c128 {
 	disable_roms
+		sei
 		lda #%00111110
 		sta MMU_CR1
 	rts
 } else {
 	disable_roms
+		sei
 		lda #$35
 		sta $01
 	rts

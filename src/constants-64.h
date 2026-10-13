@@ -17,17 +17,6 @@
 
 	; System vectors from $0300 to $0333
 
-	ascii_to_petscii_table			= $0a00 ; 1 page
-
-	main_mem_free_end				= $a500
-
-	reu_driver						= $a500
-
-	volume_table_lower				= $a600 ; 38 pages \__ 64 pages/16 kB, split
-	volume_table_upper				= $e000 ; 26 pages /   between two memory areas
-
-	VIC_SCREEN						= $cc00 ; (between the volume table halves)
-
 	; ========================================================================
 	; From here on down are hard-coded KERNAL/system variables and such
 

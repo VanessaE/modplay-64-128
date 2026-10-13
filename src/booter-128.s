@@ -43,15 +43,10 @@ boot_start
 
 	+ENABLE_KERNAL_ONLY
 
-	ldx #0
--	lda reu_driver_origin,x
-	sta reu_driver,x
-	inx
-	bne -
-
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
+
 	lda reu_highest_bank
 	bne ++
 
@@ -514,10 +509,8 @@ program_load_decrunch_stub_origin
 		!byte 0
 }
 
-reu_driver_origin
-	!pseudopc reu_driver {
-		!source "src/drv-reu-blockops.s"
-	}
+!source "src/drv-reu-blockops.s"
+!source "src/reu-size-test.s"
 
 wrong_screen_msg
 	!byte LOWER,LGRY,CLR

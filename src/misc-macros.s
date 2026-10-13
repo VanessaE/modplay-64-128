@@ -135,6 +135,8 @@
 	}
 }
 
+; see also misc-functions.s near line 7
+
 !macro ENABLE_KERNAL_ONLY {
 	!ifdef c128 {
 		lda #%00001110

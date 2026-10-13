@@ -14,19 +14,9 @@ set_volume
 	cmp #64
 	bcc +
 	lda #63
-	sta current_sample_volume_levels,y
-	bne voltab_use_upper
-
-+	sta current_sample_volume_levels,y
-	cmp #38
-	bcs voltab_use_upper
-
-	adc #>volume_table_lower
-	jmp set_vol_addrs_only
-
-voltab_use_upper
 	clc
-	adc #(>volume_table_upper)-38
++	sta current_sample_volume_levels,y
+	adc #>volume_table
 
 set_vol_addrs_only
 	ldx current_track_gate_flags,y

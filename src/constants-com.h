@@ -97,41 +97,42 @@
 	audio_buffer_left					= $1100 ; 1 page
 	audio_buffer_right					= $1200 ; 1 page
 
-	clear_main_memory					= audio_buffer_left
-
-	; it's safe to reuse the audio bufs for this since it's only needed once.
-
 	multab2hi							= $1300 ; 2 pages
+	program_load_decrunch_stub			= multab2hi
 
 	zero_page_swap_area					= $1500
 
-	; these are only used once, during the loop-unroll-or-don't
+	; these are only used at load time, during the loop-unroll-or-don't
 	; code when they're compared and/or updated, then they're discarded
 
 	sample_loop_end_addresses_lows		= zero_page_swap_area
 	sample_loop_end_addresses_mids		= zero_page_swap_area + 32
 	sample_loop_end_addresses_highs		= zero_page_swap_area + 64
 
-	program_load_decrunch_stub			= multab2hi
-
 	program_start						= $1600
 
-	; main program code starts here, followed by more tables and buffers,
-	; then comes all the "high-memory" stuff -- see below and
-	; constants-64/128.h
+	; main program code starts here, followed by more tables and buffers
+
+	!ifndef c128 {
+		main_mem_free_end				= $cc00
+		VIC_SCREEN						= main_mem_free_end
+	} else {
+		main_mem_free_end				= $d000
+	}
 
 	; Under-KERNAL-ROM stuff
 
-	mah_table_6581						= $fa00
-	mah_table_8580						= $fb00
+	under_kernal_code					= $e000
 
-	divide_by_16_table					= $fc00 ; 1 page
+	mah_table_6581						= $fb00
+	mah_table_8580						= $fc00
+	tempo_table_fracts					= $fd00
+	tempo_table_lows					= $fe00
 
-	tempo_table_fracts					= $fd00 ; 1 page
-	tempo_table_fracts					= $fd00 ; 1 page
-	tempo_table_lows					= $fe00 ; 1 page
+	; C128 MMU occupies $ff00 through $ff04, REU can watch $ffxx also.
+	; and CPU vectors of course start at $fffa.
 
-	note_names_table					= $ff08 ; 240 bytes
+	note_names_table					= $ff08; 240 bytes, through $fff9
 
 	; KERNAL/System vectors
 
@@ -241,6 +242,8 @@
 
 	DMA_LENGTH_LO						= $df07		; transfer length
 	DMA_LENGTH_HI						= $df08
+
+	DMA_ADDR_CONTROL					= $df0a
 
 	; 1541U-specific registers
 
@@ -455,10 +458,10 @@ ntsc_clock = 1022727
 	current_sample_end_addr_mids		!skip 8
 	current_sample_end_addr_highs		!skip 8
 
-	current_vibrato_fundamental_periods_lows  !skip 8
-	current_vibrato_fundamental_periods_highs !skip 8
-	current_vibrato_top_periods_lows		!skip 8
-	current_vibrato_top_periods_highs	!skip 8
+	current_vibrato_fundamental_periods_lows	!skip 8
+	current_vibrato_fundamental_periods_highs	!skip 8
+	current_vibrato_top_periods_lows			!skip 8
+	current_vibrato_top_periods_highs			!skip 8
 
 	current_vibrato_step_sizes_fracts	!skip 8
 	current_vibrato_step_sizes_ints		!skip 8

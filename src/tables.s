@@ -19,9 +19,9 @@ tempo_fine_adjust_constant_ntsc = 159778
 
 ; enter with .A = desired output resolution
 generate_volume_tables
-	lda #<volume_table_lower
+	lda #<volume_table
 	sta fill_copy_target
-	lda #>volume_table_lower
+	lda #>volume_table
 	sta fill_copy_target+1
 
 	lda #0
@@ -88,14 +88,8 @@ use7bit
 	inc fill_copy_target+1
 	inc vol_cnt
 	lda vol_cnt
-	cmp #38		; the first 38 pages go in the lower part of the table
-	bne +
 
-	lda #>volume_table_upper	; ...while the rest goes under the KERNAL.
-	sta fill_copy_target+1
-	bne -
-
-+	cmp #64
+	cmp #64
 	bne -
 rts
 
@@ -161,9 +155,6 @@ generate_tempo_table
 rts
 
 generate_period_table
-	sei
-	jsr disable_roms
-
 	lda #pitch_fine_adjust_constant_pal
 	bit pal_flag
 	bmi +
@@ -239,15 +230,11 @@ generate_period_table
 +	lda utility_counter+1
 	cmp #7
 	bne -
-
-	jsr enable_kernal_only
-	cli
 rts
 
-generate_note_number_lookup_table
-	sei
-	jsr disable_roms
+; make sure ROMs are switched out before calling this one.
 
+generate_note_number_lookup_table
 	ldy #0
 	lda #0
 -	sta viz_note_number_lookup_table,y
@@ -318,13 +305,9 @@ generate_note_number_lookup_table
 	lda utility_counter+1
 	sbc #>1712
 	bcc -
-
-	jsr enable_kernal_only
-	cli
 rts
 
 regenerate_tables_if_needed
-
 	!ifndef c128 {
 		!ifdef scpu {
 			sta SCPU_ENABLE_HW_REGS
@@ -361,28 +344,6 @@ regenerate_tables_if_needed
 	jmp .regen_tables_exit
 
 .regen_at_least_one_table
-	bit allow_regen_msg
-	bpl no_msgs1
-
-	!ifndef scpu {
-		!ifndef c64u {
-			jsr gray_out
-			jsr draw_short_popup
-
-			ldx #short_popup_top_row+1
-			ldy #short_popup_left_column
-			clc
-			jsr PLOT
-
-			lda #0
-			ldx #<main_player_regen_tables_msg
-			ldy #>main_player_regen_tables_msg
-			sec
-			jsr print_msg
-		}
-	}
-
-no_msgs1
 	lda volume_tables_resolution
 	cmp last_volume_tables_resolution
 	beq +

@@ -1,10 +1,21 @@
 ; this section is responsible for initializing everything at startup
 ; note that the first byte of this file is page-aligned from modplay.s
 
-lockout_interrupts ; any interrupt that gets here exits unacknowledged
-rti
-
 init
+	; make sure interrupts can't do anything if one fires and the
+	; KERNAL is out before actual interrupt sources have been set up.
+	; the target is a single RTI in modplay.s
+
+	lda #<lockout_interrupts
+	sta CPU_IRQ_vector
+	lda #>lockout_interrupts
+	sta CPU_IRQ_vector+1
+
+	lda #<lockout_interrupts
+	sta CPU_NMI_vector
+	lda #>lockout_interrupts
+	sta CPU_NMI_vector+1
+
 	!ifdef c128 {
 		lda #1
 		sta C128_VIC_CLOCK_SPEED
@@ -293,6 +304,11 @@ init
 	inx
 	bne -
 
+	jsr under_kernal_code_copy
+
+	lda #0
+	sta DMA_ADDR_CONTROL	; just to make sure it's in normal mode 😛
+
 	lda #<reu_fetch_block
 	sta fetch_block_vec
 	lda #>reu_fetch_block
@@ -328,16 +344,13 @@ init
 	lda #>reu_do_selfmods_for_instrument_change
 	sta do_selfmod_instrument_vec+1
 
-	lda #0
-	sta allow_regen_msg
+	jsr disable_roms
 
 	jsr set_cia2_cra_default_val
 
 	jsr init_audio_driver
 	jsr check_sid_type_left
 	jsr check_sid_type_right
-
-	jsr regenerate_tables_if_needed
 
 	jsr generate_note_number_lookup_table
 
@@ -346,9 +359,7 @@ init
 	}
 
 	jsr ascii_table_copy
-
-	jsr final_clear_copy
-	jmp clear_main_memory
+rts
 
 ; ####### end of main init code
 
@@ -375,42 +386,6 @@ copy_code				; call this with fill_copy_source = source,
 	dec zero_count
 	bne -
 rts
-
-final_clear_copy
-	lda #<clear_main_memory_origin
-	sta fill_copy_source
-	lda #>clear_main_memory_origin
-	sta fill_copy_source+1
-	lda #<clear_main_memory
-	sta fill_copy_target
-	lda #>clear_main_memory
-	sta fill_copy_target+1
-jmp copy_code
-
-
-clear_main_memory_origin
-	lda #<end_of_mid_mem_tables
-	sta fill_copy_target
-	lda #>end_of_mid_mem_tables
-	sta fill_copy_target+1
-	lda #0
-	ldy #0
--	sta (fill_copy_target),y
-	inc fill_copy_target
-	bne -
-	inc fill_copy_target+1
-	ldx fill_copy_target+1
-	cpx #>main_mem_free_end
-	bne -
-
-	ldy #$ff
--	iny
-	lda clear_main_memory+$40,y
-	sta end_of_mid_mem_tables,y
-	bne -
-	rts
-
-	!byte 0,0,0
 
 semitones_table_copy
 	ldx #31
@@ -568,8 +543,6 @@ mah_table_6581_origin
 
 mah_table_8580_origin
 	!source "src/mah-table-8580.s"
-
-!align 255,0
 
 binsearch_note_period_table
 	!word  57,  60,   64,   67,   71,   76,   80,   85,   90,   95,  101,  107

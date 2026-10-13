@@ -450,7 +450,7 @@ reu_silence_non_looping_track
 	; the mixer volume selfmod loop needs
 	; the vol table high addr byte in .A
 
-	lda #>volume_table_lower					; 2
+	lda #>volume_table							; 2
 
 	reu_mixer_silence_track
 	jsr $1234									; 3+6+84 cycles
