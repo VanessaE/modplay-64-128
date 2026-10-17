@@ -48,11 +48,6 @@ under_kernal_code_origin
 		!source "src/fxcmd-vibrato.s"
 
 		under_kernal_code_end = *
-
-		!if under_kernal_code_end > mah_table_6581 {
-			!error "Under-KERNAL code overlaps mah_table_6581 by ", under_kernal_code_end - mah_table_6581, " bytes!"
-		}
-
 	}
 
 }

@@ -221,15 +221,9 @@ divide_by_16_table					= steprate_lookup_table + 14*256
 
 end_of_mid_mem_tables				= divide_by_16_table + 256
 
-!if end_of_mid_mem_tables > main_mem_free_end {
-	!error "Mid-memory tables overlap high memory area by ", main_mem_free_end - end_of_mid_mem_tables, " bytes!"
-}
-
-!if nnt_end > $fff9 {
-	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt - $fff9, " bytes! (",nnt,")"
-}
-
 ; ----------------------------------------------------------------------
 ; constants that depend on the addresses pointed to by the symbols above
 
 magic_number_location = load_buffer + header31_seek_to_pat_tbl + 128
+
+!source "src/assemble-errs.s"

@@ -371,9 +371,7 @@ ntsc_clock = 1022727
 
 	arpeggio_counters					!skip 8 ; zero page is mandatory for this one (STX $ZP,Y)
 
-	!if * > $0023 {
-			!error "Backed-up-zero-page variables, lower part exceeds $0023 by ", * - $0023, " bytes!"
-	}
+	bzp_low_end = *
 
 	; because they're needed both inside and outside of the player, multiply
 	; divide, and binary search routines' zero page variables have to be in
@@ -424,10 +422,7 @@ ntsc_clock = 1022727
 
 	current_sample_volume_levels		!skip 8
 
-	!byte 0
-	!if * > $0050 {
-			!error "Backed-up-zero-page variables, lower middle part exceeds $0050 by ", * - $0050, " bytes!"
-	}
+	bzp_lowmid_end = *
 
 	; utility_pointer_b uses $50 through $52
 
@@ -438,9 +433,7 @@ ntsc_clock = 1022727
 	sequencer_temp_a					!skip 2 ; \__ these can also be used
 	sequencer_temp_b					!skip 2 ; /   as one 4-byte temp
 
-	!if * > $0059 {
-			!error "Backed-up-zero-page variables, upper middle part exceeds $0059 by ", * - $0059, " bytes!"
-	}
+	bzp_upmid_end = *
 
 	; remainder, load pointer and other random stuff uses $59-$5b
 	; expansion_memory_target_pointer uses $5c-$5e
@@ -480,9 +473,7 @@ ntsc_clock = 1022727
 
 	; should be about 8 bytes free here
 
-	!if * > $00f6 {
-		!error "Backed-up-zero-page variables, top part exceeds $f6 by ", * - $00f6, " bytes!"
-	}
+	bzp_top_end = *
 
 	; in-/out-of-Zero-Page-backup multi-use
 	; variables in $f7 through $ff, see above.
@@ -533,16 +524,7 @@ ntsc_clock = 1022727
 	pal_flag							!skip 1
 
 	; there's about 43 bytes free here on C64 (on C128 it's all full).
-
-	!ifndef c128 {
-		!if * > $03ff {
-				!error "Low memory area exceeds overlaps `multablo` by ", * - $03ff, " bytes!"
-		}
-	} else {
-		!if * > $02a1 {
-				!error "Low memory area overlaps C128 indirect routines by ", * - $02a1, " bytes!"
-		}
-	}
+	lma_cur_end = *
 
 	; All of the various tables, buffers (both C64 and C128)
 
@@ -774,8 +756,6 @@ ntsc_clock = 1022727
 	do_viz_plot							!skip 1
 	seq_key_debounce					!skip 1
 
-	; about 72 bytes free here on both machines
+	mv_end = *
 
-	!if * > $0fff {
-			!error "Main variables zone exceeds $0fff by ", * - $0fff, " bytes!"
-	}
+	; about 72 bytes free here on both machines
