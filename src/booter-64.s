@@ -38,6 +38,11 @@ boot_start
 
 	+ENABLE_KERNAL_ONLY
 
+	lda #<nmi_lockout
+	sta CPU_NMI_vector
+	lda #>nmi_lockout
+	sta CPU_NMI_vector + 1
+
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
@@ -502,6 +507,9 @@ turbo_broken_msg_2
 	!text "Select Turbo Boost -> Turbo Control",RETURN
 	!text "and set it to \"Turbo Registers\"."
 	!byte 0
+
+nmi_lockout
+rti
 
 !source "src/drv-reu-blockops.s"
 !source "src/reu-size-test.s"

@@ -43,6 +43,12 @@ boot_start
 
 	+ENABLE_KERNAL_ONLY
 
+	lda #<nmi_lockout
+	sta CPU_NMI_vector
+	lda #>nmi_lockout
+	sta CPU_NMI_vector + 1
+
+
 	; check REU size/presence (duh 😛 )
 
 	jsr reu_get_size
@@ -508,6 +514,9 @@ program_load_decrunch_stub_origin
 		!text CYAN,"   Initializing...    "
 		!byte 0
 }
+
+nmi_lockout
+rti
 
 !source "src/drv-reu-blockops.s"
 !source "src/reu-size-test.s"
