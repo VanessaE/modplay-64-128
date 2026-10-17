@@ -920,7 +920,8 @@ unroll_one_loop
 	sbc #0
 	bcc +
 
-	; if so, just copy its end addr to the sample end addr and bail out
+	; if so, just copy its end addr to the sample end addr, then go add
+	; the head-after-tail copy
 
 	lda sample_loop_end_addresses_lows,y
 	sta sample_end_addresses_lows,y
@@ -928,7 +929,7 @@ unroll_one_loop
 	sta sample_end_addresses_mids,y
 	lda sample_loop_end_addresses_highs,y
 	sta sample_end_addresses_highs,y
-	jmp unroll_next
+	jmp add_head_after_tail
 
 	; otherwise, fetch the loop data into the load buf
 	; the loop length becomes the stash/fetch size
@@ -1023,8 +1024,12 @@ unroll_more
 	sbc utility_pointer_b+2
 	bcc unroll_more
 
-	; Fill the load buffer with silence
+; Now whether a loop had to be unrolled, we fill-out the blank space after it
+; with silence, then append a copy of the first 256 bytes of the loop onto
+; the end of the loop so that the fetcher can just run off the end and still
+; find valid data.  avoids resorting to a two-part fetch.
 
+add_head_after_tail
 	ldx #0
 	lda #$80
 -	sta load_buffer,x
@@ -1038,9 +1043,38 @@ unroll_more
 	dex
 	bne -
 
-	; use that to fill the remaining space
+	; now add the first 256 bytes of the loop's head to the beginning of that
+	; silence area.
 
-	; expansion_memory_target_pointer already points to the target addr
+	lda #0
+	sta stash_size
+	lda #1
+	sta stash_size+1
+
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+
+	lda sample_loop_start_addresses_lows,y
+	sta expansion_memory_target_pointer
+	lda sample_loop_start_addresses_mids,y
+	sta expansion_memory_target_pointer+1
+	lda sample_loop_start_addresses_highs,y
+	sta expansion_memory_target_pointer+2
+
+	+JSR_INDIRECT (fetch_block_vec)
+
+	; and stash as much as will fit into the reserved space, head and silence
+	; together.
+
+	clc
+	lda sample_loop_end_addresses_lows,y
+	sta expansion_memory_target_pointer
+	lda sample_loop_end_addresses_mids,y
+	sta expansion_memory_target_pointer+1
+	lda sample_loop_end_addresses_highs,y
+	sta expansion_memory_target_pointer+2
 
 	sec
 	lda #0
@@ -1054,11 +1088,6 @@ unroll_more
 	sta stash_size				; address somehow wanders off into neverland
 	lda #8
 +	sta stash_size+1
-
-	lda #<load_buffer
-	sta expansion_transfer_local_addr
-	lda #>load_buffer
-	sta expansion_transfer_local_addr+1
 
 	+JSR_INDIRECT (stash_block_vec)
 

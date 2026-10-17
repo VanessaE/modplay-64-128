@@ -390,7 +390,7 @@ parse_instruments
 	sbc #8
 	lda utility_pointer_b+2
 	sbc #0
-	bcs skip_sample ; loop is > 2kB, no need to unroll it
+	bcs add_loop_head_reserve ; loop is > 2kB, no need to unroll it
 
 	; reserve original loop length....
 	clc
@@ -419,6 +419,14 @@ parse_instruments
 
 	; and add 256 bytes to pad to the next sample
 
+	inc parse_header_sample_pointer+1
+	bne add_loop_head_reserve
+	inc parse_header_sample_pointer+2
+
+; whether or not the loop is unrolled, reserve an extra page beyond that,
+; at the end, to be used for head-after-tail later.
+
+add_loop_head_reserve
 	inc parse_header_sample_pointer+1
 	bne skip_sample
 	inc parse_header_sample_pointer+2
