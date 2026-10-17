@@ -1,8 +1,6 @@
 ; this file holds the "outline" of the actual player
 
 start_main_player
-	jsr disable_roms
-
 	!ifdef scpu {
 		bit SCPU_JD_TURBO_SWITCH
 		bvc .scpu_turbo_sw_is_on
@@ -32,6 +30,8 @@ start_main_player
 		sta SCPU_OPTIMIZATION_MODE	; local RAM
 		sta SCPU_DISABLE_HW_REGS
 	}
+
+	jsr disable_roms
 
 	jsr force_mono_if_no_second_sid
 	jsr init_audio_driver
