@@ -132,7 +132,8 @@
 	; C128 MMU occupies $ff00 through $ff04, REU can watch $ffxx also.
 	; and CPU vectors of course start at $fffa.
 
-	note_names_table					= $ff08; 240 bytes, through $fff9
+	note_names_table					= $ff06; 244 bytes, through $fff9
+	nnt_end								= note_names_table + 243
 
 	; KERNAL/System vectors
 

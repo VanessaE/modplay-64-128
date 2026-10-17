@@ -225,6 +225,10 @@ end_of_mid_mem_tables				= divide_by_16_table + 256
 	!error "Mid-memory tables overlap high memory area by ", main_mem_free_end - end_of_mid_mem_tables, " bytes!"
 }
 
+!if nnt_end > $fff9 {
+	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt - $fff9, " bytes! (",nnt,")"
+}
+
 ; ----------------------------------------------------------------------
 ; constants that depend on the addresses pointed to by the symbols above
 

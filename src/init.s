@@ -459,7 +459,7 @@ note_names_table_copy
 
 +	sta note_names_table,x
 	inx
-	cpx #240
+	cpx #244
 	bne -
   +
 rts
