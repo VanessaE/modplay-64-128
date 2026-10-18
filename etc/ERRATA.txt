@@ -144,9 +144,6 @@
 	set "loaded file is mipmapped" to true
 	exit
 
-* BOTH: strings that should be centered are off by one: disk name is 1 to the
-  left, file size in loader is 1 to the right.
-
 * Some notes from algorithm regarding working-around a linearity issue in the
   SID chip's classic 4-bit sample capability:
 

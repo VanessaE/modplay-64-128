@@ -4,14 +4,14 @@
 
 load_file_to_expansion
 	!ifndef c128 {
-		size_text = 9
+		size_text			= 10
 		progbar_row			= 13
 		progbar_column		= 12
 		progbar_len			= 16
 		kbs_row				= 15
 		kbs_column			= 15
 	} else {
-		size_text = 12
+		size_text			= 13
 		progbar_row			= 13
 		progbar_column		= 27
 		progbar_len			= 26
@@ -632,14 +632,8 @@ loader_paint_screen
 	sbc temp_abs_c			; length of the kB figure
 	sbc #size_text			; length of the "blocks" and "k" parts
 	lsr
-	tay
-	dey
 	beq +
-	!ifdef c128 {
-		dey
-		beq +
-	}
-
+	tay
 	lda #RIGHT
 -	jsr CHROUT
 	dey

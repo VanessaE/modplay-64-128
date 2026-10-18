@@ -324,7 +324,7 @@ get_num_length
 	bne +
 	dey
 	bne -
-  +
++	iny
 rts
 
 
