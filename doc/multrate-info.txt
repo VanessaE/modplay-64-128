@@ -1,0 +1,43 @@
+The multirate routines are run once, at the very end of the loader
+(after unroll_mod_sample_loops), and are used to build decimated copies
+(1/2, 1/4, 1/8, 1/16 rate = levels 1..4) of every sample from the finished,
+possibly-unrolled data that'll be sitting in the REU after the load.
+
+Level 0 is the original data and is never touched.
+
+In the multirate routines' tables, the index for a given level L (1..4),
+and sample S (0..31) is (L-1)*32 + S.
+
+Since the majority of the load buffer i.e. sample data buffer is unused when
+multirate is active, the multirate code's variables and tables, which would
+otherwise take up a lot of RAM, are stored up there instead.  Only the first
+page of that buffer gets used for live audio cache versus half of the buffer.
+
+
+###############
+LOADER HOOK (loader-common.s), at file_size_okay: the last two lines
+
+       jsr load_sample_data
+       jmp unroll_mod_sample_loops
+
+become
+
+       jsr load_sample_data
+       jsr unroll_mod_sample_loops
+       jmp multirate_generate_all
+
+(unroll_mod_sample_loops ends in an rts, so jsr is fine; .C comes back
+set if there wasn't enough REU for the multirate data.)
+
+
+###############
+DATA LAYOUT (for checking REU dumps)
+
+Region for (level L, sample S) starts at multirate_sample_start_addresses_*
+[(L-1)*32+S], page aligned, never crossing a 512k boundary.  Contents = the
+final level-0 data from the sample start, passed L times through pairwise
+averaging, (a+b)>>1, per 256-byte page.  Looped samples: loop start/end =
+start + (offset >> L), start + offset' + ((loop length + half a step) >> L),
+and the end addr equals the loop end addr.  After the end addr (loop end for
+looped samples) there are MULTIRATE_GUARD bytes: the first MULTIRATE_GUARD
+bytes of the decimated loop, or $80s for unlooped samples.

@@ -1,28 +1,22 @@
 ; multirate-related code -- POST-LOAD version
-;
-; Runs once, at the very end of the loader (after unroll_mod_sample_loops), and
-; builds decimated copies (1/2, 1/4, 1/8, 1/16 rate = levels 1..4) of every
-; sample from the finished, unrolled data already sitting in the REU.
-; Level 0 is the original data and is never touched.
-;
-; Table index for level L (1..4), sample S (0..31) is (L-1)*32 + S.
-;
-; Entry:   jsr/jmp multirate_generate_all
-; Returns: .C clear = done, tables valid, multirate_valid = $80
-;          .C set   = not enough REU for all four levels; nothing was written to
-;                     the REU, multirate_valid = 0 and the tables must be ignored.
-;
-; On success highest_exp_addresss_used is raised past the multirate area.
 
-MULTIRATE_GUARD = 32		; bytes of loop-head / silence placed after every end addr
+; Entry:   jsr/jmp multirate_generate_all
+; Returns: .C set   = completed -- the tables area is valid, REU has been
+;                     populated with new data, and multirate_valid = $80
+;          .C clear = not enough RAM for all four levels; nothing extra was
+;                     written to the REU, multirate_valid = 0 and the tables
+;                     must be ignored.
+;
+; On success, highest_exp_addresss_used is raised past the multirate area.
+
+; ----------------------------------------------------------------------------
+; number of bytes of loop-head, and length of silence after every sample
+
+MULTIRATE_GUARD = 32
 
 ; ---------------------------------------------------------------------------
-; Variables and the multirate tables live in RAM at the top of the sample data
-; buffer area instead of in the code, because they must survive into playback
-; but the load buffer is free by then.  Define MULTIRATE_VARS_END in constants.h
-; as the first address AFTER this block (it should be 128-byte aligned so no
-; table access ever crosses a page).  The block is MULTIRATE_VARS_SIZE bytes
-; and is fully (re)initialised by multirate_generate_all.
+; The multirate routines tables and variables sit at the top of the sample
+; data buffer area instead of in the code
 
 MULTIRATE_VARS_BASE = sample_data_buffer + 256
 
@@ -685,30 +679,3 @@ multirate_half_counts							!byte 128,64,32,16
 multirate_alloc_adds							!byte 0,3,7,15,31	; (2<<level)-1, by level 1..4
 multirate_round_adds							!byte 0,1,2,4,8		; 1<<(level-1), by level 1..4
 }
-
-; ###############
-; LOADER HOOK (loader-common.s), at file_size_okay: the last two lines
-;
-;        jsr load_sample_data
-;        jmp unroll_mod_sample_loops
-;
-; become
-;
-;        jsr load_sample_data
-;        jsr unroll_mod_sample_loops
-;        jmp multirate_generate_all
-;
-; (unroll_mod_sample_loops ends in an rts, so jsr is fine; .C comes back
-; set if there wasn't enough REU for the multirate data.)
-;
-; ###############
-; DATA LAYOUT (for checking dumps)
-;
-; Region for (level L, sample S) starts at multirate_sample_start_addresses_*
-; [(L-1)*32+S], page aligned, never crossing a 512k boundary.  Contents = the
-; final level-0 data from the sample start, passed L times through pairwise
-; averaging, (a+b)>>1, per 256-byte page.  Looped samples: loop start/end =
-; start + (offset >> L), start + offset' + ((loop length + half a step) >> L),
-; and the end addr equals the loop end addr.  After the end addr (loop end for
-; looped samples) there are MULTIRATE_GUARD bytes: the first MULTIRATE_GUARD
-; bytes of the decimated loop, or $80s for unlooped samples.
