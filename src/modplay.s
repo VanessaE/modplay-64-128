@@ -108,6 +108,7 @@ rti
 !source "src/loader-standard.s"
 !source "src/loader-uci.s"
 !source "src/decode-mod.s"
+!source "src/multirate.s"
 
 !source "src/disk-ops.s"
 !source "src/directory.s"
