@@ -65,15 +65,9 @@ multirate_exp_target_pointer					= MULTIRATE_MISC + 91		; 3 bytes
 !zone multirate_ops {
 
 multirate_generate_all
-	stx multirate_x_temp
-	sty multirate_y_temp
-
-	lda #0
-	sta multirate_valid
-
 	jsr multirate_count_source_pages
 	jsr calculate_multirate_addrs
-	bcs multirate_no_room
+	bcc .no_room
 
 	jsr multirate_convert_all
 	jsr multirate_finish_samples
@@ -84,21 +78,13 @@ multirate_generate_all
 	sta highest_exp_addresss_used+1
 	lda multirate_exp_target_pointer+2
 	sta highest_exp_addresss_used+2
-
-	lda #$80
-	sta multirate_valid
-
-	ldx multirate_x_temp
-	ldy multirate_y_temp
-	clc
-rts
-
-multirate_no_room
-	ldx multirate_x_temp
-	ldy multirate_y_temp
 	sec
-rts
 
+.no_room
+	lda #0
+	ror
+	sta multirate_valid
+rts
 
 ; number of 256-byte source pages to decimate for each sample:
 ;   (end page - start page) + 1 if the end isn't page-aligned
@@ -178,8 +164,8 @@ calculate_multirate_addrs
 	ldx #4
 	jsr calc_addrs
 
-	lda multirate_exp_target_pointer+2
-	cmp reu_highest_bank
+	lda reu_highest_bank
+	cmp multirate_exp_target_pointer+2
 rts
 
 ; enter with .X = decimation level (1= 256->128, 2=128->64, ...)
