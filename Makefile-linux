@@ -212,8 +212,17 @@ gen_mod_disks:
 
 	$(eval DISK_IMG := disk-images/mods-3.d81)
 
-	$(CC1541) -t -n 'mods 3' -i m3												\
+	$(CC1541) -t -n 'mods 3' -i m3											\
 				-f 'On the Telly'			-w 'mods/On the Telly.mod'		\
 				-f 'Hall of Hobbits'		-w 'mods/Hall of Hobbits (Remix).mod' \
 				-f 'Happy as Fish'			-w 'mods/Happy As Fish.mod'		\
+																			$(DISK_IMG)
+
+	$(eval DISK_IMG := disk-images/mods-4.d81)
+
+	$(CC1541) -t -n 'mods 4' -i m4											\
+				-f 'Enigma'				-w 'mods/Enigma.mod'				\
+				-f 'Spice it Up'		-w 'mods/Spice it Up.mod'			\
+				-f 'One Sample'			-w 'mods/One Sample.mod'			\
+				-f 'Outrun Magic Snd'	-w 'mods/Outrun Magical Sound Shower.mod' \
 																			$(DISK_IMG)
