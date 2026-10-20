@@ -27,7 +27,7 @@ become
        jmp multirate_generate_all
 
 (unroll_mod_sample_loops ends in an rts, so jsr is fine; .C comes back
-set if there wasn't enough REU for the multirate data.)
+clear if there wasn't enough REU for the multirate data.)
 
 
 ###############

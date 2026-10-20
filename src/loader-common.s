@@ -235,9 +235,8 @@ file_size_okay
 	jsr loader_add_progress_bar
 	jsr load_pattern_data
 	jsr load_sample_data
-
-jmp unroll_mod_sample_loops
-
+	jsr unroll_mod_sample_loops
+jmp multirate_generate_all
 
 abort_load
 	lda #0
