@@ -323,7 +323,7 @@ player_popup_next_line
 	!byte 0
 
 loading_msg
-	!text LGRN,"    Loading...",0
+	!text LGRN,"Loading...",0
 
 file_too_large_msg
 	!text RIGHT,RED,"This file needs",RETURN

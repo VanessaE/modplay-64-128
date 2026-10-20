@@ -55,6 +55,15 @@ multirate_y_temp								= MULTIRATE_MISC + 86
 multirate_y_temp2								= MULTIRATE_MISC + 87
 multirate_exp_source_pointer					= MULTIRATE_MISC + 88		; 3 bytes
 multirate_exp_target_pointer					= MULTIRATE_MISC + 91		; 3 bytes
+multirate_progbar_page_count					= MULTIRATE_MISC + 94		; 2 bytes
+
+!ifndef c128 {
+	resampling_msg_row = 11
+	resampling_msg_col = 12
+} else {
+	resampling_msg_row = 11
+	resampling_msg_col = 32
+}
 
 !zone multirate_ops {
 
@@ -62,6 +71,8 @@ multirate_generate_all
 	jsr multirate_count_source_pages
 	jsr calculate_multirate_addrs
 	bcc .no_room
+
+	jsr multirate_draw_progress_bar
 
 	jsr multirate_convert_all
 	jsr multirate_finish_samples
@@ -472,7 +483,20 @@ multirate_convert_page
 	+JSR_INDIRECT (fetch_block_vec)
 	jsr multirate_process_block
 
-	inc multirate_exp_source_pointer+1
+; update progess bar, if it's enabled.  to limit the CPU spent on it, check
+; if bits 1,0 of the page count are zero, so we only update once per kB.
+
+	inc multirate_progbar_page_count
+	bne +
+	inc multirate_progbar_page_count+1
+
++	lda multirate_progbar_page_count
+	and #$03
+	bne +
+
+	jsr multirate_update_progress
+
++	inc multirate_exp_source_pointer+1
 	bne +
 	inc multirate_exp_source_pointer+2
 
@@ -673,9 +697,115 @@ multirate_finish_skip
 +
 rts
 
+multirate_draw_progress_bar
+	ldx #resampling_msg_row
+	ldy #resampling_msg_col
+	clc
+	jsr PLOT
+
+	lda #0
+	ldx #<resampling_msg
+	ldy #>resampling_msg
+	sec
+	jsr print_msg
+
+	ldx #resampling_msg_row
+	ldy #resampling_msg_col
+	clc
+	jsr PLOT
+
+	lda #DOWN
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+
+	lda #" "
+	ldy #15
+-	jsr CHROUT
+	dey
+	bne -
+
+	lda #CYAN
+	sta progress_bar_color
+
+	lda #(loader_progbar_len * 8)
+	ldx #loader_progbar_column
+	ldy #loader_progbar_row
+	jsr draw_empty_progress_bar
+
+	lda #0
+	sta multirate_progbar_page_count
+	sta multirate_progbar_page_count+1
+	sta dividend
+	sta dividend+2
+
+	; number of patterns times 4 = number pages taken up by pattern
+	; data and header, approximately.
+
+	lda number_of_patterns
+	sta dividend+1
+
+	asl dividend+1
+	rol dividend+2
+	asl dividend+1
+	rol dividend+2
+
+	; Subtract that from file size in blocks = approximate number of pages
+	; taken up just by sample data (we don't care if the real count is off by
+	; a small amount, it won't be noticeable, as long as less actual data
+	; ends up being processed than the apparent count).
+
+	sec
+	lda file_to_load_size
+	sbc dividend+1
+	sta dividend+1
+	lda file_to_load_size+1
+	sbc dividend+2
+	sta dividend+2
+
+	; divide the result by the number of progress bar segments
+
+	lda #(loader_progbar_len * 8)
+	sta divisor
+	lda #0
+	sta divisor+1
+	sta divisor+2
+	jsr divide_24by24
+
+	lda quotient
+	sta progress_bar_bytes_per_segment
+	lda quotient+1
+	sta progress_bar_bytes_per_segment+1
+	lda quotient+2
+	sta progress_bar_bytes_per_segment+2
+rts
+
+multirate_update_progress
+	lda #0
+	sta dividend
+	lda multirate_progbar_page_count
+	sta dividend+1
+	lda multirate_progbar_page_count+1
+	sta dividend+2
+
+	lda progress_bar_bytes_per_segment
+	sta divisor
+	lda progress_bar_bytes_per_segment+1
+	sta divisor+1
+	lda progress_bar_bytes_per_segment+2
+	sta divisor+2
+	jsr divide_24by24
+
+	lda quotient
+jmp update_progress_bar
+
 ; constant lookup tables (read-only, stay in the code)
 
 multirate_half_counts							!byte 128,64,32,16
 multirate_alloc_adds							!byte 0,3,7,15,31	; (2<<level)-1, by level 1..4
 multirate_round_adds							!byte 0,1,2,4,8		; 1<<(level-1), by level 1..4
+
+resampling_msg
+	!text CYAN,"  Resampling...",0
 }

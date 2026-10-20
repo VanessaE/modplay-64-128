@@ -4,19 +4,23 @@
 
 load_file_to_expansion
 	!ifndef c128 {
-		size_text			= 10
-		progbar_row			= 13
-		progbar_column		= 12
-		progbar_len			= 16
-		kbs_row				= 15
-		kbs_column			= 15
+		size_text				= 10
+		loading_msg_row			= 11
+		loading_msg_col			= 15
+		loader_progbar_row		= 13
+		loader_progbar_column	= 12
+		loader_progbar_len		= 16
+		kbs_row					= 15
+		kbs_column				= 15
 	} else {
-		size_text			= 13
-		progbar_row			= 13
-		progbar_column		= 27
-		progbar_len			= 26
-		kbs_row				= 15
-		kbs_column			= 35
+		size_text				= 13
+		loading_msg_row			= 2
+		loading_msg_col			= 10
+		loader_progbar_row		= 13
+		loader_progbar_column	= 27
+		loader_progbar_len		= 26
+		kbs_row					= 15
+		kbs_column				= 35
 
 		php
 		jsr FULLW
@@ -236,7 +240,12 @@ file_size_okay
 	jsr load_pattern_data
 	jsr load_sample_data
 	jsr unroll_mod_sample_loops
-jmp multirate_generate_all
+
+	!ifndef turbo_available {
+		jmp multirate_generate_all
+	} else {
+		rts
+	}
 
 abort_load
 	lda #0
@@ -660,16 +669,10 @@ loader_paint_screen
 	sec
 	jsr print_msg
 
-	!ifndef c128 {
-		lda #0
-		ldx #<mini_popup_next_line
-		ldy #>mini_popup_next_line
-		sec
-		jsr print_msg_rle
-	} else {
-		lda #RETURN
-		jsr CHROUT
-	}
+	ldx #loading_msg_row
+	ldy #loading_msg_col
+	clc
+	jsr PLOT
 
 	lda #0
 	ldx #<loading_msg
@@ -689,6 +692,13 @@ loader_paint_screen
 rts
 
 loader_add_progress_bar
+	lda #LGRN
+	sta progress_bar_color
+
+	lda #(loader_progbar_len * 8)
+	ldx #loader_progbar_column
+	ldy #loader_progbar_row
+	jsr draw_empty_progress_bar
 
 	; file size is in blocks, so displace by 1 byte in dividend to get bytes-to-load
 
@@ -701,7 +711,7 @@ loader_add_progress_bar
 
 	; divide the size by the number of progress bar segments
 
-	lda #(progbar_len * 8)
+	lda #(loader_progbar_len * 8)
 	sta divisor
 	lda #0
 	sta divisor+1
@@ -718,11 +728,10 @@ loader_add_progress_bar
 	lda #LGRN
 	sta progress_bar_color
 
-	lda #(progbar_len * 8)
-	ldx #progbar_column
-	ldy #progbar_row
+	lda #(loader_progbar_len * 8)
+	ldx #loader_progbar_column
+	ldy #loader_progbar_row
 jmp draw_empty_progress_bar
-
 
 loader_update_progress
 	jsr loader_print_loading_speed
@@ -1182,7 +1191,7 @@ loader_prefilter_samples
 	lda .total_pages+1
 	sta dividend+2
 
-	lda #(progbar_len * 8)
+	lda #(loader_progbar_len * 8)
 	sta divisor
 	lda #0
 	sta divisor+1
@@ -1236,9 +1245,9 @@ loader_prefilter_samples
 	lda #ORG
 	sta progress_bar_color
 
-	lda #(progbar_len * 8)
-	ldx #progbar_column
-	ldy #progbar_row
+	lda #(loader_progbar_len * 8)
+	ldx #loader_progbar_column
+	ldy #loader_progbar_row
 	jsr draw_empty_progress_bar
 
 	ldy #1
@@ -1456,17 +1465,18 @@ rts
 	sta divisor+2
 	jsr divide_24by24
 
-	; (the bar can only hold progbar_len * 8 segments, and rounding can make the
-	; quotient a little bigger than that, especially for a tiny sample)
+	; (the bar can only hold loader_progbar_len * 8 segments, and rounding
+	; can make the quotient a little bigger than that, especially for a tiny
+	; sample)
 
 	lda quotient+1
 	ora quotient+2
 	bne .bar_full
 	lda quotient
-	cmp #(progbar_len * 8 + 1)
+	cmp #(loader_progbar_len * 8 + 1)
 	bcc +
 .bar_full
-	lda #(progbar_len * 8)
+	lda #(loader_progbar_len * 8)
 +	jmp update_progress_bar
 
 .sample		!byte 0

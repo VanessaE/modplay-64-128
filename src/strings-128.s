@@ -236,7 +236,6 @@ saving_msg
 	!text DOWN,DOWN,LGRN,"   Saving configuration...",0
 
 loading_msg
-	!fill 10,RIGHT
 	!text LGRN,"Loading...",0
 
 file_too_large_msg
