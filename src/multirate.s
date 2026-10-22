@@ -15,13 +15,13 @@
 ; decimated levels generated.  the window caps the per-pair step at
 ; MULTIRATE_WINDOW/16 bytes, and each level halves the step again.
 
-MULTIRATE_WINDOW_SHIFT = 5
+MULTIRATE_WINDOW_SHIFT = 6
 MULTIRATE_WINDOW = 1 << MULTIRATE_WINDOW_SHIFT
 
 !ifndef c128 {
-	MULTIRATE_LEVELS = 3
-} else {
 	MULTIRATE_LEVELS = 2
+} else {
+	MULTIRATE_LEVELS = 1
 }
 
 ; ----------------------------------------------------------------------------
@@ -99,6 +99,8 @@ multirate_generate_all
 	jsr multirate_draw_progress_bar
 
 	jsr multirate_convert_all
+	jsr multirate_update_progress		; the last pages may not have hit the
+										; once-per-kB update, so finish the bar
 	jsr multirate_finish_samples
 
 	lda multirate_exp_target_pointer
@@ -795,29 +797,24 @@ multirate_draw_progress_bar
 	sta dividend
 	sta dividend+2
 
-	; number of patterns times 4 = number pages taken up by pattern
-	; data and header, approximately.
+	; the total number of source pages that the decimation will work through
+	; is the sum of what multirate_count_source_pages worked out for each
+	; sample.
 
-	lda number_of_patterns
+	lda #0
 	sta dividend+1
-
-	asl dividend+1
-	rol dividend+2
-	asl dividend+1
-	rol dividend+2
-
-	; Subtract that from file size in blocks = approximate number of pages
-	; taken up just by sample data (we don't care if the real count is off by
-	; a small amount, it won't be noticeable, as long as less actual data
-	; ends up being processed than the apparent count).
-
-	sec
-	lda file_to_load_size
-	sbc dividend+1
-	sta dividend+1
-	lda file_to_load_size+1
-	sbc dividend+2
 	sta dividend+2
+
+	ldy #31
+-	clc
+	lda dividend+1
+	adc multirate_src_pages_lo,y
+	sta dividend+1
+	lda dividend+2
+	adc multirate_src_pages_hi,y
+	sta dividend+2
+	dey
+	bpl -
 
 	; divide the result by the number of progress bar segments
 
@@ -852,7 +849,17 @@ multirate_update_progress
 	sta divisor+2
 	jsr divide_24by24
 
+	lda quotient+1						; never ask for more than the whole bar
+	ora quotient+2
+	bne .mpu_full
 	lda quotient
+	cmp #(loader_progbar_len * 8 + 1)
+	bcc .mpu_ok
+
+.mpu_full
+	lda #(loader_progbar_len * 8)
+
+.mpu_ok
 jmp update_progress_bar
 
 ; constant lookup tables (read-only, stay in the code)
