@@ -20,24 +20,24 @@ MULTIRATE_GUARD = 32
 
 MULTIRATE_VARS_BASE = sample_data_buffer + 256
 
-; 8 tables of 5*32 entries, indexed level*32 + sample, level = 0..4.
-; level 0 is a copy of the loader's own tables.  there are no loop-end
-; tables: for a looped sample the end addr IS the loop end addr.
+; 8 tables of 4*32 entries, indexed level*32 + sample, level = 1..4.  each
+; table's base is offset down by 32 so that index 32 is its first entry.  the
+; level 0 slots don't exist, level 0 uses the loader's own tables.  there are
+; no loop-end tables: for a looped sample the end addr IS the loop end addr.
 ;
-; space used: 8*160 = 1280 bytes of tables + 95 bytes of misc, starting 256
-; bytes into the 2048-byte sample data buffer, so it all fits with room to
-; spare.
+; space used: 8*128 = 1024 bytes of tables + 95 bytes of misc, starting 256
+; bytes into the 2048-byte sample data buffer.
 
-MULTIRATE_TABLE_LEN = 160
+MULTIRATE_TABLE_LEN = 128
 
-multirate_sample_start_addresses_mids			= MULTIRATE_VARS_BASE + 0*MULTIRATE_TABLE_LEN
-multirate_sample_start_addresses_highs			= MULTIRATE_VARS_BASE + 1*MULTIRATE_TABLE_LEN
-multirate_sample_end_addresses_lows				= MULTIRATE_VARS_BASE + 2*MULTIRATE_TABLE_LEN
-multirate_sample_end_addresses_mids				= MULTIRATE_VARS_BASE + 3*MULTIRATE_TABLE_LEN
-multirate_sample_end_addresses_highs			= MULTIRATE_VARS_BASE + 4*MULTIRATE_TABLE_LEN
-multirate_sample_loop_start_addresses_lows		= MULTIRATE_VARS_BASE + 5*MULTIRATE_TABLE_LEN
-multirate_sample_loop_start_addresses_mids		= MULTIRATE_VARS_BASE + 6*MULTIRATE_TABLE_LEN
-multirate_sample_loop_start_addresses_highs		= MULTIRATE_VARS_BASE + 7*MULTIRATE_TABLE_LEN
+multirate_sample_start_addresses_mids			= MULTIRATE_VARS_BASE + 0*MULTIRATE_TABLE_LEN - 32
+multirate_sample_start_addresses_highs			= MULTIRATE_VARS_BASE + 1*MULTIRATE_TABLE_LEN - 32
+multirate_sample_end_addresses_lows				= MULTIRATE_VARS_BASE + 2*MULTIRATE_TABLE_LEN - 32
+multirate_sample_end_addresses_mids				= MULTIRATE_VARS_BASE + 3*MULTIRATE_TABLE_LEN - 32
+multirate_sample_end_addresses_highs			= MULTIRATE_VARS_BASE + 4*MULTIRATE_TABLE_LEN - 32
+multirate_sample_loop_start_addresses_lows		= MULTIRATE_VARS_BASE + 5*MULTIRATE_TABLE_LEN - 32
+multirate_sample_loop_start_addresses_mids		= MULTIRATE_VARS_BASE + 6*MULTIRATE_TABLE_LEN - 32
+multirate_sample_loop_start_addresses_highs		= MULTIRATE_VARS_BASE + 7*MULTIRATE_TABLE_LEN - 32
 
 ; everything else, after the tables
 
@@ -77,7 +77,6 @@ multirate_generate_all
 	jsr calculate_multirate_addrs
 	bcc .no_room
 
-	jsr multirate_copy_level_0
 	jsr multirate_draw_progress_bar
 
 	jsr multirate_convert_all
@@ -95,35 +94,6 @@ multirate_generate_all
 	lda #0
 	ror
 	sta multirate_valid
-rts
-
-; level 0 = the loader's own tables, copied into slots 0..31 of the unified
-; tables so that level*32 + sample works for every level, including 0.
-
-multirate_copy_level_0
-	ldy #31
-
--	lda sample_start_addresses_mids,y
-	sta multirate_sample_start_addresses_mids,y
-	lda sample_start_addresses_highs,y
-	sta multirate_sample_start_addresses_highs,y
-
-	lda sample_end_addresses_lows,y
-	sta multirate_sample_end_addresses_lows,y
-	lda sample_end_addresses_mids,y
-	sta multirate_sample_end_addresses_mids,y
-	lda sample_end_addresses_highs,y
-	sta multirate_sample_end_addresses_highs,y
-
-	lda sample_loop_start_addresses_lows,y
-	sta multirate_sample_loop_start_addresses_lows,y
-	lda sample_loop_start_addresses_mids,y
-	sta multirate_sample_loop_start_addresses_mids,y
-	lda sample_loop_start_addresses_highs,y
-	sta multirate_sample_loop_start_addresses_highs,y
-
-	dey
-	bpl -
 rts
 
 ; number of 256-byte source pages to decimate for each sample:
@@ -718,7 +688,7 @@ multirate_finish_loop
 multirate_finish_skip
 	inc multirate_index_temp
 	lda multirate_index_temp
-	cmp #MULTIRATE_TABLE_LEN
+	cmp #(MULTIRATE_TABLE_LEN + 32)
 	beq +
 	jmp multirate_finish_next
 +
