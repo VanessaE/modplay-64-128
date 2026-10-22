@@ -17,8 +17,8 @@
 
 	; System vectors from $0300 to $0333
 
-	; ========================================================================
-	; From here on down are hard-coded KERNAL/system variables and such
+; ----------------------------------------------------------------------------
+; From here on down are hard-coded KERNAL/system variables and such
 
 	; KERNAL zero-page variables
 

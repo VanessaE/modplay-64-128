@@ -22,8 +22,8 @@
 	PKYBUF							= $1000
 	PKYDEF							= $100a
 
-	; =================================================================
-	; From here on down are hard-coded KERNAL/system variables and such
+; ----------------------------------------------------------------------------
+; From here on down are hard-coded KERNAL/system variables and such
 
 	; KERNAL zero-page variables
 
@@ -66,11 +66,6 @@
 	VDC_VM3							= $0a2e ; base of VDC screen mem
 	C128_EXTRA_KEYS					= $d02f ; Esc, Alt, Help, 10-key pad, etc.
 
-	MMU_CR1							= $d500
-
-	VDC_ADDR						= $d600
-	VDC_DATA						= $d601
-
 	; KERNAL/editor routines and jump table
 
 	WINDOW							= $c02d
@@ -80,10 +75,6 @@
 	COLORS_TABLE					= $ce4c ; 16-byte PETSCII color code table
 
 	RESET							= $e000
-
-	SWAPPER							= $ff5f
-	DLCHR							= $ff62
-	SETBNK							= $ff68
 
 }
 
