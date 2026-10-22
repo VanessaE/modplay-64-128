@@ -80,6 +80,26 @@ start_sample
 	lda sample_default_loop_flags,x
 	sta current_track_loop_flags,y
 
+	; the fetcher restarts loops from these per-track copies
+
+	lda sample_loop_start_addresses_lows,x
+	sta current_loop_start_lows,y
+	lda sample_loop_start_addresses_mids,x
+	sta current_loop_start_mids,y
+	lda sample_loop_start_addresses_highs,x
+	sta current_loop_start_highs,y
+
+	!ifndef turbo_available {
+		lda #0
+		sta current_multirate_levels,y
+
+		bit multirate_enable
+		bpl +
+
+		jsr multirate_apply_level
+	  +
+	}
+
 	lda current_track_gate_flags,y
 	bmi +
 
@@ -145,6 +165,11 @@ set_pitch_by_table_lookup
 	iny
 	lda (utility_pointer),y
 	sta current_steprates_ints,x
+
+	!ifndef turbo_available {
+		jsr multirate_shift_steprate
+	}
+
 	ldy seq_current_track
 	+JSR_INDIRECT (do_selfmod_pitch_vec)
 rts

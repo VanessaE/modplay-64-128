@@ -1,5 +1,15 @@
 ; routines common to all mixer types
 
+; distance between the per-track input caches in sample_data_buffer.  oldskool
+; builds fetch a fixed 16 bytes per track, so the four caches are packed into
+; the first page, 16 bytes apart.  turbo builds keep one page per track.
+
+!ifndef turbo_available {
+	MIXER_CACHE_STRIDE = 16
+} else {
+	MIXER_CACHE_STRIDE = $0100
+}
+
 !macro MIXER_VOL_SELFMOD_LOOP .seg_base, .seg_len, .base_table {
 	ldx .base_table,y
 	!for .idx6, 0, 15 {
@@ -10,7 +20,16 @@
 !macro MIXER_PITCH_SELFMOD_LOOP .seg_base, .seg_len, .base_table {
 	ldy seq_current_track
 
-	lda #0
+	!ifndef turbo_available {
+		tya						; each track's cache starts at track * 16
+		asl
+		asl
+		asl
+		asl
+	} else {
+		lda #0
+	}
+
 	sta utility_zpbk_counter
 
 	lda #0
@@ -48,5 +67,7 @@
 		sta utility_zpbk_counter
 	}
 
-	adc #1
+	!ifdef turbo_available {
+		adc #1
+	}
 }

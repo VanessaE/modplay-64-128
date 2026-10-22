@@ -30,6 +30,10 @@ start_effect_arpeggio
 	lda (utility_pointer),y
 	sta multiplicand_a+1
 
+	!ifndef turbo_available {
+		jsr multirate_shift_multiplicand_a
+	}
+
 	ldy seq_current_track
 
 	lda seq_command_arguments,y

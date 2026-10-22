@@ -620,6 +620,8 @@ ntsc_clock = 1022727
 
 	supercpu_detected					!skip 1
 
+	multirate_enable					!skip 1 ; $80 = use multirate, 0 = don't
+
 	multiplicand_a						!skip 2 ; these first two are only
 	multiplicand_b						!skip 2 ; used by 16x16 multiply
 	product								!skip 4 ; 8x8 uses this one also.
@@ -740,6 +742,11 @@ ntsc_clock = 1022727
 	current_sample_numbers				!skip 8
 	enqueued_sample_numbers				!skip 8
 	track_current_enable_flags			!skip 8
+
+	current_multirate_levels			!skip 8
+	current_loop_start_lows				!skip 8
+	current_loop_start_mids				!skip 8
+	current_loop_start_highs			!skip 8
 
 	current_arp_extra_note_1st_fracts	!skip 8
 	current_arp_extra_note_1st_ints		!skip 8

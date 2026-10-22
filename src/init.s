@@ -359,6 +359,13 @@ init
 	}
 
 	jsr ascii_table_copy
+
+	!ifndef turbo_available {
+		lda #$80
+	} else {
+		lda #0
+	}
+	sta multirate_enable
 rts
 
 ; ####### end of main init code

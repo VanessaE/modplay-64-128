@@ -84,6 +84,15 @@ reu_run_fetch_and_mixer
 	lda #0													; 2
 	sta DMA_LOCAL_LO										; 4
 	sta DMA_LENGTH_HI										; 4
+
+	!ifndef turbo_available {
+		; all four tracks' caches are in the first page of sample_data_buffer,
+		; so the high byte never changes.  each track sets its own low byte.
+
+		lda #>sample_data_buffer
+		sta DMA_LOCAL_HI
+	}
+
 	lda audio_in_buf_index									; 3
 	and #$f0												; 2
 	tax														; 2
@@ -106,10 +115,15 @@ reu_run_fetch_and_mixer
 
 			; this conditional MUST have the same code length both ways
 
-			!if .ftrk = 0 {
-				sta DMA_LOCAL_HI						; 4
+			!ifndef turbo_available {
+				lda #.ftrk * 16							; 2
+				sta DMA_LOCAL_LO						; 4
 			} else {
-				inc DMA_LOCAL_HI						; 5
+				!if .ftrk = 0 {
+					sta DMA_LOCAL_HI					; 4
+				} else {
+					inc DMA_LOCAL_HI					; 5
+				}
 			}
 
 			bit current_track_gate_flags + .ftrk		; 3
@@ -154,7 +168,11 @@ reu_run_fetch_and_mixer
 		.reu_do_standard_fetch
 			!if .ftrk = 0 { !set reu_fetchlen = * }
 		.reu_this_fetchlen
-			lda #1										; 2
+			!ifndef turbo_available {
+				lda #16									; 2
+			} else {
+				lda #1									; 2
+			}
 			sta DMA_LENGTH_LO							; 4
 
 			; N below will vary by pitch, on average it'll be around 32
@@ -199,19 +217,19 @@ reu_run_fetch_and_mixer
 
 		.reu_move_pointer_to_loop_start_offset
 			; we can only get here if .A contains a non-zero overflow len.
-			ldy current_sample_numbers + .ftrk			; 3
+			; the loop start comes from the per-track copy that start_sample
+			; made, which is for whichever decimation level the note is using.
 			clc											; 2
-			adc sample_loop_start_addresses_lows,y		; 5
+			adc current_loop_start_lows + .ftrk			; 4
 			sta current_sample_pointers_lows + .ftrk	; 3
-			lda sample_loop_start_addresses_mids,y		; 5
+			lda current_loop_start_mids + .ftrk			; 4
 			adc #0										; 2
 			sta current_sample_pointers_mids + .ftrk	; 3
-			lda sample_loop_start_addresses_highs,y		; 5
+			lda current_loop_start_highs + .ftrk		; 4
 			adc #0										; 2
 			sta current_sample_pointers_highs + .ftrk	; 3
 			lda #0										; 2
 			sta current_fetch_loop_ofl_amounts + .ftrk	; 3
-			ldy #$b1									; 2
 			jmp .reu_advance_pointer_and_fetch			; 3
 
 		.reu_end_of_track_fetch
@@ -266,9 +284,11 @@ reu_do_selfmods_for_pitch_change
 	mixer_selfmod_pitch_change_vec	; returns total lookahead distance in .A
 	  jsr $1234
 
-	; fetch length addr
-	ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
-	sta (utility_pointer),y
+	!ifdef turbo_available {
+		; fetch length addr
+		ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
+		sta (utility_pointer),y
+	}
 rts
 
 ; This simply plugs the sample/loop end addresses into the fetch routine.

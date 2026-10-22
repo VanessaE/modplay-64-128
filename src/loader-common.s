@@ -242,10 +242,29 @@ file_size_okay
 	jsr unroll_mod_sample_loops
 
 	!ifndef turbo_available {
-		jmp multirate_generate_all
-	} else {
-		rts
+		bit multirate_enable
+		bpl +
+
+		jsr multirate_generate_all
+
+		bit multirate_valid
+		bmi +
+
+		; not enough room in the REU for the decimated copies, so refuse the file
+
+		jsr draw_mini_popup
+
+		lda #0
+		ldx #<file_too_large_msg
+		ldy #>file_too_large_msg
+		sec
+		jsr print_msg
+
+		jmp abort_load
+	  +
 	}
+
+	rts
 
 abort_load
 	lda #0

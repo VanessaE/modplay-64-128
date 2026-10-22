@@ -1,6 +1,13 @@
 ; SET SAMPLE OFFSET
 
 run_effect_set_sample_offset
+	!ifndef turbo_available {
+		lda current_multirate_levels,y
+		beq +
+		jmp multirate_set_sample_offset
+	  +
+	}
+
 	ldx current_sample_numbers,y
 	clc
 	lda seq_command_arguments,y

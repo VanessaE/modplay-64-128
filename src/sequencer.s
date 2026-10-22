@@ -44,6 +44,8 @@ start_sequencer
 
 	sta current_fine_tune_values,x
 
+	sta current_multirate_levels,x
+
 	sta current_steprates_fracts,x
 	sta current_steprates_ints,x
 

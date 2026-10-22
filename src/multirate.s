@@ -836,3 +836,363 @@ multirate_round_adds							!byte 0,1,2,4,8		; 1<<(level-1), by level 1..4
 resampling_msg
 	!text CYAN,"  Resampling...",0
 }
+
+; ----------------------------------------------------------------------------
+; PLAYER-SIDE ROUTINES
+;
+; these are called from the sequencer, only when a note starts (never from the
+; ISR).  the level for a note is the smallest decimation level at which the
+; fastest pitch the note can reach within its row steps by no more than 1.0
+; byte per output sample pair.  a block's step rate (fract, int) is 16 times
+; the per-pair step, so the limit is 16.0 in those units.
+;
+; variables and tables live here in the main image, in RAM, because the
+; sequencer code that uses them has the ROMs banked out.
+
+!zone multirate_player {
+
+mrp_track										!byte 0
+mrp_sample										!byte 0
+mrp_tmp											!byte 0
+mrp_period_lo									!byte 0
+mrp_period_hi									!byte 0
+mrp_step_fract									!byte 0
+mrp_step_int									!byte 0
+
+multirate_level_bases							!byte 0,32,64,96,128
+
+; enter with .X = sample number and .Y = track number, right after
+; start_sample has installed the level-0 pointers for the new note.  chooses
+; the note's level and, if it isn't 0, swaps in that level's start pointer,
+; end address and loop start.  .X and .Y are preserved.
+
+multirate_apply_level
+	stx mrp_sample
+	sty mrp_track
+
+	jsr multirate_choose_level			; returns .A = level, .Y = track
+	sta current_multirate_levels,y
+	tax
+	beq .mral_done
+
+	lda multirate_level_bases,x
+	ora mrp_sample
+	tax									; .X = level*32 + sample
+
+	lda seq_commands,y
+	cmp #9								; the set-sample-offset command sets
+	beq +								; the pointer itself, so leave it
+
+	lda multirate_sample_start_addresses_mids,x
+	sta current_sample_pointers_mids,y
+	lda multirate_sample_start_addresses_highs,x
+	sta current_sample_pointers_highs,y
+
++	lda multirate_sample_end_addresses_lows,x
+	sta current_sample_end_addr_lows,y
+	lda multirate_sample_end_addresses_mids,x
+	sta current_sample_end_addr_mids,y
+	lda multirate_sample_end_addresses_highs,x
+	sta current_sample_end_addr_highs,y
+
+	lda multirate_sample_loop_start_addresses_lows,x
+	sta current_loop_start_lows,y
+	lda multirate_sample_loop_start_addresses_mids,x
+	sta current_loop_start_mids,y
+	lda multirate_sample_loop_start_addresses_highs,x
+	sta current_loop_start_highs,y
+
+.mral_done
+	ldx mrp_sample
+	ldy mrp_track
+rts
+
+
+; enter with .Y = track number, row data for the new note available.
+; returns .A = level 0..4, .Y = track number.
+;
+; the fastest reachable pitch within the row is worked out for:
+;   0xy  arpeggio             highest semitone offset in the argument
+;   1xx  slide up             period minus rate * (ticks - 1), min 57
+;   4xy/6xy vibrato           period minus 1/16 of itself (a bit more than
+;                             the deepest vibrato goes)
+;   E1x  fine slide up        period minus x
+; anything beyond that (a slide continuing over several rows, fine tuning)
+; is dealt with by the clamp in multirate_shift_steprate.
+
+multirate_choose_level
+	sty mrp_track
+
+	ldx seq_cur_track_data_offset
+	lda seq_current_row_data+2,x
+	sta mrp_period_lo
+	lda seq_current_row_data+1,x
+	and #$0f
+	sta mrp_period_hi
+
+	lda seq_command_arguments,y			; .A = argument
+	ldx seq_commands,y					; .X = command
+
+	cpx #1
+	beq .mrcl_slide_up
+	cpx #4
+	beq .mrcl_vibrato
+	cpx #6
+	beq .mrcl_vibrato
+	cpx #14
+	beq .mrcl_extended
+	jmp .mrcl_lookup
+
+.mrcl_slide_up
+	sta mrp_tmp
+	lda #0
+	sta mrp_step_fract
+	sta mrp_step_int
+
+	ldx seq_ticks_per_division
+	dex
+	bne .mrcl_slide_sum
+	jmp .mrcl_lookup
+
+.mrcl_slide_sum
+	clc
+	lda mrp_step_fract
+	adc mrp_tmp
+	sta mrp_step_fract
+	bcc +
+	inc mrp_step_int
++	dex
+	bne .mrcl_slide_sum
+	jmp .mrcl_subtract
+
+.mrcl_vibrato
+	lda mrp_period_hi
+	sta mrp_step_int
+	lda mrp_period_lo
+	sta mrp_step_fract
+	ldx #4
+-	lsr mrp_step_int
+	ror mrp_step_fract
+	dex
+	bne -
+	jmp .mrcl_subtract
+
+.mrcl_extended
+	sta mrp_tmp
+	and #$f0
+	cmp #$10							; only E1x (fine slide up) matters
+	beq +
+	jmp .mrcl_lookup
+
++	lda mrp_tmp
+	and #$0f
+	sta mrp_step_fract
+	lda #0
+	sta mrp_step_int
+
+	; subtract the amount in mrp_step_int/fract from the period, but don't
+	; let it go below 57
+
+.mrcl_subtract
+	sec
+	lda mrp_period_lo
+	sbc mrp_step_fract
+	sta mrp_period_lo
+	lda mrp_period_hi
+	sbc mrp_step_int
+	sta mrp_period_hi
+	bcc .mrcl_force_min
+	bne .mrcl_lookup					; (.Z is still from the SBC above)
+	lda mrp_period_lo
+	cmp #57
+	bcs .mrcl_lookup
+
+.mrcl_force_min
+	lda #57
+	sta mrp_period_lo
+	lda #0
+	sta mrp_period_hi
+
+	; look up the step rate for that period
+
+.mrcl_lookup
+	lda mrp_period_lo
+	sta utility_pointer
+	lda mrp_period_hi
+	asl utility_pointer
+	rol
+	sta utility_pointer+1
+
+	clc
+	lda utility_pointer
+	adc #<steprate_lookup_table
+	sta utility_pointer
+	lda utility_pointer+1
+	adc #>steprate_lookup_table
+	sta utility_pointer+1
+
+	ldy #0
+	lda (utility_pointer),y
+	sta mrp_step_fract
+	iny
+	lda (utility_pointer),y
+	sta mrp_step_int
+
+	ldy mrp_track
+	lda seq_commands,y
+	bne .mrcl_find_level
+	lda seq_command_arguments,y			; arpeggio, but only if it has an
+	beq .mrcl_find_level				; argument
+
+	; scale by the larger of the two semitone offsets
+
+	sta mrp_tmp
+	lsr
+	lsr
+	lsr
+	lsr
+	tax									; .X = high nybble
+	lda mrp_tmp
+	and #$0f							; .A = low nybble
+	stx mrp_tmp
+	cmp mrp_tmp
+	bcs +
+	lda mrp_tmp
++	asl									; table entries are 16 bits
+	tax
+	lda semitones_table,x
+	sta multiplicand_b
+	lda semitones_table+1,x
+	sta multiplicand_b+1
+	lda mrp_step_fract
+	sta multiplicand_a
+	lda mrp_step_int
+	sta multiplicand_a+1
+
+	sec
+	jsr multiply_16x16
+
+	lda product+1
+	sta mrp_step_fract
+	lda product+2
+	sta mrp_step_int
+
+	; halve until it's at most 16.0, up to four times
+
+.mrcl_find_level
+	ldx #0
+
+.mrcl_level_loop
+	lda mrp_step_int
+	cmp #17
+	bcs .mrcl_shift
+	cmp #16
+	bcc .mrcl_level_done
+	lda mrp_step_fract
+	beq .mrcl_level_done
+
+.mrcl_shift
+	cpx #4
+	beq .mrcl_level_done
+	lsr mrp_step_int
+	ror mrp_step_fract
+	inx
+	bne .mrcl_level_loop
+
+.mrcl_level_done
+	ldy mrp_track
+	txa
+rts
+
+
+; enter with .X = track number, with the table-lookup step rate already in
+; current_steprates_fracts/ints.  shifts it down by the track's level, and then
+; clamps it to 16.0 (1 byte per sample pair) so that a track never needs more
+; than the 16 bytes of its cache.  trashes .A and .Y.
+
+multirate_shift_steprate
+	lda current_multirate_levels,x
+	beq .mrss_clamp
+	tay
+-	lsr current_steprates_ints,x
+	ror current_steprates_fracts,x
+	dey
+	bne -
+
+.mrss_clamp
+	lda current_steprates_ints,x
+	cmp #17
+	bcs .mrss_set
+	cmp #16
+	bcc .mrss_done
+	lda current_steprates_fracts,x
+	beq .mrss_done
+
+.mrss_set
+	lda #16
+	sta current_steprates_ints,x
+	lda #0
+	sta current_steprates_fracts,x
+
+.mrss_done
+rts
+
+
+; enter with .X = track number.  shifts the table-lookup step rate that the
+; arpeggio start routine has put in multiplicand_a down by the track's level.
+; trashes .A and .Y.
+
+multirate_shift_multiplicand_a
+	lda current_multirate_levels,x
+	beq +
+	tay
+-	lsr multiplicand_a+1
+	ror multiplicand_a
+	dey
+	bne -
++
+rts
+
+
+; the set-sample-offset command for a track that's using a decimated copy of
+; its sample.  the offset is xx*256 bytes of the original, so here that's
+; xx*256 >> level.  enter with .Y = track number.
+
+multirate_set_sample_offset
+	sty mrp_track
+
+	lda current_multirate_levels,y
+	sta mrp_tmp
+	tax
+	lda multirate_level_bases,x
+	ora current_sample_numbers,y
+	tax									; .X = level*32 + sample
+
+	lda #0
+	sta utility_pointer
+	lda seq_command_arguments,y
+	sta utility_pointer+1
+
+	ldy mrp_tmp
+-	lsr utility_pointer+1
+	ror utility_pointer
+	dey
+	bne -
+
+	ldy mrp_track
+	lda utility_pointer
+	sta current_sample_pointers_lows,y
+
+	clc									; (the decimated copies' start
+	lda multirate_sample_start_addresses_mids,x		; addresses are page-aligned)
+	adc utility_pointer+1
+	sta current_sample_pointers_mids,y
+	lda multirate_sample_start_addresses_highs,x
+	adc #0
+	sta current_sample_pointers_highs,y
+
+	lda #0
+	sta current_sample_pointers_fracts,y
+rts
+
+}

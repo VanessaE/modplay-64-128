@@ -51,19 +51,19 @@ run_mixer_standard											; 6 to enter
 		lda $8100,y											; 4
 
 		!if .idx2 = 0 { mixer_rd_la_track_4 = *}
-		ldy sample_data_buffer+$0300						; 4
+		ldy sample_data_buffer + MIXER_CACHE_STRIDE*3	; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_4 = *}
 		adc $8400,y											; 4
 
 		sta audio_buffer_left + .idx2,x						; 5
 
 		!if .idx2 = 0 { mixer_rd_la_track_2 = * }
-		ldy sample_data_buffer+$0100						; 4
+		ldy sample_data_buffer + MIXER_CACHE_STRIDE*1	; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_2 = * }
 		lda $8200,y											; 4
 
 		!if .idx2 = 0 { mixer_rd_la_track_3 = * }
-		ldy sample_data_buffer+$0200						; 4
+		ldy sample_data_buffer + MIXER_CACHE_STRIDE*2	; 4
 		!if .idx2 = 0 { mixer_vol_std_addr_3 = * }
 		adc $8300,y											; 4
 
