@@ -123,7 +123,7 @@
 	; Under-KERNAL-ROM stuff
 
 	under_kernal_code					= $e000
-
+	and_f0_table						= $fa00
 	mah_table_6581						= $fb00
 	mah_table_8580						= $fc00
 	tempo_table_fracts					= $fd00
