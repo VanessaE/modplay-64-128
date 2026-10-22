@@ -623,7 +623,7 @@ reformat_pattern_data
 		lda #0
 		sta pattern_conv_trk_counter
 		conv_trk_loop
- 
+
 			ldy #0
 			lda (utility_pointer),y
 			and #$f0
