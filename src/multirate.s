@@ -15,14 +15,19 @@
 ; decimated levels generated.  the window caps the per-pair step at
 ; MULTIRATE_WINDOW/16 bytes, and each level halves the step again.
 
-MULTIRATE_WINDOW_SHIFT = 6
-MULTIRATE_WINDOW = 1 << MULTIRATE_WINDOW_SHIFT
+; the C64's low output rate wants the larger window (decimated steps stay
+; large, so the nearest-neighbor timing error stays small).  the C128's higher
+; rate leaves less time per block for the REU, so it keeps a smaller window.
 
 !ifndef c128 {
+	MULTIRATE_WINDOW_SHIFT = 6
 	MULTIRATE_LEVELS = 2
 } else {
-	MULTIRATE_LEVELS = 1
+	MULTIRATE_WINDOW_SHIFT = 5
+	MULTIRATE_LEVELS = 2
 }
+
+MULTIRATE_WINDOW = 1 << MULTIRATE_WINDOW_SHIFT
 
 ; ----------------------------------------------------------------------------
 ; number of bytes of loop-head, and length of silence after every sample.  the
