@@ -41,3 +41,20 @@ start + (offset >> L), start + offset' + ((loop length + half a step) >> L),
 and the end addr equals the loop end addr.  After the end addr (loop end for
 looped samples) there are MULTIRATE_GUARD bytes: the first MULTIRATE_GUARD
 bytes of the decimated loop, or $80s for unlooped samples.
+
+
+PLAYER-SIDE MULTIRATE, STAGE 1  (multirate branch)
+==================================================
+Static edit, not assembled or run.  Hunks are diff-style; match on the context.
+The multirate pass itself is in the new multirate.s (unified level*32+sample
+tables, level 0 copied in, no loop-end tables).
+
+Build switch:  multirate is used only in oldskool builds (no turbo_available).
+Everything below that is multirate-only sits behind  !ifdef use_multirate ,
+so turbo builds assemble the old code paths.  Where possible the code is
+common to both builds (idx = sample number and play_* = the loader's own
+tables in turbo builds).
+
+Layout decision this relies on:  the four 16-byte track caches are packed into
+the FIRST page of sample_data_buffer (offsets 0,16,32,48), because the
+multirate tables start at sample_data_buffer+256.
