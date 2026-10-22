@@ -98,14 +98,6 @@ start_sequencer
 	dey
 	bpl -
 
-	; and then disable them again
-
-	lda #0
-	ldx #7
--	sta track_current_enable_flags,x
-	dex
-	bpl -
-
 	lda #125
 	sta seq_tempo_bpm
 	lda #6

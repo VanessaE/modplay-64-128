@@ -18,6 +18,10 @@ set_volume
 +	sta current_sample_volume_levels,y
 	adc #>volume_table
 
+	ldx track_current_enable_flags,y	; consider track-muted state (if the
+	bmi set_vol_addrs_only				; user pressed 1-4 while playing)
+	rts
+
 set_vol_addrs_only
 	ldx current_track_gate_flags,y
 	bmi +
