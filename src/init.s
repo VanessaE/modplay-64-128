@@ -361,8 +361,7 @@ init
 	jsr ascii_table_copy
 
 	!ifndef turbo_available {
-		;lda #$80
-		lda #0
+		lda #$80
 	} else {
 		lda #0
 	}
