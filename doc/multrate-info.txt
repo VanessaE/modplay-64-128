@@ -32,6 +32,28 @@ Multirate is used only in oldskool builds (no turbo_available).  Turbo builds
 assemble the old code paths and never touch any of this.
 
 ###############
+SETTING AND MODES
+
+multirate_is_allowed is the user's setting:
+
+   0   off:  never resample, play every file in striding mode
+   1   on:  resample every file, and refuse a file whose decimated copies
+       won't fit in the REU (the "file too large" popup)
+   2   on, with fallback:  resample if the copies fit, otherwise play that
+       one file in striding mode
+
+multirate_enable is the per-file result, set by the loader for every file:
+$80 if this file has decimated copies and uses multirate, 0 if it's in
+striding mode.  Everything that matters at playback (the cache layout, the ISR
+interval, the level choice at each note) goes by multirate_enable, never by
+multirate_is_allowed.  Both are 0 in turbo builds.
+
+Striding mode is the engine as it was before multirate:  each track's cache is
+a page of its own, the fetch length follows the note's step rate (up to ~140
+bytes at the highest notes), and the mixer steps through the cache at the full
+step rate.  See STRIDING MODE below.
+
+###############
 TABLES AND MEMORY
 
 Tables are indexed  level*32 + sample  (level 1..MULTIRATE_LEVELS, sample
@@ -42,14 +64,21 @@ are no loop-end tables, because for a looped sample the end addr IS the loop
 end addr.  Eight tables of MULTIRATE_LEVELS*32 entries:  start mids/highs, end
 lows/mids/highs, loop start lows/mids/highs.
 
-Most of the load buffer/sample_data_buffer (2048 bytes) would have been
-unused with multirate, so instead we re-use some of that space for the tables
-and the module's loader-time variables (~100 bytes), starting 256 bytes in.
+The load buffer/sample_data_buffer is LOAD_BUFFER_PAGES (5) pages, 1280 bytes.
+Its size is set by the 1084-byte 31-sample MOD header.  The loop unroller works
+in chunks of that size, because it stages a whole loop in the buffer, so loops
+of 1280 bytes or more aren't unrolled.  Striding mode needs four of its pages
+for the caches.
+
+Most of it would have been unused with multirate, so instead we re-use some of
+that space for the tables and the module's loader-time variables (~100 bytes),
+starting 256 bytes in.  (They end 869 bytes in, and assemble-errs.s checks that
+they fit.)
 
 The first page of that buffer holds the live audio cache:  the four tracks'
 caches are packed MULTIRATE_WINDOW bytes apart (offsets 0, W, 2W, 3W), which
 is why the window is a power of two and why 4 * 64 exactly fills the page on
-the C64.  (Turbo builds keep one page per track.)
+the C64.  (Turbo builds, and striding mode, keep one page per track.)
 
 The player-side variables (mrp_*) and routines are in the main program area,
 because the sequencer code that uses them runs with the ROMs banked out.
@@ -63,18 +92,20 @@ LOADER HOOK (loader-common.s), at the end of the file load
 
        jsr load_sample_data
        jsr unroll_mod_sample_loops
-       bit multirate_enable
-       bpl +
+       multirate_enable = 0                    (assume striding mode)
+       if multirate_is_allowed = 0, done
        jsr multirate_generate_all
-       bit multirate_valid
-       bmi +
+       if multirate_valid is set, go to fits
+       if multirate_is_allowed = 2, done       (fall back to striding mode)
        ... "file too large" popup, jmp abort_load
-     +
+     fits:
+       multirate_enable = $80
+     done:
 
 multirate_generate_all returns with multirate_valid = $80 if the decimated
-copies fit in the REU.  If they don't, nothing extra has been written, the
-tables are invalid, and the file is refused.  On success,
-highest_exp_addresss_used is raised past the multirate area.
+copies fit in the REU.  If they don't, nothing extra has been written and the
+tables are invalid.  On success, highest_exp_addresss_used is raised past the
+multirate area.
 
 
 ###############
@@ -109,7 +140,13 @@ After each level's end addr there are MULTIRATE_GUARD (= MULTIRATE_WINDOW)
 bytes, because the fetcher can run that far past the end:  for looped samples,
 a copy of the first MULTIRATE_GUARD bytes of the decimated loop, and for
 everything else, $80s.  (A decimated loop is never shorter than the window,
-because the level-0 loop was already unrolled to at least 2 kB.)
+because the level-0 loop was already unrolled to at least LOAD_BUFFER_PAGES
+pages, 1.25 kB, which is at least 320 bytes at level 2.  assemble-errs.s checks
+that this stays at least MULTIRATE_GUARD.)
+
+Note that the loop's length gets rounded to a whole number of decimated
+samples, so the pitch error from that is at most half a decimated sample per
+loop, or about 2.7 cents for the shortest loop at level 2.
 
 
 ###############
@@ -136,7 +173,8 @@ PLAYER SIDE
 
    Every pitch change, from any command, runs through here with the table-
    lookup step rate in current_steprates_*.  The rate is shifted down by the
-   track's level, and clamped to the window.
+   track's level, and clamped to the window.  (In striding mode it does
+   nothing at all.)
 
 3. Mid-note promotion (multirate_promote_track)
 
@@ -171,6 +209,39 @@ PLAYER SIDE
    For a track on a decimated copy, the offset is xx*256 >> level bytes into
    that level's copy (multirate_set_sample_offset).
 
+
+###############
+STRIDING MODE
+
+A file plays in striding mode when multirate_enable is 0 (see SETTING AND
+MODES).  Oldskool builds have the multirate window built into the fetch loop
+and the mixers, so reu_set_cache_layout (drv-reu-musicops.s) sets the engine up
+for the file at the start of playback, right after
+reu_set_selfmod_and_mixer_vectors.  It always writes everything listed below,
+so nothing carries over from the previous file.
+
+                       multirate in use          striding mode
+  cache for track n    page 0 of the buffer,     page n of the buffer
+                       at n * MULTIRATE_WINDOW
+  fetch length         MULTIRATE_WINDOW, fixed   the lookahead distance for the
+                                                 track's step rate, patched in
+                                                 by the pitch self-mod
+  step rate clamp      the window                none
+  note levels          0 to MULTIRATE_LEVELS     always 0
+  ISR fudge (C128)     15 cycles                 20 cycles
+
+What it patches:
+
+ - the fetch loop's per-track  lda #imm / sta DMA_LOCAL_xx  pair, which stays
+   the same size and cycle count:  with multirate, the immediate is the track's
+   offset and it's stored in DMA_LOCAL_LO (the page is set once, at the top of
+   the routine);  in striding mode, it's the track's cache page and it's stored
+   in DMA_LOCAL_HI (the low byte stays 0)
+ - the fetch length immediate, which goes back to the window each time
+ - mixer_cache_offsets, the per-track starting offsets that the mixers' pitch
+   self-mod uses (0, W, 2W, 3W, or all 0)
+ - reu_cache_hi_bytes, which supplies the high byte of each of the 16 cache
+   reads per track in both mixers
 
 ###############
 DECIDED AGAINST, FOR NOW

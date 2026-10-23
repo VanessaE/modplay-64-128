@@ -30,6 +30,10 @@ on C64 the timing variation collapses to:
 
 2 +4+4 +4+4 +4+4 +4+4 +64 = 98 cycles per track, total 392 cycles
 
+(Apart from the multirate figures, the rest of this document describes striding
+mode, which is what a file plays in when multirate is off or couldn't be used
+for that file, and what the turbo builds always do.)
+
 For the C128, the hardware does clock stretching on I/O accesses, but only
 for the one cycle when the actual read/write is being committed.  Most of
 the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
@@ -100,18 +104,22 @@ Total fetch runtime for all four tracks,
 amortized across 16 output samples:
 
 C64:
-	likely: (10 + 208 + 264 + 13) / 16 = ~31 cycles
-	worst:  (10 + 272 + 692 + 13) / 16 = ~62 cycles
-	worst, with multirate:  (10 + 272 + 392 + 13) / 16 = ~43 cycles
+	striding mode, likely: (10 + 208 + 264 + 13) / 16 = ~31 cycles
+	striding mode, worst:  (10 + 272 + 692 + 13) / 16 = ~62 cycles
+	multirate, likely:     (10 + 208 + 392 + 13) / 16 = ~39 cycles
+	multirate, worst:      (10 + 272 + 392 + 13) / 16 = ~43 cycles
 
 C128:
-	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles - but this is a little too fast
-	worst:  (10 + 272 + 704 + 11) / 16 = ~63 cycles
-	when using multirate:  (10 + 272 + 448 + 11) / 16 = ~47 cycles
+	striding mode, likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles - but this is a little too fast
+	striding mode, worst:  (10 + 272 + 704 + 11) / 16 = ~63 cycles
+	multirate, likely:     (10 + 208 + 448 + 11) / 16 = ~43 cycles
+	multirate, worst:      (10 + 272 + 448 + 11) / 16 = ~47 cycles
 
-(The "likely" figures above were not redone for multirate.  Notes that stay
-at level 0 fetch the same as before, and decimated notes fetch less, so it
-can only come out lower.)
+With multirate, every track fetches the full window every time, no matter the
+pitch, so the DMA time is a constant and the only variation left is the fetch
+loop's own overhead.  That makes multirate's typical cost HIGHER than striding
+mode's typical cost (an average note only needs ~27 bytes), but its worst case
+is lower than striding mode's worst case.
 
 SCPU:
 	likely: (26 + 508 + 1280 + 10) / 16 = ~114 turbo cycles
@@ -305,4 +313,5 @@ NOTE
 
 None of the above timings take into account convergeance.  As the sample rate
 rises, the step rates drop, which decreases the lookahead fetch length, which
-in turn further reduces the cycle counts.
+in turn further reduces the cycle counts.  (This only applies to striding
+mode.  With multirate the fetch length is fixed.)
