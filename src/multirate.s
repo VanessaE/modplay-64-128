@@ -899,6 +899,11 @@ mrp_period_lo									!byte 0
 mrp_period_hi									!byte 0
 mrp_step_fract									!byte 0
 mrp_step_int									!byte 0
+mrp_pr_track									!byte 0
+mrp_pr_sample									!byte 0
+mrp_pr_mid										!byte 0
+mrp_pr_hi										!byte 0
+mrp_pr_count									!byte 0
 
 multirate_level_bases							!byte 0,32,64,96,128
 
@@ -959,7 +964,8 @@ rts
 ;                             the deepest vibrato goes)
 ;   E1x  fine slide up        period minus x
 ; anything beyond that (a slide continuing over several rows, fine tuning)
-; is dealt with by the clamp in multirate_shift_steprate.
+; is dealt with by promoting the note to a higher level mid-note, in
+; multirate_shift_steprate (and multirate_arp_promote for arpeggios).
 
 multirate_choose_level
 	sty mrp_track
@@ -1147,11 +1153,48 @@ rts
 
 
 ; enter with .X = track number, with the table-lookup step rate already in
-; current_steprates_fracts/ints.  shifts it down by the track's level, and then
-; clamps it to MULTIRATE_WINDOW.0 so that a track never needs more than the
-; MULTIRATE_WINDOW bytes of its cache.  trashes .A and .Y.
+; current_steprates_fracts/ints (not yet shifted).  if the rate, shifted by the
+; track's level, would be more than MULTIRATE_WINDOW.0, the note is promoted to
+; the next level (repeatedly, if need be) until it fits or the top level is
+; reached.  then the rate is shifted by the final level, and clamped to
+; MULTIRATE_WINDOW.0 so that a track never needs more than the MULTIRATE_WINDOW
+; bytes of its cache (the clamp can only still bite at the top level).
+; preserves .X, trashes .A and .Y.
 
 multirate_shift_steprate
+	bit multirate_enable
+	bpl .mrss_shift
+
+.mrss_check
+	ldy current_multirate_levels,x
+	cpy #MULTIRATE_LEVELS
+	bcs .mrss_shift
+
+	lda current_steprates_ints,x
+	sta mrp_step_int
+	lda current_steprates_fracts,x
+	sta mrp_step_fract
+	cpy #0
+	beq .mrss_test
+-	lsr mrp_step_int
+	ror mrp_step_fract
+	dey
+	bne -
+
+.mrss_test
+	lda mrp_step_int
+	cmp #(MULTIRATE_WINDOW + 1)
+	bcs .mrss_promote
+	cmp #MULTIRATE_WINDOW
+	bcc .mrss_shift
+	lda mrp_step_fract
+	beq .mrss_shift
+
+.mrss_promote
+	jsr multirate_promote_track
+	jmp .mrss_check
+
+.mrss_shift
 	lda current_multirate_levels,x
 	beq .mrss_clamp
 	tay
@@ -1176,6 +1219,217 @@ multirate_shift_steprate
 	sta current_steprates_fracts,x
 
 .mrss_done
+rts
+
+
+; enter with .X = track number whose level is below MULTIRATE_LEVELS.  moves
+; the playing note up one decimation level, in place:  the position within the
+; sample is halved (fraction included), and the end address and loop start
+; are replaced by the next level's.  the level is incremented.  the caller must
+; redo the track's step rate.  preserves .X, trashes .A and .Y.
+;
+; the instrument self-mod routine works on seq_current_track, which is the
+; same as .X for every caller here (like the pitch self-mod that follows).
+
+multirate_promote_track
+	stx mrp_pr_track
+
+	; start address of the current level's copy -> mrp_pr_mid/hi
+
+	lda current_sample_numbers,x
+	sta mrp_pr_sample
+	lda current_multirate_levels,x
+	bne .mrpt_old_level
+
+	ldy mrp_pr_sample					; level 0 is the loader's own copy
+	lda sample_start_addresses_mids,y
+	sta mrp_pr_mid
+	lda sample_start_addresses_highs,y
+	sta mrp_pr_hi
+	jmp .mrpt_have_old
+
+.mrpt_old_level
+	tay
+	lda multirate_level_bases,y
+	ora mrp_pr_sample
+	tay
+	lda multirate_sample_start_addresses_mids,y
+	sta mrp_pr_mid
+	lda multirate_sample_start_addresses_highs,y
+	sta mrp_pr_hi
+
+	; offset into the sample = pointer - start, as hi:mid:low.fract (the
+	; start addresses are page-aligned), then halve all 32 bits of it
+
+.mrpt_have_old
+	sec
+	lda current_sample_pointers_mids,x
+	sbc mrp_pr_mid
+	sta mrp_pr_mid
+	lda current_sample_pointers_highs,x
+	sbc mrp_pr_hi
+	lsr
+	sta mrp_pr_hi
+	ror mrp_pr_mid
+	ror current_sample_pointers_lows,x
+	ror current_sample_pointers_fracts,x
+
+	; next level, and its table index
+
+	lda current_multirate_levels,x
+	clc
+	adc #1
+	sta current_multirate_levels,x
+	tay
+	lda multirate_level_bases,y
+	ora mrp_pr_sample
+	tay									; .Y = (level+1)*32 + sample
+
+	clc
+	lda mrp_pr_mid
+	adc multirate_sample_start_addresses_mids,y
+	sta current_sample_pointers_mids,x
+	lda mrp_pr_hi
+	adc multirate_sample_start_addresses_highs,y
+	sta current_sample_pointers_highs,x
+
+	lda multirate_sample_end_addresses_lows,y
+	sta current_sample_end_addr_lows,x
+	lda multirate_sample_end_addresses_mids,y
+	sta current_sample_end_addr_mids,x
+	lda multirate_sample_end_addresses_highs,y
+	sta current_sample_end_addr_highs,x
+
+	lda multirate_sample_loop_start_addresses_lows,y
+	sta current_loop_start_lows,x
+	lda multirate_sample_loop_start_addresses_mids,y
+	sta current_loop_start_mids,x
+	lda multirate_sample_loop_start_addresses_highs,y
+	sta current_loop_start_highs,x
+
+	lsr current_fetch_loop_ofl_amounts,x	; (pending loop overshoot, in bytes)
+
+	+JSR_INDIRECT (do_selfmod_instrument_vec)	; new end addr -> fetcher
+
+	ldx mrp_pr_track
+rts
+
+
+; the arpeggio's two extra notes are made from the base step rate and bypass
+; multirate_shift_steprate, so promote the note here, at the start of an
+; arpeggio, far enough that the higher of the two still fits the window.
+; enter with .X = track number (arpeggio argument non-zero).  preserves .X
+; and .Y.  if the level changed, the base pitch is redone for the new level.
+
+multirate_arp_promote
+	bit multirate_enable
+	bmi +
+	jmp .mrap_none
+
++	lda current_track_gate_flags,x
+	bmi +
+	jmp .mrap_none
+
++	lda current_multirate_levels,x
+	cmp #MULTIRATE_LEVELS
+	bcc +
+	jmp .mrap_none
+
++	stx mrp_track
+	lda #0
+	sta mrp_pr_count
+
+	; unshifted base step rate for the note period -> multiplicand_a
+
+	lda current_note_periods_lows,x
+	sta utility_pointer
+	lda current_note_periods_highs,x
+	asl utility_pointer
+	rol
+	sta utility_pointer+1
+
+	clc
+	lda utility_pointer
+	adc #<steprate_lookup_table
+	sta utility_pointer
+	lda utility_pointer+1
+	adc #>steprate_lookup_table
+	sta utility_pointer+1
+
+	ldy #0
+	lda (utility_pointer),y
+	sta multiplicand_a
+	iny
+	lda (utility_pointer),y
+	sta multiplicand_a+1
+
+	; scale by the larger of the two semitone offsets
+
+	lda seq_command_arguments,x
+	sta mrp_tmp
+	lsr
+	lsr
+	lsr
+	lsr
+	sta mrp_step_int
+	lda mrp_tmp
+	and #$0f
+	cmp mrp_step_int
+	bcs +
+	lda mrp_step_int
++	asl
+	tax
+	lda semitones_table,x
+	sta multiplicand_b
+	lda semitones_table+1,x
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16
+
+	lda product+1
+	sta mrp_step_fract
+	lda product+2
+	sta mrp_step_int
+
+	; shift by the note's current level, then promote until it fits
+
+	ldx mrp_track
+	ldy current_multirate_levels,x
+	beq .mrap_check
+-	lsr mrp_step_int
+	ror mrp_step_fract
+	dey
+	bne -
+
+.mrap_check
+	lda mrp_step_int
+	cmp #(MULTIRATE_WINDOW + 1)
+	bcs .mrap_promote
+	cmp #MULTIRATE_WINDOW
+	bcc .mrap_finish
+	lda mrp_step_fract
+	beq .mrap_finish
+
+.mrap_promote
+	lsr mrp_step_int
+	ror mrp_step_fract
+	jsr multirate_promote_track
+	inc mrp_pr_count
+	lda current_multirate_levels,x
+	cmp #MULTIRATE_LEVELS
+	bcc .mrap_check
+
+.mrap_finish
+	lda mrp_pr_count
+	beq .mrap_restore
+	ldy mrp_track
+	jsr set_pitch_by_table_lookup
+
+.mrap_restore
+	ldx mrp_track
+	ldy mrp_track
+.mrap_none
 rts
 
 

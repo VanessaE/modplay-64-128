@@ -8,6 +8,10 @@ start_effect_arpeggio
 +	tya
 	tax
 
+	!ifndef turbo_available {
+		jsr multirate_arp_promote
+	}
+
 	lda current_note_periods_lows,x
 	sta utility_pointer
 	lda current_note_periods_highs,x
