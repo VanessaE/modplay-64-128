@@ -38,7 +38,11 @@ isr_set_interval
 
 		!ifndef scpu {
 			!ifdef c128 {
-				adc #20
+				adc #15					; if multirate is available, bump the
+				bit multirate_enable	; sample rate up a bit on C128.
+				bmi +
+				adc #5
+			  +
 			} else {
 				bit enable_screen_on_playback
 				bpl +
