@@ -11,9 +11,6 @@
 reu_fetch_loop_segment_length = reu_fetch_segment_close - reu_fetch_segment_start
 
 reu_set_selfmod_and_mixer_vectors
-	lda filter_setting
-	bmi +
-
 	lda #<run_mixer_standard
 	sta reu_mixer_call_vec+1
 	lda #>run_mixer_standard
@@ -27,23 +24,6 @@ reu_set_selfmod_and_mixer_vectors
 	lda #<mixer_standard_set_vol_addrs
 	sta reu_mixer_silence_track+1
 	lda #>mixer_standard_set_vol_addrs
-	sta reu_mixer_silence_track+2
-
-	rts
-
-+	lda #<run_mixer_lowpass
-	sta reu_mixer_call_vec+1
-	lda #>run_mixer_lowpass
-	sta reu_mixer_call_vec+2
-
-	lda #<mixer_lowpass_do_selfmods_for_pitch_change
-	sta mixer_selfmod_pitch_change_vec+1
-	lda #>mixer_lowpass_do_selfmods_for_pitch_change
-	sta mixer_selfmod_pitch_change_vec+2
-
-	lda #<mixer_lowpass_set_vol_addrs
-	sta reu_mixer_silence_track+1
-	lda #>mixer_lowpass_set_vol_addrs
 	sta reu_mixer_silence_track+2
 
 rts

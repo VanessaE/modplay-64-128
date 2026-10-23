@@ -27,8 +27,5 @@ set_vol_addrs_only
 	bmi +
 	rts
 
-+	bit filter_setting
-	bmi +
-	jmp mixer_standard_set_vol_addrs
-+	jmp mixer_lowpass_set_vol_addrs
++	jmp mixer_standard_set_vol_addrs
 

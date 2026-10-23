@@ -29,7 +29,6 @@ under_kernal_code_origin
 		!source "src/sequencer-aux.s"
 
 		!source "src/mixer-standard.s"
-		!source "src/mixer-lowpass.s"
 
 		!source "src/drv-reu-musicops.s"
 
