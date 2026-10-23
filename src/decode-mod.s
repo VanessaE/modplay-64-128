@@ -383,14 +383,14 @@ parse_instruments
 	;
 	; utility_pointer_b still holds the loop len...
 
-	; is that loop more than 2kB in size?
+	; is that loop more than LOAD_BUFFER_PAGES pages in size?
 	lda utility_pointer_b
 	cmp #0
 	lda utility_pointer_b+1
-	sbc #8
+	sbc #LOAD_BUFFER_PAGES
 	lda utility_pointer_b+2
 	sbc #0
-	bcs add_loop_head_reserve ; loop is > 2kB, no need to unroll it
+	bcs add_loop_head_reserve ; loop is too big to unroll, don't
 
 	; reserve original loop length....
 	clc
@@ -404,9 +404,9 @@ parse_instruments
 	adc utility_pointer_b+2
 	sta utility_pointer_b+2
 
-	; ..plus 2kB
+	; ..plus LOAD_BUFFER_PAGES pages
 	lda utility_pointer_b+1
-	adc #8
+	adc #LOAD_BUFFER_PAGES
 	sta utility_pointer_b+1
 	bcc +
 	inc utility_pointer_b+2

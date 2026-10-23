@@ -335,6 +335,39 @@ load_mod_header ; and also the first pattern if it's a 15-sample mod
 	beq .loaded_31			; if it's a 31-sample mod, then we're right at the
 							; first byte of the first pattern.  otherwise, some
 							; of the first pattern is loaded, so get the rest.
+
+	; the header is no longer needed.  move the part of the first pattern that
+	; we already have down to the start of the buffer, and get the rest of it
+	; right behind that, so the buffer doesn't need to hold the whole header
+	; AND a whole pattern.
+
+	lda #<(load_buffer+header15_seek_to_pat_data)
+	sta utility_pointer_b
+	lda #>(load_buffer+header15_seek_to_pat_data)
+	sta utility_pointer_b+1
+	lda #<load_buffer
+	sta load_pointer
+	lda #>load_buffer
+	sta load_pointer+1
+
+	ldy #0
+-	lda (utility_pointer_b),y
+	sta (load_pointer),y
+	iny
+	bne -
+
+	inc utility_pointer_b+1
+	inc load_pointer+1
+
+-	lda (utility_pointer_b),y			; (.Y is still 0)
+	sta (load_pointer),y
+	iny
+	cpy #<(header31_seek_to_pat_data - header15_seek_to_pat_data - 256)
+	bne -
+
+	sty load_pointer					; (the buffer is page-aligned, so that's
+										; the low byte of the next free address)
+
 	lda #0
 	sta utility_counter
 	sta utility_counter+1
@@ -366,30 +399,7 @@ load_mod_header ; and also the first pattern if it's a 15-sample mod
 	bcc +
 	inc loaded_bytes_count+2
 
-	; now that the header is no longer needed and the first pattern has been
-	; loaded, move it down to the bottom of the load buffer
-
-+	lda #<load_buffer
-	sta load_pointer
-	lda #>load_buffer
-	sta load_pointer+1
-
-	lda #<(load_buffer+header15_seek_to_pat_data)
-	sta utility_pointer_b
-	lda #>(load_buffer+header15_seek_to_pat_data)
-	sta utility_pointer_b+1
-
-	ldy #0
--	lda (utility_pointer_b),y
-	sta (load_pointer),y
-	iny
-	bne -
-	inc utility_pointer_b+1
-	inc load_pointer+1
-	lda load_pointer+1
-	cmp #>(load_buffer+$0400)
-	bne -
-	clc
++	clc
 .loaded_31
 	lda #$80
 	sta header_loaded
@@ -935,7 +945,7 @@ unroll_one_loop
 	bmi +
 	jmp unroll_next
 
-	; is its len > 2kB?
+	; is its len > LOAD_BUFFER_PAGES pages?
 
 +	sec
 	lda sample_loop_end_addresses_lows,y
@@ -953,7 +963,7 @@ unroll_one_loop
 	lda utility_pointer_b
 	cmp #0
 	lda utility_pointer_b+1
-	sbc #8
+	sbc #LOAD_BUFFER_PAGES
 	lda utility_pointer_b+2
 	sbc #0
 	bcc +
@@ -1000,11 +1010,11 @@ unroll_one_loop
 	adc #0
 	sta utility_pointer_b+2
 
-	; ..then add 2kB
+	; ..then add LOAD_BUFFER_PAGES pages
 
 	; clc implied
 	lda utility_pointer_b+1
-	adc #8
+	adc #LOAD_BUFFER_PAGES
 	sta utility_pointer_b+1
 	bcc store_first_copy
 	inc utility_pointer_b+2
@@ -1070,14 +1080,10 @@ unroll_more
 add_head_after_tail
 	ldx #0
 	lda #$80
--	sta load_buffer,x
-	sta load_buffer+$0100,x
-	sta load_buffer+$0200,x
-	sta load_buffer+$0300,x
-	sta load_buffer+$0400,x
-	sta load_buffer+$0500,x
-	sta load_buffer+$0600,x
-	sta load_buffer+$0700,x
+-
+	!for .pg, 0, LOAD_BUFFER_PAGES - 1 {
+		sta load_buffer + .pg * $0100,x
+	}
 	dex
 	bne -
 
@@ -1120,11 +1126,11 @@ add_head_after_tail
 	sta stash_size
 	lda sample_start_addresses_mids+1,y
 	sbc expansion_memory_target_pointer+1
-	cmp #9
+	cmp #(LOAD_BUFFER_PAGES + 1)
 	bcc +
-	lda #0						; cap the size at 2kB just in case a start
+	lda #0						; cap the size at the buffer's size just in case a start
 	sta stash_size				; address somehow wanders off into neverland
-	lda #8
+	lda #LOAD_BUFFER_PAGES
 +	sta stash_size+1
 
 	+JSR_INDIRECT (stash_block_vec)

@@ -39,7 +39,14 @@ MULTIRATE_GUARD = MULTIRATE_WINDOW
 ; The multirate routines tables and variables sit at the top of the sample
 ; data buffer area instead of in the code
 
-MULTIRATE_VARS_BASE = sample_data_buffer + 256
+; (the offset and the size of the misc area are separate constants so that
+; assemble-errs.s can check them with !if, which can't use anything derived from
+; sample_data_buffer, because that's defined later on than this file is read.)
+
+MULTIRATE_VARS_OFFSET = 256
+MULTIRATE_MISC_SIZE = 101
+
+MULTIRATE_VARS_BASE = sample_data_buffer + MULTIRATE_VARS_OFFSET
 
 ; 8 tables of MULTIRATE_LEVELS*32 entries, indexed level*32 + sample, with
 ; level = 1..MULTIRATE_LEVELS.  each table's base is offset down by 32 so that
@@ -47,8 +54,8 @@ MULTIRATE_VARS_BASE = sample_data_buffer + 256
 ; loader's own tables.  there are no loop-end tables: for a looped sample the
 ; end addr IS the loop end addr.
 ;
-; space used: 8 * MULTIRATE_TABLE_LEN bytes of tables + 101 bytes of misc,
-; starting 256 bytes into the 2048-byte sample data buffer.
+; space used: 8 * MULTIRATE_TABLE_LEN bytes of tables + MULTIRATE_MISC_SIZE bytes
+; of misc, starting MULTIRATE_VARS_OFFSET bytes into the sample data buffer.
 
 MULTIRATE_TABLE_LEN = MULTIRATE_LEVELS * 32
 
@@ -675,8 +682,10 @@ rts
 ; loop after the loop end addr (= the end addr); everything else gets silence
 ; after the end addr.  level 0 is skipped, the loader already did its own.
 ;
-; (a decimated loop is never shorter than 128 bytes, because the level-0 loop
-; was already unrolled to at least 2 kB, so a single copy of the head is enough.)
+; (a decimated loop is never shorter than (LOAD_BUFFER_PAGES * 256) >> MULTIRATE_LEVELS
+; bytes, because the level-0 loop was already unrolled to at least that many pages,
+; and assemble-errs.s checks that's at least MULTIRATE_GUARD, so a single copy of the
+; head is enough.)
 
 multirate_finish_samples
 	lda #<load_buffer

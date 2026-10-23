@@ -417,6 +417,13 @@ header31_seek_to_pat_tbl		= 20+31*(22+2+1+1+2+2)+1+1 ; (952)
 header15_seek_to_pat_data = header15_seek_to_pat_tbl + 128
 header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
 
+; size of the load/sample data buffer, in pages.  the floor is the 1084-byte
+; 31-sample header (5 pages).  the loop unroller works in chunks of this size,
+; because it has to hold a whole loop, and the sample data buffer has to hold
+; striding mode's four cache pages.
+
+LOAD_BUFFER_PAGES = 5
+
 pal_clock = 985248
 ntsc_clock = 1022727
 

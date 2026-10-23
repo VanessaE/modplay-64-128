@@ -136,6 +136,10 @@ rti
 !source "src/viz-common.s"
 !source "src/sequencer-ui.s"
 
+!source "src/fxcmd-set-volume.s"
+!source "src/fxcmd-set-sample-offset.s"
+!source "src/fxcmd-extended-misc.s"
+
 ; see under-kernal.s for the rest of the code
 
 !ifdef c64u {
@@ -210,13 +214,12 @@ init_begin
 
 volume_table						= init_begin
 
-; load/sample buffer is 2 kB, overlapped
+; load/sample buffer is LOAD_BUFFER_PAGES pages (1.25 kB), overlapped
 load_buffer							= volume_table + 64*256
 sample_data_buffer					= load_buffer
 
-ascii_to_petscii_table				= load_buffer + 2048
-and_f0_table						= ascii_to_petscii_table + 256
-viz_note_number_lookup_table		= and_f0_table + 256
+ascii_to_petscii_table				= load_buffer + LOAD_BUFFER_PAGES*256
+viz_note_number_lookup_table		= ascii_to_petscii_table + 256
 steprate_lookup_table				= viz_note_number_lookup_table + 7*256
 divide_by_16_table					= steprate_lookup_table + 14*256
 
