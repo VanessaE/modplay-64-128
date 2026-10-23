@@ -116,7 +116,7 @@ reu_run_fetch_and_mixer
 			; this conditional MUST have the same code length both ways
 
 			!ifndef turbo_available {
-				lda #.ftrk * 16							; 2
+				lda #.ftrk * MULTIRATE_WINDOW			; 2
 				sta DMA_LOCAL_LO						; 4
 			} else {
 				!if .ftrk = 0 {
@@ -169,7 +169,7 @@ reu_run_fetch_and_mixer
 			!if .ftrk = 0 { !set reu_fetchlen = * }
 		.reu_this_fetchlen
 			!ifndef turbo_available {
-				lda #16									; 2
+				lda #MULTIRATE_WINDOW					; 2
 			} else {
 				lda #1									; 2
 			}

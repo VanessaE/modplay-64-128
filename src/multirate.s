@@ -10,9 +10,25 @@
 ; On success, highest_exp_addresss_used is raised past the multirate area.
 
 ; ----------------------------------------------------------------------------
-; number of bytes of loop-head, and length of silence after every sample
+; the number of bytes fetched per track per mixer block (a power of two, so
+; that the mixer's cache offsets can be made by shifting), and the number of
+; decimated levels generated.  the window caps the per-pair step at
+; MULTIRATE_WINDOW/16 bytes, and each level halves the step again.
 
-MULTIRATE_GUARD = 32
+MULTIRATE_WINDOW_SHIFT = 5
+MULTIRATE_WINDOW = 1 << MULTIRATE_WINDOW_SHIFT
+
+!ifndef c128 {
+	MULTIRATE_LEVELS = 3
+} else {
+	MULTIRATE_LEVELS = 2
+}
+
+; ----------------------------------------------------------------------------
+; number of bytes of loop-head, and length of silence after every sample.  the
+; fetcher can run up to MULTIRATE_WINDOW bytes past the end.
+
+MULTIRATE_GUARD = MULTIRATE_WINDOW
 
 ; ---------------------------------------------------------------------------
 ; The multirate routines tables and variables sit at the top of the sample
@@ -20,15 +36,16 @@ MULTIRATE_GUARD = 32
 
 MULTIRATE_VARS_BASE = sample_data_buffer + 256
 
-; 8 tables of 4*32 entries, indexed level*32 + sample, level = 1..4.  each
-; table's base is offset down by 32 so that index 32 is its first entry.  the
-; level 0 slots don't exist, level 0 uses the loader's own tables.  there are
-; no loop-end tables: for a looped sample the end addr IS the loop end addr.
+; 8 tables of MULTIRATE_LEVELS*32 entries, indexed level*32 + sample, with
+; level = 1..MULTIRATE_LEVELS.  each table's base is offset down by 32 so that
+; index 32 is its first entry.  the level 0 slots don't exist, level 0 uses the
+; loader's own tables.  there are no loop-end tables: for a looped sample the
+; end addr IS the loop end addr.
 ;
-; space used: 8*128 = 1024 bytes of tables + 95 bytes of misc, starting 256
-; bytes into the 2048-byte sample data buffer.
+; space used: 8 * MULTIRATE_TABLE_LEN bytes of tables + 95 bytes of misc,
+; starting 256 bytes into the 2048-byte sample data buffer.
 
-MULTIRATE_TABLE_LEN = 128
+MULTIRATE_TABLE_LEN = MULTIRATE_LEVELS * 32
 
 multirate_sample_start_addresses_mids			= MULTIRATE_VARS_BASE + 0*MULTIRATE_TABLE_LEN - 32
 multirate_sample_start_addresses_highs			= MULTIRATE_VARS_BASE + 1*MULTIRATE_TABLE_LEN - 32
@@ -165,14 +182,10 @@ calculate_multirate_addrs
 	adc #0
 	sta multirate_exp_target_pointer+2
 
-	ldx #1
-	jsr calc_addrs
-	ldx #2
-	jsr calc_addrs
-	ldx #3
-	jsr calc_addrs
-	ldx #4
-	jsr calc_addrs
+	!for .lvl, 1, MULTIRATE_LEVELS {
+		ldx #.lvl
+		jsr calc_addrs
+	}
 
 	lda reu_highest_bank
 	cmp multirate_exp_target_pointer+2
@@ -535,7 +548,7 @@ multirate_begin_sample
 	adc #32
 	tay
 	inx
-	cpx #4
+	cpx #MULTIRATE_LEVELS
 	bne -
 
 	ldy multirate_y_temp2
@@ -598,7 +611,7 @@ multirate_next_level
 
 +	inc multirate_level_temp
 	lda multirate_level_temp
-	cmp #4
+	cmp #MULTIRATE_LEVELS
 	beq +
 	jmp multirate_next_level
 +
@@ -812,9 +825,10 @@ resampling_msg
 ;
 ; these are called from the sequencer, only when a note starts (never from the
 ; ISR).  the level for a note is the smallest decimation level at which the
-; fastest pitch the note can reach within its row steps by no more than 1.0
-; byte per output sample pair.  a block's step rate (fract, int) is 16 times
-; the per-pair step, so the limit is 16.0 in those units.
+; fastest pitch the note can reach within its row steps by no more than
+; MULTIRATE_WINDOW/16 bytes per output sample pair.  a block's step rate
+; (fract, int) is 16 times the per-pair step, so the limit is MULTIRATE_WINDOW
+; in those units (the integer part).
 ;
 ; variables and tables live here in the main image, in RAM, because the
 ; sequencer code that uses them has the ROMs banked out.
@@ -1047,22 +1061,22 @@ multirate_choose_level
 	lda product+2
 	sta mrp_step_int
 
-	; halve until it's at most 16.0, up to four times
+	; halve until it's at most MULTIRATE_WINDOW.0, up to MULTIRATE_LEVELS times
 
 .mrcl_find_level
 	ldx #0
 
 .mrcl_level_loop
 	lda mrp_step_int
-	cmp #17
+	cmp #(MULTIRATE_WINDOW + 1)
 	bcs .mrcl_shift
-	cmp #16
+	cmp #MULTIRATE_WINDOW
 	bcc .mrcl_level_done
 	lda mrp_step_fract
 	beq .mrcl_level_done
 
 .mrcl_shift
-	cpx #4
+	cpx #MULTIRATE_LEVELS
 	beq .mrcl_level_done
 	lsr mrp_step_int
 	ror mrp_step_fract
@@ -1077,8 +1091,8 @@ rts
 
 ; enter with .X = track number, with the table-lookup step rate already in
 ; current_steprates_fracts/ints.  shifts it down by the track's level, and then
-; clamps it to 16.0 (1 byte per sample pair) so that a track never needs more
-; than the 16 bytes of its cache.  trashes .A and .Y.
+; clamps it to MULTIRATE_WINDOW.0 so that a track never needs more than the
+; MULTIRATE_WINDOW bytes of its cache.  trashes .A and .Y.
 
 multirate_shift_steprate
 	lda current_multirate_levels,x
@@ -1091,15 +1105,15 @@ multirate_shift_steprate
 
 .mrss_clamp
 	lda current_steprates_ints,x
-	cmp #17
+	cmp #(MULTIRATE_WINDOW + 1)
 	bcs .mrss_set
-	cmp #16
+	cmp #MULTIRATE_WINDOW
 	bcc .mrss_done
 	lda current_steprates_fracts,x
 	beq .mrss_done
 
 .mrss_set
-	lda #16
+	lda #MULTIRATE_WINDOW
 	sta current_steprates_ints,x
 	lda #0
 	sta current_steprates_fracts,x

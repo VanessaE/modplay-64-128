@@ -1,11 +1,12 @@
 ; routines common to all mixer types
 
 ; distance between the per-track input caches in sample_data_buffer.  oldskool
-; builds fetch a fixed 16 bytes per track, so the four caches are packed into
-; the first page, 16 bytes apart.  turbo builds keep one page per track.
+; builds fetch a fixed MULTIRATE_WINDOW bytes per track, so the four caches are
+; packed into the first page, MULTIRATE_WINDOW bytes apart.  turbo builds keep
+; one page per track.
 
 !ifndef turbo_available {
-	MIXER_CACHE_STRIDE = 16
+	MIXER_CACHE_STRIDE = MULTIRATE_WINDOW
 } else {
 	MIXER_CACHE_STRIDE = $0100
 }
@@ -21,11 +22,10 @@
 	ldy seq_current_track
 
 	!ifndef turbo_available {
-		tya						; each track's cache starts at track * 16
-		asl
-		asl
-		asl
-		asl
+		tya						; each track's cache starts at track * MULTIRATE_WINDOW
+		!for .win_shift, 1, MULTIRATE_WINDOW_SHIFT {
+			asl
+		}
 	} else {
 		lda #0
 	}
