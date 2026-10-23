@@ -1,60 +1,184 @@
-The multirate routines are run once, at the very end of the loader
-(after unroll_mod_sample_loops), and are used to build decimated copies
-(1/2, 1/4, 1/8, 1/16 rate = levels 1..4) of every sample from the finished,
-possibly-unrolled data that'll be sitting in the REU after the load.
+MULTIRATE (decimated sample copies)
+===================================
 
-Level 0 is the original data and is never touched.
+Idea:  the REU fetch length per track per mixer block is proportional to the
+note's step rate, so high notes cost a lot of DMA time.  After the load, the
+loader builds half- and quarter-rate copies of every sample, and each note
+plays from the smallest-numbered copy ("level") at which its step stays within
+a fixed fetch window.  Level 0 is the original data and is never touched.
 
-In the multirate routines' tables, the index for a given level L (1..4),
-and sample S (0..31) is (L-1)*32 + S.
+Settings (multirate.s):
 
-Since the majority of the load buffer i.e. sample data buffer is unused when
-multirate is active, the multirate code's variables and tables, which would
-otherwise take up a lot of RAM, are stored up there instead.  Only the first
-page of that buffer gets used for live audio cache versus half of the buffer.
+                 C64    C128
+  window         64     32      MULTIRATE_WINDOW, bytes fetched per track per
+                                 block at most (a power of two)
+  levels          2      2      MULTIRATE_LEVELS, level L = 1/2^L of the rate
+
+The window caps a block's step at WINDOW/16 bytes per output sample pair.
+(Step rates in current_steprates_* are 16x the per-pair step, so the limit
+reads as WINDOW.0 in those units.)  Why 64 and 32:  beating was traced to
+nearest-neighbor stepping over decimated data with a small step, and the 64
+byte window keeps decimated steps large enough to fix it on the C64.  The
+C128's higher output rate leaves too little time per block for the REU, and it
+sags at 64, so it stays at 32.
+
+Output rates this gives (the ISR interval is the sum of the mixer, driver and
+fetch cycle counts plus fudge, see timing-info.txt):
+
+  C64, screen on:   interval 189 cycles (3 rasters, PAL)  = ~5213 Hz
+  C128:             interval 97 cycles = ~10.16 kHz PAL, ~10.54 kHz NTSC
+
+Multirate is used only in oldskool builds (no turbo_available).  Turbo builds
+assemble the old code paths and never touch any of this.
+
+###############
+TABLES AND MEMORY
+
+Tables are indexed  level*32 + sample  (level 1..MULTIRATE_LEVELS, sample
+0..31).  Each table's base address is offset down by 32 so that index 32 is its
+first entry.  The level 0 slots don't exist:  level 0 uses the loader's own
+tables (sample_start_addresses_*, sample_end_addresses_*, and so on).  There
+are no loop-end tables, because for a looped sample the end addr IS the loop
+end addr.  Eight tables of MULTIRATE_LEVELS*32 entries:  start mids/highs, end
+lows/mids/highs, loop start lows/mids/highs.
+
+Most of the load buffer/sample_data_buffer (2048 bytes) would have been
+unused with multirate, so instead we re-use some of that space for the tables
+and the module's loader-time variables (~100 bytes), starting 256 bytes in.
+
+The first page of that buffer holds the live audio cache:  the four tracks'
+caches are packed MULTIRATE_WINDOW bytes apart (offsets 0, W, 2W, 3W), which
+is why the window is a power of two and why 4 * 64 exactly fills the page on
+the C64.  (Turbo builds keep one page per track.)
+
+The player-side variables (mrp_*) and routines are in the main program area,
+because the sequencer code that uses them runs with the ROMs banked out.
+current_multirate_levels holds each track's level, and current_loop_start_*
+holds each track's loop start for the level it is using (the fetcher restarts
+loops from these, not from the loader's tables).
 
 
 ###############
-LOADER HOOK (loader-common.s), at file_size_okay: the last two lines
-
-       jsr load_sample_data
-       jmp unroll_mod_sample_loops
-
-become
+LOADER HOOK (loader-common.s), at the end of the file load
 
        jsr load_sample_data
        jsr unroll_mod_sample_loops
-       jmp multirate_generate_all
+       bit multirate_enable
+       bpl +
+       jsr multirate_generate_all
+       bit multirate_valid
+       bmi +
+       ... "file too large" popup, jmp abort_load
+     +
 
-(unroll_mod_sample_loops ends in an rts, so jsr is fine; .C comes back
-clear if there wasn't enough REU for the multirate data.)
+multirate_generate_all returns with multirate_valid = $80 if the decimated
+copies fit in the REU.  If they don't, nothing extra has been written, the
+tables are invalid, and the file is refused.  On success,
+highest_exp_addresss_used is raised past the multirate area.
 
 
 ###############
 DATA LAYOUT (for checking REU dumps)
 
 Region for (level L, sample S) starts at multirate_sample_start_addresses_*
-[(L-1)*32+S], page aligned, never crossing a 512k boundary.  Contents = the
-final level-0 data from the sample start, passed L times through pairwise
-averaging, (a+b)>>1, per 256-byte page.  Looped samples: loop start/end =
-start + (offset >> L), start + offset' + ((loop length + half a step) >> L),
-and the end addr equals the loop end addr.  After the end addr (loop end for
-looped samples) there are MULTIRATE_GUARD bytes: the first MULTIRATE_GUARD
-bytes of the decimated loop, or $80s for unlooped samples.
+[L*32+S], page aligned, laid out level by level above the highest expansion
+address used by the load, and never crossing a 512k boundary (a region that
+would is moved to the next boundary).  It is ceil(source pages / 2^L) + 1
+pages long.  Empty sample slots get zeroed entries, with an end address mid
+byte of 1.
+
+Contents:  the final (possibly unrolled) level-0 data from the sample start,
+decimated L times.  Each decimation step takes a byte pair (a,b) and writes
+
+       m   = (a + b) >> 1
+       s   = (s + m + 1) >> 1       running low-pass, carried from page to page,
+                                    starts at $80 at the start of each sample
+       out = clamp(m + ((m - s) >> 1))
+
+The second line and the third make up for the droop of the 2-tap average (a
+one-pole high-frequency boost of 1/2 of m - s).  Level 2 is made from level 1's
+output (boost included), with its own filter state.
+
+Looped samples:  loop start = start + (offset >> L), end = loop start +
+((loop length + half a decimated sample) >> L), rounding the length to nearest
+so that the loop's pitch error is under half a decimated sample.  One extra
+source page is decimated for looped samples, so the part beyond the loop end
+is there too.
+
+After each level's end addr there are MULTIRATE_GUARD (= MULTIRATE_WINDOW)
+bytes, because the fetcher can run that far past the end:  for looped samples,
+a copy of the first MULTIRATE_GUARD bytes of the decimated loop, and for
+everything else, $80s.  (A decimated loop is never shorter than the window,
+because the level-0 loop was already unrolled to at least 2 kB.)
 
 
-PLAYER-SIDE MULTIRATE, STAGE 1  (multirate branch)
-==================================================
-Static edit, not assembled or run.  Hunks are diff-style; match on the context.
-The multirate pass itself is in the new multirate.s (unified level*32+sample
-tables, level 0 copied in, no loop-end tables).
+###############
+PLAYER SIDE
 
-Build switch:  multirate is used only in oldskool builds (no turbo_available).
-Everything below that is multirate-only sits behind  !ifdef use_multirate ,
-so turbo builds assemble the old code paths.  Where possible the code is
-common to both builds (idx = sample number and play_* = the loader's own
-tables in turbo builds).
+1. At note start (start_sample -> multirate_apply_level)
 
-Layout decision this relies on:  the four 16-byte track caches are packed into
-the FIRST page of sample_data_buffer (offsets 0,16,32,48), because the
-multirate tables start at sample_data_buffer+256.
+   The track's level is set to 0 and the loader's level-0 pointers are
+   installed as usual.  multirate_choose_level then picks the level, and for
+   level > 0 the track's start pointer (unless the note's command is 9, set
+   sample offset, which sets the pointer itself), end address and loop start
+   are replaced from the level's tables.
+
+   The level is the smallest one at which the FASTEST pitch the note can reach
+   within its row steps by no more than the window.  That pitch is worked out
+   from the period and the row's effect:
+
+     0xy  arpeggio             larger of the two semitone offsets
+     1xx  slide up             period minus rate * (ticks - 1), min 57
+     4xy/6xy  vibrato          period minus 1/16 of itself
+     E1x  fine slide up        period minus x
+
+2. Step rate (set_pitch_by_table_lookup -> multirate_shift_steprate)
+
+   Every pitch change, from any command, runs through here with the table-
+   lookup step rate in current_steprates_*.  The rate is shifted down by the
+   track's level, and clamped to the window.
+
+3. Mid-note promotion (multirate_promote_track)
+
+   The level chosen at note start only covers the current row.  A slide or
+   portamento that continues over several rows, vibrato, fine slides, or an
+   arpeggio that begins on a later row can take a note past the window.  So
+   when the rate, shifted by the track's current level, would exceed the
+   window, multirate_shift_steprate moves the note UP one level at a time
+   until it fits (or the top level is reached, which is the only place the
+   clamp can still act).  Promotion rebases the playing note in place:
+
+     - the position (pointer, 32 bits including the fraction) relative to the
+       current level's start is halved, and re-added to the next level's start
+     - end address and loop start are replaced by the next level's
+     - any pending loop overshoot (current_fetch_loop_ofl_amounts) is halved
+     - the level is incremented, and the instrument self-mod routine is run
+       so the fetcher gets the new end address
+
+   There is no demotion.  A note sliding down in pitch just runs a smaller
+   step over coarser data.
+
+4. Arpeggio
+
+   The arpeggio's two extra notes are made from the base step rate and do not
+   pass through multirate_shift_steprate, so multirate_shift_multiplicand_a
+   shifts the base rate by the track's level, and multirate_arp_promote
+   promotes the note at the arpeggio's start, far enough for the higher extra
+   note to fit.  The base pitch is redone if the level changed.
+
+5. Set sample offset (command 9)
+
+   For a track on a decimated copy, the offset is xx*256 >> level bytes into
+   that level's copy (multirate_set_sample_offset).
+
+
+###############
+DECIDED AGAINST, FOR NOW
+
+ - A dynamic fetch budget (varying the window per block).  It would cut the
+   fraction of notes in Bach Fugue in G-Minor that are played decimated from
+   56% to 6%, but it would come at the cost of long DMA bursts and variable
+   fetch time.
+ - Further changes to sample rates or to the profiler until the Mahoney
+   driver has been trimmed and the corresponding bespoke mixers have been
+   added.

@@ -5,7 +5,7 @@ turned on unless otherwise noted.  All times rounded-up to the next whole
 cycle.
 
 -----------
-fetch DMA calls alone:
+Fetch DMA calls alone:
 
 On average, the step rate will be close to 1.7, so it'll be fetching
 16 * 1.7 = ~27 bytes per transfer.  We have to split the transfer up into
@@ -21,22 +21,36 @@ kind of cap or limiter:
 
 2 +4+4 +4+4 +4+4 +4+4 +139 = 173 cycles per track, total 692 cycles
 
+In oldskool builds, multirate (see multrate-info.txt) puts a cap on this:  a
+track's fetch is always MULTIRATE_WINDOW bytes, because a note whose step
+would be larger than that is played from a decimated copy of its sample
+instead (and promoted to a higher level mid-note if a slide takes it there).
+At the moment, the window is 64 bytes on the C64 and 32 on the C128, so
+on C64 the timing variation collapses to:
+
+2 +4+4 +4+4 +4+4 +4+4 +64 = 98 cycles per track, total 392 cycles
+
 For the C128, the hardware does clock stretching on I/O accesses, but only
 for the one cycle when the actual read/write is being committed.  Most of
 the fetch instructions, and all of the actual DMA fetches, run in 1 MHz mode
 for their whole duration. The explicit 1/2 MHz switching above adds 18,
 2 MHz cycles (9 for the shift down to 1 MHz, 9 to shift back up).
 
-Being almost twice as fast, it'll have half the step rates, so best step rate
-will be about 0.137, typical will be around 0.9, worst around 6.4, so it'll
-be fetching ~2, ~13, and ~101 bytes, respectively.
+Being almost twice as fast, it'll have about half the step rates, so best
+step rate will be about 0.137, typical will be around 0.9, worst around 6.4,
+so it'll be fetching ~2, ~13, and ~101 bytes, respectively.
 
 That machine's fetch timings should be about:
 
 most likely:    2 +4+8 +8+8 +8+8 +8+8 +13 + 18 = 93 cycles, total 372
 worst possible: 2 +4+8 +8+8 +8+8 +8+8 +101 + 13 = 176 cycles, total 704
 
-On SuperCPU each fetch will probably only need to get two bytes or so on
+...and with multirate's 32 byte window on that platform, the same logic
+applies as on the C64 -- the timing is always:
+
+2 +4+8 +8+8 +8+8 +8+8 +32 + 18 = 112 cycles, total 448
+
+On SuperCPU, each fetch will probably only need to get two bytes or so on
 average, since the whole fetch-mix-output chain is already running several
 times faster than stock:
 
@@ -48,36 +62,38 @@ We'll just assume a worst-case of 3 times that amount, or 3840 turbo cycles.
 ----------
 Fetch loop
 
-open:
+Open:
 2+4+2+2 = 10 cycles
 
-within the loop, not counting the above DMA calls, (those are added below):
+Within the loop, not counting the above DMA calls, (those are added below):
 
 minimum time (also the most likely case), all four tracks updating two
 bytes of the 4-byte address, and not at the end of the sample yet:
 
 (3+2+3 +2+3+4+3 +3+4 +3+4)*4 + (3+2+3+2+3+2+3)*4 = 208 cycles
 
-worst possible case, all four tracks have to update all four bytes, not at
+Worst possible case, all four tracks have to update all four bytes, not at
 the end of sample yet:
 
 (3+2+3+2 +2+3+4+2 +5+3+4+2 +5+3+4+3)*4 + (3+2+3+2+3+2+3)*4 = 272 cycles
 
-fetch routine main loop close:
+Fetch routine main loop close:
 5+2+6 = 13 cycles
 
 On SuperCPU-equipped machines, accounting for cache misses:
 
-open loop:
+Open loop:
 (2+20+2+2) = 26 turbo cycles
 
-within loop, most likely code path:
+Within the loop, most likely code path:
+
 2+20+3+2+3+3+2+3+20+3 +3+20 +3+20 +3+2+3+2+3+2+3 +2 = 127 cycles per track
+
 multiply by 4 = 508 turbo cycles for all four tracks
 
 We'll assume double that amount for the worst case, so 1016 turbo cycles.
 
-close loop:
+Close loop:
 5+2+3 = 10 turbo cycles
 
 Total fetch runtime for all four tracks,
@@ -86,10 +102,16 @@ amortized across 16 output samples:
 C64:
 	likely: (10 + 208 + 264 + 13) / 16 = ~31 cycles
 	worst:  (10 + 272 + 692 + 13) / 16 = ~62 cycles
+	worst, with multirate:  (10 + 272 + 392 + 13) / 16 = ~43 cycles
 
 C128:
 	likely: (10 + 208 + 372 + 11) / 16 = ~38 cycles - but this is a little too fast
 	worst:  (10 + 272 + 704 + 11) / 16 = ~63 cycles
+	when using multirate:  (10 + 272 + 448 + 11) / 16 = ~47 cycles
+
+(The "likely" figures above were not redone for multirate.  Notes that stay
+at level 0 fetch the same as before, and decimated notes fetch less, so it
+can only come out lower.)
 
 SCPU:
 	likely: (26 + 508 + 1280 + 10) / 16 = ~114 turbo cycles
@@ -131,21 +153,28 @@ Stereo mode adds 16 * 3 cycles, for a total of 101 turbo cycles
 For the 8-bit DAC driver:
 
 Stock machines:
+
 Same timings as the SID driver if it's a single DAC on the Expansion or User
-Port, plus 12 cycles if it's stereo DigiMAX on the User Port, for a maximum of
-65 cycles on the C64, or 34, 1 MHz cycles on the C128.
+Port, plus 12 cycles if it's stereo DigiMAX Mk1 on the User Port, for a
+maximum of 65 cycles on the C64, or 34, 1 MHz cycles on the C128.
 
 With SuperCPU:
-Identical to the SID driver's SuperCPU timings, except add 40 cycles if
-it's stereo DigiMAX on the User Port, for a total of 85, 101, or 141 turbo
+
+Identical to the SID driver's SuperCPU timings, except add 40 cycles if it's
+stereo DigiMAX Mk1 on the User Port, for a total of 85, 101, or 141 turbo
 cycles.
 
+There are other audio drivers available that are not covered here, such as
+Mahoney audio output or 4-to-8-bit SID with dithering.  The above are just to
+give you a good idea of the timings, and as it so happens, SID 4-bit mono and
+DigiMAX Mk1 stereo are the fastest and slowest of the available drivers at
+the moment.
 
 ------------
 GRAND TOTALS
 
-Using the 4-bit SID driver in mono, with dithering turned off (also applies to
-8-bit DAC driver if it's running in mono)...
+Using the 4-bit SID driver in mono (also applies to 8-bit DAC driver if it's
+running in mono)...
 
 Factoring-in the mixer/lookahead runtime of 46 cycles per byte, plus 52 cycles
 per byte for the ISR, plus the "likely" code path in the fetch routine taking
@@ -161,6 +190,8 @@ fudge amount will cause the ISR to round-up to 3 rasters either way:
 
 1022727 / (65 * 3) = ~5244.8
 
+(On PAL it's 3 rasters of 63 cycles = 189 cycles, or ~5213 Hz.)
+
 With 24 (1 MHz) cycles for the standard mixer, 28 for the ISR, 24 for the
 fetch, and 15 cycles' of fudge for the sequencer, the C128 should be able to
 run at about 11.2 kHz:
@@ -170,6 +201,16 @@ run at about 11.2 kHz:
 and with the lowpass filtering mixer, a C128 should do about 10.1 kHz:
 
 1022727 / (24 + 10 + 28 + 24 + 15) = ~10126.0
+
+With multirate active (the usual case on oldskool C128 builds), the ISR
+interval is 97 cycles, including the 15 cycles of fudge (it is 20 with
+multirate off), for about 10.54 kHz on NTSC machines and 10.16 kHz on PAL:
+
+1022727 / 97 = ~10543.6
+ 985248 / 97 = ~10157.2
+
+No pitch sags or tempo/rhythm fall-offs were heard at this interval (tested
+in VICE).
 
 As mentioned above, using the lowpass filtering mixer increases sample time,
 thus trading sample rate for a boost in mixing quality.  That's fine if you
@@ -185,17 +226,6 @@ rasters per sample, for a measly 3.9 kHz.
 With the screen off, we don't need that extra fudge, so the above 181 cycles
 applies, and gives a sample rate of just over 5.6 kHz.  I suppose that's not
 too horrible for a stock breadbin.
-
-Also note that the SID 4-bit dithering driver is expensive as well.
-
-SID 4-bit mono with dithering needs 64-66 cycles in the ISR on C64, and 65-69
-cycles at 2 MHz (that is, ~33-35 at 1 MHz) on C128.  Stereo needs 86-92 cycles
-on C64, 90-96 at 2 MHz (45-48 at 1 MHz) on C128.
-
-Adding in the fudge and other stuff, a stock C64 just manages to eek-out a
-5.2 kHz (3-raster-line) sample rate with dithering in mono, with the screen
-on, and not using the lowpass filtering mixer.  With the screen off, it runs
-at just shy of 6.2 kHz.  The C128 manages a respectable 11.7 kHz in this mode.
 
 
 ===============================
@@ -259,10 +289,10 @@ pitches, both high and low, would have the same total cycle count.
 ==================================
 On the C64 Ultimate and Ultimate64
 
-These machines are so freakin' fast that I simply run at 64 MHz or 48 MHz,
-respectively, and set all playback modes and drivers to a fixed time of 20,
-1 MHz cycles on PAL and 21 on NTSC, producing 49.2 or 48.7 kHz sample rates,
-respectively....and there's still CPU to to spare!
+These machines are so freakin' fast that I simply run the machine at 64 MHz
+or 48 MHz, respectively, and set all playback modes and drivers to a fixed
+time of 20, 1 MHz cycles on PAL and 21 on NTSC, producing 49.2 or 48.7 kHz
+sample rates, respectively....and there's still CPU to to spare!
 
 In theory, these machines are probably fast enough to do 96 kHz, but I doubt
 the actual audio hardware goes that fast, and the CIAs timers don't have the
