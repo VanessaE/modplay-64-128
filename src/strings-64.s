@@ -216,7 +216,7 @@ menu_text_dithering
 }
 
 menu_text_enable_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filtering",RETURN,0
+	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Sample filter",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
 

@@ -174,7 +174,7 @@ menu_text_filter
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Enable Dithering",RETURN,0
 menu_text_enable_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Low-pass Filtering",RETURN,0
+	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filter samples when loading",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save configuration",RETURN,0  ; "🠜"
 

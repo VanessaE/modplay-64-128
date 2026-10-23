@@ -1090,7 +1090,195 @@ unroll_next
 	beq +
 	jmp unroll_one_loop
   +
+	!ifndef turbo_available {
+		jmp loader_prefilter_samples		; (which ends in an rts)
+	}
 rts
+
+!ifndef turbo_available {
+!zone loader_prefilter {
+
+; Low-pass every sample's data, in place in the REU, with [1,2,1]/4:
+;
+;   out = (prev + 2*cur + next + 2) >> 2         (unsigned bytes)
+;
+; The player reads sample data by truncating its position, with no filtering, so
+; anything in a sample above half the output rate gets folded back into the band
+; when a note steps through the data faster than one byte per output sample.
+; Filtering the data in advance removes most of that.  It keeps the data's size,
+; and costs nothing at playback.
+;
+; It only runs when filter_setting is on, and not at all in the turbo builds, which
+; run at output rates where nothing needs filtering.
+;
+; This runs after the loop unroller, so unrolled loops and the head-after-tail
+; zone get filtered with everything else.  It goes through each sample's pages
+; (all of them, looped samples get one more for the zone after the loop end), and
+; fetches each with the first byte of the next one, so the last byte of the page
+; has its right-hand neighbor.  The byte before a sample's first byte counts as
+; silence ($80), and the byte before each page's first is carried over from the
+; page before it, unfiltered.  (A looped sample's first loop byte is filtered with
+; the byte before the loop instead of the byte before the loop's end, which makes
+; that one byte very slightly off on later passes through the loop.)
+
+loader_prefilter_samples
+	bit filter_setting
+	bmi +
+	rts
+
++	ldy #1
+
+.next_sample
+	lda sample_start_addresses_mids,y
+	ora sample_start_addresses_highs,y
+	bne +
+	jmp .skip_sample
+
++	sty .sample
+
+	; start at the first page
+
+	lda #0
+	sta .pointer
+	lda sample_start_addresses_mids,y
+	sta .pointer+1
+	lda sample_start_addresses_highs,y
+	sta .pointer+2
+
+	; pages = end page - start page, +1 if the end isn't page-aligned, +1 more
+	; if the sample is looped
+
+	sec
+	lda sample_end_addresses_mids,y
+	sbc sample_start_addresses_mids,y
+	sta .pages
+	lda sample_end_addresses_highs,y
+	sbc sample_start_addresses_highs,y
+	sta .pages+1
+
+	lda sample_end_addresses_lows,y
+	cmp #1								; carry set if not page-aligned
+	lda .pages
+	adc #0
+	sta .pages
+	bcc +
+	inc .pages+1
+
++	lda sample_default_loop_flags,y
+	bpl +
+	inc .pages
+	bne +
+	inc .pages+1
+
++	lda #$80
+	sta .prev
+
+.next_page
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+	lda #<257
+	sta stash_size
+	lda #>257
+	sta stash_size+1
+
+	lda .pointer
+	sta expansion_memory_target_pointer
+	lda .pointer+1
+	sta expansion_memory_target_pointer+1
+	lda .pointer+2
+	sta expansion_memory_target_pointer+2
+
+	+JSR_INDIRECT (fetch_block_vec)
+
+	; filter the page in place, two bytes per pass.  utility_pointer_b holds the
+	; byte before the pair (c1), utility_pointer_b+1 the first byte of it (c0).
+	; the pair's second byte is saved into c1 for the next pass just before it's
+	; overwritten.  about 32 cycles per byte.
+
+	lda .prev
+	sta utility_pointer_b
+
+	ldx #0
+-	lda load_buffer,x					; x[i]
+	sta utility_pointer_b+1
+	lda load_buffer+1,x					; x[i+1]
+	sec								; (the +1 makes the second halving round)
+	adc utility_pointer_b				; + x[i-1]
+	ror
+	adc utility_pointer_b+1				; + x[i]
+	ror
+	sta load_buffer,x					; out[i]
+
+	lda load_buffer+2,x					; x[i+2]
+	sec
+	adc utility_pointer_b+1				; + x[i]
+	ror
+	adc load_buffer+1,x					; + x[i+1], which is still unfiltered
+	ror
+	ldy load_buffer+1,x
+	sty utility_pointer_b				; x[i+1] is the next pair's x[i-1]
+	sta load_buffer+1,x					; out[i+1]
+
+	inx
+	inx
+	bne -
+
+	lda utility_pointer_b					; (x[255], unfiltered)
+	sta .prev
+
+	; write the 256 filtered bytes back.  (not the 257th, that's the next page's.)
+
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta stash_size
+	lda #1
+	sta stash_size+1
+
+	lda .pointer
+	sta expansion_memory_target_pointer
+	lda .pointer+1
+	sta expansion_memory_target_pointer+1
+	lda .pointer+2
+	sta expansion_memory_target_pointer+2
+
+	+JSR_INDIRECT (stash_block_vec)
+
+	inc .pointer+1
+	bne +
+	inc .pointer+2
+
++	lda .pages
+	bne +
+	dec .pages+1
++	dec .pages
+
+	lda .pages
+	ora .pages+1
+	beq +
+	jmp .next_page
+
++	ldy .sample
+
+.skip_sample
+	iny
+	cpy #32
+	beq +
+	jmp .next_sample
++
+rts
+
+.sample		!byte 0
+.prev		!byte 0
+.pages		!word 0
+.pointer	!byte 0, 0, 0
+
+}
+}
 
 loader_get_one_byte
 	bit load_device_can_use_uci
