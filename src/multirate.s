@@ -1159,11 +1159,13 @@ rts
 ; reached.  then the rate is shifted by the final level, and clamped to
 ; MULTIRATE_WINDOW.0 so that a track never needs more than the MULTIRATE_WINDOW
 ; bytes of its cache (the clamp can only still bite at the top level).
-; preserves .X, trashes .A and .Y.
+; preserves .X, trashes .A and .Y.  (in striding mode, when multirate isn't in
+; use for the file, it does nothing at all.)
 
 multirate_shift_steprate
 	bit multirate_enable
-	bpl .mrss_shift
+	bmi .mrss_check
+	rts									; striding mode:  no levels, no clamp
 
 .mrss_check
 	ldy current_multirate_levels,x

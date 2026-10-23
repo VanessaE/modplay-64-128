@@ -1,14 +1,31 @@
 ; routines common to all mixer types
 
 ; distance between the per-track input caches in sample_data_buffer.  oldskool
-; builds fetch a fixed MULTIRATE_WINDOW bytes per track, so the four caches are
-; packed into the first page, MULTIRATE_WINDOW bytes apart.  turbo builds keep
-; one page per track.
+; builds with multirate in use fetch a fixed MULTIRATE_WINDOW bytes per track,
+; so the four caches are packed into the first page, MULTIRATE_WINDOW bytes
+; apart.  turbo builds, and oldskool builds in striding mode, keep one page per
+; track.  (the assembled addresses below are for the packed layout, and are
+; re-written at the start of playback when that's not what the file needs.)
 
 !ifndef turbo_available {
 	MIXER_CACHE_STRIDE = MULTIRATE_WINDOW
 } else {
 	MIXER_CACHE_STRIDE = $0100
+}
+
+!ifndef turbo_available {
+
+	; oldskool builds set these up at the start of playback, for each file, in
+	; reu_set_cache_layout.  with multirate in use the four caches are packed
+	; into the first page, MULTIRATE_WINDOW bytes apart, and all of the mixer's
+	; read addresses are in that page.  in striding mode each track gets a
+	; page of its own, like in the turbo builds.
+
+	mixer_cache_offsets
+		!byte 0, MULTIRATE_WINDOW, MULTIRATE_WINDOW*2, MULTIRATE_WINDOW*3
+	reu_cache_hi_bytes
+		!byte >sample_data_buffer, >sample_data_buffer
+		!byte >sample_data_buffer, >sample_data_buffer
 }
 
 !macro MIXER_VOL_SELFMOD_LOOP .seg_base, .seg_len, .base_table {
@@ -22,10 +39,7 @@
 	ldy seq_current_track
 
 	!ifndef turbo_available {
-		tya						; each track's cache starts at track * MULTIRATE_WINDOW
-		!for .win_shift, 1, MULTIRATE_WINDOW_SHIFT {
-			asl
-		}
+		lda mixer_cache_offsets,y	; this track's cache offset within its page
 	} else {
 		lda #0
 	}
@@ -67,7 +81,5 @@
 		sta utility_zpbk_counter
 	}
 
-	!ifdef turbo_available {
-		adc #1
-	}
+	adc #1						; (only striding mode and turbo builds use the result)
 }

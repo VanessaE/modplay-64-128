@@ -242,15 +242,25 @@ file_size_okay
 	jsr unroll_mod_sample_loops
 
 	!ifndef turbo_available {
-		bit multirate_enable
-		bpl +
+		lda #0						; assume striding mode until proven otherwise
+		sta multirate_enable
+
+		lda multirate_is_allowed
+		beq .mrld_done				; 0 = multirate is turned off
 
 		jsr multirate_generate_all
 
 		bit multirate_valid
-		bmi +
+		bmi .mrld_fits
 
-		; not enough room in the REU for the decimated copies, so refuse the file
+		; not enough room in the REU for the decimated copies.  if the user
+		; allows it (2), play this file in striding mode instead.
+
+		lda multirate_is_allowed
+		cmp #2
+		beq .mrld_done
+
+		; otherwise (1), refuse the file
 
 		jsr draw_mini_popup
 
@@ -261,7 +271,11 @@ file_size_okay
 		jsr print_msg
 
 		jmp abort_load
-	  +
+
+.mrld_fits
+		lda #$80
+		sta multirate_enable
+.mrld_done
 	}
 
 	rts

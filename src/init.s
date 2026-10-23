@@ -361,10 +361,13 @@ init
 	jsr ascii_table_copy
 
 	!ifndef turbo_available {
-		lda #$80
+		lda #2					; multirate allowed, with fallback to striding
 	} else {
 		lda #0
 	}
+	sta multirate_is_allowed
+
+	lda #0						; (the loader sets this for each file)
 	sta multirate_enable
 rts
 

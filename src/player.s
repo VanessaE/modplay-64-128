@@ -38,6 +38,8 @@ start_main_player
 	jsr reu_set_selfmod_and_mixer_vectors
 
 	!ifndef turbo_available {
+		jsr reu_set_cache_layout
+
 		bit allow_regen_msg
 		bpl +
 

@@ -215,7 +215,8 @@ load_buffer							= volume_table + 64*256
 sample_data_buffer					= load_buffer
 
 ascii_to_petscii_table				= load_buffer + 2048
-viz_note_number_lookup_table		= ascii_to_petscii_table + 256
+and_f0_table						= ascii_to_petscii_table + 256
+viz_note_number_lookup_table		= and_f0_table + 256
 steprate_lookup_table				= viz_note_number_lookup_table + 7*256
 divide_by_16_table					= steprate_lookup_table + 14*256
 

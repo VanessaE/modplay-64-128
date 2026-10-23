@@ -167,7 +167,10 @@
 
 	supercpu_detected					!skip 1
 
-	multirate_enable					!skip 1 ; $80 = use multirate, 0 = don't
+	multirate_is_allowed				!skip 1 ; user setting:  0 = off, 1 = on (refuse files that
+												; won't fit), 2 = on (play such files in striding mode)
+	multirate_enable					!skip 1 ; set by the loader for each file:  $80 = this file is
+												; using multirate, 0 = striding mode
 
 	multiplicand_a						!skip 2 ; these first two are only
 	multiplicand_b						!skip 2 ; used by 16x16 multiply

@@ -116,6 +116,10 @@ reu_run_fetch_and_mixer
 			; this conditional MUST have the same code length both ways
 
 			!ifndef turbo_available {
+				; reu_set_cache_layout re-writes this pair for striding mode,
+				; to load .ftrk's cache page and store it in DMA_LOCAL_HI.
+
+				!if .ftrk = 0 { !set reu_local_addr_imm = * }
 				lda #.ftrk * MULTIRATE_WINDOW			; 2
 				sta DMA_LOCAL_LO						; 4
 			} else {
@@ -288,6 +292,13 @@ reu_do_selfmods_for_pitch_change
 		; fetch length addr
 		ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
 		sta (utility_pointer),y
+	} else {
+		; with multirate in use, the fetch length stays fixed at the window
+		bit multirate_enable
+		bmi +
+		ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
+		sta (utility_pointer),y
+	  +
 	}
 rts
 
@@ -317,6 +328,119 @@ reu_do_selfmods_for_instrument_change
 	lda current_sample_end_addr_highs,x
 	sta (utility_pointer),y
 rts
+
+!ifndef turbo_available {
+
+; Sets up the cache layout for the file about to be played.  Run once at the
+; start of playback, and it always writes everything, so that the settings from
+; the previous file never carry over.
+;
+;   multirate in use ($80):   caches packed into the first page of
+;       sample_data_buffer, MULTIRATE_WINDOW bytes apart, and every fetch is
+;       exactly MULTIRATE_WINDOW bytes.
+;   striding mode (0):  one page per track and variable-length fetches, which
+;       is what the turbo builds do.
+;
+; this changes, in the fetch routine, the immediate and the register that the
+; per-track `lda #imm / sta DMA_LOCAL_xx` pair loads, and the fetch length;
+; and in the mixers, the track offsets used by the pitch self-mod and the high
+; byte of every cache read address.
+
+reu_set_cache_layout
+	ldx #3
+
+.rscl_track
+	lda reu_selfmod_fetch_segment_base_table,x
+	sta utility_pointer
+	lda reu_selfmod_fetch_segment_base_table+4,x
+	sta utility_pointer+1
+
+	ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
+	lda #MULTIRATE_WINDOW				; (striding mode sets the real length
+	sta (utility_pointer),y				; when the pitch self-mod runs)
+
+	bit multirate_enable
+	bpl .rscl_striding
+
+	txa									; packed:  cache at track * window,
+	!for .win_shift, 1, MULTIRATE_WINDOW_SHIFT {
+		asl
+	}
+	sta mixer_cache_offsets,x
+	ldy #(reu_local_addr_imm - reu_fetch_segment_start + 1)
+	sta (utility_pointer),y				; ...loaded into DMA_LOCAL_LO,
+	lda #>sample_data_buffer
+	sta reu_cache_hi_bytes,x
+	lda #<DMA_LOCAL_LO
+	bne .rscl_set_target				; (always)
+
+.rscl_striding
+	lda #0								; striding:  cache at the start of its
+	sta mixer_cache_offsets,x			; own page, that page being loaded into
+	txa									; DMA_LOCAL_HI
+	clc
+	adc #>sample_data_buffer
+	sta reu_cache_hi_bytes,x
+	ldy #(reu_local_addr_imm - reu_fetch_segment_start + 1)
+	sta (utility_pointer),y
+	lda #<DMA_LOCAL_HI
+
+.rscl_set_target
+	ldy #(reu_local_addr_imm - reu_fetch_segment_start + 3)
+	sta (utility_pointer),y				; (the low byte of the STA's operand)
+
+	dex
+	bpl .rscl_track
+
+	; the high byte of every cache read address in the mixer
+
+	lda #<mixer_std_rd_la_track_1
+	sta utility_pointer
+	lda #>mixer_std_rd_la_track_1
+	sta utility_pointer+1
+	lda #<mixer_standard_read_addr_idx
+	sta utility_pointer_b
+	lda #>mixer_standard_read_addr_idx
+	sta utility_pointer_b+1
+	lda #mixer_standard_loop_segment_length
+
+	; enter with .A = the length of one unrolled segment of the mixer's loop,
+	; utility_pointer = the first cache read (track 1, first segment), and
+	; utility_pointer_b = the mixer's table of per-track offsets to those.
+
+.rscl_patch_mixer_hi_bytes
+	sta .rscl_seg_len
+	lda #15
+	sta .rscl_seg_count
+
+.rscl_segment
+	ldx #3
+
+.rscl_mixer_track
+	txa
+	tay
+	lda (utility_pointer_b),y			; offset of this track's read
+	clc
+	adc #2								; its high byte
+	tay
+	lda reu_cache_hi_bytes,x
+	sta (utility_pointer),y
+	dex
+	bpl .rscl_mixer_track
+
+	clc
+	lda utility_pointer
+	adc .rscl_seg_len
+	sta utility_pointer
+	bcc +
+	inc utility_pointer+1
+  +	dec .rscl_seg_count
+	bpl .rscl_segment
+rts
+
+.rscl_seg_len						!byte 0
+.rscl_seg_count						!byte 0
+}
 
 ; make sure .A = 0 on entry, .Y = track number
 
