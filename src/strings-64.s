@@ -202,8 +202,6 @@ menu_text_dac_addr_b
 	!text LGRY,"address",RETURN,0
 menu_text_stereo
 	!text RIGHT,GRN,"[",YEL,"S",GRN,"]",LGRY," Stereo",RETURN,0
-menu_text_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filter",RETURN,0
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Dithering",RETURN,0
 
@@ -216,7 +214,7 @@ menu_text_dithering
 }
 
 menu_text_enable_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Sample filter",RETURN,0
+	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Load filt.",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
 

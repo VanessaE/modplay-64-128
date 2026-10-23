@@ -169,8 +169,6 @@ menu_text_dac_addr
 	!text RIGHT,GRN,"[",YEL,"A",GRN,"]",LGRY," Change DigiMAX/DAC address",RETURN,0
 menu_text_stereo
 	!text RIGHT,GRN,"[",YEL,"S",GRN,"]",LGRY," Stereo output",RETURN,0
-menu_text_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Change filter cutoff",RETURN,0
 menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Enable Dithering",RETURN,0
 menu_text_enable_filter

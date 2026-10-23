@@ -12,7 +12,7 @@
 	dacaddr_row		= 3
 	dacaddr_col		= 32
 	filter_row		= 4
-	filter_col		= 24
+	filter_col		= 33
 	dith_en_row		= 4
 	dith_en_col		= 22
 	info_plat_row	= 2
@@ -47,7 +47,7 @@
 	dacaddr_row		= 6
 	dacaddr_col		= 31
 	filter_row		= 7
-	filter_col		= 33
+	filter_col		= 34
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9
@@ -82,7 +82,7 @@
 	dacaddr_row		= 6
 	dacaddr_col		= 31
 	filter_row		= 9
-	filter_col		= 33
+	filter_col		= 34
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9

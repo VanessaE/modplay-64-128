@@ -248,6 +248,7 @@ player_ui_finish
 	!ifndef c128 {
 		jsr enable_kernal_only
 		jsr IOINIT
+		jsr enable_kernal_only
 	} else {
 		lda #255
 		sta VIC_RASTER_LOW
