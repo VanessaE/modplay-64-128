@@ -42,6 +42,10 @@
 !ifndef turbo_available {
 	.mr_buffer_needed = MULTIRATE_VARS_OFFSET + 8 * MULTIRATE_TABLE_LEN + MULTIRATE_MISC_SIZE
 
+	!if MULTIRATE_WINDOW * 4 > 256 {
+		!error "The four tracks' caches don't fit in one page at this MULTIRATE_WINDOW!"
+	}
+
 	!if .mr_buffer_needed > LOAD_BUFFER_PAGES * 256 {
 		!error "Multirate tables overflow the sample data buffer by ", .mr_buffer_needed - LOAD_BUFFER_PAGES * 256, " bytes!"
 	}

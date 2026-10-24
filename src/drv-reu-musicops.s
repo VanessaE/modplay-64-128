@@ -378,10 +378,7 @@ reu_set_cache_layout
 	bit multirate_enable
 	bpl .rscl_striding
 
-	txa									; packed:  cache at track * window,
-	!for .win_shift, 1, MULTIRATE_WINDOW_SHIFT {
-		asl
-	}
+	lda .packed_offsets,x				; packed:  cache at track * window,
 	sta mixer_cache_offsets,x
 	ldy #(reu_local_addr_imm - reu_fetch_segment_start + 1)
 	sta (utility_pointer),y				; ...loaded into DMA_LOCAL_LO,
@@ -454,6 +451,7 @@ reu_set_cache_layout
 	bpl .rscl_segment
 rts
 
+.packed_offsets						!byte 0, MULTIRATE_WINDOW, MULTIRATE_WINDOW*2, MULTIRATE_WINDOW*3
 .rscl_seg_len						!byte 0
 .rscl_seg_count						!byte 0
 }

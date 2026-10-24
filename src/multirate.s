@@ -10,24 +10,24 @@
 ; On success, highest_exp_addresss_used is raised past the multirate area.
 
 ; ----------------------------------------------------------------------------
-; the number of bytes fetched per track per mixer block (a power of two, so
-; that the mixer's cache offsets can be made by shifting), and the number of
+; the most bytes that are fetched per track per mixer block (any number up to
+; 64, so that the four packed caches fit in a page), and the number of
 ; decimated levels generated.  the window caps the per-pair step at
-; MULTIRATE_WINDOW/16 bytes, and each level halves the step again.
+; MULTIRATE_WINDOW/16 bytes, and each level halves the step again.  a track
+; only fetches what its pitch needs, up to the window, so a big window only
+; costs time on the notes that use it.
 
 ; the C64's low output rate wants the larger window (decimated steps stay
 ; large, so the nearest-neighbor timing error stays small).  the C128's higher
 ; rate leaves less time per block for the REU, so it keeps a smaller window.
 
 !ifndef c128 {
-	MULTIRATE_WINDOW_SHIFT = 6
+	MULTIRATE_WINDOW = 64
 	MULTIRATE_LEVELS = 2
 } else {
-	MULTIRATE_WINDOW_SHIFT = 5
+	MULTIRATE_WINDOW = 48
 	MULTIRATE_LEVELS = 2
 }
-
-MULTIRATE_WINDOW = 1 << MULTIRATE_WINDOW_SHIFT
 
 ; ----------------------------------------------------------------------------
 ; number of bytes of loop-head, and length of silence after every sample.  the
