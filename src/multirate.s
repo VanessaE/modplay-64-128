@@ -90,8 +90,8 @@ multirate_y_temp2								= MULTIRATE_MISC + 87
 multirate_exp_source_pointer					= MULTIRATE_MISC + 88		; 3 bytes
 multirate_exp_target_pointer					= MULTIRATE_MISC + 91		; 3 bytes
 multirate_progbar_page_count					= MULTIRATE_MISC + 94		; 2 bytes
-multirate_iir_state								= MULTIRATE_MISC + 96		; 4 bytes: per-level boost filter state
-multirate_iir_cur								= MULTIRATE_MISC + 100		; the running level's state
+multirate_iir_state								= MULTIRATE_MISC + 96		; 4 bytes: unused now, the boost is gone
+multirate_iir_cur								= MULTIRATE_MISC + 100		; (free for the next person)
 
 !ifndef c128 {
 	resampling_msg_row = 11
@@ -558,9 +558,6 @@ multirate_begin_sample
 	sta multirate_wptr_highs,x
 	lda #0
 	sta multirate_wptr_lows,x
-	lda #$80								; (silence) start each level's boost
-	sta multirate_iir_state,x				; filter from mid-scale
-
 	tya
 	clc
 	adc #32
@@ -577,13 +574,9 @@ rts
 ; level by level, pairwise-averaging in place, and stash each result at that
 ; level's running write pointer.  DESTROYS load_buffer.
 ;
-; each averaged byte m also goes through a one-pole high-frequency boost, to
-; make up for the droop of the 2-tap average:
-;
-;   s = (s + m + 1) >> 1       ; running low-pass, carried from page to page
-;   out = clamp(m + ((m - s) >> 1))
-;
-; |m - s| is never more than 128, so it fits in a signed byte.
+; there's no high-frequency boost after the average.  a one-pole boost used to
+; follow it, to make up for the droop of the 2-tap filter, but offline
+; measurements (etc/modsim.py) showed that it makes the error worse, not better.
 
 multirate_process_block
 	lda #<load_buffer
@@ -602,42 +595,12 @@ multirate_next_level
 	lda #0
 	sta stash_size+1
 
-	lda multirate_iir_state,x
-	sta multirate_iir_cur
-
 	ldy #0						; dest
 	ldx #0						; source = dest*2
 -	lda load_buffer,x
 	clc
 	adc load_buffer+1,x
-	ror							; .A = m, the average
-	sta multirate_x_temp
-
-	sec							; s = (s + m + 1) >> 1
-	adc multirate_iir_cur
-	ror
-	sta multirate_iir_cur
-
-	lda multirate_x_temp		; .A = (m - s) >> 1, arithmetic shift
-	sec
-	sbc multirate_iir_cur
-	cmp #$80
-	ror
-	bmi .mrb_neg
-
-	clc							; boost up, clamp at 255
-	adc multirate_x_temp
-	bcc .mrb_store
-	lda #$ff
-	bne .mrb_store
-
-.mrb_neg
-	clc							; boost down, clamp at 0
-	adc multirate_x_temp
-	bcs .mrb_store
-	lda #0
-
-.mrb_store
+	ror							; .A = the average
 	sta load_buffer,y
 	inx
 	inx
@@ -646,9 +609,6 @@ multirate_next_level
 	bne -
 
 	ldx multirate_level_temp
-	lda multirate_iir_cur
-	sta multirate_iir_state,x
-
 	lda multirate_wptr_lows,x
 	sta expansion_memory_target_pointer
 	lda multirate_wptr_mids,x
