@@ -293,12 +293,28 @@ reu_do_selfmods_for_pitch_change
 		ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
 		sta (utility_pointer),y
 	} else {
-		; with multirate in use, the fetch length stays fixed at the window
+		; with multirate in use, the result counts from the start of the track's
+		; cache, which in the packed layout isn't 0, so take that off to get the
+		; number of bytes the mixer will read from it, and never fetch more than the
+		; window.  (striding mode uses the result as it is.)
+		;
+		; the length used to be fixed at the window, but that makes every track's DMA
+		; burst as long as the window on every block, whatever the pitch, which holds
+		; the CPU for longer and costs more time than the cycle counts allow for.
+
 		bit multirate_enable
-		bmi +
+		bpl .store_fetch_len
+
+		ldx seq_current_track
+		sec
+		sbc mixer_cache_offsets,x
+		cmp #(MULTIRATE_WINDOW + 1)
+		bcc .store_fetch_len
+		lda #MULTIRATE_WINDOW
+
+.store_fetch_len
 		ldy #(reu_fetchlen - reu_fetch_segment_start + 1)
 		sta (utility_pointer),y
-	  +
 	}
 rts
 
