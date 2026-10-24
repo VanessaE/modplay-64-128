@@ -1121,8 +1121,9 @@ rts
 ; Filtering the data in advance removes most of that.  It keeps the data's size,
 ; and costs nothing at playback.
 ;
-; It only runs when filter_setting is on, and not at all in the turbo builds, which
-; run at output rates where nothing needs filtering.
+; filter_setting picks the filter:  $80 = Best (the [1,2,1]/4 above), $40 = Good ([1,1]/2,
+; which is about a third faster and filters less), 0 = None.  It doesn't run at all in the
+; turbo builds, which run at output rates where nothing needs filtering.
 ;
 ; This runs after the loop unroller, so unrolled loops and the head-after-tail
 ; zone get filtered with everything else.  It goes through each sample's pages
@@ -1135,8 +1136,9 @@ rts
 ; that one byte very slightly off on later passes through the loop.)
 
 loader_prefilter_samples
-	bit filter_setting
+	bit filter_setting					; $80 = Best, $40 = Good, 0 = None
 	bmi +
+	bvs +
 	rts
 
 	; total up the pages to filter, for the progress bar
@@ -1283,15 +1285,46 @@ loader_prefilter_samples
 
 	+JSR_INDIRECT (fetch_block_vec)
 
-	; filter the page in place, two bytes per pass.  utility_pointer_b holds the
-	; byte before the pair (c1), utility_pointer_b+1 the first byte of it (c0).
-	; the pair's second byte is saved into c1 for the next pass just before it's
-	; overwritten.  about 32 cycles per byte.
+	; filter the page in place, two bytes per pass.  zero page is used for the
+	; running bytes because it's faster.  Best is [1,2,1]/4, about 32 cycles per
+	; byte;  Good is [1,1]/2, about 23.
 
 	lda .prev
 	sta utility_pointer_b
 
 	ldx #0
+	bit filter_setting
+	bmi .best
+
+	; Good:  out = (prev + cur + 1) >> 1.  utility_pointer_b is the byte before
+	; the pair (c1), utility_pointer_b+1 the pair's first byte (c0), and the pair's
+	; second byte goes into c1 for the next pass, now that it's no longer needed.
+
+-	lda load_buffer,x					; x[i]
+	sta utility_pointer_b+1
+	sec								; (the +1 makes the halving round)
+	adc utility_pointer_b				; + x[i-1]
+	ror
+	sta load_buffer,x					; out[i]
+
+	lda load_buffer+1,x					; x[i+1]
+	sta utility_pointer_b				; the next pair's x[i-1]
+	sec
+	adc utility_pointer_b+1				; + x[i]
+	ror
+	sta load_buffer+1,x					; out[i+1]
+
+	inx
+	inx
+	bne -
+	beq .page_filtered				; (always:  .X just wrapped to 0)
+
+	; Best:  out = (prev + 2*cur + next + 2) >> 2.  utility_pointer_b holds the
+	; byte before the pair (c1), utility_pointer_b+1 the first byte of it (c0).
+	; the pair's second byte is saved into c1 for the next pass just before it's
+	; overwritten.
+
+.best
 -	lda load_buffer,x					; x[i]
 	sta utility_pointer_b+1
 	lda load_buffer+1,x					; x[i+1]
@@ -1316,6 +1349,7 @@ loader_prefilter_samples
 	inx
 	bne -
 
+.page_filtered
 	lda utility_pointer_b					; (x[255], unfiltered)
 	sta .prev
 

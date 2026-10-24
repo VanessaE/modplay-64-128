@@ -211,6 +211,15 @@ mode_on_msg
 mode_off_msg
 	!text GRN,"(",LGRY,"Off",GRN,")",0
 
+; the sample filter's three settings (all the same width, so nothing is left behind)
+
+filter_none_msg
+	!text GRN,"(",LGRY,"None",GRN,")",0
+filter_good_msg
+	!text GRN,"(",WHT,"Good",GRN,")",0
+filter_best_msg
+	!text GRN,"(",WHT,"Best",GRN,")",0
+
 mode_always_on_msg
 	!text "(Always On)",0
 na_msg

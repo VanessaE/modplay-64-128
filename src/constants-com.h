@@ -546,7 +546,7 @@ ntsc_clock = 1022727
 	; Stereo enable is only used with SIDs.  With DAC or DigiMAX
 	; mono or stereo is enforced according to the device. 
 	stereo_enable						!skip 1
-	filter_setting						!skip 1 ; $80 = low-pass samples at load time, 0 = don't
+	filter_setting						!skip 1 ; sample filter:  0 = None, $40 = Good ([1,1]/2), $80 = Best ([1,2,1]/4)
 	visualizer_mode						!skip 1 ; 0=row data, 1=waveforms
 	dither_enable						!skip 1
 	enable_screen_on_playback			!skip 1 ; $80 = enabled (C64 only)

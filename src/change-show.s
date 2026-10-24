@@ -47,7 +47,7 @@
 	dacaddr_row		= 6
 	dacaddr_col		= 31
 	filter_row		= 7
-	filter_col		= 34
+	filter_col		= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9
@@ -82,7 +82,7 @@
 	dacaddr_row		= 6
 	dacaddr_col		= 31
 	filter_row		= 9
-	filter_col		= 34
+	filter_col		= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9
@@ -523,25 +523,35 @@ show_filter_setting
 	clc
 	jsr PLOT
 
-	bit filter_setting
-	bpl +
+	bit filter_setting					; $80 = Best, $40 = Good, 0 = None
+	bmi ++
+	bvs +
 
 	lda #0
-	ldx #<mode_on_msg
-	ldy #>mode_on_msg
+	ldx #<filter_none_msg
+	ldy #>filter_none_msg
 	sec
 	jmp print_msg
 
 +	lda #0
-	ldx #<mode_off_msg
-	ldy #>mode_off_msg
+	ldx #<filter_good_msg
+	ldy #>filter_good_msg
+	sec
+	jmp print_msg
+
+++	lda #0
+	ldx #<filter_best_msg
+	ldy #>filter_best_msg
 	sec
 jmp print_msg
 
 change_filter_setting
 	lda filter_setting
-	eor #$80
-	sta filter_setting
+	asl								; None -> Good -> Best -> None
+	bne +							; Good ($40) -> Best ($80)
+	bcs +							; Best ($80) -> None (.A is 0)
+	lda #$40							; None -> Good
++	sta filter_setting
 jmp show_filter_setting
 
 

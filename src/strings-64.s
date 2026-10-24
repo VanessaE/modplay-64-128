@@ -214,7 +214,7 @@ menu_text_dithering
 }
 
 menu_text_enable_filter
-	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Load filt.",RETURN,0
+	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Load filt",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
 
@@ -257,6 +257,15 @@ mode_on_msg
 	!text GRN,"(",WHT,"On",GRN,") ",0
 mode_off_msg
 	!text GRN,"(",LGRY,"Off",GRN,")",0
+
+; the sample filter's three settings (all the same width, so nothing is left behind)
+
+filter_none_msg
+	!text GRN,"(",LGRY,"None",GRN,")",0
+filter_good_msg
+	!text GRN,"(",WHT,"Good",GRN,")",0
+filter_best_msg
+	!text GRN,"(",WHT,"Best",GRN,")",0
 
 mode_always_on_msg
 	!text "(Always)",0
