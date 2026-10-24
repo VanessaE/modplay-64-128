@@ -1098,6 +1098,16 @@ rts
 !ifndef turbo_available {
 !zone loader_prefilter {
 
+; where the "Loading..." text is, on the loading screen
+
+!ifndef c128 {
+	.msg_row = 11
+	.msg_col = 12
+} else {
+	.msg_row = 11
+	.msg_col = 32
+}
+
 ; Low-pass every sample's data, in place in the REU, with [1,2,1]/4:
 ;
 ;   out = (prev + 2*cur + next + 2) >> 2         (unsigned bytes)
@@ -1126,7 +1136,105 @@ loader_prefilter_samples
 	bmi +
 	rts
 
-+	ldy #1
+	; total up the pages to filter, for the progress bar
+
++	lda #0
+	sta .total_pages
+	sta .total_pages+1
+
+	ldy #1
+.count_next
+	lda sample_start_addresses_mids,y
+	ora sample_start_addresses_highs,y
+	beq .count_skip
+
+	jsr .count_pages
+	clc
+	lda .total_pages
+	adc .pages
+	sta .total_pages
+	lda .total_pages+1
+	adc .pages+1
+	sta .total_pages+1
+
+.count_skip
+	iny
+	cpy #32
+	bne .count_next
+
+	lda .total_pages
+	ora .total_pages+1
+	bne +
+	rts									; no samples, nothing to do
+
+	; set up the progress bar the way loader_add_progress_bar does, but
+	; counting the pages to filter instead of the bytes to load.  (bytes per
+	; segment = total pages * 256 / segments)
+
++	lda #0
+	sta dividend
+	lda .total_pages
+	sta dividend+1
+	lda .total_pages+1
+	sta dividend+2
+
+	lda #(progbar_len * 8)
+	sta divisor
+	lda #0
+	sta divisor+1
+	sta divisor+2
+	jsr divide_24by24
+
+	lda quotient
+	sta progress_bar_bytes_per_segment
+	lda quotient+1
+	sta progress_bar_bytes_per_segment+1
+	lda quotient+2
+	sta progress_bar_bytes_per_segment+2
+
+	lda #0
+	sta .done
+	sta .done+1
+	sta .done+2
+	sta .tick
+
+	; say what we're doing, over the "Loading..." text, and erase the loading
+	; speed that was left on the screen
+
+	ldx #.msg_row
+	ldy #.msg_col
+	clc
+	jsr PLOT
+
+	lda #0
+	ldx #<.filtering_msg
+	ldy #>.filtering_msg
+	sec
+	jsr print_msg
+
+	ldx #.msg_row
+	ldy #.msg_col
+	clc
+	jsr PLOT
+
+	lda #DOWN
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+	jsr CHROUT
+
+	lda #" "
+	ldy #15
+-	jsr CHROUT
+	dey
+	bne -
+
+	lda #(progbar_len * 8)
+	ldx #progbar_column
+	ldy #progbar_row
+	jsr draw_empty_progress_bar
+
+	ldy #1
 
 .next_sample
 	lda sample_start_addresses_mids,y
@@ -1145,32 +1253,9 @@ loader_prefilter_samples
 	lda sample_start_addresses_highs,y
 	sta .pointer+2
 
-	; pages = end page - start page, +1 if the end isn't page-aligned, +1 more
-	; if the sample is looped
+	jsr .count_pages
 
-	sec
-	lda sample_end_addresses_mids,y
-	sbc sample_start_addresses_mids,y
-	sta .pages
-	lda sample_end_addresses_highs,y
-	sbc sample_start_addresses_highs,y
-	sta .pages+1
-
-	lda sample_end_addresses_lows,y
-	cmp #1								; carry set if not page-aligned
-	lda .pages
-	adc #0
-	sta .pages
-	bcc +
-	inc .pages+1
-
-+	lda sample_default_loop_flags,y
-	bpl +
-	inc .pages
-	bne +
-	inc .pages+1
-
-+	lda #$80
+	lda #$80
 	sta .prev
 
 .next_page
@@ -1248,7 +1333,20 @@ loader_prefilter_samples
 
 	+JSR_INDIRECT (stash_block_vec)
 
-	inc .pointer+1
+	; one more page done.  update the bar once per kB, to keep the division from
+	; taking much of the time.
+
+	inc .done+1
+	bne +
+	inc .done+2
+
++	inc .tick
+	lda .tick
+	and #$03
+	bne +
+	jsr .update_progress
+
++	inc .pointer+1
 	bne +
 	inc .pointer+2
 
@@ -1269,13 +1367,79 @@ loader_prefilter_samples
 	cpy #32
 	beq +
 	jmp .next_sample
+
++	jmp .update_progress				; (the last pages may not have hit the once-per-kB update)
+
+; enter with .Y = the sample number.  works out how many pages to filter for that
+; sample, into .pages:  end page - start page, +1 if the end isn't page-aligned,
+; +1 more if the sample is looped.  preserves .Y.
+
+.count_pages
+	sec
+	lda sample_end_addresses_mids,y
+	sbc sample_start_addresses_mids,y
+	sta .pages
+	lda sample_end_addresses_highs,y
+	sbc sample_start_addresses_highs,y
+	sta .pages+1
+
+	lda sample_end_addresses_lows,y
+	cmp #1								; carry set if not page-aligned
+	lda .pages
+	adc #0
+	sta .pages
+	bcc +
+	inc .pages+1
+
++	lda sample_default_loop_flags,y
+	bpl +
+	inc .pages
+	bne +
+	inc .pages+1
 +
 rts
+
+; fill the progress bar to (pages done * 256) / bytes per segment segments.
+
+.update_progress
+	lda .done
+	sta dividend
+	lda .done+1
+	sta dividend+1
+	lda .done+2
+	sta dividend+2
+
+	lda progress_bar_bytes_per_segment
+	sta divisor
+	lda progress_bar_bytes_per_segment+1
+	sta divisor+1
+	lda progress_bar_bytes_per_segment+2
+	sta divisor+2
+	jsr divide_24by24
+
+	; (the bar can only hold progbar_len * 8 segments, and rounding can make the
+	; quotient a little bigger than that, especially for a tiny sample)
+
+	lda quotient+1
+	ora quotient+2
+	bne .bar_full
+	lda quotient
+	cmp #(progbar_len * 8 + 1)
+	bcc +
+.bar_full
+	lda #(progbar_len * 8)
++	jmp update_progress_bar
 
 .sample		!byte 0
 .prev		!byte 0
 .pages		!word 0
 .pointer	!byte 0, 0, 0
+.total_pages	!word 0
+.done		!byte 0, 0, 0
+.tick		!byte 0
+
+.filtering_msg
+	!text LGRN,"  Filtering...",0
 
 }
 }
