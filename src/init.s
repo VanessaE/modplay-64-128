@@ -360,13 +360,6 @@ init
 
 	jsr ascii_table_copy
 
-	!ifndef turbo_available {
-		lda #2					; multirate allowed, with fallback to striding
-	} else {
-		lda #0
-	}
-	sta multirate_is_allowed
-
 	lda #0						; (the loader sets this for each file)
 	sta multirate_enable
 rts
@@ -493,16 +486,17 @@ default_config
 		!byte 64,0,"c",6,4
 	}
 
-	!ifdef c64u {
+	!ifdef turbo_available {
 		!byte 8					; default device
 		!word $d420				; default stereo SID addr
 		!word $dd01				; default DAC addr
 		!byte 1					; default audio driver (SID 4-bit)
 		!byte 1					; default RAM driver (REU)
 		!byte $80				; default Stereo mode (on)
-		!byte $80				; default filter setting (on)
 		!byte 0					; default visualizer mode (row data)
 		!byte $80				; default dithering mode (on)
+		!byte 0					; [always 0]
+		!byte 0					; [always 0]
 		!byte 0					; [always 0]
 		!byte $ff				; end of file marker
 	} else {
@@ -512,10 +506,11 @@ default_config
 		!byte 2					; default audio driver (SID Mahoney method)
 		!byte 1					; default RAM driver (REU)
 		!byte $80				; default Stereo mode (on)
-		!byte 0					; default filter setting
 		!byte 0					; default visualizer mode (row data)
 		!byte 0					; default dithering mode (off)
 		!byte $80				; default screen enable (on)
+		!byte $80				; default load filter setting (best)
+		!byte 1					; default multirate mode (preferred)
 		!byte $ff				; end of file marker
 	}
 configuration_data_end

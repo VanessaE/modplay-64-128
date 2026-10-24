@@ -88,15 +88,18 @@
 	dac_addr							!skip 2
 	; for the audio driver: 1 = 4-bit SID, 2 = Mahoney,
 	; 3 = mono 8-bit DAC, 4 = DigiMAX Mk1, 5 = DigiMAX Mk2
-	audio_driver						!skip 1 
+	audio_driver						!skip 1
 	ram_driver							!skip 1
 	; Stereo enable is only used with SIDs.  With DAC or DigiMAX
-	; mono or stereo is enforced according to the device. 
+	; mono or stereo is enforced according to the device.
 	stereo_enable						!skip 1
-	filter_setting						!skip 1 ; sample filter:  0 = None, $40 = Good ([1,1]/2), $80 = Best ([1,2,1]/4)
 	visualizer_mode						!skip 1 ; 0=row data, 1=waveforms
 	dither_enable						!skip 1
 	enable_screen_on_playback			!skip 1 ; $80 = enabled (C64 only)
+	filter_setting						!skip 1 ; sample filter:  0 = None, $40 = Good ([1,1]/2), $80 = Best ([1,2,1]/4)
+	multirate_is_allowed				!skip 1 ; 0 = off, 1 = if file won't fit
+												; in RAM, use stride, 2 = if it
+												; won't fit, don't load at all.
 
 	cfg_data_end						!skip 1 ; one byte past the real end
 
@@ -167,8 +170,6 @@
 
 	supercpu_detected					!skip 1
 
-	multirate_is_allowed				!skip 1 ; user setting:  0 = off, 1 = on (refuse files that
-												; won't fit), 2 = on (play such files in striding mode)
 	multirate_enable					!skip 1 ; set by the loader for each file:  $80 = this file is
 												; using multirate, 0 = striding mode
 
@@ -323,7 +324,7 @@
 	; on C128, $1000-$101f is used for F-key defs, required by the KERNAL.
 	; on C64, $1000-$101f is free space
 
-	current_note_periods_fracts			= $1020 ; 8x3 bytes, 
+	current_note_periods_fracts			= $1020 ; 8x3 bytes,
 	current_note_periods_lows			= $1028 ; ¯¯\ fracts only used by vibrato,
 	current_note_periods_highs			= $1030 ;    \__ otherwise it's ignored
 

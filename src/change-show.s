@@ -13,6 +13,7 @@
 	dacaddr_col		= 32
 	filter_row		= 4
 	filter_col		= 33
+	multirate_col	= 26
 	dith_en_row		= 4
 	dith_en_col		= 22
 	info_plat_row	= 2
@@ -83,6 +84,7 @@
 	dacaddr_col		= 31
 	filter_row		= 9
 	filter_col		= 33
+	multirate_col	= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
 	scr_en_row		= 9
@@ -553,6 +555,62 @@ change_filter_setting
 	lda #$40							; None -> Good
 +	sta filter_setting
 jmp show_filter_setting
+
+!ifndef turbo_available {
+
+; shown on the line right after the filter's.  0 = Off, 1 = Preferred (fall back to
+; striding mode if the REU is too small), 2 = Required (refuse such files)
+
+show_multirate_setting
+	lda current_menu_page
+	cmp #2
+	beq +
+	sec
+	rts
+
++	ldx #filter_row + 1
+
+	lda audio_driver
+	cmp #1
+	bne +
+	inx
++	ldy #multirate_col
+	clc
+	jsr PLOT
+
+	lda multirate_is_allowed
+	beq .mrs_off
+	cmp #2
+	beq .mrs_required
+
+	ldx #<multirate_preferred_msg
+	ldy #>multirate_preferred_msg
+	bne .mrs_print				; (always)
+
+.mrs_off
+	ldx #<multirate_off_msg
+	ldy #>multirate_off_msg
+	bne .mrs_print				; (always)
+
+.mrs_required
+	ldx #<multirate_required_msg
+	ldy #>multirate_required_msg
+
+.mrs_print
+	lda #0
+	sec
+jmp print_msg
+
+change_multirate_setting
+	ldx multirate_is_allowed			; Off -> Preferred -> Required -> Off
+	inx
+	cpx #3
+	bcc +
+	ldx #0
++	stx multirate_is_allowed
+jmp show_multirate_setting
+
+}
 
 
 show_dithering_setting

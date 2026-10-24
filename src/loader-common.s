@@ -254,13 +254,13 @@ file_size_okay
 		bmi .mrld_fits
 
 		; not enough room in the REU for the decimated copies.  if the user
-		; allows it (2), play this file in striding mode instead.
+		; allows it (1), play this file in striding mode instead.
 
 		lda multirate_is_allowed
-		cmp #2
+		cmp #1
 		beq .mrld_done
 
-		; otherwise (1), refuse the file
+		; otherwise (2), refuse the file
 
 		jsr draw_mini_popup
 

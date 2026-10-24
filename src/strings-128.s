@@ -173,6 +173,10 @@ menu_text_dithering
 	!text RIGHT,GRN,"[",YEL,"T",GRN,"]",LGRY," Enable Dithering",RETURN,0
 menu_text_enable_filter
 	!text RIGHT,GRN,"[",YEL,"F",GRN,"]",LGRY," Filter samples when loading",RETURN,0
+!ifndef turbo_available {
+menu_text_multirate
+	!text RIGHT,GRN,"[",YEL,"M",GRN,"]",LGRY," Multirate resampling",RETURN,0
+}
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save configuration",RETURN,0  ; "🠜"
 
@@ -219,6 +223,17 @@ filter_good_msg
 	!text GRN,"(",WHT,"Good",GRN,")",0
 filter_best_msg
 	!text GRN,"(",WHT,"Best",GRN,")",0
+
+; the multirate setting's three values (same width as the filter's, so nothing is left behind)
+
+!ifndef turbo_available {
+multirate_off_msg
+	!text GRN,"(",LGRY,"Disabled",GRN,") ",0
+multirate_preferred_msg
+	!text GRN,"(",WHT,"Preferred",GRN,")",0
+multirate_required_msg
+	!text GRN,"(",WHT,"Required",GRN,") ",0
+}
 
 mode_always_on_msg
 	!text "(Always On)",0

@@ -509,6 +509,13 @@ not_sid_menu
 	sec
 	jsr print_menu_line
 
+	!ifndef turbo_available {
+		ldx #<menu_text_multirate
+		ldy #>menu_text_multirate
+		sec
+		jsr print_menu_line
+	}
+
 	ldx #<menu_text_save_config
 	ldy #>menu_text_save_config
 	sec
@@ -519,6 +526,9 @@ not_sid_menu
 	jsr show_dac_addr
 	jsr show_stereo_mode
 	jsr show_filter_setting
+	!ifndef turbo_available {
+		jsr show_multirate_setting
+	}
 	jsr show_dithering_setting
 
 	!ifdef badlines_exist {
