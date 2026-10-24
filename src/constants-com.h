@@ -592,6 +592,7 @@ ntsc_clock = 1022727
 	progress_bar_max_length				!skip 1
 	progress_bar_segments_to_draw		!skip 1
 	progress_bar_bytes_per_segment		!skip 3
+	progress_bar_color					!skip 1
 
 	visualizer_base_address				!skip 2
 	viz_waveforms_shift_for_8_bit		!skip 1

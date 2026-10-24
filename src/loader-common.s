@@ -716,6 +716,9 @@ loader_add_progress_bar
 	lda quotient+2
 	sta progress_bar_bytes_per_segment+2
 
+	lda #LGRN
+	sta progress_bar_color
+
 	lda #(progbar_len * 8)
 	ldx #progbar_column
 	ldy #progbar_row
@@ -1229,6 +1232,9 @@ loader_prefilter_samples
 	dey
 	bne -
 
+	lda #ORG
+	sta progress_bar_color
+
 	lda #(progbar_len * 8)
 	ldx #progbar_column
 	ldy #progbar_row
@@ -1439,7 +1445,7 @@ rts
 .tick		!byte 0
 
 .filtering_msg
-	!text LGRN,"  Filtering...",0
+	!text ORG,"  Filtering...",0
 
 }
 }

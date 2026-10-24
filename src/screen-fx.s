@@ -227,7 +227,7 @@ draw_empty_progress_bar
 	lda #progbar_frame_left
 	jsr CHROUT
 
-	lda #LGRN
+	lda progress_bar_color
 	jsr CHROUT
 
 	!ifdef c128 {
