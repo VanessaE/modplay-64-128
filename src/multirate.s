@@ -44,7 +44,7 @@ MULTIRATE_GUARD = MULTIRATE_WINDOW
 ; sample_data_buffer, because that's defined later on than this file is read.)
 
 MULTIRATE_VARS_OFFSET = 256
-MULTIRATE_MISC_SIZE = 101
+MULTIRATE_MISC_SIZE = 96
 
 MULTIRATE_VARS_BASE = sample_data_buffer + MULTIRATE_VARS_OFFSET
 
@@ -90,8 +90,6 @@ multirate_y_temp2								= MULTIRATE_MISC + 87
 multirate_exp_source_pointer					= MULTIRATE_MISC + 88		; 3 bytes
 multirate_exp_target_pointer					= MULTIRATE_MISC + 91		; 3 bytes
 multirate_progbar_page_count					= MULTIRATE_MISC + 94		; 2 bytes
-multirate_iir_state								= MULTIRATE_MISC + 96		; 4 bytes: unused now, the boost is gone
-multirate_iir_cur								= MULTIRATE_MISC + 100		; (free for the next person)
 
 !ifndef c128 {
 	resampling_msg_row = 11
