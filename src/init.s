@@ -499,6 +499,19 @@ default_config
 		!byte 0					; [always 0]
 		!byte 0					; [always 0]
 		!byte $ff				; end of file marker
+	} else ifdef c128{
+		!byte 8					; default device
+		!word $d700				; default stereo SID addr
+		!word $dd01				; default DAC addr
+		!byte 2					; default audio driver (SID Mahoney method)
+		!byte 1					; default RAM driver (REU)
+		!byte $80				; default Stereo mode (on)
+		!byte 0					; default visualizer mode (row data)
+		!byte 0					; default dithering mode (off)
+		!byte $80				; default screen enable (on)
+		!byte $40				; default load filter setting (good)
+		!byte 1					; default multirate mode (preferred)
+		!byte $ff				; end of file marker
 	} else {
 		!byte 8					; default device
 		!word $d700				; default stereo SID addr
@@ -513,6 +526,7 @@ default_config
 		!byte 1					; default multirate mode (preferred)
 		!byte $ff				; end of file marker
 	}
+
 configuration_data_end
 
 nybble_x10_origin
