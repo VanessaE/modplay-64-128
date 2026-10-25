@@ -27,7 +27,7 @@ My main goals, apart from not using BASIC anymore, are:
 * Improve the audio quality by using interrupt-driven, buffered audio output.
 * Improve the slow-as-molasses loader. 😛  If you have an "Ultimate" device (U64, C64U, 1541U), the Command Interface is supported for faster loading.
 * Make the program more "modular" so that it's easy to add support for other audio and memory devices and other platforms/variants.
-* Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.
+* ~~Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.~~  Nope, that isn't happening.  Not yet anyway.
 
 **At the moment, as far as platforms go, this program supports oldskool C64's and C128's, with or without a SuperCPU (later version only), and it supports the C64 Ultimate and Ultimate64.  An REU of any size is required in all cases, which can be either the oldskool cartridge, or if your hardware has this feature built-in.**
 
@@ -52,6 +52,10 @@ Disk images can be found in the repository's **[Package Registry](https://gitlab
 
 **AI/LLM DISCLOSURE:**
 
-I would normally not be interested in (let alone advocate for) the use of AI tools for coding, but the simple fact of the matter is, they're getting pretty good these days, and I'm not getting any younger or any more energetic.  99% of the code in this project is hand-crafted by yours truly the old fashioned way (Steinway & Sons would be proud), less than 1% is third-party contributions, Codebase64, etc.
+There was a time when I would have been uninterested in the use of AI tools for coding (let alone advocating for their use), but the simple fact of the matter is, they're getting pretty good these days, and I'm not getting any younger or any more energetic.
 
-With that being the case, I've decided not to worry about some minuscule fraction being AI contributions.  As long as proper effort has been put into making the code work first before turning to AI to add some polish, and as long as said polish is high quality, I guess I can live with that.
+Therefore, I've decided not to worry about some small fraction of this project being AI contributions.  As long as I put the proper effort, for instance, by writing code myself and getting it to work enough that I can then hand it off to an AI to tweak and polish, or by having the AI generate new stuff for which my own existing code is clearly the basis, I can live with that.  Frankly I'm actually enjoying being productive again.
+
+Naturally I'll always try to properly review and test the AI's contributrions before sending it out into the ether; that which finds a home in my project has to be good quality.
+
+Very roughly, 91% of the code in this project was hand-crafted by yours truly the old fashioned way (Steinway & Sons would be proud), around 8% is AI-assisted with the help of Claude, and the last 1% or so is from third-party contributions, Codebase64, etc.
