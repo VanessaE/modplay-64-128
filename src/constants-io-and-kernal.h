@@ -16,7 +16,7 @@
 	; and CPU vectors of course start at $fffa.
 
 	note_names_table					= $ff06; 244 bytes, through $fff9
-	nnt_end								= note_names_table + 243
+	nnt_end								= note_names_table + 244
 
 	; KERNAL/System vectors
 

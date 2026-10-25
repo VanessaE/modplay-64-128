@@ -174,7 +174,7 @@
 
 	current_fetch_loop_ofl_amounts		!skip 8
 
-	; should be about 8 bytes free here
+	; should be a couple more bytes free here
 
 	bzp_top_end = *
 

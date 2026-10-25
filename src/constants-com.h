@@ -315,7 +315,7 @@
 	do_viz_plot							!skip 1
 	seq_key_debounce					!skip 1
 
-	; about 72 bytes free here on both machines
+	; about 8 bytes free here on both machines
 
 ; ------------------------------------------------------------------------
 

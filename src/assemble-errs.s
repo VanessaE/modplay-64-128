@@ -1,34 +1,34 @@
 ; ============================
 ; assemble-time error handling
 
-!if bzp_low_end > $0023 {
-	!error "Backed-up-zero-page variables, lower part exceeds $0023 by ", * - $0023, " bytes! (",bzp_low_end,")"
+!if bzp_low_end > $0024 {
+	!error "Backed-up-zero-page variables, lower part exceeds $0024 by ", bzp_low_end - $0024, " bytes! (",bzp_low_end - 1,")"
 }
 
 !if bzp_lowmid_end > $0050 {
-	!error "Backed-up-zero-page variables, lower middle part exceeds $0050 by ", * - $0050, " bytes! (",bzp_lowmid_end,")"
+	!error "Backed-up-zero-page variables, lower middle part exceeds $0050 by ", bzp_lowmid_end - $0050, " bytes! (",bzp_lowmid_end - 1,")"
 }
 
 !if bzp_upmid_end > $0059 {
-		!error "Backed-up-zero-page variables, upper middle part exceeds $0059 by ", * - $0059, " bytes! (",bzp_upmid_end,")"
+		!error "Backed-up-zero-page variables, upper middle part exceeds $0059 by ", bzp_upmid_end - $0059, " bytes! (",bzp_upmid_end - 1,")"
 }
 
-!if bzp_top_end > $00f6 {
-	!error "Backed-up-zero-page variables, top part exceeds $f6 by ", * - $00f6, " bytes! (",bzp_top_end,")"
+!if bzp_top_end > $00f7 {
+	!error "Backed-up-zero-page variables, top part exceeds $00f7 by ", bzp_top_end - $00f7, " bytes! (",bzp_top_end - 1,")"
 }
 
 !ifndef c128 {
-	!if lma_cur_end > $03ff {
-		!error "Low memory area exceeds overlaps `multablo` by ", * - $03ff, " bytes! (",lma_cur_end,")"
+	!if lma_cur_end > $0400 {
+		!error "Low memory area exceeds overlaps `multablo` by ", lma_cur_end - $0400, " bytes! (",lma_cur_end - 1,")"
 	}
 } else {
-	!if lma_cur_end > $02a1 {
-		!error "Low memory area overlaps C128 indirect routines by ", * - $02a1, " bytes! (",lma_cur_end,")"
+	!if lma_cur_end > $02a2 {
+		!error "Low memory area overlaps C128 indirect routines by ", lma_cur_end - $02a2, " bytes! (",lma_cur_end - 1,")"
 	}
 }
 
-!if mv_end > $0fff {
-	!error "Main variables zone exceeds $0fff by ", * - $0fff, " bytes! (",mv_end,")"
+!if mv_end > $1000 {
+	!error "Main variables zone exceeds $1000 by ", mv_end - $1000, " bytes! (",mv_end - 1,")"
 }
 
 !if LOAD_BUFFER_PAGES * 256 < header31_seek_to_pat_data {
@@ -58,13 +58,13 @@
 }
 
 !if end_of_mid_mem_tables > main_mem_free_end {
-	!error "Mid-memory tables overlap high memory area by ", main_mem_free_end - end_of_mid_mem_tables, " bytes! (",end_of_mid_mem_tables,")"
+	!error "Mid-memory tables overlap high memory area by ", end_of_mid_mem_tables - main_mem_free_end, " bytes! (",end_of_mid_mem_tables - 1,")"
 }
 
 !if under_kernal_code_end > $ff00 {
-	!error "Under-KERNAL code overlaps MMU/REU ($ff00) by ", under_kernal_code_end - $ff00, " bytes! (",under_kernal_code_end,")"
+	!error "Under-KERNAL code overlaps MMU/REU ($ff00) by ", under_kernal_code_end - $ff00, " bytes! (",under_kernal_code_end - 1,")"
 }
 
-!if nnt_end > $fff9 {
-	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt_end - $fff9, " bytes! (",nnt_end,")"
+!if nnt_end > $fffa {
+	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt_end - $fffa, " bytes! (",nnt_end - 1,")"
 }
