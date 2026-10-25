@@ -2,12 +2,15 @@
 
 !addr {
 
-	under_kernal_code					= $e000
-	and_f0_table						= $fa00
-	mah_table_6581						= $fb00
-	mah_table_8580						= $fc00
-	tempo_table_fracts					= $fd00
-	tempo_table_lows					= $fe00
+	viz_note_number_lookup_table		= $e000 ; 7 pages
+	divide_by_16_table					= $e700
+	and_f0_table						= $e800
+	mah_table_6581						= $e900
+	mah_table_8580						= $ea00
+	tempo_table_fracts					= $eb00
+	tempo_table_lows					= $ec00
+
+	under_kernal_code					= $ed00
 
 	; C128 MMU occupies $ff00 through $ff04, REU can watch $ffxx also.
 	; and CPU vectors of course start at $fffa.

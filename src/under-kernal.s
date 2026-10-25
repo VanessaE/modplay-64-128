@@ -30,8 +30,6 @@ under_kernal_code_origin
 
 		!source "src/mixer-standard.s"
 
-		!source "src/drv-reu-musicops.s"
-
 		!source "src/drv-sid-4b.s"
 		!source "src/drv-sid-d4b.s"
 		!source "src/drv-sid-mah.s"

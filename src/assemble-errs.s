@@ -61,8 +61,8 @@
 	!error "Mid-memory tables overlap high memory area by ", main_mem_free_end - end_of_mid_mem_tables, " bytes! (",end_of_mid_mem_tables,")"
 }
 
-!if under_kernal_code_end > and_f0_table {
-	!error "Under-KERNAL code overlaps and_f0_table by ", under_kernal_code_end - and_f0_table, " bytes! (",under_kernal_code_end,")"
+!if under_kernal_code_end > $ff00 {
+	!error "Under-KERNAL code overlaps MMU/REU ($ff00) by ", under_kernal_code_end - $ff00, " bytes! (",under_kernal_code_end,")"
 }
 
 !if nnt_end > $fff9 {

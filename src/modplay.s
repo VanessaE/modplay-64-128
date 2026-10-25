@@ -125,6 +125,7 @@ rti
 !source "src/windowing.s"
 
 !source "src/drv-reu-blockops.s"
+!source "src/drv-reu-musicops.s"
 
 !source "src/player.s"
 
@@ -219,11 +220,9 @@ load_buffer							= volume_table + 64*256
 sample_data_buffer					= load_buffer
 
 ascii_to_petscii_table				= load_buffer + LOAD_BUFFER_PAGES*256
-viz_note_number_lookup_table		= ascii_to_petscii_table + 256
-steprate_lookup_table				= viz_note_number_lookup_table + 7*256
-divide_by_16_table					= steprate_lookup_table + 14*256
+steprate_lookup_table				= ascii_to_petscii_table + 256
 
-end_of_mid_mem_tables				= divide_by_16_table + 256
+end_of_mid_mem_tables				= steprate_lookup_table + 14*256
 
 ; ----------------------------------------------------------------------
 ; constants that depend on the addresses pointed to by the symbols above
