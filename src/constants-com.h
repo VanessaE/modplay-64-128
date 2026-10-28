@@ -351,8 +351,8 @@
 	sample_loop_end_addresses_mids		= zero_page_swap_area + 32
 	sample_loop_end_addresses_highs		= zero_page_swap_area + 64
 
-	; the playlist's file sizes, 256 bytes each.  these have to be zeroed or
-	; filled before anything reads them, since init's wipe doesn't reach this far.
+	; the playlist's file sizes, 256 bytes each.  these are outside of the main
+	; variables zone, so init's wipe loop clears them separately.
 
 	playlist_file_sizes_lows			= $1600
 	playlist_file_sizes_highs			= $1700

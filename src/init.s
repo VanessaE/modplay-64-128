@@ -50,6 +50,9 @@ init
 	sta main_variables_zone+$0500,y ; a few random small tables
 	sta main_variables_zone+$0600,y ; audio buf left
 	sta main_variables_zone+$0700,y ; audio buf right
+
+	sta playlist_file_sizes_lows,y
+	sta playlist_file_sizes_highs,y
 	iny
 	bne -
 
