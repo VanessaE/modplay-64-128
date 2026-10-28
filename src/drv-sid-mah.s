@@ -5,6 +5,11 @@
 
 !zone sid_mahoney_driver {
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 sid_mahoney_driver_init
 	lda #<sid_mahoney_set_volume_table_resolution
 	sta audio_set_resolution_vec+1
@@ -41,37 +46,6 @@ sid_mahoney_driver_init
 	sta audio_isr_vec+1
 
 jmp reset_sids
-
-
-sid_mahoney_set_isr_cycle_count
-	!ifndef scpu {
-		!ifndef c128 {
-			lda #56
-			bit stereo_enable
-			bpl +
-			lda #66
-		  +
-		} else {
-			lda #58 / 2
-			bit stereo_enable
-			bpl +
-			lda #(69 + 1) / 2
-		  +
-		}
-	} else {
-		lda #7
-	}
-
-	sta audio_driver_isr_cycle_count
-rts
-
-sid_mahoney_set_volume_table_resolution
-	lda #7
-	bit stereo_enable
-	bmi +
-	lda #6
-+	sta volume_tables_resolution
-rts
 
 sid_mahoney_start
 	jsr reset_sids
@@ -202,6 +176,44 @@ mah_setup_right_sid_addrs
 	sta .mah_s2a+1
 rts
 
+sid_mahoney_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+sid_mahoney_resident
+
+sid_mahoney_set_isr_cycle_count
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #56
+			bit stereo_enable
+			bpl +
+			lda #66
+		  +
+		} else {
+			lda #58 / 2
+			bit stereo_enable
+			bpl +
+			lda #(69 + 1) / 2
+		  +
+		}
+	} else {
+		lda #7
+	}
+
+	sta audio_driver_isr_cycle_count
+rts
+
+sid_mahoney_set_volume_table_resolution
+	lda #7
+	bit stereo_enable
+	bmi +
+	lda #6
++	sta volume_tables_resolution
+rts
+
 sid_isr_mahoney_mono			; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -218,7 +230,6 @@ sid_isr_mahoney_mono			; 7 cycles coming in
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
 								; 26 on SCPU
-
 
 sid_isr_mahoney_stereo			; 7 cycles coming in
 	+NMI_SAVE_AXY				; 9
@@ -239,5 +250,7 @@ sid_isr_mahoney_stereo			; 7 cycles coming in
 
 	+NMI_RESTORE_AXY			; 9
 +NMI_EXIT						; 9, 11, or 26
+
+sid_mahoney_resident_end
 
 }

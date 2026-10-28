@@ -4,6 +4,11 @@
 
 !zone digimax_mk1_driver {
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
@@ -69,6 +74,40 @@ digimax_mk1_driver_init
 	sta audio_isr_vec+1
 rts
 
+digimax_mk1_start
+	lda #$ff
+	sta CIA2_DDR_B
+
+	lda dac_addr+1
+	cmp #$dd
+	bne +
+
+	lda CIA2_DDR_A
+	ora #%00001100
+	sta CIA2_DDR_A
+  +
+rts
+
+digimax_mk1_stop
+	lda dac_addr+1
+	cmp #$dd
+	bne +
+
+	lda CIA2_PORT_A
+	and #%11110111
+	ora #%00000100
+	sta CIA2_PORT_A
+  +
+rts
+
+digimax_mk1_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+digimax_mk1_resident
+
 digimax_mk1_set_isr_cycle_count
 	!ifndef scpu {
 		ldx dac_addr+1
@@ -104,32 +143,6 @@ digimax_mk1_set_vol_tab_resolution
 	sta volume_tables_resolution
 rts
 
-digimax_mk1_start
-	lda #$ff
-	sta CIA2_DDR_B
-
-	lda dac_addr+1
-	cmp #$dd
-	bne +
-
-	lda CIA2_DDR_A
-	ora #%00001100
-	sta CIA2_DDR_A
-  +
-rts
-
-digimax_mk1_stop
-	lda dac_addr+1
-	cmp #$dd
-	bne +
-
-	lda CIA2_PORT_A
-	and #%11110111
-	ora #%00000100
-	sta CIA2_PORT_A
-  +
-rts
-
 digimax_isr_mk1_ep				; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -142,7 +155,6 @@ digimax_isr_mk1_ep				; 7 cycles coming in
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 or 10
-
 
 digimax_isr_mk1_up				; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
@@ -160,5 +172,7 @@ digimax_isr_mk1_up				; 7 cycles coming in
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26
+
+digimax_mk1_resident_end
 
 }

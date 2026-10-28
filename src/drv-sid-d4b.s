@@ -4,6 +4,11 @@
 
 !zone sid_4bit_driver {
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
@@ -52,6 +57,29 @@ sid_4bit_dithered_driver_init
 
 jmp reset_sids
 
+sid_4bit_dithered_start
+	jsr reset_sids
+
+	lda #$ff						; voice 3 max frequency
+	sta SID_VOICE3_FREQ_LOW
+	sta SID_VOICE3_FREQ_HIGH
+
+	lda #0							; voice 3 ADSR
+	sta SID_VOICE3_ENV_AD
+	sta SID_VOICE3_ENV_SR
+
+	lda #$81						; voice 3 waveform = noise + gate
+	sta SID_VOICE3_CR
+
+jmp sid_apply_digi_boost
+
+sid_4bit_dithered_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+sid_4bit_dithered_resident
 
 sid_4bit_dithered_set_isr_cycle_count
 
@@ -82,23 +110,6 @@ sid_4bit_dithered_set_volume_table_resolution
 	lda #6
 +	sta volume_tables_resolution
 rts
-
-sid_4bit_dithered_start
-	jsr reset_sids
-
-	lda #$ff						; voice 3 max frequency
-	sta SID_VOICE3_FREQ_LOW
-	sta SID_VOICE3_FREQ_HIGH
-
-	lda #0							; voice 3 ADSR
-	sta SID_VOICE3_ENV_AD
-	sta SID_VOICE3_ENV_SR
-
-	lda #$81						; voice 3 waveform = noise + gate
-	sta SID_VOICE3_CR
-
-jmp sid_apply_digi_boost
-
 
 sid_isr_4b_dithered_mono		; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
@@ -157,5 +168,7 @@ sid_isr_4b_dithered_stereo		; 7 cycles coming in
 
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26
+
+sid_4bit_dithered_resident_end
 
 }

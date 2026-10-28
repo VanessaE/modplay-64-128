@@ -4,6 +4,11 @@
 
 !zone dac_driver {
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
@@ -42,25 +47,6 @@ dac_driver_init
 	sta audio_isr_vec+1
 rts
 
-dac_set_isr_cycle_count
-	!ifndef scpu {
-		!ifndef c128 {
-			lda #50
-		} else {
-			lda #52 / 2
-		}
-	} else {
-		lda #8
-	}
-
-	sta audio_driver_isr_cycle_count
-rts
-
-dac_set_volume_table_resolution
-	lda #6
-	sta volume_tables_resolution
-rts
-
 dac_start
 	lda #$ff
 	sta CIA2_DDR_B
@@ -82,6 +68,33 @@ dac_stop
   +
 rts
 
+dac_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+dac_resident
+
+dac_set_isr_cycle_count
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #50
+		} else {
+			lda #52 / 2
+		}
+	} else {
+		lda #8
+	}
+
+	sta audio_driver_isr_cycle_count
+rts
+
+dac_set_volume_table_resolution
+	lda #6
+	sta volume_tables_resolution
+rts
+
 dac_isr_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -96,5 +109,7 @@ dac_isr_mono					; 7 cycles coming in
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
 								; 26 on SCPU
+
+dac_resident_end
 
 }

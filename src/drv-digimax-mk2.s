@@ -10,6 +10,11 @@
 	need_cia_delays = 1
 }
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
@@ -42,25 +47,6 @@ digimax_mk2_driver_init
 	lda #>digimax_isr_mk2
 	sta audio_isr_vec+1
 	rts
-rts
-
-digimax_mk2_set_isr_cycle_count
-	!ifndef scpu {
-		!ifndef c128 {
-			lda #52
-		} else {
-			lda #56 / 2
-		}
-	} else {
-		lda #7
-	}
-
-	sta audio_driver_isr_cycle_count
-rts
-
-digimax_mk2_set_vol_tab_resolution
-	lda #7
-	sta volume_tables_resolution
 rts
 
 digimax_mk2_start
@@ -118,6 +104,41 @@ digimax_mk2_stop				; just set PA2 low, /PA3 high
 	sta CIA2_PORT_A
 rts
 
+digimax_mk2_sp_wait
+	ldx #254				; spin-wait for raster line 254
+-	cpx VIC_RASTER_LOW
+	bne -
+-	ldx VIC_RASTER_LOW		; now wait for it to roll over to 0.
+	bne -
+rts
+
+digimax_mk2_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+digimax_mk2_resident
+
+digimax_mk2_set_isr_cycle_count
+	!ifndef scpu {
+		!ifndef c128 {
+			lda #52
+		} else {
+			lda #56 / 2
+		}
+	} else {
+		lda #7
+	}
+
+	sta audio_driver_isr_cycle_count
+rts
+
+digimax_mk2_set_vol_tab_resolution
+	lda #7
+	sta volume_tables_resolution
+rts
+
 digimax_isr_mk2					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -131,13 +152,6 @@ digimax_isr_mk2					; 7 cycles coming in
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26
 
-
-digimax_mk2_sp_wait
-	ldx #254				; spin-wait for raster line 254
--	cpx VIC_RASTER_LOW
-	bne -
--	ldx VIC_RASTER_LOW		; now wait for it to roll over to 0.
-	bne -
-rts
+digimax_mk2_resident_end
 
 }

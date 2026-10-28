@@ -4,6 +4,11 @@
 
 !zone sid_4bit_driver {
 
+; ---------------------------------------------------------------------------
+; TRANSIENT PART: runs only when the driver is selected, when playback starts,
+; and when it ends, never while the audio ISR is live.  nothing in the resident
+; part below may refer to anything in here.
+
 ; ISR-common will call this function to set up the various vectors to the
 ; routines below.
 
@@ -52,6 +57,17 @@ sid_4bit_driver_init
 
 jmp reset_sids
 
+sid_4bit_start
+	jsr reset_sids
+jmp sid_apply_digi_boost
+
+sid_4bit_transient_end
+
+; ---------------------------------------------------------------------------
+; RESIDENT PART: the ISRs and the routines that are called while the tables are
+; regenerated.  the transient part patches operands in the ISRs.
+
+sid_4bit_resident
 
 ; This sets the audio ISR's cycle count, in 1 MHz units.
 
@@ -81,10 +97,6 @@ sid_4bit_set_volume_table_resolution
 	sta volume_tables_resolution
 rts
 
-sid_4bit_start
-	jsr reset_sids
-jmp sid_apply_digi_boost
-
 sid_isr_4b_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -100,7 +112,6 @@ sid_isr_4b_mono					; 7 cycles coming in
 +NMI_EXIT						; 9 cycles to exit on stock C64, 11 on C128
 								; 26 on SCPU
 
-
 sid_isr_4b_stereo				; 7 cycles coming in
 	+NMI_SAVE_AX				; 6
 
@@ -114,5 +125,6 @@ sid_isr_4b_stereo				; 7 cycles coming in
 	+NMI_RESTORE_AX				; 6
 +NMI_EXIT						; 9, 11, or 26
 
+sid_4bit_resident_end
 
 }
