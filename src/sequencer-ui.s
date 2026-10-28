@@ -382,8 +382,24 @@ toggle_enable_track
 
 
 pause_player
-	lda #$7f						; disable timer A interrupt
-	sta CIA2_ICR
+	; the audio ISR is still running here, so fill the audio buffers with silence
+	; and give it a couple of samples to play it.  that leaves the DAC resting at
+	; its midpoint instead of wherever the last sample happened to be, without
+	; needing any help from the audio driver.
+
+	lda #$80
+	jsr fill_audio_buffers
+
+	!ifndef use_profiler {
+		ldx audio_out_buf_index
+		inx
+		inx
+-		cpx audio_out_buf_index
+		bne -
+	}
+
+	lda #$7f						; disable timer A interrupt, but leave the timer
+	sta CIA2_ICR					; running so it stays in sync with the raster
 
 	bit CIA1_TOD_HOURS				; we can't stop the TOD, so just save
 	lda CIA1_TOD_MINUTES			; the elapsed M:S.t and restore it later
@@ -398,20 +414,6 @@ pause_player
 	sta CIA1_TOD_MINUTES
 	sta CIA1_TOD_SECONDS
 	sta CIA1_TOD_TENTHS
-
-	lda #$80
-	jsr fill_audio_buffers
-
-	jsr audio_stop_vec
-
-	!ifndef use_profiler {
-		lda audio_driver
-		cmp #5
-		bne +
-
-		jsr isr_reset_timers_interrupts
-	  +
-	}
 
 	jsr swap_zero_page				; KERNAL swap -> active, player -> swap
 	jsr enable_kernal_only
@@ -462,20 +464,10 @@ pause_player
 .pause_noviz2
 
 	!ifndef use_profiler {
-		lda audio_driver
-		cmp #5
-		beq +
-
-		jsr audio_start_vec
+		lda CIA2_ICR					; the timer's flag has been set the whole time, so clear
+										; it, or the NMI would fire the moment we unmask it
 		lda #$81						; enable timer A interrupt
 		sta CIA2_ICR
-		jmp ++
-
-	+	jsr isr_reset_timers_interrupts ; for the DigiMAX Mk2 we have to 
-		jsr audio_start_vec ; take special care to restart it.
-		jsr isr_startup
-		jmp ++
-	++
 	}
 
 	lda #0

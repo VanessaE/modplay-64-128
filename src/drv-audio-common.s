@@ -191,6 +191,15 @@ show_audio_driver
 	sec
 rts
 
+; enter with .A = byte to fill with
+fill_audio_buffers
+	ldy #0
+-	sta audio_buffer_left,y
+	sta audio_buffer_right,y
+	iny
+	bne -
+rts
+
 reset_sids
 	lda #0
 	ldy #$18

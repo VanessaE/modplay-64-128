@@ -1174,15 +1174,6 @@ display_byte_hex_direct
 	ldy temp_abs_y
 rts
 
-; enter with .A = byte to fill with
-fill_audio_buffers
-	ldy #0
--	sta audio_buffer_left,y
-	sta audio_buffer_right,y
-	iny
-	bne -
-rts
-
 keyboard_debounce
 	lda #0						; drive all columns low on CIA
 	sta CIA1_PORT_A
