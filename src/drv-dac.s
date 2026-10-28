@@ -4,37 +4,27 @@
 
 !zone dac_driver {
 
-; ---------------------------------------------------------------------------
-; TRANSIENT PART: runs only when the driver is selected, when playback starts,
-; and when it ends, never while the audio ISR is live.  nothing in the resident
-; part below may refer to anything in here.
+; TRANSIENT IMAGE: init, start and stop.  it's assembled to run from the start of
+; the load buffer, but it is stored in the PRG (and then in expansion memory) as
+; plain data, and fetched into place whenever it is needed.  it only runs when
+; the driver is selected, when playback starts, and when it ends, never while the
+; audio ISR is live, and nothing in the resident image may refer to it.  its
+; entry jumps are at audio_transient_init, _start and _stop.
 
-; ISR-common will call this function to set up the various vectors to the
-; routines below.
+dac_transient_image = *
+
+!pseudopc audio_transient_base {
+
+	jmp dac_driver_init
+	jmp dac_start
+	jmp dac_stop
+
+; init_audio_driver calls this through the first entry of the transient image.
+; it points audio_isr_vec at the right ISR and patches the ISRs' operands.
 
 dac_driver_init
 	lda #0
 	sta stereo_enable
-
-	lda #<dac_set_volume_table_resolution
-	sta audio_set_resolution_vec+1
-	lda #>dac_set_volume_table_resolution
-	sta audio_set_resolution_vec+2
-
-	lda #<dac_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+1
-	lda #>dac_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+2
-
-	lda #<dac_start
-	sta audio_start_vec+1
-	lda #>dac_start
-	sta audio_start_vec+2
-
-	lda #<dac_stop
-	sta audio_stop_vec+1
-	lda #>dac_stop
-	sta audio_stop_vec+2
 
 	lda dac_addr
 	sta .da+1
@@ -70,11 +60,19 @@ rts
 
 dac_transient_end
 
-; ---------------------------------------------------------------------------
-; RESIDENT PART: the ISRs and the routines that are called while the tables are
-; regenerated.  the transient part patches operands in the ISRs.
+}
 
-dac_resident
+; RESIDENT IMAGE: the ISRs, and the routines that the table generator calls.
+; it runs from the reserved page under the KERNAL, whose first two entries are
+; the cycle count and volume table resolution setters.  the transient image
+; patches operands in the ISRs here.
+
+dac_resident_image = *
+
+!pseudopc audio_resident_page {
+
+	jmp dac_set_isr_cycle_count
+	jmp dac_set_volume_table_resolution
 
 dac_set_isr_cycle_count
 	!ifndef scpu {
@@ -111,5 +109,7 @@ dac_isr_mono					; 7 cycles coming in
 								; 26 on SCPU
 
 dac_resident_end
+
+}
 
 }

@@ -12,6 +12,16 @@
 
 	under_kernal_code					= $ed00
 
+	; the resident part of the active audio driver (its ISRs and the routines the
+	; table generator calls) is fetched into this page, just below the C128 MMU.
+	; its first two entries are JMPs to the ISR cycle count and volume table
+	; resolution setters.
+
+	audio_resident_page					= $fe00
+	audio_set_isr_cycle_count			= audio_resident_page
+	audio_set_volume_table_resolution	= audio_resident_page + 3
+
+
 	; C128 MMU occupies $ff00 through $ff04, REU can watch $ffxx also.
 	; and CPU vectors of course start at $fffa.
 

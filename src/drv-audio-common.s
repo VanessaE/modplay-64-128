@@ -500,32 +500,110 @@ sid_apply_digi_boost
   +
 rts
 
-init_audio_driver
+; ----------------------------------------------------------------------------
+; AUDIO DRIVER IMAGES
+;
+; Each audio driver is split in two images (see the drv-*.s files).  The
+; resident image, with the ISRs and the routines that the table generator calls,
+; runs from the reserved page at audio_resident_page.  The transient image, with
+; the init, start and stop routines, runs from the start of the load buffer.
+; Both are kept in expansion memory, in the EXP_AUDIO_DRIVER_PAGES pages just in
+; front of the file data, and are fetched into place when they are needed.
+;
+; The transient image has to be fetched again before a start or a stop, since
+; the load buffer doubles as the striding mode caches in between.
+
+; returns the index of the active driver's images in .A:  0 = SID 4-bit,
+; 1 = SID 4-bit dithered, 2 = Mahoney, 3 = DAC, 4 = DigiMAX Mk1, 5 = DigiMAX Mk2
+
+audio_image_index
 	lda audio_driver
+	cmp #2
+	bcs +
 
-	cmp #5
-	bne +
-	jmp digimax_mk2_driver_init
-
-+	cmp #4
-	bne +
-	jmp digimax_mk1_driver_init
-
-+	cmp #3
-	bne +
-	jmp dac_driver_init
-
-+	cmp #2
-	bne +
-	jmp sid_mahoney_driver_init
-
-+	bit dither_enable
+	lda #0
+	bit dither_enable
 	bpl +
+	lda #1
++
+rts
 
-	jmp sid_4bit_dithered_driver_init
+; selects the driver, which has to be done any time that its settings (stereo,
+; dithering and so on) may have changed.
 
-  +
-jmp sid_4bit_driver_init
+init_audio_driver
+	jsr audio_swap_in_resident
+	jsr audio_swap_in_transient
+jmp audio_transient_init
+
+audio_start
+	jsr audio_swap_in_transient
+jmp audio_transient_start
+
+audio_stop
+	jsr audio_swap_in_transient
+jmp audio_transient_stop
+
+audio_swap_in_transient
+	jsr audio_image_index
+	asl
+	asl
+	tax							; the transient offset is the first word
+
+	lda #<audio_transient_base
+	sta expansion_transfer_local_addr
+	lda #>audio_transient_base
+	sta expansion_transfer_local_addr+1
+
+	lda #>AUDIO_TRANSIENT_MAX	; 512 bytes, which is always more than the image needs
+	bne audio_fetch_image
+
+audio_swap_in_resident
+	jsr audio_image_index
+	asl
+	asl
+	tax
+	inx
+	inx							; the resident offset is the second word
+
+	lda #<audio_resident_page
+	sta expansion_transfer_local_addr
+	lda #>audio_resident_page
+	sta expansion_transfer_local_addr+1
+
+	lda #1						; one page, and fall into the fetch
+
+; enter with .X = offset into audio_image_table of the image's offset, .A = the
+; length of the fetch in pages, and expansion_transfer_local_addr set.
+
+audio_fetch_image
+	sta stash_size+1
+	lda #0
+	sta stash_size
+	sta expansion_transfer_local_addr+2
+	sta expansion_memory_target_pointer+2
+
+	lda audio_image_table,x
+	sta expansion_memory_target_pointer
+
+	sec
+	lda exp_file_data_start_page
+	sbc #EXP_AUDIO_DRIVER_PAGES
+	clc
+	adc audio_image_table+1,x
+	sta expansion_memory_target_pointer+1
+jmp fetch_block_vec
+
+; the offsets of each driver's images from audio_images_start, in the order given
+; by audio_image_index:  the transient image first, then the resident one.
+
+audio_image_table
+	!word sid_4bit_transient_image - audio_images_start, sid_4bit_resident_image - audio_images_start
+	!word sid_4bit_dithered_transient_image - audio_images_start, sid_4bit_dithered_resident_image - audio_images_start
+	!word sid_mahoney_transient_image - audio_images_start, sid_mahoney_resident_image - audio_images_start
+	!word dac_transient_image - audio_images_start, dac_resident_image - audio_images_start
+	!word digimax_mk1_transient_image - audio_images_start, digimax_mk1_resident_image - audio_images_start
+	!word digimax_mk2_transient_image - audio_images_start, digimax_mk2_resident_image - audio_images_start
 
 
 set_cia2_cra_default_val

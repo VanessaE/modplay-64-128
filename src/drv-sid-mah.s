@@ -5,32 +5,22 @@
 
 !zone sid_mahoney_driver {
 
-; ---------------------------------------------------------------------------
-; TRANSIENT PART: runs only when the driver is selected, when playback starts,
-; and when it ends, never while the audio ISR is live.  nothing in the resident
-; part below may refer to anything in here.
+; TRANSIENT IMAGE: init, start and stop.  it's assembled to run from the start of
+; the load buffer, but it is stored in the PRG (and then in expansion memory) as
+; plain data, and fetched into place whenever it is needed.  it only runs when
+; the driver is selected, when playback starts, and when it ends, never while the
+; audio ISR is live, and nothing in the resident image may refer to it.  its
+; entry jumps are at audio_transient_init, _start and _stop.
+
+sid_mahoney_transient_image = *
+
+!pseudopc audio_transient_base {
+
+	jmp sid_mahoney_driver_init
+	jmp sid_mahoney_start
+	jmp reset_sids
 
 sid_mahoney_driver_init
-	lda #<sid_mahoney_set_volume_table_resolution
-	sta audio_set_resolution_vec+1
-	lda #>sid_mahoney_set_volume_table_resolution
-	sta audio_set_resolution_vec+2
-
-	lda #<sid_mahoney_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+1
-	lda #>sid_mahoney_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+2
-
-	lda #<sid_mahoney_start
-	sta audio_start_vec+1
-	lda #>sid_mahoney_start
-	sta audio_start_vec+2
-
-	lda #<reset_sids
-	sta audio_stop_vec+1
-	lda #>reset_sids
-	sta audio_stop_vec+2
-
 	bit stereo_enable
 	bmi +
 
@@ -178,11 +168,19 @@ rts
 
 sid_mahoney_transient_end
 
-; ---------------------------------------------------------------------------
-; RESIDENT PART: the ISRs and the routines that are called while the tables are
-; regenerated.  the transient part patches operands in the ISRs.
+}
 
-sid_mahoney_resident
+; RESIDENT IMAGE: the ISRs, and the routines that the table generator calls.
+; it runs from the reserved page under the KERNAL, whose first two entries are
+; the cycle count and volume table resolution setters.  the transient image
+; patches operands in the ISRs here.
+
+sid_mahoney_resident_image = *
+
+!pseudopc audio_resident_page {
+
+	jmp sid_mahoney_set_isr_cycle_count
+	jmp sid_mahoney_set_volume_table_resolution
 
 sid_mahoney_set_isr_cycle_count
 	!ifndef scpu {
@@ -252,5 +250,7 @@ sid_isr_mahoney_stereo			; 7 cycles coming in
 +NMI_EXIT						; 9, 11, or 26
 
 sid_mahoney_resident_end
+
+}
 
 }

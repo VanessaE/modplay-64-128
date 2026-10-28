@@ -1,6 +1,7 @@
 ; Jump table for the routines that the program calls indirectly.  Each entry is a
-; JMP whose operand gets pointed at the real routine by init, or by the audio driver
-; setup code, so a call is just a JSR to the entry (like the KERNAL's own jump table).
+; JMP whose operand gets pointed at the real routine by init, so a call is just a
+; JSR to the entry (like the KERNAL's own jump table).  The audio drivers aren't in
+; here:  they have fixed entry points of their own (see drv-audio-common.s).
 ; To set an entry, store the target's low byte at ENTRY+1 and its high byte at ENTRY+2.
 ;
 ; This has to live in the early part of the program, because it must be visible while
@@ -15,13 +16,5 @@ fetch_block_vec
 	jmp $1234		; fetch a block from expansion memory
 stash_block_vec
 	jmp $1234		; stash a block to expansion memory
-audio_set_resolution_vec
-	jmp $1234		; set the volume tables resolution for the audio driver
-audio_driver_set_cycle_count_vec
-	jmp $1234		; set the audio driver's ISR cycle count
-audio_start_vec
-	jmp $1234		; start the audio driver
-audio_stop_vec
-	jmp $1234		; stop the audio driver
 ram_driver_set_cycle_counts_vec
 	jmp $1234		; set the ram driver's cycle counts

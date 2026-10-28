@@ -61,67 +61,73 @@
 	!error "Mid-memory tables overlap high memory area by ", end_of_mid_mem_tables - main_mem_free_end, " bytes! (",end_of_mid_mem_tables - 1,")"
 }
 
-!if under_kernal_code_end > $ff00 {
-	!error "Under-KERNAL code overlaps MMU/REU ($ff00) by ", under_kernal_code_end - $ff00, " bytes! (",under_kernal_code_end - 1,")"
+!if under_kernal_code_end > audio_resident_page {
+	!error "Under-KERNAL code overlaps the audio driver page (", audio_resident_page, ") by ", under_kernal_code_end - audio_resident_page, " bytes! (",under_kernal_code_end - 1,")"
 }
 
 !if nnt_end > $fffa {
 	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt_end - $fffa, " bytes! (",nnt_end - 1,")"
 }
 
-; each audio driver is split into a transient part and a resident part (see the
-; comments in the drv-*.s files).  when the drivers get swapped in from under I/O,
-; the resident part has to fit in one page along with its two entry jumps, and the
-; transient part has to fit in two block copies of 255 bytes along with its three
-; entry jumps.
+; each audio driver is two images:  the resident one is assembled to run from the
+; reserved page under the KERNAL, and the transient one from the start of the load
+; buffer.  the resident image (with its two entry jumps) has to fit in the page, and
+; the transient image (with its three entry jumps) in the bytes that are fetched.  and the images have to fit in the pages
+; that the booter reserves for them in expansion memory, with room to spare for the
+; last fetch to run past the end of the last image.
 
-AUDIO_RESIDENT_MAX	= 256 - 2 * 3
-AUDIO_TRANSIENT_MAX	= 2 * 255 - 3 * 3
-
-!if sid_4bit_resident_end - sid_4bit_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the SID 4-bit audio driver exceeds one page by ", sid_4bit_resident_end - sid_4bit_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if sid_4bit_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the SID 4-bit audio driver exceeds AUDIO_RESIDENT_MAX by ", sid_4bit_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if sid_4bit_transient_end - sid_4bit_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the SID 4-bit audio driver exceeds two copies by ", sid_4bit_transient_end - sid_4bit_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if sid_4bit_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the SID 4-bit audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", sid_4bit_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
 }
 
-!if sid_4bit_dithered_resident_end - sid_4bit_dithered_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the SID 4-bit dithered audio driver exceeds one page by ", sid_4bit_dithered_resident_end - sid_4bit_dithered_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if sid_4bit_dithered_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the SID 4-bit dithered audio driver exceeds AUDIO_RESIDENT_MAX by ", sid_4bit_dithered_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if sid_4bit_dithered_transient_end - sid_4bit_dithered_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the SID 4-bit dithered audio driver exceeds two copies by ", sid_4bit_dithered_transient_end - sid_4bit_dithered_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if sid_4bit_dithered_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the SID 4-bit dithered audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", sid_4bit_dithered_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
 }
 
-!if sid_mahoney_resident_end - sid_mahoney_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the SID Mahoney audio driver exceeds one page by ", sid_mahoney_resident_end - sid_mahoney_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if sid_mahoney_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the SID Mahoney audio driver exceeds AUDIO_RESIDENT_MAX by ", sid_mahoney_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if sid_mahoney_transient_end - sid_mahoney_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the SID Mahoney audio driver exceeds two copies by ", sid_mahoney_transient_end - sid_mahoney_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if sid_mahoney_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the SID Mahoney audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", sid_mahoney_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
 }
 
-!if dac_resident_end - dac_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the DAC audio driver exceeds one page by ", dac_resident_end - dac_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if dac_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the DAC audio driver exceeds AUDIO_RESIDENT_MAX by ", dac_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if dac_transient_end - dac_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the DAC audio driver exceeds two copies by ", dac_transient_end - dac_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if dac_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the DAC audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", dac_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
 }
 
-!if digimax_mk1_resident_end - digimax_mk1_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the DigiMAX Mk1 audio driver exceeds one page by ", digimax_mk1_resident_end - digimax_mk1_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if digimax_mk1_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the DigiMAX Mk1 audio driver exceeds AUDIO_RESIDENT_MAX by ", digimax_mk1_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if digimax_mk1_transient_end - digimax_mk1_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the DigiMAX Mk1 audio driver exceeds two copies by ", digimax_mk1_transient_end - digimax_mk1_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if digimax_mk1_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the DigiMAX Mk1 audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", digimax_mk1_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
 }
 
-!if digimax_mk2_resident_end - digimax_mk2_resident > AUDIO_RESIDENT_MAX {
-	!error "Resident part of the DigiMAX Mk2 audio driver exceeds one page by ", digimax_mk2_resident_end - digimax_mk2_resident - AUDIO_RESIDENT_MAX, " bytes!"
+!if digimax_mk2_resident_end - audio_resident_page > AUDIO_RESIDENT_MAX {
+	!error "Resident image of the DigiMAX Mk2 audio driver exceeds AUDIO_RESIDENT_MAX by ", digimax_mk2_resident_end - audio_resident_page - AUDIO_RESIDENT_MAX, " bytes!"
 }
 
-!if digimax_mk2_transient_end - digimax_mk2_driver_init > AUDIO_TRANSIENT_MAX {
-	!error "Transient part of the DigiMAX Mk2 audio driver exceeds two copies by ", digimax_mk2_transient_end - digimax_mk2_driver_init - AUDIO_TRANSIENT_MAX, " bytes!"
+!if digimax_mk2_transient_end - audio_transient_base > AUDIO_TRANSIENT_MAX {
+	!error "Transient image of the DigiMAX Mk2 audio driver exceeds ", AUDIO_TRANSIENT_MAX, " bytes by ", digimax_mk2_transient_end - audio_transient_base - AUDIO_TRANSIENT_MAX, " bytes!"
+}
+
+!if AUDIO_TRANSIENT_MAX > LOAD_BUFFER_PAGES * 256 {
+	!error "Load buffer is too small for an audio driver's transient image!"
+}
+
+!if audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX > EXP_AUDIO_DRIVER_PAGES * 256 {
+	!error "Audio driver images don't fit in the expansion memory pages that are reserved for them by ", audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX - EXP_AUDIO_DRIVER_PAGES * 256, " bytes!"
 }

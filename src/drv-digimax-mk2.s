@@ -10,37 +10,27 @@
 	need_cia_delays = 1
 }
 
-; ---------------------------------------------------------------------------
-; TRANSIENT PART: runs only when the driver is selected, when playback starts,
-; and when it ends, never while the audio ISR is live.  nothing in the resident
-; part below may refer to anything in here.
+; TRANSIENT IMAGE: init, start and stop.  it's assembled to run from the start of
+; the load buffer, but it is stored in the PRG (and then in expansion memory) as
+; plain data, and fetched into place whenever it is needed.  it only runs when
+; the driver is selected, when playback starts, and when it ends, never while the
+; audio ISR is live, and nothing in the resident image may refer to it.  its
+; entry jumps are at audio_transient_init, _start and _stop.
 
-; ISR-common will call this function to set up the various vectors to the
-; routines below.
+digimax_mk2_transient_image = *
+
+!pseudopc audio_transient_base {
+
+	jmp digimax_mk2_driver_init
+	jmp digimax_mk2_start
+	jmp digimax_mk2_stop
+
+; init_audio_driver calls this through the first entry of the transient image.
+; it points audio_isr_vec at the right ISR and patches the ISRs' operands.
 
 digimax_mk2_driver_init
 	lda #$80
 	sta stereo_enable
-
-	lda #<digimax_mk2_set_vol_tab_resolution
-	sta audio_set_resolution_vec+1
-	lda #>digimax_mk2_set_vol_tab_resolution
-	sta audio_set_resolution_vec+2
-
-	lda #<digimax_mk2_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+1
-	lda #>digimax_mk2_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec+2
-
-	lda #<digimax_mk2_start
-	sta audio_start_vec+1
-	lda #>digimax_mk2_start
-	sta audio_start_vec+2
-
-	lda #<digimax_mk2_stop
-	sta audio_stop_vec+1
-	lda #>digimax_mk2_stop
-	sta audio_stop_vec+2
 
 	lda #<digimax_isr_mk2
 	sta audio_isr_vec
@@ -114,11 +104,19 @@ rts
 
 digimax_mk2_transient_end
 
-; ---------------------------------------------------------------------------
-; RESIDENT PART: the ISRs and the routines that are called while the tables are
-; regenerated.  the transient part patches operands in the ISRs.
+}
 
-digimax_mk2_resident
+; RESIDENT IMAGE: the ISRs, and the routines that the table generator calls.
+; it runs from the reserved page under the KERNAL, whose first two entries are
+; the cycle count and volume table resolution setters.  the transient image
+; patches operands in the ISRs here.
+
+digimax_mk2_resident_image = *
+
+!pseudopc audio_resident_page {
+
+	jmp digimax_mk2_set_isr_cycle_count
+	jmp digimax_mk2_set_vol_tab_resolution
 
 digimax_mk2_set_isr_cycle_count
 	!ifndef scpu {
@@ -153,5 +151,7 @@ digimax_isr_mk2					; 7 cycles coming in
 +NMI_EXIT						; 9, 11, or 26
 
 digimax_mk2_resident_end
+
+}
 
 }

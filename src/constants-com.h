@@ -430,6 +430,17 @@ header31_seek_to_pat_data = header31_seek_to_pat_tbl + 132
 
 LOAD_BUFFER_PAGES = 5
 
+; how many pages of expansion memory the booter sets aside for the audio driver
+; images, directly in front of the file data (see init.s and drv-audio-common.s)
+
+EXP_AUDIO_DRIVER_PAGES = 8
+
+; the largest that a driver's resident image can be (one page), and the number of
+; bytes that are fetched for a transient image
+
+AUDIO_RESIDENT_MAX = 256
+AUDIO_TRANSIENT_MAX = 512
+
 pal_clock = 985248
 ntsc_clock = 1022727
 

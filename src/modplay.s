@@ -197,8 +197,6 @@ dirname
 !align 255,0,0
 
 init_begin
-!source "src/init.s"
-!source "src/under-kernal.s"
 
 ; volume table is a whopping 64 pages (16 kB)
 
@@ -207,6 +205,17 @@ volume_table						= init_begin
 ; load/sample buffer is LOAD_BUFFER_PAGES pages (1.25 kB), overlapped
 load_buffer							= volume_table + 64*256
 sample_data_buffer					= load_buffer
+
+; the transient part of the active audio driver is fetched to the start of the
+; load buffer whenever it's needed.  these have to be defined before the drivers.
+
+audio_transient_base				= load_buffer
+audio_transient_init				= audio_transient_base
+audio_transient_start				= audio_transient_base + 3
+audio_transient_stop				= audio_transient_base + 6
+
+!source "src/init.s"
+!source "src/under-kernal.s"
 
 ascii_to_petscii_table				= load_buffer + LOAD_BUFFER_PAGES*256
 steprate_lookup_table				= ascii_to_petscii_table + 256

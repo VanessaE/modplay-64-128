@@ -318,8 +318,8 @@ regenerate_tables_if_needed
 	}
 
 	jsr ram_driver_set_cycle_counts_vec
-	jsr audio_driver_set_cycle_count_vec
-	jsr audio_set_resolution_vec
+	jsr audio_set_isr_cycle_count
+	jsr audio_set_volume_table_resolution
 
 	jsr mixer_standard_set_cycle_count
 	jsr isr_set_interval

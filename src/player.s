@@ -215,7 +215,7 @@ player_ui_finish
 
 	jsr set_cia2_cra_default_val
 
-	jsr audio_start_vec
+	jsr audio_start
 
 	!ifndef use_profiler {
 		jsr isr_startup
@@ -234,7 +234,7 @@ player_ui_finish
 		sta VDC_DATA
 	}
 
-	jsr audio_stop_vec
+	jsr audio_stop
 
 	jsr enable_kernal_only
 	cli

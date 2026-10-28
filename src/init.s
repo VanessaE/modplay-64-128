@@ -349,6 +349,32 @@ init
 
 	jsr disable_roms
 
+	; stash the audio driver images in expansion memory, in the pages that the
+	; booter set aside just in front of the file data.  this has to happen now,
+	; because the PRG copy of them is overwritten when the tables are generated.
+
+	lda #<audio_images_start
+	sta expansion_transfer_local_addr
+	lda #>audio_images_start
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta expansion_transfer_local_addr+2
+
+	lda #<(audio_images_end - audio_images_start)
+	sta stash_size
+	lda #>(audio_images_end - audio_images_start)
+	sta stash_size+1
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+	sec
+	lda exp_file_data_start_page
+	sbc #EXP_AUDIO_DRIVER_PAGES
+	sta expansion_memory_target_pointer+1
+
+	jsr stash_block_vec
+
 	jsr set_cia2_cra_default_val
 
 	jsr init_audio_driver
