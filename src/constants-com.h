@@ -247,9 +247,6 @@
 	playlist_pos_within_selection		!skip 1
 	playlist_print_file_counter			!skip 1
 	screen_row_to_print_at				!skip 1
-	playlist_file_sizes_lows			!skip 256
-	playlist_file_sizes_highs			!skip 256
-
 	playlist_file_flags					!skip 256
 
 	; flags explanation:
@@ -299,7 +296,25 @@
 	do_viz_plot							!skip 1
 	seq_key_debounce					!skip 1
 
-	; about 8 bytes free here on both machines
+	; per-sample info, filled in when a file's header is parsed (one entry per
+	; sample, 32 per table)
+
+	sample_start_addresses_mids         !skip 32
+	sample_start_addresses_highs        !skip 32
+	sample_end_addresses_lows           !skip 32
+	sample_end_addresses_mids           !skip 32
+	sample_end_addresses_highs          !skip 32
+	sample_lengths_lows                 !skip 32
+	sample_lengths_mids                 !skip 32
+	sample_lengths_highs                !skip 32
+	sample_loop_start_addresses_lows    !skip 32
+	sample_loop_start_addresses_mids    !skip 32
+	sample_loop_start_addresses_highs   !skip 32
+	sample_default_loop_flags           !skip 32
+	sample_default_fine_tunes           !skip 32
+	sample_default_volume_levels        !skip 32
+
+	; about 94 bytes free here on both machines
 
 ; ------------------------------------------------------------------------
 
@@ -336,7 +351,13 @@
 	sample_loop_end_addresses_mids		= zero_page_swap_area + 32
 	sample_loop_end_addresses_highs		= zero_page_swap_area + 64
 
-	program_start						= $1600
+	; the playlist's file sizes, 256 bytes each.  these have to be zeroed or
+	; filled before anything reads them, since init's wipe doesn't reach this far.
+
+	playlist_file_sizes_lows			= $1600
+	playlist_file_sizes_highs			= $1700
+
+	program_start						= $1800
 
 	; main program code starts here, followed by more tables and buffers
 

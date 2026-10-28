@@ -194,21 +194,6 @@ dirname
 ; careful with the table/vars placement, C128 KERNAL-low starts at $c000
 ; so anything that needs it banked-in has to come early in this section.
 
-sample_start_addresses_mids			!skip 32
-sample_start_addresses_highs		!skip 32
-sample_end_addresses_lows			!skip 32
-sample_end_addresses_mids			!skip 32
-sample_end_addresses_highs			!skip 32
-sample_lengths_lows					!skip 32
-sample_lengths_mids					!skip 32
-sample_lengths_highs				!skip 32
-sample_loop_start_addresses_lows	!skip 32
-sample_loop_start_addresses_mids	!skip 32
-sample_loop_start_addresses_highs	!skip 32
-sample_default_loop_flags			!skip 32
-sample_default_fine_tunes			!skip 32
-sample_default_volume_levels		!skip 32
-
 !align 255,0,0
 
 init_begin
