@@ -18,19 +18,19 @@ digimax_mk2_driver_init
 	sta stereo_enable
 
 	lda #<digimax_mk2_set_vol_tab_resolution
-	sta audio_set_resolution_vec
-	lda #>digimax_mk2_set_vol_tab_resolution
 	sta audio_set_resolution_vec+1
+	lda #>digimax_mk2_set_vol_tab_resolution
+	sta audio_set_resolution_vec+2
 
 	lda #<digimax_mk2_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec
-	lda #>digimax_mk2_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec+1
+	lda #>digimax_mk2_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec+2
 
 	lda #<digimax_mk2_start
-	sta audio_start_vec
-	lda #>digimax_mk2_start
 	sta audio_start_vec+1
+	lda #>digimax_mk2_start
+	sta audio_start_vec+2
 
 	lda #<digimax_mk2_mute
 	sta audio_mute_vec
@@ -38,9 +38,9 @@ digimax_mk2_driver_init
 	sta audio_mute_vec+1
 
 	lda #<digimax_mk2_stop
-	sta audio_stop_vec
-	lda #>digimax_mk2_stop
 	sta audio_stop_vec+1
+	lda #>digimax_mk2_stop
+	sta audio_stop_vec+2
 
 	lda #<digimax_isr_mk2
 	sta audio_isr_vec

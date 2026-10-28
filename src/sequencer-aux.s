@@ -126,7 +126,7 @@ start_sample
 	sta current_fine_tune_values,y
 
 .apply_default_ft
-	+JSR_INDIRECT (do_selfmod_instrument_vec)
+	jsr do_selfmod_instrument_vec
 
 	ldy seq_current_track
 	ldx current_sample_numbers,y
@@ -171,7 +171,7 @@ set_pitch_by_table_lookup
 	}
 
 	ldy seq_current_track
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
+	jsr do_selfmod_pitch_vec
 rts
 
 ; enter with .A = desired fine tune value

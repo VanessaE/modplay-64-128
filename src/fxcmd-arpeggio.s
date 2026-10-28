@@ -120,6 +120,6 @@ run_effect_arpeggio
 
 set_arp_pitch_2_3
 	stx arpeggio_counters,y
-	+JSR_INDIRECT (do_selfmod_pitch_vec)
+	jsr do_selfmod_pitch_vec
 	ldx sequencer_temp_x
 rts

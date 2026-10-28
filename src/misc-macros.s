@@ -253,18 +253,6 @@
 	}
 }
 
-!macro JSR_INDIRECT .vec {
-	sta .reload_a+1
-	lda #>.ra
-	pha
-	lda #<.ra
-	pha
-.reload_a
-	lda #00
-	jmp (.vec)
-	.ra = * - 1
-}
-
 ; these turbo macros only take effect on C128 sans SCPU, because with
 ; that device, the turbo clock is automatically stretched as on the C64.
 ; and we allow for STA/STY/INC/DEC because in some cases it's possible to

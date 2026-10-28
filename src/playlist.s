@@ -266,7 +266,7 @@ load_directory
 		lda #0
 		sta stash_size+1
 
-		+JSR_INDIRECT (stash_block_vec)
+		jsr stash_block_vec
 
 	} else {
 		lda #<(mini_popup_lower_left_corner_addr-1)
@@ -300,7 +300,7 @@ load_directory
 	lda #0
 	sta stash_size+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 .more_files
 	ldy playlist_length
@@ -605,7 +605,7 @@ erase_file_list
 		ldx #16
 	}
 
--	+JSR_INDIRECT (stash_block_vec)
+-	jsr stash_block_vec
 
 	inc expansion_memory_target_pointer+1
 
@@ -939,7 +939,7 @@ direct_print_single_entry
 			adc #>VIC_SCREEN + 1
 			sta expansion_transfer_local_addr+1
 
-			+JSR_INDIRECT (fetch_block_vec)
+			jsr fetch_block_vec
 		} else {
 
 			lda utility_pointer
@@ -962,7 +962,7 @@ direct_print_single_entry
 			lda #>string_buffer
 			sta expansion_transfer_local_addr+1
 
-			+JSR_INDIRECT (fetch_block_vec)
+			jsr fetch_block_vec
 
 			lda #<string_buffer
 			sta fill_copy_source

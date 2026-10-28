@@ -519,13 +519,13 @@ skip_sample
 	lda #2
 	sta stash_size+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	clc
 	lda exp_instr_names_start_page
 	sta expansion_memory_target_pointer+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	lda #0
 	sta expansion_memory_target_pointer
@@ -548,7 +548,7 @@ skip_sample
 
 .decode_mod_next_instr_name
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	clc
 	lda expansion_memory_target_pointer

@@ -497,7 +497,7 @@ multirate_convert_page
 	lda multirate_exp_source_pointer+2
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 	jsr multirate_process_block
 
 ; update progess bar, if it's enabled.  to limit the CPU spent on it, check
@@ -614,7 +614,7 @@ multirate_next_level
 	lda multirate_wptr_highs,x
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	ldx multirate_level_temp
 	clc
@@ -684,7 +684,7 @@ multirate_finish_next
 	lda #0
 	sta stash_size+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 	jmp multirate_finish_skip
 
 multirate_finish_loop
@@ -700,7 +700,7 @@ multirate_finish_loop
 	lda multirate_sample_loop_start_addresses_highs,x
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 
 	ldx multirate_index_temp
 	lda multirate_sample_end_addresses_lows,x
@@ -715,7 +715,7 @@ multirate_finish_loop
 	lda #0
 	sta stash_size+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 multirate_finish_skip
 	inc multirate_index_temp
@@ -1278,7 +1278,7 @@ multirate_promote_track
 
 	lsr current_fetch_loop_ofl_amounts,x	; (pending loop overshoot, in bytes)
 
-	+JSR_INDIRECT (do_selfmod_instrument_vec)	; new end addr -> fetcher
+	jsr do_selfmod_instrument_vec	; new end addr -> fetcher
 
 	ldx mrp_pr_track
 rts

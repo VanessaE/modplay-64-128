@@ -424,7 +424,7 @@ load_pattern_data
 .is_15
 	jsr reformat_pattern_data
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	clc
 	lda expansion_memory_target_pointer+1
@@ -504,7 +504,7 @@ load_sample_data
 	iny
 	bne -
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	inc expansion_memory_target_pointer+1
 	bne +
@@ -557,7 +557,7 @@ load_sample_data
 	iny
 	bne -
 
-	+JSR_INDIRECT (stash_block_vec)		; store the result
+	jsr stash_block_vec		; store the result
 
 	inc expansion_memory_target_pointer+1
 	bne .add_blank_page
@@ -570,7 +570,7 @@ load_sample_data
 	iny
 	bne -
 
-	+JSR_INDIRECT (stash_block_vec)		; and tack it onto the end of the sample
+	jsr stash_block_vec		; and tack it onto the end of the sample
 
 	lda STATUS
 	bne .ldr_done
@@ -928,7 +928,7 @@ set_first_exp_pages_to_silence
 	lda #0
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 rts
 
 unroll_mod_sample_loops
@@ -994,7 +994,7 @@ unroll_one_loop
 	lda sample_loop_start_addresses_highs,y
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 
 	; calculate the endpoint of the unroll reserve area,
 	; same as in decode-mod.s -- first add the loop length
@@ -1032,7 +1032,7 @@ store_first_copy
 	sta expansion_memory_target_pointer+2
 
 unroll_more
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	clc
 	lda expansion_memory_target_pointer
@@ -1107,7 +1107,7 @@ add_head_after_tail
 	lda sample_loop_start_addresses_highs,y
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 
 	; and stash as much as will fit into the reserved space, head and silence
 	; together.
@@ -1133,7 +1133,7 @@ add_head_after_tail
 	lda #LOAD_BUFFER_PAGES
 +	sta stash_size+1
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 unroll_next
 	dey
@@ -1330,7 +1330,7 @@ loader_prefilter_samples
 	lda .pointer+2
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 
 	; filter the page in place, two bytes per pass.  zero page is used for the
 	; running bytes because it's faster.  Best is [1,2,1]/4, about 32 cycles per
@@ -1418,7 +1418,7 @@ loader_prefilter_samples
 	lda .pointer+2
 	sta expansion_memory_target_pointer+2
 
-	+JSR_INDIRECT (stash_block_vec)
+	jsr stash_block_vec
 
 	; one more page done.  update the bar once per kB, to keep the division from
 	; taking much of the time.

@@ -317,9 +317,9 @@ regenerate_tables_if_needed
 		}
 	}
 
-	+JSR_INDIRECT (ram_driver_set_cycle_counts_vec)
-	+JSR_INDIRECT (audio_driver_set_cycle_count_vec)
-	+JSR_INDIRECT (audio_set_resolution_vec)
+	jsr ram_driver_set_cycle_counts_vec
+	jsr audio_driver_set_cycle_count_vec
+	jsr audio_set_resolution_vec
 
 	jsr mixer_standard_set_cycle_count
 	jsr isr_set_interval

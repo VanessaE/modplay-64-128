@@ -1041,7 +1041,7 @@ list_instrument_names
 	sta stash_size
 
 .inst_cnt
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 
 	lda #RETURN
 	jsr CHROUT

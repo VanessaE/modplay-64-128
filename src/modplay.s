@@ -67,6 +67,10 @@ start
 
 	jmp show_main_menu ; and away we go!
 
+; jump table for indirect calls (see its header comment for why it's here)
+
+!source "src/jump-table.s"
+
 ; additional code goes here
 
 ; functions, macro calls used as functions, and code used at init time must

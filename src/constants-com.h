@@ -234,26 +234,12 @@
 
 	profiler_temp						!skip 1
 
-	; various program indirect JMP/JSR vectors
-
-	!align 1,0  ; vectors need to avoid crossing $xxff
-
-	do_selfmod_pitch_vec				!skip 2
-	do_selfmod_instrument_vec			!skip 2
-
-	fetch_block_vec						!skip 2
-	stash_block_vec						!skip 2
+	; indirect calls go through the jump table in src/jump-table.s now.  what's
+	; left here is plain pointers, which are only ever read with LDA.
 
 	print_vec							!skip 2
-
-	audio_set_resolution_vec			!skip 2
-	audio_driver_set_cycle_count_vec	!skip 2
-	audio_start_vec						!skip 2
 	audio_mute_vec						!skip 2
-	audio_stop_vec						!skip 2
 	audio_isr_vec						!skip 2
-
-	ram_driver_set_cycle_counts_vec		!skip 2
 
 	initial_playlist_loaded				!skip 1
 	playlist_length						!skip 1

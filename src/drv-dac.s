@@ -12,19 +12,19 @@ dac_driver_init
 	sta stereo_enable
 
 	lda #<dac_set_volume_table_resolution
-	sta audio_set_resolution_vec
-	lda #>dac_set_volume_table_resolution
 	sta audio_set_resolution_vec+1
+	lda #>dac_set_volume_table_resolution
+	sta audio_set_resolution_vec+2
 
 	lda #<dac_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec
-	lda #>dac_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec+1
+	lda #>dac_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec+2
 
 	lda #<dac_start
-	sta audio_start_vec
-	lda #>dac_start
 	sta audio_start_vec+1
+	lda #>dac_start
+	sta audio_start_vec+2
 
 	lda #<dac_mute
 	sta audio_mute_vec
@@ -32,9 +32,9 @@ dac_driver_init
 	sta audio_mute_vec+1
 
 	lda #<dac_stop
-	sta audio_stop_vec
-	lda #>dac_stop
 	sta audio_stop_vec+1
+	lda #>dac_stop
+	sta audio_stop_vec+2
 
 	lda dac_addr
 	sta .da+1

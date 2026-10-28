@@ -387,7 +387,7 @@ rts
 		adc #4
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 		; menu text
 
@@ -396,7 +396,7 @@ rts
 		lda exp_menu_start_page
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 	rts
 
 	vic_retrieve_loader_bg_from_reu
@@ -414,7 +414,7 @@ rts
 		adc #4
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 		; loader background text
 
@@ -423,7 +423,7 @@ rts
 		lda exp_loader_bg_start_page
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 	rts
 
 	vic_retrieve_player_bg_from_reu
@@ -442,7 +442,7 @@ rts
 		adc #4
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 		; player background text
 
@@ -451,7 +451,7 @@ rts
 		lda exp_player_bg_start_page
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 	rts
 
 	vic_set_copy_size
@@ -577,7 +577,7 @@ rts
 		adc #8
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 		jsr vdc_bg_upload_attrs
 
@@ -588,7 +588,7 @@ rts
 		lda exp_loader_bg_start_page
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 	jmp vdc_bg_upload_text
 
@@ -608,7 +608,7 @@ rts
 		adc #8
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 		jsr vdc_bg_upload_attrs
 
@@ -619,7 +619,7 @@ rts
 		lda exp_player_bg_start_page
 		sta expansion_memory_target_pointer+1
 
-		+JSR_INDIRECT (fetch_block_vec)
+		jsr fetch_block_vec
 
 	jmp vdc_bg_upload_text
 

@@ -402,7 +402,7 @@ pause_player
 	lda #$80
 	jsr fill_audio_buffers
 
-	+JSR_INDIRECT (audio_stop_vec)
+	jsr audio_stop_vec
 
 	!ifndef use_profiler {
 		lda audio_driver
@@ -466,13 +466,13 @@ pause_player
 		cmp #5
 		beq +
 
-		+JSR_INDIRECT (audio_start_vec)
+		jsr audio_start_vec
 		lda #$81						; enable timer A interrupt
 		sta CIA2_ICR
 		jmp ++
 
 	+	jsr isr_reset_timers_interrupts ; for the DigiMAX Mk2 we have to 
-		+JSR_INDIRECT (audio_start_vec) ; take special care to restart it.
+		jsr audio_start_vec ; take special care to restart it.
 		jsr isr_startup
 		jmp ++
 	++

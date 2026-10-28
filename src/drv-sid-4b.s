@@ -9,19 +9,19 @@
 
 sid_4bit_driver_init
 	lda #<sid_4bit_set_volume_table_resolution
-	sta audio_set_resolution_vec
-	lda #>sid_4bit_set_volume_table_resolution
 	sta audio_set_resolution_vec+1
+	lda #>sid_4bit_set_volume_table_resolution
+	sta audio_set_resolution_vec+2
 
 	lda #<sid_4bit_set_isr_cycle_count
-	sta audio_driver_set_cycle_count_vec
-	lda #>sid_4bit_set_isr_cycle_count
 	sta audio_driver_set_cycle_count_vec+1
+	lda #>sid_4bit_set_isr_cycle_count
+	sta audio_driver_set_cycle_count_vec+2
 
 	lda #<sid_4bit_start
-	sta audio_start_vec
-	lda #>sid_4bit_start
 	sta audio_start_vec+1
+	lda #>sid_4bit_start
+	sta audio_start_vec+2
 
 	lda #<sid_4bit_mute
 	sta audio_mute_vec
@@ -29,9 +29,9 @@ sid_4bit_driver_init
 	sta audio_mute_vec+1
 
 	lda #<reset_sids
-	sta audio_stop_vec
-	lda #>reset_sids
 	sta audio_stop_vec+1
+	lda #>reset_sids
+	sta audio_stop_vec+2
 
 	bit stereo_enable
 	bmi +

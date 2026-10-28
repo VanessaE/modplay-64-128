@@ -80,8 +80,8 @@ start_sequencer
 
 	lda #3 ; see above
 	sta seq_current_track
--	+JSR_INDIRECT (do_selfmod_pitch_vec)
-	+JSR_INDIRECT (do_selfmod_instrument_vec)
+-	jsr do_selfmod_pitch_vec
+	jsr do_selfmod_instrument_vec
 	dec seq_current_track
 	bpl -
 

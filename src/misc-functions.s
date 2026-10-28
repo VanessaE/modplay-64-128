@@ -684,7 +684,7 @@ get_filename_from_exp_ram
 	lda #>string_buffer
 	sta expansion_transfer_local_addr+1
 
-	+JSR_INDIRECT (fetch_block_vec)
+	jsr fetch_block_vec
 rts
 
 ; check if C= key is pressed, wait for release
