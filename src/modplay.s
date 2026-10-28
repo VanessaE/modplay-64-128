@@ -202,10 +202,10 @@ dirname
 
 ; --------------------------------------------------------------------------
 ; from here on down are transient tables and buffers and whatnot. the init
-; code and under-KERNAL stuff take about 10 kB, but the volume table alone is
-; 16 kB, so almost the entire init and under-kernal code will be overwritten
-; the first time that's generated (the first bit gets nuked when a file is
-; loaded).
+; code, the PRG copy of the under-KERNAL code, and the audio driver images take
+; about 5 kB, but the volume table alone is 16 kB, so all of that will be
+; overwritten the first time that's generated (the first bit gets nuked when a
+; file is loaded).
 
 ; careful with the table/vars placement, C128 KERNAL-low starts at $c000
 ; so anything that needs it banked-in has to come early in this section.

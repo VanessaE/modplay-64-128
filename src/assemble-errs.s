@@ -65,6 +65,22 @@
 	!error "Under-KERNAL code overlaps the audio driver page (", audio_resident_page, ") by ", under_kernal_code_end - audio_resident_page, " bytes! (",under_kernal_code_end - 1,")"
 }
 
+; the tables under the KERNAL and the code that follows them are placed by hand in
+; constants-io-and-kernal.h, one right after another.  make sure that they stay clear
+; of each other if any of them is resized.
+
+!if viz_note_number_lookup_table + 7 * 256 > steprate_lookup_table {
+	!error "The note number lookup table overlaps the steprate table by ", viz_note_number_lookup_table + 7 * 256 - steprate_lookup_table, " bytes!"
+}
+
+!if steprate_lookup_table + 14 * 256 > and_f0_table {
+	!error "The steprate table overlaps the AND $F0 table by ", steprate_lookup_table + 14 * 256 - and_f0_table, " bytes!"
+}
+
+!if and_f0_table + 256 > under_kernal_code {
+	!error "The AND $F0 table overlaps the under-KERNAL code by ", and_f0_table + 256 - under_kernal_code, " bytes!"
+}
+
 !if nnt_end > $fffa {
 	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt_end - $fffa, " bytes! (",nnt_end - 1,")"
 }
