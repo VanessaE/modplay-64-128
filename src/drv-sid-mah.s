@@ -21,11 +21,6 @@ sid_mahoney_driver_init
 	lda #>sid_mahoney_start
 	sta audio_start_vec+2
 
-	lda #<sid_mahoney_mute
-	sta audio_mute_vec
-	lda #>sid_mahoney_mute
-	sta audio_mute_vec+1
-
 	lda #<reset_sids
 	sta audio_stop_vec+1
 	lda #>reset_sids
@@ -140,9 +135,6 @@ sid_mahoney_start
 	bpl +
 	lda #>mah_table_8580
 +	sta .mah_stereo_tr+2
-rts
-
-sid_mahoney_mute
 rts
 
 mah_setup_right_sid_addrs

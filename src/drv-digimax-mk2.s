@@ -32,11 +32,6 @@ digimax_mk2_driver_init
 	lda #>digimax_mk2_start
 	sta audio_start_vec+2
 
-	lda #<digimax_mk2_mute
-	sta audio_mute_vec
-	lda #>digimax_mk2_mute
-	sta audio_mute_vec+1
-
 	lda #<digimax_mk2_stop
 	sta audio_stop_vec+1
 	lda #>digimax_mk2_stop
@@ -115,9 +110,6 @@ digimax_mk2_start
 		bit $dd00
 	}
 	sta CIA2_PORT_B
-rts
-
-digimax_mk2_mute
 rts
 
 digimax_mk2_stop				; just set PA2 low, /PA3 high

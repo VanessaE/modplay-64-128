@@ -26,11 +26,6 @@ dac_driver_init
 	lda #>dac_start
 	sta audio_start_vec+2
 
-	lda #<dac_mute
-	sta audio_mute_vec
-	lda #>dac_mute
-	sta audio_mute_vec+1
-
 	lda #<dac_stop
 	sta audio_stop_vec+1
 	lda #>dac_stop
@@ -73,9 +68,6 @@ dac_start
 	lda CIA2_DDR_A
 	ora #%00001100
 	sta CIA2_DDR_A
-rts
-
-dac_mute
 rts
 
 dac_stop

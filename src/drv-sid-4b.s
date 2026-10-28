@@ -23,11 +23,6 @@ sid_4bit_driver_init
 	lda #>sid_4bit_start
 	sta audio_start_vec+2
 
-	lda #<sid_4bit_mute
-	sta audio_mute_vec
-	lda #>sid_4bit_mute
-	sta audio_mute_vec+1
-
 	lda #<reset_sids
 	sta audio_stop_vec+1
 	lda #>reset_sids
@@ -89,9 +84,6 @@ rts
 sid_4bit_start
 	jsr reset_sids
 jmp sid_apply_digi_boost
-
-sid_4bit_mute
-rts
 
 sid_isr_4b_mono					; 7 cycles coming in
 	+NMI_SAVE_AX				; 6

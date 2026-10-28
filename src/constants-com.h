@@ -237,8 +237,6 @@
 	; indirect calls go through the jump table in src/jump-table.s now.  what's
 	; left here is plain pointers, which are only ever read with LDA.
 
-	print_vec							!skip 2
-	audio_mute_vec						!skip 2
 	audio_isr_vec						!skip 2
 
 	initial_playlist_loaded				!skip 1

@@ -274,11 +274,6 @@ draw_window
 		jsr FULLW
 	}
 
-	lda #<CHROUT
-	sta print_vec
-	lda #>CHROUT
-	sta print_vec+1
-
 	lda num_rows
 	sta temp_abs_a
 

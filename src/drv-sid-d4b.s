@@ -23,11 +23,6 @@ sid_4bit_dithered_driver_init
 	lda #>sid_4bit_dithered_start
 	sta audio_start_vec+2
 
-	lda #<sid_4bit_dithered_mute
-	sta audio_mute_vec
-	lda #>sid_4bit_dithered_mute
-	sta audio_mute_vec+1
-
 	lda #<reset_sids
 	sta audio_stop_vec+1
 	lda #>reset_sids
@@ -104,9 +99,6 @@ sid_4bit_dithered_start
 
 jmp sid_apply_digi_boost
 
-
-sid_4bit_dithered_mute
-rts
 
 sid_isr_4b_dithered_mono		; 7 cycles coming in
 	+NMI_SAVE_AX				; 6

@@ -26,11 +26,6 @@ digimax_mk1_driver_init
 	lda #>digimax_mk1_start
 	sta audio_start_vec+2
 
-	lda #<digimax_mk1_mute
-	sta audio_mute_vec
-	lda #>digimax_mk1_mute
-	sta audio_mute_vec+1
-
 	lda #<digimax_mk1_stop
 	sta audio_stop_vec+1
 	lda #>digimax_mk1_stop
@@ -121,9 +116,6 @@ digimax_mk1_start
 	ora #%00001100
 	sta CIA2_DDR_A
   +
-rts
-
-digimax_mk1_mute
 rts
 
 digimax_mk1_stop
