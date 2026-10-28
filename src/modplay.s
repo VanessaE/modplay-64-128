@@ -39,8 +39,17 @@
 
 start
 	jsr init							; the ROMs were disabled at init end
+
+	lda #0
+	sta allow_regen_msg
+
 	jsr regenerate_tables_if_needed		; this goes here because it'll
 										; overwrite the init code.
+
+	!ifndef turbo_available {
+		lda #$80
+		sta allow_regen_msg
+	}
 
 	jsr enable_kernal_only
 
