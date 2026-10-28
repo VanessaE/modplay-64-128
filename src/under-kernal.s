@@ -30,13 +30,6 @@ under_kernal_code_origin
 
 		!source "src/mixer-standard.s"
 
-		!source "src/fxcmd-arpeggio.s"
-		!source "src/fxcmd-pitch-sliding.s"
-		!source "src/fxcmd-volume-sliding.s"
-		!source "src/fxcmd-patbreak-posjump.s"
-		!source "src/fxcmd-set-speed.s"
-		!source "src/fxcmd-vibrato.s"
-
 		under_kernal_code_end = *
 	}
 

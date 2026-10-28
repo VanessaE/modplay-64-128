@@ -141,6 +141,13 @@ rti
 !source "src/viz-common.s"
 !source "src/sequencer-ui.s"
 
+!source "src/fxcmd-arpeggio.s"
+!source "src/fxcmd-pitch-sliding.s"
+!source "src/fxcmd-volume-sliding.s"
+!source "src/fxcmd-patbreak-posjump.s"
+!source "src/fxcmd-set-speed.s"
+!source "src/fxcmd-vibrato.s"
+
 !source "src/fxcmd-set-volume.s"
 !source "src/fxcmd-set-sample-offset.s"
 !source "src/fxcmd-extended-misc.s"
@@ -218,9 +225,13 @@ audio_transient_stop				= audio_transient_base + 6
 !source "src/under-kernal.s"
 
 ascii_to_petscii_table				= load_buffer + LOAD_BUFFER_PAGES*256
-steprate_lookup_table				= ascii_to_petscii_table + 256
+divide_by_16_table					= ascii_to_petscii_table + 256
+mah_table_6581						= divide_by_16_table + 256
+mah_table_8580						= mah_table_6581 + 256
+tempo_table_fracts					= mah_table_8580 + 256
+tempo_table_lows					= tempo_table_fracts + 256
 
-end_of_mid_mem_tables				= steprate_lookup_table + 14*256
+end_of_mid_mem_tables				= tempo_table_lows + 256
 
 ; ----------------------------------------------------------------------
 ; constants that depend on the addresses pointed to by the symbols above

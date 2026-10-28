@@ -3,14 +3,10 @@
 !addr {
 
 	viz_note_number_lookup_table		= $e000 ; 7 pages
-	divide_by_16_table					= $e700
-	and_f0_table						= $e800
-	mah_table_6581						= $e900
-	mah_table_8580						= $ea00
-	tempo_table_fracts					= $eb00
-	tempo_table_lows					= $ec00
+	steprate_lookup_table				= $e700 ; 14 pages
+	and_f0_table						= $f500
 
-	under_kernal_code					= $ed00
+	under_kernal_code					= $f600
 
 	; the resident part of the active audio driver (its ISRs and the routines the
 	; table generator calls) is fetched into this page, just below the C128 MMU.
