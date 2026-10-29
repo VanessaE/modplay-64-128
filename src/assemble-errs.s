@@ -81,6 +81,10 @@
 	!error "The AND $F0 table overlaps the under-KERNAL code by ", and_f0_table + 256 - under_kernal_code, " bytes!"
 }
 
+!if mixer_standard_end > audio_resident_page {
+	!error "Standard mixer overlaps audio_resident_page by ", mixer_standard_end - audio_resident_page, " bytes!"
+}
+
 !if nnt_end > $fffa {
 	!error "note_names_table overlaps CPU hardware vectors at $fffa by ", nnt_end - $fffa, " bytes! (",nnt_end - 1,")"
 }

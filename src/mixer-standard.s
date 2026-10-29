@@ -100,3 +100,5 @@ mixer_standard_vol_addr_idx
 	!byte mixer_vol_std_addr_2 - mixer_vol_std_addr_1
 	!byte mixer_vol_std_addr_3 - mixer_vol_std_addr_1
 	!byte mixer_vol_std_addr_4 - mixer_vol_std_addr_1
+
+mixer_standard_end
