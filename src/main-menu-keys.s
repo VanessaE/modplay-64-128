@@ -362,7 +362,7 @@ check_menu_key_t
 check_menu_key_m
 	!ifndef turbo_available {
 		cmp #$4d
-		bne check_menu_key_e
+		bne check_menu_key_q
 
 		jsr change_multirate_setting
 		lda #0
@@ -370,6 +370,16 @@ check_menu_key_m
 		sta main_menu_cache_is_valid
 	+	rts
 	}
+
+check_menu_key_q
+	cmp #$51
+	bne check_menu_key_e
+
+	jsr change_loader_setting
+	lda #0
+	bcc +
+	sta main_menu_cache_is_valid
++	rts
 
 check_menu_key_e
 	!ifdef badlines_exist {

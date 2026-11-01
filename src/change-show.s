@@ -14,6 +14,7 @@
 	filter_row		= 4
 	filter_col		= 33
 	multirate_col	= 26
+	loader_col		= 19
 	dith_en_row		= 4
 	dith_en_col		= 22
 	info_plat_row	= 2
@@ -51,6 +52,7 @@
 	filter_col		= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
+	loader_col		= 30
 	scr_en_row		= 9
 	scr_en_col		= 30
 	info_plat_row	= 5
@@ -87,6 +89,7 @@
 	multirate_col	= 33
 	dith_en_row		= 7
 	dith_en_col		= 33
+	loader_col		= 30
 	scr_en_row		= 9
 	scr_en_col		= 30
 	info_plat_row	= 5
@@ -612,6 +615,50 @@ jmp show_multirate_setting
 
 }
 
+
+; the loader setting is on the line after the last of the others on page C (the
+; multirate setting's, or the filter's if there isn't one).  $80 = Auto, 0 = CHRIN
+
+show_loader_setting
+	lda current_menu_page
+	cmp #2
+	beq +
+	sec
+	rts
+
++	ldx #filter_row + 1
+
+	lda audio_driver
+	cmp #1
+	bne +
+	inx
++	!ifndef turbo_available {
+		inx							; (the multirate setting's line is in between)
+	}
+	ldy #loader_col
+	clc
+	jsr PLOT
+
+	bit loader_auto_enable
+	bpl +
+
+	ldx #<loader_auto_msg
+	ldy #>loader_auto_msg
+	bne .lds_print					; (always)
+
++	ldx #<loader_chrin_msg
+	ldy #>loader_chrin_msg
+
+.lds_print
+	lda #0
+	sec
+jmp print_msg
+
+change_loader_setting
+	lda loader_auto_enable
+	eor #$80
+	sta loader_auto_enable
+jmp show_loader_setting
 
 show_dithering_setting
 	lda current_menu_page

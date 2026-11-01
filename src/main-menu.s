@@ -516,6 +516,11 @@ not_sid_menu
 		jsr print_menu_line
 	}
 
+	ldx #<menu_text_loader
+	ldy #>menu_text_loader
+	sec
+	jsr print_menu_line
+
 	ldx #<menu_text_save_config
 	ldy #>menu_text_save_config
 	sec
@@ -529,6 +534,7 @@ not_sid_menu
 	!ifndef turbo_available {
 		jsr show_multirate_setting
 	}
+	jsr show_loader_setting
 	jsr show_dithering_setting
 
 	!ifdef badlines_exist {

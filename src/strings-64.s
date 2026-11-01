@@ -219,6 +219,8 @@ menu_text_enable_filter
 menu_text_multirate
 	!text RIGHT,GRN,"[",YEL,"M",GRN,"]",LGRY," Multirate",RETURN,0
 }
+menu_text_loader
+	!text RIGHT,GRN,"[",YEL,"Q",GRN,"]",LGRY," Loader",RETURN,0
 menu_text_save_config
 	!text RIGHT,GRN,"[",YEL,"_",GRN,"]",LGRY," Save config",RETURN,0  ; "🠜"
 
@@ -281,6 +283,13 @@ multirate_preferred_msg
 multirate_required_msg
 	!text GRN,"(",WHT,"Req",GRN,") ",0
 }
+
+; the loader setting's two values (the same width, so nothing is left behind)
+
+loader_auto_msg
+	!text GRN,"(",WHT,"Auto",GRN,") ",0
+loader_chrin_msg
+	!text GRN,"(",LGRY,"CHRIN",GRN,")",0
 
 mode_always_on_msg
 	!text "(Always)",0

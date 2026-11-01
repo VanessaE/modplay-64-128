@@ -100,6 +100,8 @@
 	multirate_is_allowed				!skip 1 ; 0 = off, 1 = if file won't fit
 												; in RAM, use stride, 2 = if it
 												; won't fit, don't load at all.
+	loader_auto_enable					!skip 1 ; $80 = use whichever loader suits the
+												; load device, 0 = always read with CHRIN
 
 	cfg_data_end						!skip 1 ; one byte past the real end
 

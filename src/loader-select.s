@@ -28,19 +28,32 @@
 loader_select_image
 	!ifdef uci_loader_available {
 		jsr can_load_dev_use_uci
+	}
+
+	bit loader_auto_enable
+	bmi .auto
+
+	lda #0							; the user wants CHRIN and nothing else
+	sta load_device_can_use_uci
+	beq .kernal						; (always)
+
+.auto
+	!ifdef uci_loader_available {
 		lda #LOADER_IMAGE_UCI
 		bit load_device_can_use_uci
 		bmi .select
 	}
 
-	lda #LOADER_IMAGE_KERNAL
-
 	!ifdef c128 {
 		ldx load_device					; (the burst loader is tried for every device,
 		ldy loader_burst_state-8,x		; until one fails because it can't do burst)
-		bmi .select
+		bmi .kernal
 		lda #LOADER_IMAGE_BURST
+		bne .select						; (always)
 	}
+
+.kernal
+	lda #LOADER_IMAGE_KERNAL
 
 .select
 	cmp loader_active_image

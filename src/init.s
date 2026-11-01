@@ -552,6 +552,7 @@ default_config
 		!byte 0					; [always 0]
 		!byte 0					; [always 0]
 		!byte 0					; [always 0]
+		!byte $80				; default loader choice (automatic)
 		!byte $ff				; end of file marker
 	} else ifdef c128{
 		!byte 8					; default device
@@ -565,6 +566,7 @@ default_config
 		!byte $80				; default screen enable (on)
 		!byte $40				; default load filter setting (good)
 		!byte 1					; default multirate mode (preferred)
+		!byte $80				; default loader choice (automatic)
 		!byte $ff				; end of file marker
 	} else {
 		!byte 8					; default device
@@ -578,6 +580,7 @@ default_config
 		!byte $80				; default screen enable (on)
 		!byte $80				; default load filter setting (best)
 		!byte 1					; default multirate mode (preferred)
+		!byte $80				; default loader choice (automatic)
 		!byte $ff				; end of file marker
 	}
 
