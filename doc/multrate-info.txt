@@ -72,8 +72,10 @@ for the caches.
 
 Most of it would have been unused with multirate, so instead we re-use some of
 that space for the tables and the module's loader-time variables (~100 bytes),
-starting 256 bytes in.  (They end 869 bytes in, and assemble-errs.s checks that
-they fit.)
+starting 512 bytes in.  (They end 1120 bytes in, and assemble-errs.s checks that
+they fit.)  The first 512 bytes are left alone, because the audio driver's
+transient image is fetched over them at the start and end of every playback,
+and assemble-errs.s checks that too.
 
 The first page of that buffer holds the live audio cache:  the four tracks'
 caches are packed MULTIRATE_WINDOW bytes apart (offsets 0, W, 2W, 3W), which

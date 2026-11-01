@@ -43,7 +43,11 @@ MULTIRATE_GUARD = MULTIRATE_WINDOW
 ; assemble-errs.s can check them with !if, which can't use anything derived from
 ; sample_data_buffer, because that's defined later on than this file is read.)
 
-MULTIRATE_VARS_OFFSET = 256
+; the offset has to be at least AUDIO_TRANSIENT_MAX, because the transient image of the
+; audio driver is fetched into the start of the buffer (see drv-audio-common.s) at the
+; start and end of every playback, and that would wipe out anything that was there.
+
+MULTIRATE_VARS_OFFSET = 512
 MULTIRATE_MISC_SIZE = 96
 
 MULTIRATE_VARS_BASE = sample_data_buffer + MULTIRATE_VARS_OFFSET

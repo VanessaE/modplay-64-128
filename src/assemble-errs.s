@@ -42,6 +42,13 @@
 !ifndef turbo_available {
 	.mr_buffer_needed = MULTIRATE_VARS_OFFSET + 8 * MULTIRATE_TABLE_LEN + MULTIRATE_MISC_SIZE
 
+	; the audio drivers' transient images are fetched over the start of the same buffer
+	; whenever playback starts or stops, so the tables can't be in the way of them.
+
+	!if MULTIRATE_VARS_OFFSET < AUDIO_TRANSIENT_MAX {
+		!error "The multirate tables overlap the audio driver's transient image by ", AUDIO_TRANSIENT_MAX - MULTIRATE_VARS_OFFSET, " bytes!"
+	}
+
 	!if MULTIRATE_WINDOW * 4 > 256 {
 		!error "The four tracks' caches don't fit in one page at this MULTIRATE_WINDOW!"
 	}
