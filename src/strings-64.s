@@ -294,10 +294,10 @@ loader_chrin_msg
 ; which loader is in use, for the bottom line of the loader screen
 
 loader_msg_kernal
-	!text DGRY,"Loading via KERNAL",0
+	!text "Loading via KERNAL",0
 !ifdef uci_loader_available {
 loader_msg_uci
-	!text DGRY,"Loading via UCI",0
+	!text "Loading via UCI",0
 }
 
 mode_always_on_msg

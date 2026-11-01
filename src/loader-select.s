@@ -20,6 +20,16 @@
 ; one in the slot.  Nothing in an image may call the swap, or anything else that
 ; replaces the image.
 
+; how wide the screen is, for centering the note about the loader, and its color
+
+!ifndef c128 {
+	LOADER_NOTE_WIDTH = 40
+	LOADER_NOTE_COLOR = DGRY
+} else {
+	LOADER_NOTE_WIDTH = 80
+	LOADER_NOTE_COLOR = DCYN
+}
+
 !zone loader_select {
 
 ; picks the loader image for the load device and makes sure it's in the slot.
@@ -102,37 +112,6 @@ loader_open_file
 	ldy #>string_buffer+1
 jmp loader_open
 
-; says on the bottom line of the loader screen which loader image is reading the file.
-; trashes .A, .X and .Y.
-
-loader_show_backend
-	ldx #24
-	ldy #0
-	clc
-	jsr PLOT
-
-	ldx #<loader_msg_kernal
-	ldy #>loader_msg_kernal
-	lda loader_active_image
-	!ifdef uci_loader_available {
-		cmp #LOADER_IMAGE_UCI
-		bne +
-		ldx #<loader_msg_uci
-		ldy #>loader_msg_uci
-	+
-	}
-	!ifdef c128 {
-		cmp #LOADER_IMAGE_BURST
-		bne +
-		ldx #<loader_msg_burst
-		ldy #>loader_msg_burst
-	+
-	}
-
-	lda #0
-	sec
-jmp print_msg
-
 ; fetches loader image number .A (LOADER_IMAGE_*) into the slot.
 
 loader_swap_in_image
@@ -162,6 +141,65 @@ loader_swap_in_image
 	adc loader_image_table+1,x
 	sta expansion_memory_target_pointer+1
 jmp fetch_block_vec
+
+; says on the bottom line of the loader screen, in the middle, which loader image is
+; reading the file.  the UCI loader reads a small file so quickly that nobody could
+; read the line, so it's left out for that, unless the file is at least 1024 blocks.
+; trashes .A, .X and .Y.
+
+loader_show_backend
+	ldx loader_active_image
+	!ifdef uci_loader_available {
+		cpx #LOADER_IMAGE_UCI
+		bne +
+		lda file_to_load_size+1
+		cmp #4
+		bcs +
+		rts
+	+
+	}
+
+	lda #<loader_msg_kernal
+	sta temp_abs_x
+	lda #>loader_msg_kernal
+	sta temp_abs_y
+	!ifdef uci_loader_available {
+		cpx #LOADER_IMAGE_UCI
+		bne +
+		lda #<loader_msg_uci
+		sta temp_abs_x
+		lda #>loader_msg_uci
+		sta temp_abs_y
+	+
+	}
+	!ifdef c128 {
+		cpx #LOADER_IMAGE_BURST
+		bne +
+		lda #<loader_msg_burst
+		sta temp_abs_x
+		lda #>loader_msg_burst
+		sta temp_abs_y
+	+
+	}
+
+	ldx #24
+	ldy #0
+	clc
+	jsr PLOT
+
+	lda #LOADER_NOTE_COLOR
+	jsr CHROUT
+
+	lda #LOADER_NOTE_WIDTH
+	ldx temp_abs_x
+	ldy temp_abs_y
+	jsr center_string				; (that prints as many cursor-RIGHTs as it takes)
+
+	lda #0
+	ldx temp_abs_x
+	ldy temp_abs_y
+	sec
+jmp print_msg
 
 ; the offsets of the images from loader_images_start, in the order of the
 ; LOADER_IMAGE_* numbers.

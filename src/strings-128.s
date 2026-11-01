@@ -247,13 +247,13 @@ loader_chrin_msg
 ; which loader is in use, for the bottom line of the loader screen
 
 loader_msg_kernal
-	!text DCYN,"Loading via KERNAL",0
+	!text "Loading via KERNAL",0
 !ifdef uci_loader_available {
 loader_msg_uci
-	!text DCYN,"Loading via UCI",0
+	!text "Loading via UCI",0
 }
 loader_msg_burst
-	!text DCYN,"Loading via BURST",0
+	!text "Loading via BURST",0
 
 mode_always_on_msg
 	!text "(Always On)",0
