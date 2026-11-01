@@ -234,18 +234,33 @@ dirname
 
 ; careful with the table/vars placement, C128 KERNAL-low starts at $c000
 ; so anything that needs it banked-in has to come early in this section.
+;
+; that applies to the load buffer and the ASCII table, which are used with
+; the ROMs in.  they go in front of the init code, so that they're below
+; $c000 however big the program gets, and the volume table, which is only
+; used with the ROMs out, runs up past $c000 instead.  (they can't go at the
+; start of the init code, because init calls init_audio_driver, which fetches
+; the audio driver's image to the start of the load buffer, while init itself
+; is still running.)  the C64 doesn't have a ROM in the way up there, but it
+; does no harm to have the same layout.
 
 !align 255,0,0
+
+; load/sample buffer is LOAD_BUFFER_PAGES pages (1.25 kB)
+
+load_buffer
+	!fill LOAD_BUFFER_PAGES*256, 0
+sample_data_buffer					= load_buffer
+
+ascii_to_petscii_table
+	!fill 256, 0
 
 init_begin
 
 ; volume table is a whopping 64 pages (16 kB)
 
 volume_table						= init_begin
-
-; load/sample buffer is LOAD_BUFFER_PAGES pages (1.25 kB), overlapped
-load_buffer							= volume_table + 64*256
-sample_data_buffer					= load_buffer
+divide_by_16_table					= volume_table + 64*256
 
 ; the transient part of the active audio driver is fetched to the start of the
 ; load buffer whenever it's needed.  these have to be defined before the drivers.
@@ -258,8 +273,6 @@ audio_transient_stop				= audio_transient_base + 6
 !source "src/init.s"
 !source "src/under-kernal.s"
 
-ascii_to_petscii_table				= load_buffer + LOAD_BUFFER_PAGES*256
-divide_by_16_table					= ascii_to_petscii_table + 256
 mah_table_6581						= divide_by_16_table + 256
 mah_table_8580						= mah_table_6581 + 256
 tempo_table_fracts					= mah_table_8580 + 256

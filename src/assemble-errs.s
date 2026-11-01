@@ -64,6 +64,16 @@
 	}
 }
 
+!ifdef c128 {
+	!if load_buffer + LOAD_BUFFER_PAGES * 256 > $c000 {
+		!error "The load buffer extends above $c000, where the ROM hides it, by ", load_buffer + LOAD_BUFFER_PAGES * 256 - $c000, " bytes! (", load_buffer + LOAD_BUFFER_PAGES * 256 - 1, ")"
+	}
+
+	!if ascii_to_petscii_table + 256 > $c000 {
+		!error "The ASCII table extends above $c000, where the ROM hides it, by ", ascii_to_petscii_table + 256 - $c000, " bytes! (", ascii_to_petscii_table + 255, ")"
+	}
+}
+
 !if end_of_mid_mem_tables > main_mem_free_end {
 	!error "Mid-memory tables overlap high memory area by ", end_of_mid_mem_tables - main_mem_free_end, " bytes! (",end_of_mid_mem_tables - 1,")"
 }
