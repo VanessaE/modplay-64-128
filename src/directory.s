@@ -253,11 +253,11 @@ dir_file_unquote	; routine returns clear carry and a quote-less string at
 	; we now have the first char of file type
 
 	cmp #"d"				; if it isn't a "D", it can't be "DEL" or "DIR" 😛
-	beq +
+	bne +
 	lda string_buffer+1,x	; second char
 	cmp #"e"				; if it's an "E" then this is a "DEL" i.e.
 	beq .duq_no_file		; deleted file, so ignore it.
-	lda string_buffer,x
+	lda #"d"				; otherwise it's "DIR", so give back the "D".
 
 +	clc
 rts
