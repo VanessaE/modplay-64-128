@@ -212,8 +212,8 @@ dir_read_line
 rts
 
 dir_file_unquote	; routine returns clear carry and a quote-less string at
-					; string buffer + 32, .X = length, else it exits with set carry
-					; if valid, then .A contains first char of file type
+					; string buffer + 32, .Y = its length, else it exits with set
+					; carry.  if valid, then .A contains first char of file type
 	ldx #0
 -	lda string_buffer,x
 	cmp #$22				; look for the first quote mark
@@ -239,25 +239,25 @@ dir_file_unquote	; routine returns clear carry and a quote-less string at
 	iny
 	cpy #16					; give up if we hit the max filename length
 	bne -
-+	txa
-	tay						; we want to preserve .X now, but we can clobber .Y
++								; .Y is the length of the name now, and it stays that
+									; way, so search with .X from the second quote:
 
--	iny						; search forward from the second quote for a non-
-	cpy #32					; space char.  Give up if >32 bytes (end of file
-	beq .duq_no_file		; name area), declare it as no file.
+-	inx						; look forward for a non-space char.  Give up if
+	cpx #32					; >32 bytes (end of file name area), and declare
+	beq .duq_no_file		; it as no file.
 
-	lda string_buffer,y
+	lda string_buffer,x
 	cmp #$20
 	beq -
 
-	; we nowe have the first char of file type
+	; we now have the first char of file type
 
 	cmp #"d"				; if it isn't a "D", it can't be "DEL" or "DIR" 😛
 	beq +
-	lda string_buffer+1,y	; second char
+	lda string_buffer+1,x	; second char
 	cmp #"e"				; if it's an "E" then this is a "DEL" i.e.
 	beq .duq_no_file		; deleted file, so ignore it.
-	lda string_buffer,y
+	lda string_buffer,x
 
 +	clc
 rts

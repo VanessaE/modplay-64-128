@@ -76,6 +76,8 @@ load_file_to_expansion
 
 	jsr close_file
 
+	ldy file_to_load_name_len	; (the KERNAL's close doesn't promise to keep .Y)
+
 -	lda string_buffer+32,y  ; the "de-quoted" filename is at the end of the buf
 	sta string_buffer,y
 	dey
