@@ -102,6 +102,37 @@ loader_open_file
 	ldy #>string_buffer+1
 jmp loader_open
 
+; says on the bottom line of the loader screen which loader image is reading the file.
+; trashes .A, .X and .Y.
+
+loader_show_backend
+	ldx #24
+	ldy #0
+	clc
+	jsr PLOT
+
+	ldx #<loader_msg_kernal
+	ldy #>loader_msg_kernal
+	lda loader_active_image
+	!ifdef uci_loader_available {
+		cmp #LOADER_IMAGE_UCI
+		bne +
+		ldx #<loader_msg_uci
+		ldy #>loader_msg_uci
+	+
+	}
+	!ifdef c128 {
+		cmp #LOADER_IMAGE_BURST
+		bne +
+		ldx #<loader_msg_burst
+		ldy #>loader_msg_burst
+	+
+	}
+
+	lda #0
+	sec
+jmp print_msg
+
 ; fetches loader image number .A (LOADER_IMAGE_*) into the slot.
 
 loader_swap_in_image

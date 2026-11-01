@@ -126,7 +126,9 @@ load_by_filename_entry
 	bcc +
 	jmp print_generic_load_error
 
-+	lda #<load_buffer
++	jsr loader_show_backend
+
+	lda #<load_buffer
 	sta expansion_transfer_local_addr
 	lda #>load_buffer
 	sta expansion_transfer_local_addr+1
