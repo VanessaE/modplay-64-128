@@ -59,6 +59,9 @@ loader_images_start
 	!ifdef uci_loader_available {
 		!source "src/loader-uci.s"
 	}
+	!ifdef c128 {
+		!source "src/loader-burst.s"
+	}
 
 loader_images_end
 

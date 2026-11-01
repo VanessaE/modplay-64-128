@@ -131,6 +131,12 @@
 	header_loaded						!skip 1
 	load_device_can_use_uci				!skip 1
 	loader_active_image					!skip 1 ; which loader image is in the loader slot (0 = none yet)
+
+	!ifdef c128 {
+		; one byte for each device from 8 to 30, set to $80 once the device has been
+		; found not to do burst, so that the burst loader isn't tried again for it.
+		loader_burst_state				!skip 23
+	}
 	load_device_supports_dirs			!skip 1
 
 	main_memory_free_pages				!skip 1
@@ -439,7 +445,7 @@ EXP_AUDIO_DRIVER_PAGES = 8
 ; how many pages of expansion memory the booter sets aside for the loader images,
 ; just in front of the audio driver images (see init.s and loader-select.s)
 
-EXP_LOADER_PAGES = 4
+EXP_LOADER_PAGES = 6
 
 ; the loader slot is the fixed area of main memory that holds the active loader
 ; image.  an image is whatever code is needed to read a file from a given kind of
@@ -450,6 +456,11 @@ LOADER_SLOT_SIZE = 512
 
 LOADER_IMAGE_KERNAL = 1
 LOADER_IMAGE_UCI = 2
+LOADER_IMAGE_BURST = 3
+
+; what the burst loader's open returns for a device that doesn't do burst
+
+BURST_ERR_NOT_BURST = 10
 
 ; the largest that a driver's resident image can be (one page), and the number of
 ; bytes that are fetched for a transient image

@@ -48,6 +48,9 @@
 
 	RPTFLAG							= $0a22
 
+	FAST_SERIAL_FLAG				= $0a1c ; the KERNAL sets bit 6 when the device it
+												; talked to last uses fast serial
+
 	; I/O
 
 	VIC_SCREEN						= $0400

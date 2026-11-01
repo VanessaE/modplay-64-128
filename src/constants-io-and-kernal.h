@@ -152,6 +152,7 @@
 	SWAPPER								= $ff5f ; C128 only
 	DLCHR								= $ff62 ; C128 only
 	SETBNK								= $ff68 ; C128 only
+	SPIN								= $ff47 ; C128 only (.C = 0 selects fast serial input, 1 output)
 
 	CINT								= $ff81
 	IOINIT								= $ff84

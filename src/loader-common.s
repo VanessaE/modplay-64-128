@@ -122,13 +122,7 @@ load_by_filename_entry
 
 	jsr loader_paint_screen
 	jsr loader_select_image
-
-	clc
-	lda file_to_load_name_len
-	ldx #<string_buffer
-	ldy #>string_buffer+1
-
-	jsr loader_open
+	jsr loader_open_file
 	bcc +
 	jmp print_generic_load_error
 

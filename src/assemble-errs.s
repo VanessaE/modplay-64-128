@@ -169,6 +169,12 @@
 	}
 }
 
+!ifdef c128 {
+	!if loader_burst_end - loader_slot > LOADER_SLOT_SIZE {
+		!error "The burst loader image exceeds the loader slot by ", loader_burst_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+	}
+}
+
 !if loader_images_end - loader_images_start + LOADER_SLOT_SIZE > EXP_LOADER_PAGES * 256 {
 	!error "Loader images don't fit in the expansion memory pages that are reserved for them by ", loader_images_end - loader_images_start + LOADER_SLOT_SIZE - EXP_LOADER_PAGES * 256, " bytes!"
 }

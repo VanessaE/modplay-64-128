@@ -496,13 +496,16 @@ skip_sample
 	lda expansion_memory_target_pointer+2
 	sta utility_pointer_b+2
 
-	; use the two audio bufs for scratch space
-	; to erase the instrument names area
+	; use the left audio buf for scratch space to erase the instrument names
+	; area.  (the right one can't be used, because the burst loader has its
+	; stage there, and it's in use until the file has been read.)
 
 	lda #0
-	jsr fill_audio_buffers
+	tay
+-	sta audio_buffer_left,y
+	iny
+	bne -
 
-	lda #0
 	sta expansion_memory_target_pointer
 	sta expansion_memory_target_pointer+2
 
@@ -516,14 +519,12 @@ skip_sample
 
 	lda #0
 	sta stash_size
-	lda #2
+	lda #1
 	sta stash_size+1
 
 	jsr stash_block_vec
 
-	clc
-	lda exp_instr_names_start_page
-	sta expansion_memory_target_pointer+1
+	inc expansion_memory_target_pointer+1
 
 	jsr stash_block_vec
 
