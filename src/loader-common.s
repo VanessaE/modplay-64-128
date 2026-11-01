@@ -119,20 +119,15 @@ load_by_filename_entry
 	; the actual loading process starts here.
 
 	jsr loader_paint_screen
-	jsr can_load_dev_use_uci
+	jsr loader_select_image
 
 	clc
 	lda file_to_load_name_len
 	ldx #<string_buffer
 	ldy #>string_buffer+1
 
-	bit load_device_can_use_uci
-	bmi +
-	jsr open_file
-	jmp ++
-+	jsr uci_open_file
-
-++	bcc +
+	jsr loader_open
+	bcc +
 	jmp print_generic_load_error
 
 +	lda #<load_buffer
@@ -178,13 +173,9 @@ load_by_filename_entry
 	bit header_loaded
 	bmi header_is_okay
 
-	bit load_device_can_use_uci
-	bmi +
-	jsr close_file
-	jmp ++
-+	jsr uci_close_file
+	jsr loader_close
 
-++	!ifndef c128 {
+	!ifndef c128 {
 		ldy #mini_popup_left_column+4
 	} else {
 		ldy #mini_popup_left_column+31
@@ -217,13 +208,9 @@ header_is_okay
 	cmp reu_highest_bank
 	bcc file_size_okay
 
-	bit load_device_can_use_uci
-	bmi +
-	jsr close_file
-	jmp ++
-+	jsr uci_close_file
+	jsr loader_close
 
-++	jsr draw_mini_popup
+	jsr draw_mini_popup
 
 	lda #0
 	ldx #<file_too_large_msg
@@ -413,13 +400,8 @@ load_pattern_data
 
 .load_next_patt
 
-	bit load_device_can_use_uci
-	bmi +
-	jsr loader_standard_get_1kb
-	jmp ++
-+	jsr loader_uci_get_1kb
-
-++	jsr loader_update_progress
+	jsr loader_get_1kb
+	jsr loader_update_progress
 
 .is_15
 	jsr reformat_pattern_data
@@ -490,13 +472,9 @@ load_sample_data
 										; just use the load-remainder routine
 
 .load_next_sample_block
-	bit load_device_can_use_uci
-	bmi +
-	jsr loader_standard_get_block
-	jmp ++
-+	jsr loader_uci_get_block
+	jsr loader_get_block
 
-++	ldy #0
+	ldy #0
 -	lda load_buffer,y
 	clc
 	adc #$80							; translate signed -> unsigned
@@ -577,7 +555,7 @@ load_sample_data
 	jmp .load_next_sample
 
 .ldr_done
-	jsr close_file
+	jsr loader_done
 	lda file_size_in_kb
 	sta current_file_size_in_kb
 	lda file_size_in_kb+1
@@ -1531,13 +1509,6 @@ rts
 
 }
 }
-
-loader_get_one_byte
-	bit load_device_can_use_uci
-	bmi +
-	jmp CHRIN
-  +
-jmp uci_get_byte
 
 print_generic_load_error
 	lda #"E"

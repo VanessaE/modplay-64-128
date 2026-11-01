@@ -49,4 +49,17 @@ audio_images_start
 
 audio_images_end
 
+; the loader images are stored the same way.  each is assembled to run from the loader
+; slot (see modplay.s), init stashes this whole block in expansion memory, and
+; loader_select_image fetches the one that the load device needs.
+
+loader_images_start
+
+	!source "src/loader-standard.s"
+	!ifdef uci_loader_available {
+		!source "src/loader-uci.s"
+	}
+
+loader_images_end
+
 }

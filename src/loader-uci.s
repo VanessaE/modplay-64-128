@@ -1,7 +1,23 @@
-; Mod file loader using the UCI subsystem featured in the
+; Loader image for reading a file with the UCI subsystem featured in the
 ; 1541-Ultimate, Ultimate64, and Commodore 64 Ultimate
+;
+; This is assembled to run from the loader slot (see modplay.s), but it's stored
+; in the PRG (and then in expansion memory) as plain data, like the audio driver
+; images, and fetched into place when the load device needs it.  Its entry jumps
+; are described in loader-select.s.
 
 !zone loader_uci {
+
+loader_uci_image = *
+
+!pseudopc loader_slot {
+
+	jmp uci_open_file
+	jmp uci_close_file
+	jmp close_file				; (a finished load has always closed the KERNAL's file)
+	jmp uci_get_byte
+	jmp loader_uci_get_block
+	jmp loader_uci_get_1kb
 
 loader_uci_get_block
 	lda #<load_buffer
@@ -32,47 +48,8 @@ loader_uci_get_1kb
 	inc load_pointer+1
 jmp loader_uci_get_block_keep_ptr
 
-}
-
 ; From here on down are all the "helper" and "low-level" routines
 ; needed by the above calls
-
-UCI_IDENTIFIER			= $C9
-CMD_PUSH_CMD			= $01
-CMD_NEXT_DATA			= $02
-CMD_ABORT				= $04
-CMD_ERROR				= $08
-
-CMD_STATE_BITS			= $30
-CMD_STATE_BUSY			= $10
-CMD_STATE_MORE_DATA		= $30
-
-UCI_TARGET				= $05
-UCI_CMD_OPEN			= $13
-UCI_CMD_CLOSE			= $14
-UCI_CMD_CHKIN			= $15
-
-!zone loader_uci_helpers {
-
-can_load_dev_use_uci
-	pha
-	lda UCI_CMD_IF_COMMAND
-	cmp #UCI_IDENTIFIER
-	bne +
-
-	lda load_device
-	cmp UCI_OUR_DEVICE
-	bne +
-
-	lda #$80
-	sta load_device_can_use_uci
-	pla
-	rts
-
-+	lda #0
-	sta load_device_can_use_uci
-	pla
-rts
 
 ; enter with .A = filename len, .X/.Y = filename addr
 
@@ -241,5 +218,9 @@ uci_clear_error
 	lda #CMD_ERROR
 	sta UCI_CMD_IF_CONTROL
 	rts
+
+
+loader_uci_end
+}
 
 }

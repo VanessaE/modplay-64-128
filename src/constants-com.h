@@ -130,6 +130,7 @@
 	loaded_bytes_count					!skip 3
 	header_loaded						!skip 1
 	load_device_can_use_uci				!skip 1
+	loader_active_image					!skip 1 ; which loader image is in the loader slot (0 = none yet)
 	load_device_supports_dirs			!skip 1
 
 	main_memory_free_pages				!skip 1
@@ -434,6 +435,21 @@ LOAD_BUFFER_PAGES = 5
 ; images, directly in front of the file data (see init.s and drv-audio-common.s)
 
 EXP_AUDIO_DRIVER_PAGES = 8
+
+; how many pages of expansion memory the booter sets aside for the loader images,
+; just in front of the audio driver images (see init.s and loader-select.s)
+
+EXP_LOADER_PAGES = 4
+
+; the loader slot is the fixed area of main memory that holds the active loader
+; image.  an image is whatever code is needed to read a file from a given kind of
+; device, and the largest one has to fit in the slot.  the numbers are for the
+; images, as they are given to loader_swap_in_image.
+
+LOADER_SLOT_SIZE = 512
+
+LOADER_IMAGE_KERNAL = 1
+LOADER_IMAGE_UCI = 2
 
 ; the largest that a driver's resident image can be (one page), and the number of
 ; bytes that are fetched for a transient image

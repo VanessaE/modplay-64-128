@@ -32,6 +32,17 @@
 	turbo_available = 1
 }
 
+; the UCI loader is in every build except the C128 with SuperCPU, since the
+; 1541 Ultimate can't be used with that combination.
+
+!ifndef c128 {
+	uci_loader_available = 1
+} else {
+	!ifndef scpu {
+		uci_loader_available = 1
+	}
+}
+
 !convtab pet
 !cpu 6510
 
@@ -118,8 +129,7 @@ lockout_interrupts ; any interrupt that gets here exits unacknowledged
 rti
 
 !source "src/loader-common.s"
-!source "src/loader-standard.s"
-!source "src/loader-uci.s"
+!source "src/loader-select.s"
 !source "src/decode-mod.s"
 
 !ifndef turbo_available {
@@ -160,6 +170,21 @@ rti
 !source "src/fxcmd-set-volume.s"
 !source "src/fxcmd-set-sample-offset.s"
 !source "src/fxcmd-extended-misc.s"
+
+; the loader slot.  whichever loader image is active lives here, and its entry
+; jumps are the loader's entry points.  the images themselves are in under-kernal.s,
+; and are fetched into the slot from expansion memory (see loader-select.s).
+
+loader_slot
+	!fill LOADER_SLOT_SIZE, 0
+loader_slot_end
+
+loader_open					= loader_slot
+loader_close				= loader_slot + 3
+loader_done					= loader_slot + 6
+loader_get_one_byte			= loader_slot + 9
+loader_get_block			= loader_slot + 12
+loader_get_1kb				= loader_slot + 15
 
 ; see under-kernal.s for the rest of the code
 

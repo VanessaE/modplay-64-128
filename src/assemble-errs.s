@@ -148,6 +148,24 @@
 	!error "Load buffer is too small for an audio driver's transient image!"
 }
 
+; the loader images have to fit in the slot, and in the pages that the booter reserves
+; for them in expansion memory, again with room to spare for the last fetch to run past
+; the end of the last image.
+
+!if loader_standard_end - loader_slot > LOADER_SLOT_SIZE {
+	!error "The KERNAL loader image exceeds the loader slot by ", loader_standard_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+}
+
+!ifdef uci_loader_available {
+	!if loader_uci_end - loader_slot > LOADER_SLOT_SIZE {
+		!error "The UCI loader image exceeds the loader slot by ", loader_uci_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+	}
+}
+
+!if loader_images_end - loader_images_start + LOADER_SLOT_SIZE > EXP_LOADER_PAGES * 256 {
+	!error "Loader images don't fit in the expansion memory pages that are reserved for them by ", loader_images_end - loader_images_start + LOADER_SLOT_SIZE - EXP_LOADER_PAGES * 256, " bytes!"
+}
+
 !if audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX > EXP_AUDIO_DRIVER_PAGES * 256 {
 	!error "Audio driver images don't fit in the expansion memory pages that are reserved for them by ", audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX - EXP_AUDIO_DRIVER_PAGES * 256, " bytes!"
 }

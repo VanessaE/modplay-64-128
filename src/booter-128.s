@@ -188,7 +188,8 @@ boot_start
 	sta exp_player_bg_start_page
 	adc #16
 
-+	adc #EXP_AUDIO_DRIVER_PAGES		; the audio driver images go here, stashed by init
++	adc #EXP_LOADER_PAGES			; the loader images go here, stashed by init
+	adc #EXP_AUDIO_DRIVER_PAGES		; and the audio driver images, also stashed by init
 
 	sta exp_file_data_start_page
 	adc #16

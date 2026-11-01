@@ -375,6 +375,31 @@ init
 
 	jsr stash_block_vec
 
+	; and likewise the loader images, in the pages that are just in front of the
+	; audio driver images.
+
+	lda #<loader_images_start
+	sta expansion_transfer_local_addr
+	lda #>loader_images_start
+	sta expansion_transfer_local_addr+1
+	lda #0
+	sta expansion_transfer_local_addr+2
+
+	lda #<(loader_images_end - loader_images_start)
+	sta stash_size
+	lda #>(loader_images_end - loader_images_start)
+	sta stash_size+1
+
+	lda #0
+	sta expansion_memory_target_pointer
+	sta expansion_memory_target_pointer+2
+	sec
+	lda exp_file_data_start_page
+	sbc #EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAGES
+	sta expansion_memory_target_pointer+1
+
+	jsr stash_block_vec
+
 	jsr set_cia2_cra_default_val
 
 	jsr init_audio_driver
