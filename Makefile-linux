@@ -123,7 +123,7 @@ gen_release_disk_image:
 
 ifeq ($(MACHINE),128)
 	$(eval DISK_FORMAT := d71)
-	$(eval INTLV := 6)
+	$(eval INTLV := 4)
 	$(eval PROGINTLV := 4)
 else
 	$(eval MACHINE := 64)
