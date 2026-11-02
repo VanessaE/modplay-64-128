@@ -335,19 +335,9 @@ mini_popup_next_line
 	!byte 11,RIGHT
 	!byte 0
 
-medium_popup_top_line
-	!byte $81,HOME
-	!byte 4,DOWN
-	!byte 0
-
 player_popup_top_line
 	!byte $81,HOME
 	!byte 3,DOWN
-	!byte 0
-
-medium_popup_next_line
-	!byte $81,RETURN
-	!byte 2,RIGHT
 	!byte 0
 
 player_popup_next_line
@@ -415,9 +405,6 @@ audio_driver_4_txt
 audio_driver_5_txt
 	!text "DigiMAX Mk2",0
 
-ram_driver_0_txt
-	!text "17xx REU",0
-
 user_msg
 	!text "UserP",0
 
@@ -479,17 +466,6 @@ tracker_name_msg_startrekker
 tracker_name_msg_fasttracker
 	!text "FastTracker",0
 
-drive_loader_check_msg
-	!byte $81,HOME
-	!byte 11,DOWN
-	!byte 14,RIGHT
-	!byte $80+14
-		!text LGRN,"One moment,",RETURN,RETURN
-	!byte 12,RIGHT
-	!byte $80+17
-		!text "testing loader..."
-	!byte 0
-
 unknown_file_msg
 	!text RED,"Unknown file",0
 
@@ -497,13 +473,6 @@ dirname_background
 	!byte $82,RVSON,CYAN
 	!byte 16," "
 	!byte 16,LEFT
-	!byte 0
-
-between_songs_msg
-	!byte 20,RIGHT
-	!byte $80+14
-		!text CYAN,"Loader here",RETURN,RETURN
-	!byte 20,RIGHT
 	!byte 0
 
 loader_erase_kbs_msg
@@ -517,17 +486,6 @@ loader_kbs_msg
 
 dir_window_left_margin
 	!fill 5,RIGHT
-	!byte 0
-
-status_line_pos
-	!text HOME
-	!fill 24,DOWN
-	!byte 0
-
-sample_player_msg
-	!fill 3,RIGHT
-	!text CYAN,"Sample player goes here",RETURN,RETURN
-	!fill 13,RIGHT
 	!byte 0
 
 main_player_now_playing_msg

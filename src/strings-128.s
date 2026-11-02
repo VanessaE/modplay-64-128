@@ -375,16 +375,6 @@ tracker_name_msg_startrekker
 tracker_name_msg_fasttracker
 	!text "FastTracker",0
 
-drive_loader_check_msg
-	!byte $81,DOWN
-	!byte 9,RIGHT
-	!byte $80+14
-		!text LGRN,"One moment,",RETURN,RETURN
-	!byte 7,RIGHT
-	!byte $80+17
-		!text "testing loader..."
-	!byte 0
-
 unknown_file_msg
 	!text RED,"Unknown file type"
 	!byte 0
@@ -394,23 +384,6 @@ dirname_background
 	!byte 16," "
 	!byte $81,"]"
 	!byte 17,LEFT
-	!byte 0
-
-playlist_filename_background
-	!byte 22," "
-	!byte $83,ESC,"j",RIGHT
-	!byte 0
-
-sample_player_msg
-	!fill 4,RIGHT
-	!text CYAN,"Sample player goes here",RETURN,RETURN
-	!fill 9,RIGHT
-	!byte 0
-
-between_songs_msg
-	!byte $80+19
-		!text CYAN,"Loader goes here",RETURN,RETURN
-	!byte 7,RIGHT
 	!byte 0
 
 main_player_now_playing_msg
@@ -498,11 +471,6 @@ loader_erase_kbs_msg
 
 loader_kbs_msg
 	!text LGRN," kB/sec",0
-
-status_line_pos
-	!text HOME,HOME
-	!fill 24,DOWN
-	!byte 0
 
 !ifdef scpu {
 	turn_turbo_on_msg
