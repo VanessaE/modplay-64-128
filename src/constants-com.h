@@ -449,6 +449,22 @@ EXP_AUDIO_DRIVER_PAGES = 8
 
 EXP_LOADER_PAGES = 6
 
+; the strings that the program prints are kept in expansion memory too, in this
+; many pages just in front of the loader images (see modplay.s and init.s).  the
+; print routines are given the address of a string as always, but for strings
+; that are in expansion memory, the address is its offset from the start of the
+; strings, plus REU_STRINGS_BASE.  nothing that is read from main memory can be
+; up there, so this is how the routines tell the two apart (see misc-functions.s).
+
+EXP_STRING_PAGES = 12
+
+REU_STRINGS_BASE = $e000
+
+; what has to be subtracted from the high byte of such an address and the page
+; where the file data starts, to get the page where the string is.
+
+EXP_STRINGS_BIAS = (>REU_STRINGS_BASE) + EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAGES + EXP_STRING_PAGES
+
 ; the loader slot is the fixed area of main memory that holds the active loader
 ; image.  an image is whatever code is needed to read a file from a given kind of
 ; device, and the largest one has to fit in the slot.  the numbers are for the

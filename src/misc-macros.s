@@ -32,6 +32,10 @@
 
 	stx print_msg_addr
 	sty print_msg_addr+1
+
+	cpy #>REU_STRINGS_BASE		; an address that high is a string in expansion
+	bcs .reu					; memory, which has to be fetched a byte at a time
+
 	ldy #0
 -	lda (print_msg_addr),y
 	beq +
@@ -42,6 +46,19 @@
 	cpy print_msg_char_limit
 	beq +
 	bne -
+
+.reu	jsr reu_string_setup		; (that leaves .Y = 0)
+-	jsr reu_string_next
+	beq .reu_end
+
+	jsr check_color_flag
+	jsr CHROUT
+	iny
+	cpy print_msg_char_limit
+	bne -
+
+.reu_end
+	jsr reu_string_finish
 +	plp
 }
 
@@ -76,6 +93,12 @@
 	stx print_msg_addr
 	sty print_msg_addr+1
 
+	cpy #>REU_STRINGS_BASE		; same as print_msg, this could be a string in
+	bcc .ram					; expansion memory
+	jsr print_msg_rle_reu
+	jmp .done
+
+.ram
 	ldy #0
 	sty rle_byte_count
 

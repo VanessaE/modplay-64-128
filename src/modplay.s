@@ -199,12 +199,13 @@ loader_get_1kb				= loader_slot + 15
 	!source "src/viz-waveforms-64.s"
 }
 
-; generic text/PETSCII stuff that's used by multiple functions goes here
+; the strings that have to be here, in main memory.  all the others are in
+; expansion memory, and are assembled further down (see the init code).
 
 !ifndef c128 {
-	!source "src/strings-64.s"
+	!source "src/strings-ram-64.s"
 } else {
-	!source "src/strings-128.s"
+	!source "src/strings-ram-128.s"
 }
 
 !ifndef c128 {
@@ -227,10 +228,10 @@ dirname
 
 ; --------------------------------------------------------------------------
 ; from here on down are transient tables and buffers and whatnot. the init
-; code, the PRG copy of the under-KERNAL code, and the audio driver images take
-; about 5 kB, but the volume table alone is 16 kB, so all of that will be
-; overwritten the first time that's generated (the first bit gets nuked when a
-; file is loaded).
+; code, the PRG copy of the under-KERNAL code, the audio driver and loader
+; images, and the strings take about 8 kB, but the volume table alone is 16 kB,
+; so all of that will be overwritten the first time that's generated (the first
+; bit gets nuked when a file is loaded).
 
 ; careful with the table/vars placement, C128 KERNAL-low starts at $c000
 ; so anything that needs it banked-in has to come early in this section.
@@ -272,6 +273,24 @@ audio_transient_stop				= audio_transient_base + 6
 
 !source "src/init.s"
 !source "src/under-kernal.s"
+
+; the strings are stored here, like the images are.  they're assembled as though
+; they were at REU_STRINGS_BASE, which makes the address of each one its offset
+; in expansion memory plus that, and the print routines fetch from expansion
+; memory when they're given an address that high.  init stashes this whole block
+; in expansion memory, and none of it is read from here after that.
+
+strings_images_start
+
+!pseudopc REU_STRINGS_BASE {
+	!ifndef c128 {
+		!source "src/strings-64.s"
+	} else {
+		!source "src/strings-128.s"
+	}
+}
+
+strings_images_end
 
 mah_table_6581						= divide_by_16_table + 256
 mah_table_8580						= mah_table_6581 + 256

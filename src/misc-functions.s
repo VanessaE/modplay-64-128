@@ -54,6 +54,10 @@ rts
 get_string_length
 	stx utility_pointer_b
 	sty utility_pointer_b+1
+
+	cpy #>REU_STRINGS_BASE			; (see the note below about these)
+	bcs get_string_length_reu
+
 	ldy #0
 -	lda (utility_pointer_b),y
 	beq +
@@ -61,6 +65,120 @@ get_string_length
 	bne -
   +
 rts
+
+; most of the strings are kept in expansion memory (see modplay.s).  they're passed to
+; the print routines and to get_string_length as addresses starting at REU_STRINGS_BASE,
+; which is how those know to fetch them from there instead of reading main memory.
+;
+; a string is read one byte at a time, by having the REU's DMA overwrite the operand of
+; the LDA at reu_string_byte.  the REU's address advances by itself after each transfer
+; and the C64's is held fixed, and a transfer of one byte leaves the length register at
+; one, so after reu_string_setup, all it takes to get the next byte is another trigger.
+;
+; the audio ISR programs the same registers, so none of this can be used while it's
+; running.
+
+!zone reu_strings {
+
+; set up to read the string whose address is in print_msg_addr.  returns .Y = 0.
+
+reu_string_setup
+	lda print_msg_addr
+	sta DMA_EXTERNAL_LO
+
+	lda exp_file_data_start_page
+	clc
+	adc print_msg_addr+1
+	sec
+	sbc #EXP_STRINGS_BIAS
+	sta DMA_EXTERNAL_HI
+
+	lda #0
+	sta DMA_EXTERNAL_BANK
+	sta DMA_LENGTH_HI
+
+	lda #<(reu_string_byte + 1)
+	sta DMA_LOCAL_LO
+	lda #>(reu_string_byte + 1)
+	sta DMA_LOCAL_HI
+
+	lda #1
+	sta DMA_LENGTH_LO
+
+	lda #$80							; hold the C64's address
+	sta DMA_ADDR_CONTROL
+
+	ldy #0
+rts
+
+; gets the next byte of the string into .A, and sets the flags to match it.
+; trashes nothing else.
+
+reu_string_next
+	lda #$91
+
+	+C128_DEC_CLOCK_FOR_REU
+	sta DMA_CMD
+	+C128_STA_CLOCK_FOR_REU
+
+reu_string_byte
+	lda #0							; (the DMA puts the byte here)
+rts
+
+; puts the REU's address control back to normal.  trashes .A.
+
+reu_string_finish
+	lda #0
+	sta DMA_ADDR_CONTROL
+rts
+
+; for get_string_length, when the string is in expansion memory.
+
+get_string_length_reu
+	stx print_msg_addr
+	sty print_msg_addr+1
+
+	jsr reu_string_setup
+-	jsr reu_string_next
+	beq +
+	iny
+	bne -
+  +
+	jmp reu_string_finish
+
+; for the macro that does print_msg_rle, when the string is in expansion memory.
+; it's the same decoder as the one in the macro.
+
+print_msg_rle_reu
+	jsr reu_string_setup
+	sty rle_byte_count
+
+.lp	jsr reu_string_next
+	beq .done					; a null is always the end of the msg
+
+	ldx rle_byte_count			; if count is non-zero, just print what's in .A
+	bne .pr
+
+	sta rle_mode_flag			; else .A is a command
+	and #$7f
+	sta rle_byte_count			; so set the new count
+	bne .lp
+
+.pr	jsr check_color_flag
+	jsr CHROUT
+
+	dec rle_byte_count
+
+	ldx rle_mode_flag			; if it's a data block, continue through stream
+	bmi .lp
+	ldx rle_byte_count			; if it's a run, keep looping back to reprint
+	bne .pr						; until count runs out.
+	beq .lp
+
+.done
+	jmp reu_string_finish
+
+}
 
 ; call with .X/.Y = address of string
 ; .A = width of area to display in

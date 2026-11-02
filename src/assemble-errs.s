@@ -189,6 +189,22 @@
 	!error "Loader images don't fit in the expansion memory pages that are reserved for them by ", loader_images_end - loader_images_start + LOADER_SLOT_SIZE - EXP_LOADER_PAGES * 256, " bytes!"
 }
 
+!if strings_images_end - strings_images_start > EXP_STRING_PAGES * 256 {
+	!error "The strings don't fit in the expansion memory pages that are reserved for them by ", strings_images_end - strings_images_start - EXP_STRING_PAGES * 256, " bytes!"
+}
+
+!if EXP_STRINGS_BIAS > 255 {
+	!error "The pages reserved in expansion memory for the images and strings are too many to be subtracted from a string's address in one go!"
+}
+
+; the strings go in the init code's part of the transient area, which is overwritten
+; when the volume table is generated.  init has stashed them by then, but they have
+; to be inside the area, or they'd be in the way of the tables that come after it.
+
+!if strings_images_end > volume_table + 64 * 256 {
+	!error "The init code, the images and the strings overflow the volume table by ", strings_images_end - volume_table - 64 * 256, " bytes!"
+}
+
 !if audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX > EXP_AUDIO_DRIVER_PAGES * 256 {
 	!error "Audio driver images don't fit in the expansion memory pages that are reserved for them by ", audio_images_end - audio_images_start + AUDIO_TRANSIENT_MAX - EXP_AUDIO_DRIVER_PAGES * 256, " bytes!"
 }

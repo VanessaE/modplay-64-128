@@ -318,13 +318,6 @@ saving_msg
 saving_msg_b
 	!text RIGHT,"configuration...",0
 
-screen_line_link_table
-	!byte $84,$84,$84,$84,$84
-	!byte $84,$84,$85,$85,$85
-	!byte $85,$85,$85,$86,$86
-	!byte $86,$86,$86,$86,$86
-	!byte $87,$87,$87,$87,$87,$87
-
 mini_popup_top_line
 	!byte $81,HOME
 	!byte 8,DOWN
@@ -575,64 +568,5 @@ paused_msg
 		!byte 0
 }
 
-dir_check_string
-	!text "cd:blahdeblah",0
-
-syntax_err_string
-	!text "syntax error",0
-
-up_to_parent_dir_string
-	!text "[Up, parent dir]",0
-
 item_is_directory_msg
 	!text LBLU,"  [Directory]",0
-
-mm_lo
-	!byte <line_2
-	!byte <line_3
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_4_to_17_and_22
-	!byte <lines_18_and_20
-	!byte <line_19
-	!byte <lines_18_and_20
-	!byte <line_21
-	!byte <lines_4_to_17_and_22
-	!byte <line_23
-	!byte <line_24
-
-mm_hi
-	!byte >line_2
-	!byte >line_3
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_4_to_17_and_22
-	!byte >lines_18_and_20
-	!byte >line_19
-	!byte >lines_18_and_20
-	!byte >line_21
-	!byte >lines_4_to_17_and_22
-	!byte >line_23
-	!byte >line_24
