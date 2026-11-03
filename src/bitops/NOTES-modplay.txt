@@ -1,13 +1,22 @@
 These are the sources of the Covert Bitops Loadersystem V3.06, by Lasse Oorni
 (Cadaver), as released under the MIT license (see README.md, which is also where
-the credits are).  Nothing in them has been changed yet, except that the
-examples directory, which has binaries in it, isn't here.  They are assembled
-with DASM, not ACME, which is how they were written; the Makefiles run dasm on
-bitops-check.s, every time, to make sure that they still assemble.  That file is
-only a check, and its output isn't used for anything.
+the credits are).  Nothing in README.md, config.s, loader.s, loaderinit.s,
+loadunpacked.s, loadexomizer3.s, loader.txt and drives.txt has been changed, except
+that the examples directory, which has binaries in it, isn't here.  They are
+assembled with DASM, not ACME, which is how they were written; the Makefiles run
+dasm on bitops-check.s, every time, to make sure that they still assemble.  That
+file is only a check, and its output isn't used for anything.
 
-The modplayer calls its use of the loader "Bitops".  Any changes that the
-modplayer needs to make to these files are made in separate commits, so that
-they can be told apart from the originals.
+The modplayer calls its use of the loader "Bitops".  What it needs of the loader
+isn't the same as what the loader's own programs do (it reads files by their
+names, from a loader slot at a fixed address, and one image at a time), so the
+parts that it uses are in files of their own, which are derived from the originals,
+with the changes listed at the top of each one:
+
+    eload.s         the ELoad host code, for the SD2IEC (built by bitops-eload.s,
+                    into the image in src/loader-eload.s)
+    drive.s         the drive code for the 1541, 1571, 1581 and CMD FD and HD, and
+                    the runtime that goes with it, with files found by their names
+                    (not used by the modplayer yet, and not built by the Makefiles)
 
 loadexomizer3.s is the Exomizer depacker, which the modplayer doesn't use (yet).
