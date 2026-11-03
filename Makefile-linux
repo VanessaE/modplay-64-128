@@ -33,6 +33,7 @@ MAKE=make -f $(THIS_MAKEFILE)
 MKDIR=mkdir
 SORT=sort
 ACME=acme
+DASM=dasm
 CC1541=cc1541 
 EXOMIZER=exomizer
 
@@ -42,6 +43,8 @@ all:
 	$(RM) "$(TMPDIR)/*"
 
 	$(MAKE) clean
+
+	$(MAKE) bitops
 
 	$(MAKE) c64
 	$(MAKE) c64_scpu
@@ -58,10 +61,15 @@ all:
 
 clean:
 	$(RM) src/*.o
+	$(RM) src/bitops/*.o
 	$(RM) -r bin
 	$(RM) -r disk-images
 	$(MKDIR) -p bin
 	$(MKDIR) -p disk-images
+
+bitops:
+	$(info $(NEWLINE)Building the Bitops loader...$(NEWLINE))
+	$(DASM) src/bitops/bitops-check.s -osrc/bitops/bitops-check.o -Isrc/bitops -v3 -p3
 
 c64:
 	$(info $(NEWLINE)Building Modplay 64...$(NEWLINE))

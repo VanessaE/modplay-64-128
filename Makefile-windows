@@ -57,6 +57,7 @@ MKDIR=mkdir
 #
 SORT=sort # direct this to point to GNU sort, NOT Window's SORT.EXE
 ACME=acme
+DASM=dasm
 CC1541=cc1541
 EXOMIZER=exomizer
 
@@ -71,6 +72,8 @@ all:
 	if exist "tmp/mp-trim-ws-compress-tmp" ($(DEL) "tmp\mp-trim-ws-compress-tmp\*")
 
 	$(MAKE) clean
+
+	$(MAKE) bitops
 
 	$(MAKE) c64
 	$(MAKE) c64_scpu
@@ -89,10 +92,15 @@ clean:
 	if exist "tmp" ($(RMD) tmp)
 	$(MKDIR) tmp
 	$(DEL) src\*.o
+	$(DEL) src\bitops\*.o
 	if exist "bin" ($(RMD) bin)
 	$(MKDIR) bin
 	if exist "disk-images" ($(RMD) disk-images)
 	$(MKDIR) disk-images
+
+bitops:
+	$(info $(NEWLINE)Building the Bitops loader...$(NEWLINE))
+	$(DASM) src/bitops/bitops-check.s -osrc/bitops/bitops-check.o -Isrc/bitops -v3 -p3
 
 c64:
 	$(info $(NEWLINE)Building Modplay 64...$(NEWLINE))
