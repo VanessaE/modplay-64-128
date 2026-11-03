@@ -53,9 +53,11 @@ eload_saved_clock	!byte 0		; the C128's CPU clock setting, as it was at the open
 
 ; enter with .A = the length of the filename, .X/.Y = its address, and .C clear, as
 ; for open_file.  returns .C = 1 if the file couldn't be opened, with an error code
-; in .A.  if it did work, the CPU is at 1 MHz and interrupts are off, until
-; eload_close puts them back.  (the fast protocol has places where an interrupt
-; would break it, and the C128's has a raster interrupt right where one of them is.)
+; in .A.  if it did work, interrupts are off until eload_close puts them back.  (the
+; fast protocol has places where an interrupt would break it, and the C128's has a
+; raster interrupt right where one of them is.)  the CPU is only at 1 MHz inside each
+; of the entry points, and is put back as it was when they return, because the code
+; that runs in between does DMA with the REU, which expects the clock as it found it.
 
 eload_open
 	jsr SETNAM						; the blob reads the name and the device from the
@@ -72,14 +74,16 @@ eload_open
 
 	jsr eload_speed_down
 	jsr eload_blob_open
+	php
+	jsr eload_speed_up
+	plp
 	beq .failed
 
 	clc
 	rts
 
 .failed
-	jsr eload_speed_up				; (the blob has done the rest of the cleaning up)
-	jsr eload_restore_i
+	jsr eload_restore_i				; (the blob has done the rest of the cleaning up)
 	lda #ELOAD_ERR_OPEN
 	sec
 	rts
@@ -88,6 +92,7 @@ eload_open
 ; already) and when the load is given up in the middle.
 
 eload_close
+	jsr eload_speed_down
 	jsr eload_blob_close
 	jsr eload_speed_up
 	jsr eload_restore_i
@@ -103,8 +108,10 @@ eload_restore_i
 +	rts
 
 ; ELoad counts cycles, so the CPU has to be at 1 MHz.  that isn't a problem on a
-; stock machine, and the SuperCPU and the C128 get slowed down for it.  (an Ultimate's
-; speed is left as it is, because it's only changed for playing.)
+; stock machine, and the SuperCPU and the C128 get slowed down for it, for as long
+; as one of the entry points is running.  (an Ultimate's speed is left as it is,
+; because it's only changed for playing.)  these trash .A, and not .X or .Y, and each
+; speed_down has to be followed by its speed_up.
 
 eload_speed_down
 	!ifdef scpu {
@@ -139,7 +146,13 @@ rts
 ; .Y.
 
 eload_get_byte
+	jsr eload_speed_down
 	jsr eload_blob_get
+	php									; (.C says whether it was the last)
+	pha
+	jsr eload_speed_up
+	pla
+	plp
 	bcc +
 	pha
 	lda #$40
@@ -159,6 +172,7 @@ eload_get_block
 	sta load_pointer+1
 
 eload_get_block_keep_ptr
+	jsr eload_speed_down
 	ldy #0
 
 .block_byte
@@ -180,6 +194,7 @@ eload_get_block_keep_ptr
 	bne -
 
 .block_done
+	jsr eload_speed_up
 	inc loaded_bytes_count+1
 	bne +
 	inc loaded_bytes_count+2
