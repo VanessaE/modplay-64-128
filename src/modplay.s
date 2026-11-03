@@ -48,6 +48,28 @@
 
 * = program_start
 
+; the load buffer is first, and then the loader slot, so that their addresses are
+; fixed (see program_entry in constants-com.h).  the load buffer is LOAD_BUFFER_PAGES
+; pages (1.25 kB), and it overlaps the sample data buffer.  whichever loader image is
+; active lives in the slot, and its entry jumps are the loader's entry points.  the
+; images themselves are in under-kernal.s, and are fetched into the slot from
+; expansion memory (see loader-select.s).
+
+load_buffer
+	!fill LOAD_BUFFER_PAGES*256, 0
+sample_data_buffer					= load_buffer
+
+loader_slot
+	!fill LOADER_SLOT_SIZE, 0
+loader_slot_end
+
+loader_open					= loader_slot
+loader_close				= loader_slot + 3
+loader_done					= loader_slot + 6
+loader_get_one_byte			= loader_slot + 9
+loader_get_block			= loader_slot + 12
+loader_get_1kb				= loader_slot + 15
+
 start
 	jsr init							; the ROMs were disabled at init end
 
@@ -171,21 +193,6 @@ rti
 !source "src/fxcmd-set-sample-offset.s"
 !source "src/fxcmd-extended-misc.s"
 
-; the loader slot.  whichever loader image is active lives here, and its entry
-; jumps are the loader's entry points.  the images themselves are in under-kernal.s,
-; and are fetched into the slot from expansion memory (see loader-select.s).
-
-loader_slot
-	!fill LOADER_SLOT_SIZE, 0
-loader_slot_end
-
-loader_open					= loader_slot
-loader_close				= loader_slot + 3
-loader_done					= loader_slot + 6
-loader_get_one_byte			= loader_slot + 9
-loader_get_block			= loader_slot + 12
-loader_get_1kb				= loader_slot + 15
-
 ; see under-kernal.s for the rest of the code
 
 !ifdef c64u {
@@ -237,21 +244,16 @@ dirname
 ; so anything that needs it banked-in has to come early in this section.
 ;
 ; that applies to the load buffer and the ASCII table, which are used with
-; the ROMs in.  they go in front of the init code, so that they're below
-; $c000 however big the program gets, and the volume table, which is only
-; used with the ROMs out, runs up past $c000 instead.  (they can't go at the
-; start of the init code, because init calls init_audio_driver, which fetches
-; the audio driver's image to the start of the load buffer, while init itself
-; is still running.)  the C64 doesn't have a ROM in the way up there, but it
-; does no harm to have the same layout.
+; the ROMs in.  the load buffer is at the very start of the program, and the
+; ASCII table goes in front of the init code, so that they're below $c000
+; however big the program gets, and the volume table, which is only used with
+; the ROMs out, runs up past $c000 instead.  (they can't go at the start of
+; the init code, because init calls init_audio_driver, which fetches the audio
+; driver's image to the start of the load buffer, while init itself is still
+; running.)  the C64 doesn't have a ROM in the way up there, but it does no
+; harm to have the same layout.
 
 !align 255,0,0
-
-; load/sample buffer is LOAD_BUFFER_PAGES pages (1.25 kB)
-
-load_buffer
-	!fill LOAD_BUFFER_PAGES*256, 0
-sample_data_buffer					= load_buffer
 
 ascii_to_petscii_table
 	!fill 256, 0

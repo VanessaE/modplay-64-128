@@ -472,7 +472,7 @@ program_load_decrunch_stub_origin
 
 		jsr decrunch
 
-		jmp program_start
+		jmp program_entry
 
 	decrunch
 		!source "src/exomain.asm"

@@ -472,6 +472,13 @@ EXP_STRINGS_BIAS = (>REU_STRINGS_BASE) + EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAG
 
 LOADER_SLOT_SIZE = 512
 
+; the load buffer and then the loader slot are the first things in the program, at
+; program_start, so their addresses are fixed no matter how big the rest gets, and
+; code that is built separately and runs from them (the Bitops loader) can know
+; where it is.  the program's entry point follows them.
+
+program_entry = program_start + LOAD_BUFFER_PAGES * 256 + LOADER_SLOT_SIZE
+
 LOADER_IMAGE_KERNAL = 1
 LOADER_IMAGE_UCI = 2
 LOADER_IMAGE_BURST = 3

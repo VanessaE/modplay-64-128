@@ -64,6 +64,18 @@
 	}
 }
 
+!if load_buffer != program_start {
+	!error "The load buffer isn't at the start of the program!"
+}
+
+!if loader_slot != program_start + LOAD_BUFFER_PAGES * 256 {
+	!error "The loader slot doesn't follow the load buffer!"
+}
+
+!if start != program_entry {
+	!error "The program's entry point isn't program_entry, so the booters would jump to the wrong place!  (", start, " vs. ", program_entry, ")"
+}
+
 !ifdef c128 {
 	!if load_buffer + LOAD_BUFFER_PAGES * 256 > $c000 {
 		!error "The load buffer extends above $c000, where the ROM hides it, by ", load_buffer + LOAD_BUFFER_PAGES * 256 - $c000, " bytes! (", load_buffer + LOAD_BUFFER_PAGES * 256 - 1, ")"
