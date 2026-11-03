@@ -197,6 +197,18 @@
 	}
 }
 
+!if loader_eload_end - loader_slot > LOADER_SLOT_SIZE {
+	!error "The ELoad loader image exceeds the loader slot by ", loader_eload_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+}
+
+; the ELoad blob is assembled by DASM (see src/bitops/bitops-eload.s) to run from
+; where the loader slot is, so that has to stay where it is, or the blob has to be
+; assembled for the new place.
+
+!if loader_slot != $1d00 {
+	!error "The ELoad blob is built for a loader slot at $1d00, but it is at ", loader_slot, "!"
+}
+
 !if loader_images_end - loader_images_start + LOADER_SLOT_SIZE > EXP_LOADER_PAGES * 256 {
 	!error "Loader images don't fit in the expansion memory pages that are reserved for them by ", loader_images_end - loader_images_start + LOADER_SLOT_SIZE - EXP_LOADER_PAGES * 256, " bytes!"
 }

@@ -299,6 +299,8 @@ loader_msg_kernal
 loader_msg_uci
 	!text "Loading via UCI",0
 }
+loader_msg_eload
+	!text "Loading via ELOAD",0
 
 mode_always_on_msg
 	!text "(Always)",0

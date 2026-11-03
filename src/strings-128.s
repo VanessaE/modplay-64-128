@@ -254,6 +254,8 @@ loader_msg_uci
 }
 loader_msg_burst
 	!text "Loading via BURST",0
+loader_msg_eload
+	!text "Loading via ELOAD",0
 
 mode_always_on_msg
 	!text "(Always On)",0

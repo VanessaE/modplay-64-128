@@ -62,6 +62,7 @@ loader_images_start
 	!ifdef c128 {
 		!source "src/loader-burst.s"
 	}
+	!source "src/loader-eload.s"
 
 loader_images_end
 

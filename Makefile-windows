@@ -73,8 +73,6 @@ all:
 
 	$(MAKE) clean
 
-	$(MAKE) bitops
-
 	$(MAKE) c64
 	$(MAKE) c64_scpu
 	$(MAKE) c64u
@@ -101,9 +99,11 @@ clean:
 bitops:
 	$(info $(NEWLINE)Building the Bitops loader...$(NEWLINE))
 	$(DASM) src/bitops/bitops-check.s -osrc/bitops/bitops-check.o -Isrc/bitops -v3 -p3
+	$(DASM) src/bitops/bitops-eload.s -f3 -osrc/bitops/bitops-eload.o -Isrc/bitops -v3 -p10
 
 c64:
 	$(info $(NEWLINE)Building Modplay 64...$(NEWLINE))
+	$(MAKE) bitops
 	$(ACME) $(OPTIONS) -o tmp/mp.ignore.me -l tmp/mp64.sym.initial src/constants-com.h
 
 	$(ACME) $(OPTIONS) $(USE_PROFILER) -o src/mp64.main.o -l tmp/mp64-symbols.txt tmp/mp64.sym.initial src/modplay.s
@@ -116,6 +116,7 @@ c64:
 
 c128:
 	$(info $(NEWLINE)Building Modplay 128...$(NEWLINE))
+	$(MAKE) bitops
 	$(ACME) $(OPTIONS) -Dc128=1 -o tmp/mp.ignore.me -l tmp/mp128.sym.initial src/constants-com.h
 
 	$(ACME) $(OPTIONS) -Dc128=1 -o src/mp128.main.o -l tmp/mp128-symbols.txt tmp/mp128.sym.initial src/modplay.s
@@ -130,6 +131,7 @@ c128:
 
 c64_scpu:
 	$(info $(NEWLINE)Building Modplay 64 (SuperCPU edition)...$(NEWLINE))
+	$(MAKE) bitops
 
 	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o tmp/mp.ignore.me -l tmp/mp64-s.sym src/constants-com.h
 	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dscpu=1 -o src/mp64.main-scpu.o -l tmp/mp64+scpu-symbols.txt tmp/mp64-s.sym src/modplay.s
@@ -140,6 +142,7 @@ c64_scpu:
 
 c64u:
 	$(info $(NEWLINE)Building Modplay 64 (C64 Ultimate/Ultimate64 edition)...$(NEWLINE))
+	$(MAKE) bitops
 
 	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o tmp/mp.ignore.me -l tmp/mp64-s.sym src/constants-com.h
 	$(ACME) $(OPTIONS) $(USE_PROFILER) -Dc64u=1 -o src/mp64.main-c64u.o -l tmp/mp64+c64u-symbols.txt tmp/mp64-s.sym src/modplay.s
@@ -150,6 +153,7 @@ c64u:
 
 c128_scpu:
 	$(info $(NEWLINE)Building Modplay 128 (SuperCPU edition)...$(NEWLINE))
+	$(MAKE) bitops
 
 	$(ACME) $(OPTIONS) -Dc128=1 -Dscpu=1 -o tmp/mp.ignore.me -l tmp/mp128-s.sym src/constants-com.h
 	$(ACME) $(OPTIONS) -Dc128=1 -Dscpu=1 -o src/mp128.main-scpu.o -l tmp/mp128+scpu-symbols.txt tmp/mp128-s.sym src/modplay.s
