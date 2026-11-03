@@ -45,13 +45,17 @@ loader_eload_image = *
 	jmp eload_get_block
 	jmp eload_get_1kb
 
+eload_saved_i		!byte 0		; the interrupt flag, as it was at the open
+
 !ifdef c128 {
 eload_saved_clock	!byte 0		; the C128's CPU clock setting, as it was at the open
 }
 
 ; enter with .A = the length of the filename, .X/.Y = its address, and .C clear, as
 ; for open_file.  returns .C = 1 if the file couldn't be opened, with an error code
-; in .A.  if it did work, the CPU is at 1 MHz until eload_close puts it back.
+; in .A.  if it did work, the CPU is at 1 MHz and interrupts are off, until
+; eload_close puts them back.  (the fast protocol has places where an interrupt
+; would break it, and the C128's has a raster interrupt right where one of them is.)
 
 eload_open
 	jsr SETNAM						; the blob reads the name and the device from the
@@ -59,6 +63,12 @@ eload_open
 	sta FA
 	lda #0
 	sta STATUS
+
+	php									; remember if interrupts were off already
+	pla
+	and #%00000100
+	sta eload_saved_i
+	sei
 
 	jsr eload_speed_down
 	jsr eload_blob_open
@@ -69,6 +79,7 @@ eload_open
 
 .failed
 	jsr eload_speed_up				; (the blob has done the rest of the cleaning up)
+	jsr eload_restore_i
 	lda #ELOAD_ERR_OPEN
 	sec
 	rts
@@ -79,8 +90,17 @@ eload_open
 eload_close
 	jsr eload_blob_close
 	jsr eload_speed_up
+	jsr eload_restore_i
 	clc
 	rts
+
+; interrupts back on, if they were on at the open.
+
+eload_restore_i
+	lda eload_saved_i
+	bne +
+	cli
++	rts
 
 ; ELoad counts cycles, so the CPU has to be at 1 MHz.  that isn't a problem on a
 ; stock machine, and the SuperCPU and the C128 get slowed down for it.  (an Ultimate's

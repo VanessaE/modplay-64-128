@@ -19,6 +19,11 @@
 ;         M-E command.  Without that, the SD2IEC (version 1.0.0atentdead0-36 was the
 ;         one tried) never gets round to the fast protocol, and the machine hangs.
 ;       - The CPU speed isn't changed here (see loader-eload.s, which does that).
+;       - Interrupts aren't turned on again anywhere (the three CLIs are NOPs, so
+;         that the timing is the same).  loader-eload.s keeps them off for the
+;         whole file.  They have to be:  the fast load command has no SEI around
+;         it, and waits for the bottom border, which is where the C128's KERNAL
+;         has its raster interrupt, so on a C128 it never got through.
 ;       - The save routines, and the version of the open that is for turbo mode
 ;         being off, are left out.
 ;       - EL_GetNext and EL_Close are new, and the zero page bytes that the code uses
@@ -173,7 +178,7 @@ EL_BadLineWait: lda $d011
                 lsr
 EL_Eor:         eor #$00
                 eor $dd00
-                cli
+                nop                             ;(was CLI)
                 plp
                 dec loadBufferPos
                 beq EL_Refill
@@ -257,10 +262,10 @@ EL_SendByteLoop:and #$08+$03                    ;CLK low
                 bcs EL_SendBitOne
                 ora #$20                        ;CLK high + data bit
 EL_SendBitOne:  sta $dd00
-                cli
+                nop                             ;(was CLI)
                 jsr EL_Delay27
                 jmp EL_SendByteLoop
-EL_SendByteDone:cli
+EL_SendByteDone:nop                            ;(was CLI)
                 rts
 
 EL_Delay27:     jsr EL_Delay18
