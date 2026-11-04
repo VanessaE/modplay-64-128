@@ -24,7 +24,9 @@ with the changes listed at the top of each one:
     drive-runtime.s   what reads from the drive code once it is running
     bitops-drive.s  the modplayer's version of the same three files (it sets
                     PLAYER), with the install part and the runtime laid out
-                    where the loader image for drives will have them
-                    (not used by the modplayer yet, but built by the Makefiles)
+                    where the loader image for drives has them (built by the
+                    Makefiles, into the image in src/loader-bitops.s, which
+                    the C64 builds use for the 1541, 1571, 1581 and CMD FD
+                    and HD)
 
 loadexomizer3.s is the Exomizer depacker, which the modplayer doesn't use (yet).

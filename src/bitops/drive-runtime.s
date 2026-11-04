@@ -16,12 +16,17 @@
         ;                                   the last (the file is over, then), or if it was over,
         ;                                   with 0 as the byte.  Doesn't change .X and .Y
         ;       +6      jmp FL_Quit         quit the drive code
-        ;       +9      jmp FL_WaitDrive    wait for the drive to answer the KERNAL again
+        ;       +9      jmp FL_WaitDrive    wait for the drive to answer the KERNAL again.
+        ;                                   Returns .C = 1 if it didn't
+        ;       +12     jmp GetByte         the next byte of the file in .A, quicker than
+        ;                                   +3.  fileOpen is 0 after the last one, and
+        ;                                   nothing may be read after that
 
 RuntimeStart:   jmp FastOpen
                 jmp BitopsGetNext
                 jmp FL_Quit
                 jmp FL_WaitDrive
+                jmp GetByte
 
 BitopsGetNext:  lda fileOpen
                 beq BG_Over

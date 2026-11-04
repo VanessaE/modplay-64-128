@@ -201,12 +201,34 @@
 	!error "The ELoad loader image exceeds the loader slot by ", loader_eload_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
 }
 
+!ifndef c128 {
+	!if loader_bitops_end - loader_slot > LOADER_SLOT_SIZE {
+		!error "The Bitops loader image exceeds the loader slot by ", loader_bitops_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+	}
+}
+
 ; the ELoad blob is assembled by DASM (see src/bitops/bitops-eload.s) to run from
 ; where the loader slot is, so that has to stay where it is, or the blob has to be
 ; assembled for the new place.
 
 !if loader_slot != $1d00 {
 	!error "The ELoad blob is built for a loader slot at $1d00, but it is at ", loader_slot, "!"
+}
+
+; the Bitops drive code, which is built the same way (see src/bitops/bitops-drive.s),
+; has the install part run from the load buffer, and receives its sectors in the
+; page of the right audio buffer.
+
+!ifndef c128 {
+	!if load_buffer != $1800 {
+		!error "The Bitops install part is built for a load buffer at $1800, but it is at ", load_buffer, "!"
+	}
+	!if audio_buffer_right != $1200 {
+		!error "The Bitops runtime is built for a sector buffer at $1200, but the right audio buffer is at ", audio_buffer_right, "!"
+	}
+	!if BITOPS_INSTALL_SIZE > LOAD_BUFFER_PAGES * 256 {
+		!error "The Bitops install part doesn't fit in the load buffer by ", BITOPS_INSTALL_SIZE - LOAD_BUFFER_PAGES * 256, " bytes!"
+	}
 }
 
 !if loader_images_end - loader_images_start + LOADER_SLOT_SIZE > EXP_LOADER_PAGES * 256 {

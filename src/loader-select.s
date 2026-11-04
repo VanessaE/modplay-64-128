@@ -2,7 +2,8 @@
 ; needs, and swapping it into the loader slot.
 ;
 ; Every way of reading a file is a loader image (the KERNAL's CHRIN, the UCI, the
-; C128's burst protocol, and ELoad for the SD2IEC):  a piece of code that is assembled
+; C128's burst protocol, ELoad for the SD2IEC, and on the C64 the Bitops drive code
+; for the 1541, 1571, 1581 and the CMD FD and HD):  a piece of code that is assembled
 ; to run from loader_slot (see modplay.s), and that starts with six entry jumps.
 ; Those are the only way in:
 ;
@@ -72,6 +73,12 @@ loader_select_image
 		bmi .kernal
 		lda #LOADER_IMAGE_BURST
 		bne .select						; (always)
+	} else {
+		ldx load_device					; (the same goes for the Bitops drive code:  it is
+		ldy loader_bitops_state-8,x		; tried for every device, until one is found
+		bmi .kernal						; not to be one that it can be started in)
+		lda #LOADER_IMAGE_BITOPS
+		bne .select						; (always)
 	}
 
 .kernal
@@ -84,11 +91,12 @@ rts
 
 ; opens the file that's about to be loaded, whose name is in string_buffer, with the
 ; loader image that loader_select_image picked.  returns .C = 1 if it didn't work.
-; if the burst loader or ELoad can't open it, whether the device doesn't do burst or
-; for some other reason (the drive only does burst on PRG and SEQ files, for one), then
-; this tries again with the KERNAL image, so that it's the KERNAL that has the say
-; about whether there's a file.  a device that can't do burst at all is marked, so
-; that the burst loader won't be tried for it again.
+; if the burst loader, ELoad or the Bitops drive code can't open it, whether the device
+; doesn't do burst or can't have the drive code started in it, or for some other
+; reason (the drive only does burst on PRG and SEQ files, for one), then this tries
+; again with the KERNAL image, so that it's the KERNAL that has the say about whether
+; there's a file.  a device that can't do burst at all, or can't be started, is
+; marked, so that the image won't be tried for it again.
 
 loader_open_file
 	jsr .try
@@ -99,7 +107,14 @@ loader_open_file
 	beq .retry
 
 	!ifndef c128 {
-		bne .failed						; (always:  nothing else has a fallback)
+		cpx #LOADER_IMAGE_BITOPS
+		bne .failed						; (nothing else has a fallback)
+
+		cmp #BITOPS_ERR_NOT_FAST
+		bne .retry
+		ldx load_device
+		lda #$80
+		sta loader_bitops_state-8,x
 	} else {
 		cpx #LOADER_IMAGE_BURST
 		bne .failed
@@ -159,6 +174,40 @@ loader_swap_in_image
 	sta expansion_memory_target_pointer+1
 jmp fetch_block_vec
 
+!ifndef c128 {
+
+; fetches the install part of the Bitops drive code to the load buffer, where it runs
+; from (see loader-bitops.s).  it's in the stash right after the loader image, and is
+; fetched for every file, because the load buffer is used for everything else
+; in between.  trashes .A, and everything that loader_swap_in_image does.
+
+loader_fetch_bitops_install
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+
+	lda #0
+	sta expansion_transfer_local_addr+2
+	sta expansion_memory_target_pointer+2
+	lda #<BITOPS_INSTALL_SIZE
+	sta stash_size
+	lda #>BITOPS_INSTALL_SIZE
+	sta stash_size+1
+
+	lda #<(loader_bitops_install - loader_images_start)
+	sta expansion_memory_target_pointer
+
+	sec
+	lda exp_file_data_start_page
+	sbc #EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAGES
+	clc
+	adc #>(loader_bitops_install - loader_images_start)
+	sta expansion_memory_target_pointer+1
+jmp fetch_block_vec
+
+}
+
 ; says on the bottom line of the loader screen, in the middle, which loader image is
 ; reading the file.  the UCI loader reads a small file so quickly that nobody could
 ; read the line, so it's left out for that, unless the file is at least 1024 blocks.
@@ -205,6 +254,15 @@ loader_show_backend
 	lda #>loader_msg_eload
 	sta temp_abs_y
 	+
+	!ifndef c128 {
+		cpx #LOADER_IMAGE_BITOPS
+		bne +
+		lda #<loader_msg_bitops
+		sta temp_abs_x
+		lda #>loader_msg_bitops
+		sta temp_abs_y
+	+
+	}
 
 	ldx #24
 	ldy #0
@@ -352,6 +410,11 @@ loader_image_table
 		!word 0
 	}
 	!word loader_eload_image - loader_images_start
+	!ifndef c128 {
+		!word loader_bitops_image - loader_images_start
+	} else {
+		!word 0
+	}
 
 !ifdef uci_loader_available {
 

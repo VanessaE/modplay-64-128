@@ -301,6 +301,8 @@ loader_msg_uci
 }
 loader_msg_eload
 	!text "Loading via ELOAD",0
+loader_msg_bitops
+	!text "Loading via BITOPS",0
 
 mode_always_on_msg
 	!text "(Always)",0

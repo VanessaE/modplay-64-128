@@ -63,6 +63,9 @@ loader_images_start
 		!source "src/loader-burst.s"
 	}
 	!source "src/loader-eload.s"
+	!ifndef c128 {
+		!source "src/loader-bitops.s"
+	}
 
 loader_images_end
 

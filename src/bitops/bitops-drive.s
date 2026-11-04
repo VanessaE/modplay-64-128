@@ -12,6 +12,8 @@
 ;   INSTALL_ADDR        the install part, INSTALL_SIZE bytes of it, which is copied to
 ;                       the load buffer, and called there (InitLoader).  It has the
 ;                       drive code that it uploads in it, and is thrown away after
+;                       (as long as the drive code is started again for every file,
+;                       it is fetched again every time)
 ;   RUNTIME_ADDR        the runtime, which goes in the loader slot (see the
 ;                       jump table at the start of it, in drive-runtime.s)
 ;
@@ -35,7 +37,9 @@ zpSrcLo         = BITOPS_ZP+5
 zpSrcHi         = BITOPS_ZP+6
 BITOPS_ZP_SIZE  = 7
 
-loadBuffer      = $1800         ;where a sector is received, which is also where the install part is
+loadBuffer      = $1200         ;where a sector is received:  the page of the right audio buffer, which the
+                                ;loader has to itself while a file is read (the install part is in the load
+                                ;buffer, and the file is read into that, so it can't be received there)
 
 INSTALL_ADDR    = $1800
 INSTALL_SIZE    = $0380

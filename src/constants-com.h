@@ -143,6 +143,13 @@
 	; one byte for each device from 8 to 30, that says whether it's an SD2IEC, and so can
 	; be read with ELoad:  0 = not looked at yet, 1 = it is, $80 = it isn't.
 	loader_eload_state					!skip 23
+
+	!ifndef c128 {
+		; one byte for each device from 8 to 30, set to $80 once the device has been found
+		; not to be one that the Bitops drive code can be started in, so that it isn't
+		; tried again for it.
+		loader_bitops_state				!skip 23
+	}
 	load_device_supports_dirs			!skip 1
 
 	main_memory_free_pages				!skip 1
@@ -451,7 +458,7 @@ EXP_AUDIO_DRIVER_PAGES = 8
 ; how many pages of expansion memory the booter sets aside for the loader images,
 ; just in front of the audio driver images (see init.s and loader-select.s)
 
-EXP_LOADER_PAGES = 10
+EXP_LOADER_PAGES = 15
 
 ; the strings that the program prints are kept in expansion memory too, in this
 ; many pages just in front of the loader images (see modplay.s and init.s).  the
@@ -489,10 +496,16 @@ LOADER_IMAGE_KERNAL = 1
 LOADER_IMAGE_UCI = 2
 LOADER_IMAGE_BURST = 3
 LOADER_IMAGE_ELOAD = 4
+LOADER_IMAGE_BITOPS = 5
 
 ; what the burst loader's open returns for a device that doesn't do burst
 
 BURST_ERR_NOT_BURST = 10
+
+; and what the Bitops loader's open returns for a device that the drive code can't be
+; started in
+
+BITOPS_ERR_NOT_FAST = 11
 
 ; the largest that a driver's resident image can be (one page), and the number of
 ; bytes that are fetched for a transient image
