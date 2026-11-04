@@ -90,7 +90,7 @@ reu_string_setup
 	clc
 	adc print_msg_addr+1
 	sec
-	sbc #EXP_STRINGS_BIAS
+	sbc #<EXP_STRINGS_BIAS				; (a page number is a byte, so it wraps the same way)
 	sta DMA_EXTERNAL_HI
 
 	lda #0

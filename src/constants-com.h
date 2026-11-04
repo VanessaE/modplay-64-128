@@ -465,7 +465,9 @@ EXP_STRING_PAGES = 12
 REU_STRINGS_BASE = $e000
 
 ; what has to be subtracted from the high byte of such an address and the page
-; where the file data starts, to get the page where the string is.
+; where the file data starts, to get the page where the string is.  (this can be
+; more than 255:  a page number is a byte, so only the low byte of this is used,
+; and the subtraction wraps the same way that the addition before it does.)
 
 EXP_STRINGS_BIAS = (>REU_STRINGS_BASE) + EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAGES + EXP_STRING_PAGES
 
