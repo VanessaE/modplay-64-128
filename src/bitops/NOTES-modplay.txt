@@ -16,7 +16,15 @@ with the changes listed at the top of each one:
     eload.s         the ELoad host code, for the SD2IEC (built by bitops-eload.s,
                     into the image in src/loader-eload.s)
     drive.s         the drive code for the 1541, 1571, 1581 and CMD FD and HD, and
-                    the runtime that goes with it, with files found by their names
-                    (not used by the modplayer yet, and not built by the Makefiles)
+                    the runtime that goes with it, with files found by their names.
+                    It is the three files below, put together (that is how the
+                    benchmark, cbbench-names.s, has it)
+    drive-defs.s      the definitions, and the settings that can be changed
+    drive-install.s   InitLoader, and the drive code that it uploads
+    drive-runtime.s   what reads from the drive code once it is running
+    bitops-drive.s  the modplayer's version of the same three files (it sets
+                    PLAYER), with the install part and the runtime laid out
+                    where the loader image for drives will have them
+                    (not used by the modplayer yet, but built by the Makefiles)
 
 loadexomizer3.s is the Exomizer depacker, which the modplayer doesn't use (yet).

@@ -69,6 +69,7 @@ bitops:
 	$(info $(NEWLINE)Building the Bitops loader...$(NEWLINE))
 	$(DASM) src/bitops/bitops-check.s -osrc/bitops/bitops-check.o -Isrc/bitops -v3 -p3
 	$(DASM) src/bitops/bitops-eload.s -f3 -osrc/bitops/bitops-eload.o -Isrc/bitops -v3 -p10
+	$(DASM) src/bitops/bitops-drive.s -f3 -osrc/bitops/bitops-drive.o -Isrc/bitops -v3 -p10
 
 c64:
 	$(info $(NEWLINE)Building Modplay 64...$(NEWLINE))
