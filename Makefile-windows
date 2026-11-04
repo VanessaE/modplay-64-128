@@ -172,7 +172,7 @@ ifeq ($(MACHINE),128)
 else
 	$(eval MACHINE := 64)
 	$(eval DISK_FORMAT := d64)
-	$(eval INTLV := 11)
+	$(eval INTLV := 9)
 	$(eval PROGINTLV := 6)
 endif
 
