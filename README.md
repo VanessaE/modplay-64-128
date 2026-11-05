@@ -18,27 +18,35 @@ I tried a couple of times over the years to resurrect the project, but sadly I n
 
 This repo exists as an attempt to remedy that.
 
-My main goals, apart from not using BASIC anymore, are:
+The program has so far achieved most of my main goals (apart from not using BASIC anymore):
 
-* Have just ONE codebase for all supported platforms, since 99% of the code can be the same all around.
-* take advantage of things like conditional assembly, macros, split-up files, and so on -- things I just didn't do back in the old days.
-* Give the C128 variant the more-filled-out sequencer like the C64 version had (though for this project, I was forced to rewrite that code).
-* Give the C64 variant the nice Stereo-SID-Player-inspired user interface the C128 version had.
-* Improve the audio quality by using interrupt-driven, buffered audio output.
-* Improve the slow-as-molasses loader. 😛  If you have an "Ultimate" device (U64, C64U, 1541U), the Command Interface is supported for faster loading.
-* Make the program more "modular" so that it's easy to add support for other audio and memory devices and other platforms/variants.
-* ~~Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.~~  Nope, that isn't happening.  Not yet anyway.
+✅ Have just ONE codebase for all supported platforms, since 99% of the code can be the same all around.
+
+✅ take advantage of things like conditional assembly, macros, split-up files, and so on -- things I just didn't do back in the old days.
+
+✅ Give the C128 variant the more-filled-out sequencer like the C64 version had (though for this project, I was forced to rewrite that code).
+
+✅ Give the C64 variant the nice Stereo-SID-Player-inspired user interface the C128 version had.
+
+✅ Improve the audio quality by using interrupt-driven, buffered audio output.
+
+✅ Improve the slow-as-molasses loader. 😛  If you have an "Ultimate" device (U64, C64U, 1541U), the Command Interface is supported for faster loading.
+
+✅ Make the program more "modular" so that it's easy to add support for other audio and memory devices and other platforms/variants.
+
+❌ ~~Make it possible to load and play a few 6- and 8-channel MODs, and perhaps other audio formats.~~  That one probably isn't happening yet.
 
 **At the moment, as far as platforms go, this program supports oldskool C64's and C128's, with or without a SuperCPU (later version only), and it supports the C64 Ultimate and Ultimate64.  An REU of any size is required in all cases, which can be either the oldskool cartridge, or if your hardware has this feature built-in.**
 
 Ultimate64 users:  If you have real SID chips installed, or their modern replacements such as ARM2SID, FPGASID, etc., you **must** have firmware v3.14e or higher, as it contains a critical feature fix.  Plus, you'll be able to use the Mahoney driver for clean, crisp almost-8-bit audio.  If you are not using the SID sockets at all, then older firmware versions should be fine (but you'll only have 4-bit audio).
 
-C64 Ultimate users: sorry folks, Commodore's latest firmware (1.1.0, after the renumbering) will not suffice, it doesn't have the fix.  Unless you're willing to disable your SIDs and live with 4-bit audio, you'll have to wait for them to catch up, or you can run the Ultimate64 v3.14e or later firmware, which seems to work just fine (but be aware, you'll lose keyboard lighting on machines so-equipped, and the menus won't be as you're used to, and you'll have to source new ROM image files).
+C64 Ultimate users: sorry folks, Commodore's current firmware (1.1.0, after the renumbering) will not suffice, it doesn't have the fix.  Unless you're willing to disable your SIDs and live with 4-bit audio, you'll have to wait for them to catch up, or you can run the Ultimate64 v3.15 or later firmware, which seems to work just fine (but be aware, you'll lose keyboard lighting on machines so-equipped, and the menus won't be as you're used to, and you'll have to source new ROM image files).
 
 This project is meant to be worked-on and built on Linux using common tools.  You will need:
 
 * GNU make (any recent version should be fine)
 * ACME assembler (v0.97 or newer)
+* DASM (v2.20.14 or newer)
 * exomizer (v3.1.1 or newer, just the cruncher tool, the decruncher is part of this source tree)
 * cc1541 (v4.2 or later, and not the "c1541" that comes with VICE)
 
@@ -58,4 +66,4 @@ Therefore, I've decided not to worry about some small fraction of this project b
 
 Naturally I'll always try to properly review and test the AI's contributrions before sending it out into the ether; that which finds a home in my project has to be good quality.
 
-Very roughly, 91% of the code in this project was hand-crafted by yours truly the old fashioned way (Steinway & Sons would be proud), around 8% is AI-assisted with the help of Claude, and the last 1% or so is from third-party contributions, Codebase64, etc.
+Very roughly, at least 80% of the code in this project was hand-crafted by yours truly the old fashioned way (Steinway & Sons would be proud), around 15% is AI-assisted with the help of Claude, and the last 5% or so is from third-party contributions, Codebase64, etc.
