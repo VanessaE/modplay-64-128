@@ -53,12 +53,11 @@ The memory configuration is left as it is (the KERNAL and the I/O have to be
 in, as they are for the burst loader), and the CPU is 1 MHz for as long as an
 entry point of the loader runs, and put back as it was after that.
 
-THIS HAS NOT BEEN TRIED ON A REAL C128 WITH A RAMLINK.  The C64 version has,
-on a real HD.  Things that could still be wrong:  that a write to $DF7E and
-$DF7F is all that the C64's two routines do, that the RamLink's parallel port
-is the same when seen from 128 mode, and the RamLink's timing with a C128
-(CMD has a timing clip for that, for some C128s).  A C128 in C64 mode runs the
-C64 version, which is the same as a C64.
+This has been tried on a real C128-DCR with a SuperCPU, a RamLink and a CMD HD,
+in 128 mode and in C64 mode, with the SuperCPU at 20 MHz, with the benchmark
+(rlbench) and with the player, and both worked every time.  The player's loader
+got 20 to 21 kB/s.  Not tried:  a C128 without a SuperCPU, and the RamLink
+timing clip that CMD made for some C128s.
 
 The setting
 -----------

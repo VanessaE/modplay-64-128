@@ -292,12 +292,14 @@ loader_auto_msg
 loader_chrin_msg
 	!text GRN,"(",LGRY,"CHRIN",GRN,")",0
 } else {
+	; (nine characters, which is as much as there is room for at that column:  the setting
+	; is at column 30, and nothing else on the screen goes further right than 38)
 loader_auto_msg
-	!text GRN,"(",WHT,"Auto",GRN,")     ",0
+	!text GRN,"(",WHT,"Auto",GRN,")   ",0
 loader_auto1_msg
-	!text GRN,"(",WHT,"Auto/1MHz",GRN,")",0
+	!text GRN,"(",WHT,"Auto/1M",GRN,")",0
 loader_chrin_msg
-	!text GRN,"(",LGRY,"CHRIN",GRN,")    ",0
+	!text GRN,"(",LGRY,"CHRIN",GRN,")  ",0
 }
 
 ; which loader is in use, for the bottom line of the loader screen
