@@ -27,9 +27,17 @@
 ;       - Saving a file, the KERNAL fallback and ELoad (see eload.s) aren't
 ;         here, nor is the check that finds an SD2IEC.  InitLoader leaves
 ;         loaderMode 0 if the drive code didn't start.
-;       - The drive code only differs from the original from DrvMain on, and in
-;         DrvFindFile, which is new, so DrvMain is at $0500 and the code that
-;         is timing-critical is where it was, or a few bytes later in the same page.
+;       - A CMD FD is read as a CMD HD is:  through the ROM's $ff4e, with the
+;         job's track and sector in the native queue, at $2802 and $2803 for
+;         job 1, and not through $ff54, as a 1581 is, which on an FD did not
+;         come back from some reads, after a long run of sequential ones.  It
+;         gives its result in .A, so DrvFdExec, which read it from $03, is
+;         gone.  (The CMD FD's entries in the tables at drvPatchData are what
+;         is different.)
+;       - The drive code only differs from the original from DrvMain on, in
+;         DrvFindFile, which is new, and in those tables, so DrvMain is at
+;         $0500 and the code that is timing-critical is where it was, or a few
+;         bytes later in the same page.
 ;
 ; The runtime is assembled where the program puts it, and InitLoader can be
 ; thrown away after it has been called.  config.s (or one like it) has to be

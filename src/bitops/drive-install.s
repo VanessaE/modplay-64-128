@@ -165,13 +165,20 @@ drvIdByte:      dc.b "8","F","H"
 drvIdLocLo:     dc.b $a4,$c6,$e9
 drvIdLocHi:     dc.b $fe,$e5,$a6
 
+        ; What differs between the drives, a byte for each of the three:  1581,
+        ; CMD FD and CMD HD.  The FD is read as the HD is, through $ff4e, with
+        ; the job's track and sector in the native queue ($2802 and $2803 for
+        ; job 1), and not as a 1581 is, through $ff54, which on an FD did not
+        ; come back from some reads, after a long run of sequential ones (and
+        ; which had to have its result read from $03).
+
 drvPatchData:
-drvJobTrkLo:    dc.b <$000d,<$000d,<$2802
-drvJobTrkHi:    dc.b >$000d,>$000d,>$2802
-drvJobSctLo:    dc.b <$000e,<$000e,<$2803
-drvJobSctHi:    dc.b >$000e,>$000e,>$2803
-drvExecLo:      dc.b <$ff54,<DrvFdExec,<$ff4e
-drvExecHi:      dc.b >$ff54,>DrvFdExec,>$ff4e
+drvJobTrkLo:    dc.b <$000d,<$2802,<$2802
+drvJobTrkHi:    dc.b >$000d,>$2802,>$2802
+drvJobSctLo:    dc.b <$000e,<$2803,<$2803
+drvJobSctHi:    dc.b >$000e,>$2803,>$2803
+drvExecLo:      dc.b <$ff54,<$ff4e,<$ff4e
+drvExecHi:      dc.b >$ff54,>$ff4e,>$ff4e
 drvLedBit:      dc.b $40,$40,$00
 drvLedAdrHi:    dc.b $40,$40,$05
 drvLedAdrHi2:   dc.b $40,$40,$05
@@ -424,10 +431,6 @@ DrvCheckID:     lda id,x                        ;Check for disk ID change
 DrvIDOK:        dex
                 bpl DrvCheckID
                 pla
-                rts
-
-DrvFdExec:      jsr $ff54                       ;FD2000 fix By Ninja
-                lda $03
                 rts
 
         ; Find a file by its name, which is in drvName, drvNameLen+1 bytes long, and
