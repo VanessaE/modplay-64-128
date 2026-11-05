@@ -1,0 +1,100 @@
+HD STREAMER NOTES
+=================
+
+What this is
+------------
+
+A way to read a file from a CMD HD that is on a RamLink, faster than the
+serial bus allows:  the C64 uploads a small program to the HD, which then
+finds the file by its name in the current directory of the current partition
+(PRG and SEQ files only), reads it a sector at a time, and sends each sector
+over the RamLink's parallel bus.  The clock and data lines of the serial bus
+are the handshake that says when a byte is there.  The player's loader image
+for it is src/loader-hdstream.s.
+
+On a real HD with a RamLink, a 15 kB file reads at about 15 kB/s on a C64
+with no turbo, and about 21 kB/s with a SuperCPU left at 20 MHz.  (The
+Bitops drive code gets about 9 kB/s from the same HD.)
+
+The files
+---------
+
+  hd-defs.s           the addresses and error codes of the C64's half, and
+                      what the includer has to provide.
+  hd-host-install.s   the C64's half, the part that starts it:  finds the HD,
+                      uploads the program, starts it, and
+                      tests the parallel bus.  It is too big for the loader
+                      slot, so the loader fetches it to the load buffer for
+                      every open.
+  hd-host-runtime.s   the C64's half, the part that reads sectors:  the
+                      RamLink's hardware in and out, a sector, and stopping.
+                      This is in the loader slot.
+  hd-drive.s          the program that runs in the HD.  It is uploaded to
+                      $0400 of the HD's memory, and is 513 bytes.
+
+The HD's program has the addresses of the HD's DOS in it (the job buffer,
+the partition's header table, Exec_Job and so on), which are the ones of
+the HD's DOS V1.92, the last version.  Only the two bytes that say that the
+device is an HD (at $FEA4 of its ROM) are checked.  A device that isn't one,
+or has no RamLink or parallel bus, is marked in loader_hd_state, and the
+loader moves on to the next way of reading (the Bitops drive code, then the
+KERNAL).  An older version of the HD's DOS may well not work.
+
+The C128
+--------
+
+The same code is used in the C128 builds (in 128 mode), and the differences are
+few.  The C64's routines of the RamLink's KERNAL (at $E0A9 and $FE0F) that
+switch its hardware in and out are not there, so the C128 does what they do:
+a write to $DF7E switches it in, and a write to $DF7F switches it out, as CMD
+documented it.  There is no byte of the RamLink's KERNAL to look for either,
+so the HD and the parallel bus test are what shows that there is a RamLink.
+The memory configuration is left as it is (the KERNAL and the I/O have to be
+in, as they are for the burst loader), and the CPU is 1 MHz for as long as an
+entry point of the loader runs, and put back as it was after that.
+
+THIS HAS NOT BEEN TRIED ON A REAL C128 WITH A RAMLINK.  The C64 version has,
+on a real HD.  Things that could still be wrong:  that a write to $DF7E and
+$DF7F is all that the C64's two routines do, that the RamLink's parallel port
+is the same when seen from 128 mode, and the RamLink's timing with a C128
+(CMD has a timing clip for that, for some C128s).  A C128 in C64 mode runs the
+C64 version, which is the same as a C64.
+
+The setting
+-----------
+
+On the C64 builds with a SuperCPU the loader setting has a third value, and
+goes CHRIN, Auto/1MHz, Auto.  The HD streamer waits for the HD for every
+byte, so it works with the SuperCPU at 20 MHz, and "Auto" leaves it there.
+"Auto/1MHz" makes it 1 MHz for as long as the streamer runs, for anyone whose
+setup needs that.  The other loaders count cycles, and always use 1 MHz.
+
+What was changed from the original
+----------------------------------
+
+The HD's program is byte for byte the original's.  The C64's half is ported to
+ACME, with these changes:
+
+ - When the last sector of a file holds an odd number of bytes, the HD looks
+   at the clock line before the C64 has let go of it if the HD's CPU is fast,
+   and finishes early.  The C64 then waited for a pulse on the data line that
+   was gone, and hung.  It now waits for the data line to be released.
+ - When there is no parallel bus, the C64 tells the HD to quit by holding
+   the data line down for 24 cycles, which a slow HD misses.  It holds it
+   for 1.3 ms.
+ - Only the 513 bytes of the HD's program are uploaded (the original sent
+   31 more, which were whatever came after it in the C64's memory).
+ - One of the clock line values wasn't patched for the VIC bank bits in
+   the original, in the sector read.  All of them are.
+ - The commands (M-R, M-W and M-E) are bytes, so that no character table
+   changes the letters of them.
+ - The HD returns to its DOS by itself after the last sector, which is not
+   what the original's documentation says (it says that it waits to be
+   stopped).  There are hd_release for the end of the file, and hd_stop for
+   quitting in the middle, which gives up waiting after about half a second.
+
+Origins
+-------
+
+The streamer's two halves derive from a program written by Maurice Randall,
+for the project's author, who has full rights to use it.

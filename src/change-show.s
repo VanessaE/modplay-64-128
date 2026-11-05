@@ -639,15 +639,34 @@ show_loader_setting
 	clc
 	jsr PLOT
 
-	bit loader_auto_enable
-	bpl +
+	!ifndef loader_speed_setting {
+		bit loader_auto_enable
+		bpl +
 
-	ldx #<loader_auto_msg
-	ldy #>loader_auto_msg
-	bne .lds_print					; (always)
+		ldx #<loader_auto_msg
+		ldy #>loader_auto_msg
+		bne .lds_print					; (always)
 
 +	ldx #<loader_chrin_msg
-	ldy #>loader_chrin_msg
+		ldy #>loader_chrin_msg
+	} else {
+		lda loader_auto_enable				; $80 = Auto, $40 = Auto/1MHz, 0 = CHRIN
+		bmi .lds_auto
+		beq .lds_chrin
+
+		ldx #<loader_auto1_msg
+		ldy #>loader_auto1_msg
+		bne .lds_print					; (always)
+
+.lds_auto
+		ldx #<loader_auto_msg
+		ldy #>loader_auto_msg
+		bne .lds_print					; (always)
+
+.lds_chrin
+		ldx #<loader_chrin_msg
+		ldy #>loader_chrin_msg
+	}
 
 .lds_print
 	lda #0
@@ -655,8 +674,22 @@ show_loader_setting
 jmp print_msg
 
 change_loader_setting
-	lda loader_auto_enable
-	eor #$80
+	!ifndef loader_speed_setting {
+		lda loader_auto_enable
+		eor #$80
+	} else {
+		lda loader_auto_enable				; CHRIN -> Auto/1MHz -> Auto -> CHRIN
+		bmi .cls_chrin
+		beq .cls_1mhz
+		lda #$80
+		bne .cls_store					; (always)
+.cls_1mhz
+		lda #$40
+		bne .cls_store					; (always)
+.cls_chrin
+		lda #0
+	}
+.cls_store
 	sta loader_auto_enable
 jmp show_loader_setting
 

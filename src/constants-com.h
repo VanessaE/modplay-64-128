@@ -150,6 +150,10 @@
 		; tried again for it.
 		loader_bitops_state				!skip 23
 	}
+
+	; and the same for the HD streamer (a CMD HD on a RamLink):  $80 = it can't be used with
+	; the device, 0 = not found not to be so.
+	loader_hd_state						!skip 23
 	load_device_supports_dirs			!skip 1
 
 	main_memory_free_pages				!skip 1
@@ -458,7 +462,7 @@ EXP_AUDIO_DRIVER_PAGES = 8
 ; how many pages of expansion memory the booter sets aside for the loader images,
 ; just in front of the audio driver images (see init.s and loader-select.s)
 
-EXP_LOADER_PAGES = 15
+EXP_LOADER_PAGES = 23
 
 ; the strings that the program prints are kept in expansion memory too, in this
 ; many pages just in front of the loader images (see modplay.s and init.s).  the
@@ -497,6 +501,7 @@ LOADER_IMAGE_UCI = 2
 LOADER_IMAGE_BURST = 3
 LOADER_IMAGE_ELOAD = 4
 LOADER_IMAGE_BITOPS = 5
+LOADER_IMAGE_HD = 6
 
 ; what the burst loader's open returns for a device that doesn't do burst
 
@@ -506,6 +511,11 @@ BURST_ERR_NOT_BURST = 10
 ; started in
 
 BITOPS_ERR_NOT_FAST = 11
+
+; and what the HD streamer's open returns for a device that it can't be used with (no
+; RamLink, not an HD, no parallel bus, or an HD ROM that it isn't known to be right for)
+
+HDSTREAM_ERR_UNUSABLE = 13
 
 ; the largest that a driver's resident image can be (one page), and the number of
 ; bytes that are fetched for a transient image

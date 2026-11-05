@@ -207,6 +207,13 @@
 	}
 }
 
+!if loader_hdstream_end - loader_slot > LOADER_SLOT_SIZE {
+	!error "The HD streamer loader image exceeds the loader slot by ", loader_hdstream_end - loader_slot - LOADER_SLOT_SIZE, " bytes!"
+}
+!if loader_hd_install_end - loader_hd_install > LOAD_BUFFER_PAGES * 256 {
+	!error "The HD streamer's install part doesn't fit in the load buffer by ", loader_hd_install_end - loader_hd_install - LOAD_BUFFER_PAGES * 256, " bytes!"
+}
+
 ; the ELoad blob is assembled by DASM (see src/bitops/bitops-eload.s) to run from
 ; where the loader slot is, so that has to stay where it is, or the blob has to be
 ; assembled for the new place.

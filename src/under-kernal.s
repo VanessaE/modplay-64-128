@@ -66,6 +66,7 @@ loader_images_start
 	!ifndef c128 {
 		!source "src/loader-bitops.s"
 	}
+	!source "src/loader-hdstream.s"
 
 loader_images_end
 

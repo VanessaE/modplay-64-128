@@ -43,6 +43,14 @@
 	}
 }
 
+; the loader setting has a third value in the builds with a SuperCPU, because the HD
+; streamer doesn't need the SuperCPU to be at 1 MHz, and the setting says whether it is
+; to be (see loader-hdstream.s).  The other loaders that need that always do it.
+
+!ifdef scpu {
+	loader_speed_setting = 1
+}
+
 !convtab pet
 !cpu 6510
 

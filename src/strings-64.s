@@ -286,10 +286,19 @@ multirate_required_msg
 
 ; the loader setting's two values (the same width, so nothing is left behind)
 
+!ifndef loader_speed_setting {
 loader_auto_msg
 	!text GRN,"(",WHT,"Auto",GRN,") ",0
 loader_chrin_msg
 	!text GRN,"(",LGRY,"CHRIN",GRN,")",0
+} else {
+loader_auto_msg
+	!text GRN,"(",WHT,"Auto",GRN,")     ",0
+loader_auto1_msg
+	!text GRN,"(",WHT,"Auto/1MHz",GRN,")",0
+loader_chrin_msg
+	!text GRN,"(",LGRY,"CHRIN",GRN,")    ",0
+}
 
 ; which loader is in use, for the bottom line of the loader screen
 
@@ -303,6 +312,8 @@ loader_msg_eload
 	!text "Loading via ELOAD",0
 loader_msg_bitops
 	!text "Loading via BITOPS",0
+loader_msg_hd
+	!text "Loading via HD STREAM",0
 
 mode_always_on_msg
 	!text "(Always)",0

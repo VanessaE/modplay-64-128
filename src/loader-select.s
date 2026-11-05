@@ -2,8 +2,9 @@
 ; needs, and swapping it into the loader slot.
 ;
 ; Every way of reading a file is a loader image (the KERNAL's CHRIN, the UCI, the
-; C128's burst protocol, ELoad for the SD2IEC, and on the C64 the Bitops drive code
-; for the 1541, 1571, 1581 and the CMD FD and HD):  a piece of code that is assembled
+; C128's burst protocol, ELoad for the SD2IEC, the HD streamer for a CMD HD on a
+; RamLink, and on the C64 the Bitops drive code for the 1541, 1571, 1581 and the CMD FD
+; and HD):  a piece of code that is assembled
 ; to run from loader_slot (see modplay.s), and that starts with six entry jumps.
 ; Those are the only way in:
 ;
@@ -34,6 +35,18 @@
 
 !zone loader_select {
 
+; what comes after the HD streamer, for a device that it can't be used with:  the burst
+; loader (C128), or the Bitops drive code (C64), and the state table that says whether it
+; has been found not to work for a device.  (the KERNAL is the last of all.)
+
+!ifdef c128 {
+	LOADER_IMAGE_NEXT = LOADER_IMAGE_BURST
+	loader_next_state = loader_burst_state
+} else {
+	LOADER_IMAGE_NEXT = LOADER_IMAGE_BITOPS
+	loader_next_state = loader_bitops_state
+}
+
 ; picks the loader image for the load device and makes sure it's in the slot.
 ; trashes .A, .X and .Y.
 
@@ -44,6 +57,9 @@ loader_select_image
 
 	bit loader_auto_enable
 	bmi .auto
+	!ifdef loader_speed_setting {
+		bvs .auto						; ("Auto/1MHz" is bit 6, and it is auto, too)
+	}
 
 	lda #0							; the user wants CHRIN and nothing else
 	sta load_device_can_use_uci
@@ -67,27 +83,25 @@ loader_select_image
 	bne .select							; (always)
 
 .not_eload
-	!ifdef c128 {
-		ldx load_device					; (the burst loader is tried for every device,
-		ldy loader_burst_state-8,x		; until one fails because it can't do burst)
-		bmi .kernal
-		lda #LOADER_IMAGE_BURST
-		bne .select						; (always)
-	} else {
-		ldx load_device					; (the same goes for the Bitops drive code:  it is
-		ldy loader_bitops_state-8,x		; tried for every device, until one is found
-		bmi .kernal						; not to be one that it can be started in)
-		lda #LOADER_IMAGE_BITOPS
-		bne .select						; (always)
-	}
+	ldx load_device						; (the HD streamer is for a CMD HD on a RamLink, and the next
+	ldy loader_hd_state-8,x				; one is for the other drives:  each is tried for every
+	bmi .try_next						; device, until one is found not to be one that it can be
+	lda #LOADER_IMAGE_HD				; used with, and the KERNAL is the last)
+	bne .select							; (always)
+.try_next
+	ldy loader_next_state-8,x
+	bmi .kernal
+	lda #LOADER_IMAGE_NEXT
+	bne .select							; (always)
 
 .kernal
 	lda #LOADER_IMAGE_KERNAL
 
 .select
 	cmp loader_active_image
-	bne loader_swap_in_image
-rts
+	beq +
+	jmp loader_swap_in_image			; (too far for a branch now)
++	rts
 
 ; opens the file that's about to be loaded, whose name is in string_buffer, with the
 ; loader image that loader_select_image picked.  returns .C = 1 if it didn't work.
@@ -106,6 +120,21 @@ loader_open_file
 	cpx #LOADER_IMAGE_ELOAD
 	beq .retry
 
+	cpx #LOADER_IMAGE_HD
+	bne +
+	cmp #HDSTREAM_ERR_UNUSABLE
+	bne .retry							; (a problem with the file:  the KERNAL has the say)
+	ldx load_device
+	lda #$80
+	sta loader_hd_state-8,x
+	lda loader_next_state-8,x			; the next loader is tried, unless it is known not to
+	bmi .retry							; work for the device
+	lda #LOADER_IMAGE_NEXT
+	jsr loader_swap_in_image
+	jsr .try
+	bcc .opened
+	ldx loader_active_image
++
 	!ifndef c128 {
 		cpx #LOADER_IMAGE_BITOPS
 		bne .failed						; (nothing else has a fallback)
@@ -208,6 +237,34 @@ jmp fetch_block_vec
 
 }
 
+; the same for the install part of the HD streamer (see loader-hdstream.s), which goes
+; to the load buffer too.
+
+loader_fetch_hd_install
+	lda #<load_buffer
+	sta expansion_transfer_local_addr
+	lda #>load_buffer
+	sta expansion_transfer_local_addr+1
+
+	lda #0
+	sta expansion_transfer_local_addr+2
+	sta expansion_memory_target_pointer+2
+	lda #<(loader_hd_install_end - loader_hd_install)
+	sta stash_size
+	lda #>(loader_hd_install_end - loader_hd_install)
+	sta stash_size+1
+
+	lda #<(loader_hd_install - loader_images_start)
+	sta expansion_memory_target_pointer
+
+	sec
+	lda exp_file_data_start_page
+	sbc #EXP_AUDIO_DRIVER_PAGES + EXP_LOADER_PAGES
+	clc
+	adc #>(loader_hd_install - loader_images_start)
+	sta expansion_memory_target_pointer+1
+jmp fetch_block_vec
+
 ; says on the bottom line of the loader screen, in the middle, which loader image is
 ; reading the file.  the UCI loader reads a small file so quickly that nobody could
 ; read the line, so it's left out for that, unless the file is at least 1024 blocks.
@@ -263,6 +320,13 @@ loader_show_backend
 		sta temp_abs_y
 	+
 	}
+	cpx #LOADER_IMAGE_HD
+	bne +
+	lda #<loader_msg_hd
+	sta temp_abs_x
+	lda #>loader_msg_hd
+	sta temp_abs_y
+	+
 
 	ldx #24
 	ldy #0
@@ -415,6 +479,7 @@ loader_image_table
 	} else {
 		!word 0
 	}
+	!word loader_hdstream_image - loader_images_start
 
 !ifdef uci_loader_available {
 
