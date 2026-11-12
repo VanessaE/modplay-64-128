@@ -65,20 +65,24 @@
 
 	ldx .base_table,y
 
+	; the running int stays in .A from one cycle of the write loop to the
+	; next, and sits in .Y while the fractions are added (so this trashes .Y)
+
+	lda utility_zpbk_counter
+
 	!for .wr_idx, 0, 15 {
 
 		!set .rd_addr = .seg_base + .seg_len * .wr_idx
 
-		lda utility_zpbk_counter	; the last-generated int becomes the
-		sta .rd_addr + 1,x			; index for that cycle of the write loop
+		sta .rd_addr + 1,x			; the last-generated int becomes the
+		tay							; index for that cycle of the write loop
 
 		lda temp_zpbk_b				; add up the fractions
 		adc temp_zpbk_a				; and just store them
 		sta temp_zpbk_b
 
-		lda utility_zpbk_counter	; add the ints, result to be used in the
+		tya							; add the ints, result to be used in the
 		adc temp_zpbk_a+1			; next cycle of the loop (above)
-		sta utility_zpbk_counter
 	}
 
 	adc #1						; (only striding mode and turbo builds use the result)
