@@ -12,23 +12,7 @@ start_effect_arpeggio
 		jsr multirate_arp_promote
 	}
 
-	lda current_note_periods_lows,x
-	sta utility_pointer
-	lda current_note_periods_highs,x
-	asl utility_pointer
-	rol
-	sta utility_pointer+1
-
-	clc
-	lda utility_pointer
-	adc #<steprate_lookup_table
-	sta utility_pointer
-	lda utility_pointer+1
-	adc #>steprate_lookup_table
-	sta utility_pointer+1
-
-	ldy #0
-	lda (utility_pointer),y
+	jsr steprate_lookup_for_track
 	sta multiplicand_a
 	iny
 	lda (utility_pointer),y

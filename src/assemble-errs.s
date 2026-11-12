@@ -106,6 +106,10 @@
 	!error "The note number lookup table overlaps the steprate table by ", viz_note_number_lookup_table + 7 * 256 - steprate_lookup_table, " bytes!"
 }
 
+!if <steprate_lookup_table != 0 {
+	!error "The steprate table isn't page-aligned, which steprate_lookup needs it to be!"
+}
+
 !if steprate_lookup_table + 14 * 256 > and_f0_table {
 	!error "The steprate table overlaps the AND $F0 table by ", steprate_lookup_table + 14 * 256 - and_f0_table, " bytes!"
 }

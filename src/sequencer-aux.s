@@ -129,6 +129,32 @@ start_sample
 	ldx current_sample_numbers,y
 rts
 
+; look up the step rate for a note period.  steprate_lookup_for_track takes
+; the track number in .X, and uses that track's current period.
+; steprate_lookup takes the period's low byte in utility_pointer, and its high
+; byte in .A.
+;
+; both return the step's fraction in .A, with utility_pointer and .Y (= 0) set
+; so that `iny / lda (utility_pointer),y` gets its integer part.  .X is left
+; alone.  the table is page-aligned, so only the high byte of its address has
+; to be added (see assemble-errs.s).
+
+steprate_lookup_for_track
+	lda current_note_periods_lows,x
+	sta utility_pointer
+	lda current_note_periods_highs,x
+
+steprate_lookup
+	asl utility_pointer
+	rol
+	clc
+	adc #>steprate_lookup_table
+	sta utility_pointer+1
+
+	ldy #0
+	lda (utility_pointer),y
+rts
+
 ; convert a note period into a sample stepper value
 ; enter with .Y = track number
 
@@ -137,26 +163,10 @@ set_pitch_by_table_lookup
 	bmi +
 	rts
 
-+	lda current_note_periods_lows,y
-	sta utility_pointer
-	lda current_note_periods_highs,y
-	asl utility_pointer
-	rol
-	sta utility_pointer+1
-
-	clc
-	lda utility_pointer
-	adc #<steprate_lookup_table
-	sta utility_pointer
-	lda utility_pointer+1
-	adc #>steprate_lookup_table
-	sta utility_pointer+1
-
-	tya
++	tya
 	tax
 
-	ldy #0
-	lda (utility_pointer),y
+	jsr steprate_lookup_for_track
 	sta current_steprates_fracts,x
 	iny
 	lda (utility_pointer),y

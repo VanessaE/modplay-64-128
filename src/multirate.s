@@ -1037,20 +1037,7 @@ multirate_choose_level
 	lda mrp_period_lo
 	sta utility_pointer
 	lda mrp_period_hi
-	asl utility_pointer
-	rol
-	sta utility_pointer+1
-
-	clc
-	lda utility_pointer
-	adc #<steprate_lookup_table
-	sta utility_pointer
-	lda utility_pointer+1
-	adc #>steprate_lookup_table
-	sta utility_pointer+1
-
-	ldy #0
-	lda (utility_pointer),y
+	jsr steprate_lookup
 	sta mrp_step_fract
 	iny
 	lda (utility_pointer),y
@@ -1314,23 +1301,7 @@ multirate_arp_promote
 
 	; unshifted base step rate for the note period -> multiplicand_a
 
-	lda current_note_periods_lows,x
-	sta utility_pointer
-	lda current_note_periods_highs,x
-	asl utility_pointer
-	rol
-	sta utility_pointer+1
-
-	clc
-	lda utility_pointer
-	adc #<steprate_lookup_table
-	sta utility_pointer
-	lda utility_pointer+1
-	adc #>steprate_lookup_table
-	sta utility_pointer+1
-
-	ldy #0
-	lda (utility_pointer),y
+	jsr steprate_lookup_for_track
 	sta multiplicand_a
 	iny
 	lda (utility_pointer),y
