@@ -699,93 +699,62 @@ prefill_playlist_colors
 		kb_color		= $86 ; dark cyan
 		kb_fade			= $83 ; light blue
 
+		; every row is filled in three parts (the filename, the file number, and
+		; the size), each in the color that the row's kind has for it.  the rows
+		; that are all one color just have the same one for all three parts.
+		;
+		; (vdc_block_fill_extend fills one more byte than it's asked to, so the
+		; three parts add up to playlist_width.)
+
 		lda #<(VDC_ATTRIBUTES+ 3*80+5)
 		sta fill_copy_target
 		lda #>(VDC_ATTRIBUTES+ 3*80+5)
 		sta fill_copy_target+1
-		lda #main_fade2
-		ldx #playlist_width
-		jsr vdc_block_fill
 
-		lda #<(VDC_ATTRIBUTES+ 4*80+5)
-		sta fill_copy_target
-		lda #>(VDC_ATTRIBUTES+ 4*80+5)
-		sta fill_copy_target+1
-		lda #main_fade1
+		ldy #0
+
+	.attr_next_row
+		lda .attr_row_kinds,y
+		sta temp_abs_b
+		tax
+		lda .attr_main_colors,x
 		ldx #filename_column_width
 		jsr vdc_block_fill
 
+		ldx temp_abs_b
+		lda .attr_num_colors,x
 		ldx #4
-		lda #num_fade
-		jsr vdc_block_fill_extend
-		ldx #4
-		lda #kb_fade
 		jsr vdc_block_fill_extend
 
-		!for .row, 5, 11 {
-			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta fill_copy_target
-			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta fill_copy_target+1
-			lda #main_color
-			ldx #filename_column_width
-			jsr vdc_block_fill
+		ldx temp_abs_b
+		lda .attr_kb_colors,x
+		ldx #4
+		jsr vdc_block_fill_extend
 
-			ldx #4
-			lda #num_color
-			jsr vdc_block_fill_extend
-			ldx #4
-			lda #kb_color
-			jsr vdc_block_fill_extend
-		}
-
-		lda #<(VDC_ATTRIBUTES+12*80+5)
+		clc
+		lda fill_copy_target
+		adc #80
 		sta fill_copy_target
-		lda #>(VDC_ATTRIBUTES+12*80+5)
-		sta fill_copy_target+1
-		lda #hl_color
-		ldx #playlist_width
-		jsr vdc_block_fill
+		bcc +
+		inc fill_copy_target+1
 
-		!for .row, 13, 19 {
-			lda #<(VDC_ATTRIBUTES+.row*80+5)
-			sta fill_copy_target
-			lda #>(VDC_ATTRIBUTES+.row*80+5)
-			sta fill_copy_target+1
-			lda #main_color
-			ldx #filename_column_width
-			jsr vdc_block_fill
+	+	iny
+		cpy #19
+		bne .attr_next_row
+		rts
 
-			ldx #4
-			lda #num_color
-			jsr vdc_block_fill_extend
-			ldx #4
-			lda #kb_color
-			jsr vdc_block_fill_extend
-		}
+	; the kind of each row, from row 3 to row 21:  0 = normal, 1 = the first
+	; step of the fade, 2 = the second step, 3 = the highlighted row
 
-		lda #<(VDC_ATTRIBUTES+20*80+5)
-		sta fill_copy_target
-		lda #>(VDC_ATTRIBUTES+20*80+5)
-		sta fill_copy_target+1
-		lda #main_fade1
-		ldx #filename_column_width
-		jsr vdc_block_fill
+	.attr_row_kinds
+		!byte 2, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 2
 
-		ldx #4
-		lda #num_fade
-		jsr vdc_block_fill_extend
-		ldx #4
-		lda #kb_fade
-		jsr vdc_block_fill_extend
-
-		lda #<(VDC_ATTRIBUTES+21*80+5)
-		sta fill_copy_target
-		lda #>(VDC_ATTRIBUTES+21*80+5)
-		sta fill_copy_target+1
-		lda #main_fade2
-		ldx #playlist_width
-		jsr vdc_block_fill
+	.attr_main_colors
+		!byte main_color, main_fade1, main_fade2, hl_color
+	.attr_num_colors
+		!byte num_color, num_fade, main_fade2, hl_color
+	.attr_kb_colors
+		!byte kb_color, kb_fade, main_fade2, hl_color
 	}
 rts
 
