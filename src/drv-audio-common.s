@@ -22,49 +22,17 @@ choose_audio_driver
 	jsr print_msg_rle
 
 	lda #1
+	sta temp_abs_c
+
+-	lda temp_abs_c
 	jsr print_num_paren
+	lda temp_abs_c
+	jsr print_audio_driver_name
 
-	lda #0
-	ldx #<audio_driver_1_txt
-	ldy #>audio_driver_1_txt
-	sec
-	jsr print_msg
-
-	lda #2
-	jsr print_num_paren
-
-	lda #0
-	ldx #<audio_driver_2_txt
-	ldy #>audio_driver_2_txt
-	sec
-	jsr print_msg
-
-	lda #3
-	jsr print_num_paren
-
-	lda #0
-	ldx #<audio_driver_3_txt
-	ldy #>audio_driver_3_txt
-	sec
-	jsr print_msg
-
-	lda #4
-	jsr print_num_paren
-
-	lda #0
-	ldx #<audio_driver_4_txt
-	ldy #>audio_driver_4_txt
-	sec
-	jsr print_msg
-
-	lda #5
-	jsr print_num_paren
-
-	lda #0
-	ldx #<audio_driver_5_txt
-	ldy #>audio_driver_5_txt
-	sec
-	jsr print_msg
+	inc temp_abs_c
+	lda temp_abs_c
+	cmp #6
+	bne -
 
 -	jsr GETIN
 	beq -
@@ -139,49 +107,10 @@ show_audio_driver
 	lda #WHT
 	jsr CHROUT
 	lda audio_driver
-	cmp #1
-	bne +
-
-	lda #0
-	ldx #<audio_driver_1_txt
-	ldy #>audio_driver_1_txt
-	sec
-	jsr print_msg
-	jmp .adrv_app
-
-+	cmp #2
-	bne +
-	lda #0
-	ldx #<audio_driver_2_txt
-	ldy #>audio_driver_2_txt
-	sec
-	jsr print_msg
-	jmp .adrv_app
-
-+	cmp #3
-	bne +
-	lda #0
-	ldx #<audio_driver_3_txt
-	ldy #>audio_driver_3_txt
-	sec
-	jsr print_msg
-	jmp .adrv_app
-
-+	cmp #4
-	bne +
-	lda #0
-	ldx #<audio_driver_4_txt
-	ldy #>audio_driver_4_txt
-	sec
-	jsr print_msg
-
-+	cmp #5
-	bne .adrv_app
-	lda #0
-	ldx #<audio_driver_5_txt
-	ldy #>audio_driver_5_txt
-	sec
-	jsr print_msg
+	beq .adrv_app
+	cmp #6
+	bcs .adrv_app
+	jsr print_audio_driver_name
 
 .adrv_app
 	lda #GRN
@@ -190,6 +119,25 @@ show_audio_driver
 	jsr CHROUT
 	sec
 rts
+
+; print the name of an audio driver.  enter with .A = its number, 1 to 5.
+
+print_audio_driver_name
+	tax
+	ldy audio_driver_txt_highs-1,x
+	lda audio_driver_txt_lows-1,x
+	tax
+	lda #0
+	sec
+jmp print_msg
+
+audio_driver_txt_lows
+	!byte <audio_driver_1_txt, <audio_driver_2_txt, <audio_driver_3_txt
+	!byte <audio_driver_4_txt, <audio_driver_5_txt
+
+audio_driver_txt_highs
+	!byte >audio_driver_1_txt, >audio_driver_2_txt, >audio_driver_3_txt
+	!byte >audio_driver_4_txt, >audio_driver_5_txt
 
 ; enter with .A = byte to fill with
 fill_audio_buffers
