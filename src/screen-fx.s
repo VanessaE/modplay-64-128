@@ -476,39 +476,17 @@ rts
 	rts
 
 } else {
-	vdc_copy_main_menu_to_cache
+	; copy 2 kB (a whole screen's worth of text or attributes) from one place
+	; in VDC memory to another.  enter with .A = the high byte of the source
+	; address, .Y = the high byte of the target.  both have to be page-aligned,
+	; and all of the places that this is used with are.
 
-		; menu attributes
-
-		lda #<VDC_ATTRIBUTES
-		sta fill_copy_source
-		lda #>VDC_ATTRIBUTES
+	vdc_copy_2k
 		sta fill_copy_source+1
-
-		lda #<VDC_64K_CACHE_MENU_ATTRS
-		sta fill_copy_target
-		lda #>VDC_64K_CACHE_MENU_ATTRS
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
-
-		; menu text
-
-		lda #<VDC_SCREEN
+		sty fill_copy_target+1
+		lda #0
 		sta fill_copy_source
-		lda #>VDC_SCREEN
-		sta fill_copy_source+1
-
-		lda #<VDC_64K_CACHE_MENU_TEXT
 		sta fill_copy_target
-		lda #>VDC_64K_CACHE_MENU_TEXT
-		sta fill_copy_target+1
 
 		ldx #0
 		jsr vdc_block_copy
@@ -519,46 +497,33 @@ rts
 		bne -
 	rts
 
-	vdc_retrieve_main_menu_from_cache
+	vdc_copy_main_menu_to_cache
+
 		; menu attributes
 
-		lda #<VDC_64K_CACHE_MENU_ATTRS
-		sta fill_copy_source
-		lda #>VDC_64K_CACHE_MENU_ATTRS
-		sta fill_copy_source+1
-
-		lda #<VDC_ATTRIBUTES
-		sta fill_copy_target
 		lda #>VDC_ATTRIBUTES
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		ldy #>VDC_64K_CACHE_MENU_ATTRS
+		jsr vdc_copy_2k
 
 		; menu text
 
-		lda #<VDC_64K_CACHE_MENU_TEXT
-		sta fill_copy_source
-		lda #>VDC_64K_CACHE_MENU_TEXT
-		sta fill_copy_source+1
-
-		lda #<VDC_SCREEN
-		sta fill_copy_target
 		lda #>VDC_SCREEN
-		sta fill_copy_target+1
+		ldy #>VDC_64K_CACHE_MENU_TEXT
+		jsr vdc_copy_2k
+	rts
 
-		ldx #0
-		jsr vdc_block_copy
+	vdc_retrieve_main_menu_from_cache
+		; menu attributes
 
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		lda #>VDC_64K_CACHE_MENU_ATTRS
+		ldy #>VDC_ATTRIBUTES
+		jsr vdc_copy_2k
+
+		; menu text
+
+		lda #>VDC_64K_CACHE_MENU_TEXT
+		ldy #>VDC_SCREEN
+		jsr vdc_copy_2k
 	rts
 
 	vdc_retrieve_loader_bg_from_reu
@@ -627,86 +592,30 @@ rts
 
 		; loader background attributes
 
-		lda #<VDC_64K_CACHE_LDR_BG_ATTRS
-		sta fill_copy_source
 		lda #>VDC_64K_CACHE_LDR_BG_ATTRS
-		sta fill_copy_source+1
-
-		lda #<VDC_ATTRIBUTES
-		sta fill_copy_target
-		lda #>VDC_ATTRIBUTES
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		ldy #>VDC_ATTRIBUTES
+		jsr vdc_copy_2k
 
 		; loader background text
 
-		lda #<VDC_64K_CACHE_LDR_BG_TEXT
-		sta fill_copy_source
 		lda #>VDC_64K_CACHE_LDR_BG_TEXT
-		sta fill_copy_source+1
-
-		lda #<VDC_SCREEN
-		sta fill_copy_target
-		lda #>VDC_SCREEN
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		ldy #>VDC_SCREEN
+		jsr vdc_copy_2k
 	rts
 
 	vdc_copy_player_bg_from_cache
 
 		; player background attributes
 
-		lda #<VDC_64K_CACHE_PLYR_BG_ATTRS
-		sta fill_copy_source
 		lda #>VDC_64K_CACHE_PLYR_BG_ATTRS
-		sta fill_copy_source+1
-
-		lda #<VDC_ATTRIBUTES
-		sta fill_copy_target
-		lda #>VDC_ATTRIBUTES
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		ldy #>VDC_ATTRIBUTES
+		jsr vdc_copy_2k
 
 		; player background text
 
-		lda #<VDC_64K_CACHE_PLYR_BG_TEXT
-		sta fill_copy_source
 		lda #>VDC_64K_CACHE_PLYR_BG_TEXT
-		sta fill_copy_source+1
-
-		lda #<VDC_SCREEN
-		sta fill_copy_target
-		lda #>VDC_SCREEN
-		sta fill_copy_target+1
-
-		ldx #0
-		jsr vdc_block_copy
-
-		ldy #7
-	-	jsr vdc_block_copy_extend
-		dey
-		bne -
+		ldy #>VDC_SCREEN
+		jsr vdc_copy_2k
 	rts
 
 	vdc_set_fetch_size
