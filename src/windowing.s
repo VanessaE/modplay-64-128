@@ -30,7 +30,7 @@ bottom_edge_char			= $60
 
 	short_popup_left_column			= 4
 	short_popup_width				= 30
-	short_popup_height				= 5
+	short_popup_height				= 8
 
 	medium_popup_left_column		= 4
 	medium_popup_width				= 36
@@ -62,7 +62,7 @@ bottom_edge_char			= $60
 
 	short_popup_left_column			= 0
 	short_popup_width				= 30
-	short_popup_height				= 5
+	short_popup_height				= 7
 
 	medium_popup_left_column		= 0
 	medium_popup_width				= 40

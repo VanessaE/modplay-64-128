@@ -39,26 +39,6 @@ start_main_player
 
 	!ifndef turbo_available {
 		jsr reu_set_cache_layout
-
-		bit allow_regen_msg
-		bpl +
-
-		jsr enable_kernal_only
-		jsr gray_out
-
-		jsr draw_short_popup
-
-		ldx #short_popup_top_row+1
-		ldy #short_popup_left_column
-		clc
-		jsr PLOT
-
-		lda #0
-		ldx #<main_player_regen_tables_msg
-		ldy #>main_player_regen_tables_msg
-		sec
-		jsr print_msg
-	  +
 	}
 
 	jsr disable_roms
@@ -272,3 +252,75 @@ player_ui_finish
 	 +
 	}
 rts
+
+!ifndef turbo_available {
+
+; tell the user that the tables are being regenerated, and set up the progress
+; bar for it.  regenerate_tables_if_needed calls this, with the ROMs out, once
+; it knows that there's something to regenerate, and only if allow_regen_msg
+; says to.  the generators in tables.s then step the bar as they go.
+
+regen_popup_top_row		= (25 - short_popup_height) / 2 ; (as calculate_corners has it)
+regen_progbar_row		= regen_popup_top_row + 6
+regen_progbar_len		= (short_popup_width * 3) / 4
+regen_progbar_column	= (screen_width - regen_progbar_len) / 2
+
+regen_show_popup
+	jsr enable_kernal_only
+	jsr gray_out
+
+	jsr draw_short_popup
+
+	ldx #regen_popup_top_row
+	ldy #short_popup_left_column
+	clc
+	jsr PLOT
+
+	lda #0
+	ldx #<main_player_regen_tables_msg
+	ldy #>main_player_regen_tables_msg
+	sec
+	jsr print_msg
+
+	; the bar's total is the number of steps that the generators which are
+	; about to run will count, one per call
+
+	lda #0
+	sta progress_bar_total+1
+	sta progress_bar_step+1
+
+	ldx volume_tables_resolution
+	cpx last_volume_tables_resolution
+	beq +
+	lda #REGEN_STEPS_VOLUME
+
++	ldx isr_trigger_interval
+	cpx last_isr_trigger_interval
+	bne +
+	ldx isr_trigger_interval+1
+	cpx last_isr_trigger_interval+1
+	beq ++
+
++	clc
+	adc #(REGEN_STEPS_TEMPO + REGEN_STEPS_PERIOD)
+
+++	sta progress_bar_total
+
+	lda #1
+	sta progress_bar_step
+
+	lda #YEL
+	sta progress_bar_color
+
+	!ifdef c128 {
+		jsr FULLW ; the bar is placed by its position on the whole screen
+	}
+
+	lda #regen_progbar_len
+	ldx #regen_progbar_column
+	ldy #regen_progbar_row
+	jsr init_progress_bar
+
+jmp disable_roms
+
+}

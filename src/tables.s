@@ -18,6 +18,43 @@ tempo_fine_adjust_constant_ntsc = 159778
 
 
 ; enter with .A = desired output resolution
+; how many times each generator steps the progress bar, when there is one.  the
+; counts are chosen so that a step takes about the same time in all three.
+
+REGEN_STEPS_VOLUME = 64		; once per volume level
+REGEN_STEPS_TEMPO = 14		; once per 16 tempos, from 32 to 255
+REGEN_STEPS_PERIOD = 108	; once per 16 periods, from 57 to 1791
+
+!ifndef turbo_available {
+
+; step the progress bar, if there is one.  trashes .A, .X and .Y.
+
+regen_progress_tick
+	bit allow_regen_msg
+	bpl +
+
+	!ifdef c128 {
+		; the C128's update_progress_bar uses fill_copy_target, and so do the
+		; generators
+		lda fill_copy_target
+		pha
+		lda fill_copy_target+1
+		pha
+	}
+
+	jsr update_progress_bar
+
+	!ifdef c128 {
+		pla
+		sta fill_copy_target+1
+		pla
+		sta fill_copy_target
+	}
+  +
+rts
+
+}
+
 generate_volume_tables
 	lda #<volume_table
 	sta fill_copy_target
@@ -87,6 +124,11 @@ use7bit
 
 	inc fill_copy_target+1
 	inc vol_cnt
+
+	!ifndef turbo_available {
+		jsr regen_progress_tick
+	}
+
 	lda vol_cnt
 
 	cmp #64
@@ -150,6 +192,17 @@ generate_tempo_table
 	sta tempo_table_fracts,x
 	lda quotient+1
 	sta tempo_table_lows,x
+
+	!ifndef turbo_available {
+		txa
+		and #$0f
+		cmp #$0f
+		bne +
+		jsr regen_progress_tick
+		ldx temp_abs_x
+	  +
+	}
+
 	inx
 	bne -
 rts
@@ -223,7 +276,15 @@ generate_period_table
 	bcc +
 	inc fill_copy_target+1
 
-+	inc utility_counter
++	!ifndef turbo_available {
+		lda utility_counter
+		and #$0f
+		bne ++
+		jsr regen_progress_tick
+	 ++
+	}
+
+	inc utility_counter
 	bne +
 	inc utility_counter+1
 
@@ -338,6 +399,15 @@ regenerate_tables_if_needed
 	jmp .regen_tables_exit
 
 .regen_at_least_one_table
+	!ifndef turbo_available {
+		; say so, with a progress bar, if we're allowed to
+
+		bit allow_regen_msg
+		bpl +
+		jsr regen_show_popup
+	  +
+	}
+
 	lda volume_tables_resolution
 	cmp last_volume_tables_resolution
 	beq +
