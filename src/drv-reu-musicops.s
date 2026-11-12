@@ -100,7 +100,11 @@ reu_run_fetch_and_mixer
 	reu_fetch_main_loop
 		clc													; 2
 		ldy #$b1											; 2
-		lda #>sample_data_buffer							; 2
+
+		!ifdef turbo_available {
+			; (the oldskool builds load .A for each track, below)
+			lda #>sample_data_buffer						; 2
+		}
 
 		!for reu_fetch_track, 0, 3 {
 		  !zone reu_fetchloop {
@@ -135,8 +139,7 @@ reu_run_fetch_and_mixer
 			jmp .reu_end_of_track_fetch					; 3
 
 		+	lda current_fetch_loop_ofl_amounts + .ftrk	; 3
-			beq .reu_advance_pointer_and_fetch			; 3/2
-			jmp .reu_move_pointer_to_loop_start_offset	; 3
+			bne .reu_move_pointer_to_loop_start_offset	; 2/3
 
 		.reu_advance_pointer_and_fetch
 			lda current_sample_pointers_fracts + .ftrk	; 3
@@ -199,10 +202,9 @@ reu_run_fetch_and_mixer
 			lda #0										; 2
 			sbc current_sample_pointers_highs + .ftrk	; 3
 
-			bcc +										; 2/3
-			jmp .reu_end_of_track_fetch					; 3
+			bcs .reu_end_of_track_fetch					; 3/2
 
-		+	lda current_track_loop_flags + .ftrk		; 3
+			lda current_track_loop_flags + .ftrk		; 3
 			bne .reu_sample_has_loop					; 3/2
 
 			; .A = 0 implied
