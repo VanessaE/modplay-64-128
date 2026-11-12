@@ -178,10 +178,29 @@ rts
 ; that means the real row/column, not the position within whatever popup
 ; might be open), .A = length of the progress bar in segments (8 per char).
 
-; the frame will be drawn in the row above, the column to the left, and the
-; row below the given coordinates (and of course, to the right of it)
-
-; maximum bar length is 255 segments, one segment shy of 32 chars.
+; PROGRESS BAR
+;
+; Before calling init_progress_bar, set:
+;
+;   progress_bar_color   the bar's color, as a PETSCII color code
+;   progress_bar_total   (2 bytes) the amount that means the bar is full
+;   progress_bar_step    (2 bytes) how much of that amount each call to
+;                        update_progress_bar stands for
+;
+; the last two are in whatever units suit the caller (pages, blocks...), as long
+; as it's the same for both.
+;
+; init_progress_bar draws the empty bar and its frame.  enter with .A = the
+; length of the bar in characters (31 at most), .X = column, .Y = row.  the
+; frame is drawn in the row above, the column to the left, and the row below the
+; given coordinates (and of course, to the right of it).
+;
+; update_progress_bar takes no arguments.  it counts one more step, and fills
+; the bar to match.  it never fills past the end, however many times it's called.
+;
+; a caller that changes progress_bar_step or progress_bar_total while the bar is
+; in use has to call progress_bar_set_scale afterwards, which keeps what's been
+; counted so far.
 
 !ifndef c128 {
 	progbar_frame_top = $af
@@ -194,12 +213,12 @@ rts
 progbar_frame_left = $aa
 progbar_frame_right = $b4
 
-draw_empty_progress_bar
-	sta progress_bar_max_length
-	lsr
-	lsr
-	lsr
+init_progress_bar
 	sta temp_abs_a ; length in characters
+	asl
+	asl
+	asl
+	sta progress_bar_max_length ; length in segments, eight per character
 	stx progress_bar_column
 	sty progress_bar_row
 
@@ -282,11 +301,84 @@ draw_empty_progress_bar
 	lda progress_bar_char_pointer+1
 	adc #0
 	sta progress_bar_char_pointer+1
+
+	lda #0
+	sta progress_bar_filled
+	sta progress_bar_accum
+	sta progress_bar_accum+1
+	sta progress_bar_accum+2
+
+; work out how far one step moves the bar:  the step times the bar's length in
+; segments.  the bar gains a segment each time the running total of those
+; reaches progress_bar_total, so nothing has to be divided.
+
+progress_bar_set_scale
+	lda progress_bar_step
+	sta multiplicand_a
+	lda progress_bar_step+1
+	sta multiplicand_a+1
+	lda progress_bar_max_length
+	sta multiplicand_b
+	lda #0
+	sta multiplicand_b+1
+
+	sec
+	jsr multiply_16x16
+
+	lda product
+	sta progress_bar_scaled_step
+	lda product+1
+	sta progress_bar_scaled_step+1
+	lda product+2
+	sta progress_bar_scaled_step+2
 rts
 
-; enter this one with .A = number of segments to draw, max 255
-
 update_progress_bar
+	clc
+	lda progress_bar_accum
+	adc progress_bar_scaled_step
+	sta progress_bar_accum
+	lda progress_bar_accum+1
+	adc progress_bar_scaled_step+1
+	sta progress_bar_accum+1
+	lda progress_bar_accum+2
+	adc progress_bar_scaled_step+2
+	sta progress_bar_accum+2
+
+	; add a segment for each whole progress_bar_total that's in there, and
+	; stop when the bar is full (which is also what ends this if the total
+	; is zero)
+
+.pbar_check
+	lda progress_bar_filled
+	cmp progress_bar_max_length
+	bcs .pbar_draw
+
+	lda progress_bar_accum+2
+	bne .pbar_add_segment
+
+	lda progress_bar_accum
+	cmp progress_bar_total
+	lda progress_bar_accum+1
+	sbc progress_bar_total+1
+	bcc .pbar_draw
+
+.pbar_add_segment
+	sec
+	lda progress_bar_accum
+	sbc progress_bar_total
+	sta progress_bar_accum
+	lda progress_bar_accum+1
+	sbc progress_bar_total+1
+	sta progress_bar_accum+1
+	bcs +
+	dec progress_bar_accum+2
+
++	inc progress_bar_filled
+	bne .pbar_check ; (always)
+
+.pbar_draw
+	lda progress_bar_filled
 	sta temp_abs_a
 
 	!ifdef c128 {
@@ -322,6 +414,8 @@ update_progress_bar
 nofill
 	lda temp_abs_a
 	and #$07
+	beq .pbar_done ; no part-filled character (and a full bar ends here,
+	               ; so that it doesn't write over the frame)
 	tax
 
 	lda progress_bar_segments,x
@@ -336,6 +430,7 @@ nofill
 	} else {
 		jsr vdc_write_ram
 	}
+.pbar_done
 rts
 
 !ifndef c128 {

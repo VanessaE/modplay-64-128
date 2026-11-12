@@ -113,7 +113,7 @@ multirate_generate_all
 	jsr multirate_draw_progress_bar
 
 	jsr multirate_convert_all
-	jsr multirate_update_progress		; the last pages may not have hit the
+	jsr update_progress_bar				; the last pages may not have hit the
 										; once-per-kB update, so finish the bar
 	jsr multirate_finish_samples
 
@@ -515,7 +515,7 @@ multirate_convert_page
 	and #$03
 	bne +
 
-	jsr multirate_update_progress
+	jsr update_progress_bar
 
 +	inc multirate_exp_source_pointer+1
 	bne +
@@ -759,84 +759,38 @@ multirate_draw_progress_bar
 	dey
 	bne -
 
-	lda #CYAN
-	sta progress_bar_color
-
-	lda #(loader_progbar_len * 8)
-	ldx #loader_progbar_column
-	ldy #loader_progbar_row
-	jsr draw_empty_progress_bar
-
 	lda #0
 	sta multirate_progbar_page_count
 	sta multirate_progbar_page_count+1
-	sta dividend
-	sta dividend+2
 
 	; the total number of source pages that the decimation will work through
 	; is the sum of what multirate_count_source_pages worked out for each
-	; sample.
+	; sample.  the bar is updated once for every four of them.
 
-	lda #0
-	sta dividend+1
-	sta dividend+2
+	sta progress_bar_total
+	sta progress_bar_total+1
+	sta progress_bar_step+1
+	lda #4
+	sta progress_bar_step
 
 	ldy #31
 -	clc
-	lda dividend+1
+	lda progress_bar_total
 	adc multirate_src_pages_lo,y
-	sta dividend+1
-	lda dividend+2
+	sta progress_bar_total
+	lda progress_bar_total+1
 	adc multirate_src_pages_hi,y
-	sta dividend+2
+	sta progress_bar_total+1
 	dey
 	bpl -
 
-	; divide the result by the number of progress bar segments
+	lda #CYAN
+	sta progress_bar_color
 
-	lda #(loader_progbar_len * 8)
-	sta divisor
-	lda #0
-	sta divisor+1
-	sta divisor+2
-	jsr divide_24by24
-
-	lda quotient
-	sta progress_bar_bytes_per_segment
-	lda quotient+1
-	sta progress_bar_bytes_per_segment+1
-	lda quotient+2
-	sta progress_bar_bytes_per_segment+2
-rts
-
-multirate_update_progress
-	lda #0
-	sta dividend
-	lda multirate_progbar_page_count
-	sta dividend+1
-	lda multirate_progbar_page_count+1
-	sta dividend+2
-
-	lda progress_bar_bytes_per_segment
-	sta divisor
-	lda progress_bar_bytes_per_segment+1
-	sta divisor+1
-	lda progress_bar_bytes_per_segment+2
-	sta divisor+2
-	jsr divide_24by24
-
-	lda quotient+1						; never ask for more than the whole bar
-	ora quotient+2
-	bne .mpu_full
-	lda quotient
-	cmp #(loader_progbar_len * 8 + 1)
-	bcc .mpu_ok
-
-.mpu_full
-	lda #(loader_progbar_len * 8)
-
-.mpu_ok
-jmp update_progress_bar
+	lda #loader_progbar_len
+	ldx #loader_progbar_column
+	ldy #loader_progbar_row
+jmp init_progress_bar
 
 ; constant lookup tables (read-only, stay in the code)
 

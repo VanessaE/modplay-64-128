@@ -714,63 +714,36 @@ loader_add_progress_bar
 	lda #LGRN
 	sta progress_bar_color
 
-	lda #(loader_progbar_len * 8)
-	ldx #loader_progbar_column
-	ldy #loader_progbar_row
-	jsr draw_empty_progress_bar
+	; the file's size is in blocks, and the progress is counted in pages, which
+	; is near enough to the same thing
 
-	; file size is in blocks, so displace by 1 byte in dividend to get bytes-to-load
-
-	lda #0
-	sta dividend
 	lda file_to_load_size
-	sta dividend+1
+	sta progress_bar_total
 	lda file_to_load_size+1
-	sta dividend+2
+	sta progress_bar_total+1
 
-	; divide the size by the number of progress bar segments
+	; the header was loaded before the bar was drawn, so the first step is
+	; however many pages that came to
 
-	lda #(loader_progbar_len * 8)
-	sta divisor
+	lda loaded_bytes_count+1
+	sta progress_bar_step
 	lda #0
-	sta divisor+1
-	sta divisor+2
-	jsr divide_24by24
+	sta progress_bar_step+1
 
-	lda quotient
-	sta progress_bar_bytes_per_segment
-	lda quotient+1
-	sta progress_bar_bytes_per_segment+1
-	lda quotient+2
-	sta progress_bar_bytes_per_segment+2
-
-	lda #LGRN
-	sta progress_bar_color
-
-	lda #(loader_progbar_len * 8)
+	lda #loader_progbar_len
 	ldx #loader_progbar_column
 	ldy #loader_progbar_row
-jmp draw_empty_progress_bar
+	jsr init_progress_bar
+	jsr update_progress_bar
+
+	; after that, the bar is updated once for every kB that's loaded
+
+	lda #4
+	sta progress_bar_step
+jmp progress_bar_set_scale
 
 loader_update_progress
 	jsr loader_print_loading_speed
-
-	lda loaded_bytes_count
-	sta dividend
-	lda loaded_bytes_count+1
-	sta dividend+1
-	lda loaded_bytes_count+2
-	sta dividend+2
-
-	lda progress_bar_bytes_per_segment
-	sta divisor
-	lda progress_bar_bytes_per_segment+1
-	sta divisor+1
-	lda progress_bar_bytes_per_segment+2
-	sta divisor+2
-	jsr divide_24by24
-
-	lda quotient
 jmp update_progress_bar
 
 loader_print_loading_speed
@@ -1195,35 +1168,19 @@ loader_prefilter_samples
 	bne +
 	rts									; no samples, nothing to do
 
-	; set up the progress bar the way loader_add_progress_bar does, but
-	; counting the pages to filter instead of the bytes to load.  (bytes per
-	; segment = total pages * 256 / segments)
+	; the progress bar counts the pages to filter, and it's updated once for
+	; every four of them
 
-+	lda #0
-	sta dividend
-	lda .total_pages
-	sta dividend+1
++	lda .total_pages
+	sta progress_bar_total
 	lda .total_pages+1
-	sta dividend+2
-
-	lda #(loader_progbar_len * 8)
-	sta divisor
+	sta progress_bar_total+1
+	lda #4
+	sta progress_bar_step
 	lda #0
-	sta divisor+1
-	sta divisor+2
-	jsr divide_24by24
-
-	lda quotient
-	sta progress_bar_bytes_per_segment
-	lda quotient+1
-	sta progress_bar_bytes_per_segment+1
-	lda quotient+2
-	sta progress_bar_bytes_per_segment+2
+	sta progress_bar_step+1
 
 	lda #0
-	sta .done
-	sta .done+1
-	sta .done+2
 	sta .tick
 
 	; say what we're doing, over the "Loading..." text, and erase the loading
@@ -1260,10 +1217,10 @@ loader_prefilter_samples
 	lda #ORG
 	sta progress_bar_color
 
-	lda #(loader_progbar_len * 8)
+	lda #loader_progbar_len
 	ldx #loader_progbar_column
 	ldy #loader_progbar_row
-	jsr draw_empty_progress_bar
+	jsr init_progress_bar
 
 	ldy #1
 
@@ -1396,18 +1353,13 @@ loader_prefilter_samples
 
 	jsr stash_block_vec
 
-	; one more page done.  update the bar once per kB, to keep the division from
-	; taking much of the time.
+	; one more page done.  update the bar once per kB.
 
-	inc .done+1
-	bne +
-	inc .done+2
-
-+	inc .tick
+	inc .tick
 	lda .tick
 	and #$03
 	bne +
-	jsr .update_progress
+	jsr update_progress_bar
 
 +	inc .pointer+1
 	bne +
@@ -1431,7 +1383,7 @@ loader_prefilter_samples
 	beq +
 	jmp .next_sample
 
-+	jmp .update_progress				; (the last pages may not have hit the once-per-kB update)
++	jmp update_progress_bar				; (the last pages may not have hit the once-per-kB update)
 
 ; enter with .Y = the sample number.  works out how many pages to filter for that
 ; sample, into .pages:  end page - start page, +1 if the end isn't page-aligned,
@@ -1462,44 +1414,11 @@ loader_prefilter_samples
 +
 rts
 
-; fill the progress bar to (pages done * 256) / bytes per segment segments.
-
-.update_progress
-	lda .done
-	sta dividend
-	lda .done+1
-	sta dividend+1
-	lda .done+2
-	sta dividend+2
-
-	lda progress_bar_bytes_per_segment
-	sta divisor
-	lda progress_bar_bytes_per_segment+1
-	sta divisor+1
-	lda progress_bar_bytes_per_segment+2
-	sta divisor+2
-	jsr divide_24by24
-
-	; (the bar can only hold loader_progbar_len * 8 segments, and rounding
-	; can make the quotient a little bigger than that, especially for a tiny
-	; sample)
-
-	lda quotient+1
-	ora quotient+2
-	bne .bar_full
-	lda quotient
-	cmp #(loader_progbar_len * 8 + 1)
-	bcc +
-.bar_full
-	lda #(loader_progbar_len * 8)
-+	jmp update_progress_bar
-
 .sample		!byte 0
 .prev		!byte 0
 .pages		!word 0
 .pointer	!byte 0, 0, 0
 .total_pages	!word 0
-.done		!byte 0, 0, 0
 .tick		!byte 0
 
 .filtering_msg

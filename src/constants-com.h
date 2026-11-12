@@ -164,9 +164,12 @@
 	progress_bar_row					!skip 1
 	progress_bar_column					!skip 1
 	progress_bar_max_length				!skip 1
-	progress_bar_segments_to_draw		!skip 1
-	progress_bar_bytes_per_segment		!skip 3
 	progress_bar_color					!skip 1
+	progress_bar_step					!skip 2 ; set by the caller (see screen-fx.s)
+	progress_bar_total					!skip 2 ; ditto
+	progress_bar_scaled_step			!skip 3 ; step * length in segments
+	progress_bar_accum					!skip 3 ; running total of those
+	progress_bar_filled					!skip 1 ; segments filled so far
 
 	visualizer_base_address				!skip 2
 	viz_waveforms_shift_for_8_bit		!skip 1
@@ -356,7 +359,7 @@
 	sample_default_fine_tunes           !skip 32
 	sample_default_volume_levels        !skip 32
 
-	; about 11 bytes free here on both machines
+	; about 4 bytes free here on both machines
 
 ; ------------------------------------------------------------------------
 
