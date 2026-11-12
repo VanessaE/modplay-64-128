@@ -98,6 +98,10 @@
 ; constants-io-and-kernal.h, one right after another.  make sure that they stay clear
 ; of each other if any of them is resized.
 
+!if <viz_note_number_lookup_table != 0 {
+	!error "The note number lookup table isn't page-aligned, which the row data visualizer needs it to be!"
+}
+
 !if viz_note_number_lookup_table + 7 * 256 > steprate_lookup_table {
 	!error "The note number lookup table overlaps the steprate table by ", viz_note_number_lookup_table + 7 * 256 - steprate_lookup_table, " bytes!"
 }
