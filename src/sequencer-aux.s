@@ -77,9 +77,6 @@ start_sample
 	lda sample_end_addresses_highs,x
 	sta current_sample_end_addr_highs,y
 
-	lda sample_default_loop_flags,x
-	sta current_track_loop_flags,y
-
 	; the fetcher restarts loops from these per-track copies
 
 	lda sample_loop_start_addresses_lows,x
@@ -141,7 +138,6 @@ set_pitch_by_table_lookup
 	rts
 
 +	lda current_note_periods_lows,y
-	lda current_note_periods_lows,y
 	sta utility_pointer
 	lda current_note_periods_highs,y
 	asl utility_pointer
@@ -171,8 +167,7 @@ set_pitch_by_table_lookup
 	}
 
 	ldy seq_current_track
-	jsr do_selfmod_pitch_vec
-rts
+jmp do_selfmod_pitch_vec
 
 ; enter with .A = desired fine tune value
 ; and .X = the index into the row data for the channel's period value
