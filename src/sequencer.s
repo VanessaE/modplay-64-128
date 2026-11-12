@@ -18,6 +18,8 @@ start_sequencer
 
 	sta current_pitch_slide_target_lows,x
 	sta current_pitch_slide_target_highs,x
+	sta current_pitch_slide_rates,x
+	sta current_pitch_bend_dirs,x
 
 	sta current_retrigger_rates,x
 	sta current_cut_sample_ticks,x
@@ -29,6 +31,8 @@ start_sequencer
 	sta current_vibrato_step_sizes_fracts,x
 	sta current_vibrato_fundamental_periods_lows,x
 	sta current_vibrato_fundamental_periods_highs,x
+	sta current_vibrato_top_periods_lows,x
+	sta current_vibrato_top_periods_highs,x
 	sta last_vibrato_rates,x
 	sta last_vibrato_amplitudes,x
 

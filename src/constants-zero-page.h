@@ -62,17 +62,38 @@
 ; This area may only be used when player is running, or at least, when no
 ; KERNAL or BASIC calls are needed.  Must be restored after any such use.
 
+	; What's in here, and what isn't:
+	;
+	; - anything that the fetch loop, the mixer or the audio ISR touches.
+	; - arrays that are indexed with .X or addressed directly, which are a
+	;   byte shorter per reference here, and a cycle faster to store to or to
+	;   modify in place.
+	; - arrays that need STX zp,Y, or scalars that the sequencer uses on every
+	;   row or tick.
+	;
+	; arrays that are only ever indexed with .Y gain nothing from being here,
+	; because nothing but LDX/STX has a zero page,Y form.  those are in the main
+	; variables zone (see constants-com.h).
+	;
+	; everything in here is zeroed by erase_zero_page when playback starts.
+
 	* = $02
+
+	; scratch space
 
 	utility_zpbk_counter				!skip 3
 	temp_zpbk_a							!skip 3
 	temp_zpbk_b							!skip 1
+
+	; fetch loop, per-track state (see also the block at $61)
 
 	current_track_loop_flags			!skip 8
 	current_track_gate_flags			!skip 8
 	current_active_tracks_count			!skip 1
 
 	arpeggio_counters					!skip 8 ; zero page is mandatory for this one (STX $ZP,Y)
+
+	; 2 bytes free here
 
 	bzp_low_end = *
 
@@ -95,35 +116,39 @@
 
 	; the various multiples of 8 bytes below are in order by track number
 
-	; $2a is also available as an in/out-of-ZP-backup common addr
-
 	* = $2a
 
-	pattern_break_target_row			!skip 1
-	pos_jump_target_pattern				!skip 1
-	seq_current_pattern_number			!skip 1
-	seq_current_row						!skip 1
-	seq_current_track					!skip 1
-	seq_cur_track_data_offset			!skip 1
-	seq_ticks_counter					!skip 1
-	current_song_pos					!skip 1
-	glissando_flag						!skip 1
-	vibrato_waveform					!skip 1
-	tremolo_waveform					!skip 1
-	delay_pattern_divisions				!skip 1
+	; audio ISR and mixer
+
 	audio_in_buf_index					!skip 1
 	audio_out_buf_index					!skip 1
 
-	song_speed							!skip 1
-	seq_tempo_bpm						!skip 1
-	seq_ticks_per_division				!skip 1
+	nmi_temp_a							!skip 1 ; use these for saving and
+	nmi_temp_x							!skip 1 ; restoring .AXY during IRQ's
+	nmi_temp_y							!skip 1
+	nmi_temp_b							!skip 1
 
-	mixer_loops_per_tick_fract			!skip 1
-	mixer_loops_per_tick				!skip 1
-	mixer_countdown_fract				!skip 1
 	mixer_countdown						!skip 1
+	mixer_countdown_fract				!skip 1
+	mixer_loops_per_tick				!skip 1
+	mixer_loops_per_tick_fract			!skip 1
 
-	current_sample_volume_levels		!skip 8
+	; sequencer, per-tick and per-row scalars
+
+	seq_current_track					!skip 1
+	seq_cur_track_data_offset			!skip 1
+	seq_ticks_counter					!skip 1
+	seq_ticks_per_division				!skip 1
+	seq_tempo_bpm						!skip 1
+	seq_current_row						!skip 1
+	seq_current_pattern_number			!skip 1
+	current_song_pos					!skip 1
+	pattern_break_target_row			!skip 1
+	pos_jump_target_pattern				!skip 1
+
+	current_multirate_levels			!skip 8
+
+	; 10 bytes free here
 
 	bzp_lowmid_end = *
 
@@ -132,9 +157,9 @@
 	* = $53
 
 	sequencer_temp_x					!skip 1
-	sequencer_temp_y					!skip 1
-	sequencer_temp_a					!skip 2 ; \__ these can also be used
-	sequencer_temp_b					!skip 2 ; /   as one 4-byte temp
+	sequencer_temp_y					!skip 1 ; (the row data visualizer's track offset)
+
+	; 4 bytes free here
 
 	bzp_upmid_end = *
 
@@ -144,6 +169,9 @@
 	; divide_tmp uses $5f and $60
 
 	* = $61
+
+	; fetch loop, per-track state
+
 	current_sample_pointers_fracts		!skip 8
 	current_sample_pointers_lows		!skip 8
 	current_sample_pointers_mids		!skip 8
@@ -151,30 +179,25 @@
 
 	current_steprates_fracts			!skip 8
 	current_steprates_ints				!skip 8
+
 	current_sample_end_addr_lows		!skip 8
 	current_sample_end_addr_mids		!skip 8
 	current_sample_end_addr_highs		!skip 8
 
-	current_vibrato_fundamental_periods_lows	!skip 8
-	current_vibrato_fundamental_periods_highs	!skip 8
-	current_vibrato_top_periods_lows			!skip 8
-	current_vibrato_top_periods_highs			!skip 8
-
-	current_vibrato_step_sizes_fracts	!skip 8
-	current_vibrato_step_sizes_ints		!skip 8
-
-	current_pitch_slide_rates			!skip 8
-	current_pitch_bend_dirs				!skip 8 ; 0=pitching down, $80=pitching up
-												; ¯¯\__ vibrato uses this also
-
-	nmi_temp_a							!skip 1 ; use these for saving and
-	nmi_temp_x							!skip 1 ; restoring .AXY during IRQ's
-	nmi_temp_y							!skip 1
-	nmi_temp_b							!skip 1
-
 	current_fetch_loop_ofl_amounts		!skip 8
 
-	; should be a couple more bytes free here
+	; where the fetcher restarts each track's loop from
+
+	current_loop_start_lows				!skip 8
+	current_loop_start_mids				!skip 8
+	current_loop_start_highs			!skip 8
+
+	; the row that the sequencer is working on, fetched here from expansion
+	; memory:  four bytes per track
+
+	seq_current_row_data				!skip 32
+
+	; 14 bytes free here
 
 	bzp_top_end = *
 

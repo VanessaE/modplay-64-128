@@ -280,7 +280,6 @@
 	; $40 = this item is a directory
 	; $80 = this is an enqueued file
 
-	seq_current_row_data				!skip 32
 	seq_commands						!skip 8
 	seq_prev_commands					!skip 8
 	seq_command_arguments				!skip 8
@@ -299,10 +298,29 @@
 	enqueued_sample_numbers				!skip 8
 	track_current_enable_flags			!skip 8
 
-	current_multirate_levels			!skip 8
-	current_loop_start_lows				!skip 8
-	current_loop_start_mids				!skip 8
-	current_loop_start_highs			!skip 8
+	; these arrays are only ever indexed with .Y in the player, so they'd gain
+	; nothing from being in zero page (see constants-zero-page.h)
+
+	current_sample_volume_levels		!skip 8
+
+	current_pitch_slide_rates			!skip 8
+	current_pitch_bend_dirs				!skip 8 ; 0=pitching down, $80=pitching up
+												; ¯¯\__ vibrato uses this also
+
+	current_vibrato_fundamental_periods_lows	!skip 8
+	current_vibrato_fundamental_periods_highs	!skip 8
+	current_vibrato_top_periods_lows			!skip 8
+	current_vibrato_top_periods_highs			!skip 8
+
+	current_vibrato_step_sizes_fracts	!skip 8
+	current_vibrato_step_sizes_ints		!skip 8
+
+	; these are set when playback starts, and nothing reads them yet
+
+	glissando_flag						!skip 1
+	vibrato_waveform					!skip 1
+	tremolo_waveform					!skip 1
+	delay_pattern_divisions				!skip 1
 
 	current_arp_extra_note_1st_fracts	!skip 8
 	current_arp_extra_note_1st_ints		!skip 8
@@ -338,7 +356,7 @@
 	sample_default_fine_tunes           !skip 32
 	sample_default_volume_levels        !skip 32
 
-	; about 94 bytes free here on both machines
+	; about 11 bytes free here on both machines
 
 ; ------------------------------------------------------------------------
 
