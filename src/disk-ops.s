@@ -209,8 +209,8 @@ open_file			; enter with .A = filename len, .X/.Y = filename addr
 	jsr SETNAM
 
 	!ifdef c128 {
-		lda #0
-		ldx #0
+		lda #KERNAL_FILE_BANK
+		ldx #KERNAL_FILE_BANK
 		jsr SETBNK
 	}
 
@@ -309,8 +309,8 @@ save_config
 	ldy #>config_filename
 	jsr SETNAM
 	!ifdef c128 {
-		lda #0
-		ldx #0
+		lda #KERNAL_FILE_BANK
+		ldx #KERNAL_FILE_BANK
 		jsr SETBNK
 	}
 	lda #0

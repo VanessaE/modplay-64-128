@@ -81,6 +81,19 @@
 
 }
 
+; the bank that the KERNAL is told (with SETBNK) to read filenames from, and to
+; load and save data in.  the KERNAL switches to that bank's configuration, with
+; interrupts enabled, for every byte it reads or writes that way.  bank 0 is all
+; RAM, so an interrupt that lands in one of those moments is taken through the
+; RAM under the KERNAL, where this program keeps its own vectors and code
+; instead of what the KERNAL expects to find there.
+;
+; bank 12 (configuration $06 in the KERNAL's table at $f7f0) is RAM bank 0 up
+; to $7fff, with the KERNAL ROM and I/O in.  the KERNAL stays mapped the whole
+; time, so that can't happen, but anything given to it has to be below $8000.
+
+KERNAL_FILE_BANK = 12
+
 ORG									= LRED
 MGRY								= DGRY
 DGRY								= $98

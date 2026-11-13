@@ -271,10 +271,20 @@ isr_reset_timers_interrupts
 	lda #0
 	sta VIC_IRQ_MASK
 
-	lda #<vic_raster_sync_stage_1
-	sta CPU_IRQ_vector
-	lda #>vic_raster_sync_stage_1
-	sta CPU_IRQ_vector+1
+	; only the C64 without a turbo uses the raster sync IRQ.  the rest have no
+	; IRQ source of their own, so nothing should ever come through here.
+
+	!ifdef badlines_exist {
+		lda #<vic_raster_sync_stage_1
+		sta CPU_IRQ_vector
+		lda #>vic_raster_sync_stage_1
+		sta CPU_IRQ_vector+1
+	} else {
+		lda #<lockout_interrupts
+		sta CPU_IRQ_vector
+		lda #>lockout_interrupts
+		sta CPU_IRQ_vector+1
+	}
 
 	lda audio_isr_vec
 	sta CPU_NMI_vector

@@ -105,8 +105,8 @@ init
 	jsr SETNAM
 
 	!ifdef c128 {
-		lda #0
-		ldx #0
+		lda #KERNAL_FILE_BANK
+		ldx #KERNAL_FILE_BANK
 		jsr SETBNK
 	}
 

@@ -86,6 +86,16 @@
 	}
 }
 
+!ifdef c128 {
+	; filenames and DOS commands are read by the KERNAL from bank KERNAL_FILE_BANK,
+	; which is only RAM below $8000 (see constants-128.h).  the ones in the program
+	; are all in the resident part, which ends where the ASCII table starts.
+
+	!if ascii_to_petscii_table > $8000 {
+		!error "The resident part of the program extends above $8000 by ", ascii_to_petscii_table - $8000, " bytes, where the KERNAL can't read filenames from!"
+	}
+}
+
 !if end_of_mid_mem_tables > main_mem_free_end {
 	!error "Mid-memory tables overlap high memory area by ", end_of_mid_mem_tables - main_mem_free_end, " bytes! (",end_of_mid_mem_tables - 1,")"
 }
