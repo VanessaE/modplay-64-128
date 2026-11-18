@@ -30,7 +30,7 @@ The program has so far achieved most of my main goals (apart from not using BASI
 
 ✅ Improve the audio quality by using interrupt-driven, buffered audio output.
 
-✅ Improve the slow-as-molasses loader. 😛  If you have an "Ultimate" device (U64, C64U, 1541U), the Command Interface is supported for faster loading.
+✅ Improve the slow-as-molasses loader. 😛  This program has multiple backends for loading, including Cadaver's Bitops for most drives, BURST mode on the C128 when the drive supports it, ELoad for SD2IEC devices, support for RAMLink/CMD HD parallel, and if you have an "Ultimate" device (U64, C64U, 1541U), even the Command Interface is supported (and it's fast!).
 
 ✅ Make the program more "modular" so that it's easy to add support for other audio and memory devices and other platforms/variants.
 
@@ -38,9 +38,13 @@ The program has so far achieved most of my main goals (apart from not using BASI
 
 **At the moment, as far as platforms go, this program supports oldskool C64's and C128's, with or without a SuperCPU (later version only), and it supports the C64 Ultimate and Ultimate64.  An REU of any size is required in all cases, which can be either the oldskool cartridge, or if your hardware has this feature built-in.**
 
-Ultimate64 users:  If you have real SID chips installed, or their modern replacements such as ARM2SID, FPGASID, etc., you **must** have firmware v3.14e or higher, as it contains a critical feature fix.  Plus, you'll be able to use the Mahoney driver for clean, crisp almost-8-bit audio.  If you are not using the SID sockets at all, then older firmware versions should be fine (but you'll only have 4-bit audio).
+C64 Ultimate and Ultimate64 users:  If you have real SID chips installed (or their modern replacements such as ARM2SID, FPGASID, etc.), you **must** have up-to-date system firmware, as this program depends on behaviors that were broken in older firmwares.  Plus, you'll be able to use the Mahoney driver for clean, crisp almost-8-bit audio.  
 
-C64 Ultimate users: sorry folks, Commodore's current firmware (1.1.0, after the renumbering) will not suffice, it doesn't have the fix.  Unless you're willing to disable your SIDs and live with 4-bit audio, you'll have to wait for them to catch up, or you can run the Ultimate64 v3.15 or later firmware, which seems to work just fine (but be aware, you'll lose keyboard lighting on machines so-equipped, and the menus won't be as you're used to, and you'll have to source new ROM image files).
+For the C64U, C64CU, or C77, that'll be firmware v1.2.0 or higher.
+
+For original U64, you'll need firmware v3.15 or higher.
+
+If you are just using the built-in UltiSID and not using the SID sockets at all, then older firmware versions should work, but you'll only have 4-bit audio (UltiSID doesn't properly play Mahoney audio).
 
 This project is meant to be worked-on and built on Linux using common tools.  You will need:
 

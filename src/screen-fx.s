@@ -174,10 +174,6 @@ scroll_area_up
   +
 rts
 
-; enter with .X/.Y = column and row of the progress bar itself (on C128, that
-; that means the real row/column, not the position within whatever popup
-; might be open), .A = length of the progress bar in segments (8 per char).
-
 ; PROGRESS BAR
 ;
 ; Before calling init_progress_bar, set:
